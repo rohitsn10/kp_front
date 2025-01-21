@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import loginImg from '../assets/loginSideImg.png'
+import loginImg from '../assets/mainBackgroundImage.png'
 import logoImg from '../assets/logo.png'
 import { toast } from 'react-toastify';
+import { login } from '../services/auth';
 
 function Login() {
     const showToast = () => {
@@ -17,7 +18,7 @@ function Login() {
         setInputForm({...inputForm,[e.target.name]:e.target.value})
     }
 
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async(e) => {
         e.preventDefault();
         if (inputForm?.name.trim() === '') {
             toast.error("Please add an user Name");
@@ -33,9 +34,27 @@ function Login() {
           toast.error("Please add a password");
           return; 
         }
-    
+        const loginData = {
+          username: inputForm.name, // You can adjust this field name as needed
+          password: inputForm.password,
+          group_id: inputForm.email // You can replace this with actual logic for group_id
+      };
+
+      try {
+        const response = await login(loginData);
+        
+        if (response && response.data) {
+            toast.success("Login successful!");
+            window.location.href = '/dashboard';
+        }
+        } catch (error) {
+            console.error('Login error:', error);
+            toast.error('Login failed. Please try again.');
+        }
+
         console.log(inputForm);
-        toast.success("Form submitted successfully!");
+        toast.success("Details!");
+
       };
 
     return (
