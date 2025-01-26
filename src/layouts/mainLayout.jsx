@@ -9,7 +9,8 @@ function MainLayout({children}) {
         backgroundImage:`url(${backgroundImage})`
       }} className="flex-1 ml-60 overflow-y-auto h-[calc(100vh)] bg-cover bg-center">
         <div className='min-w-[100%] min-h-[100%] border bg-gray-700 bg-opacity-35'>
-      <div  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* <div  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> */}
+      <div  className="">
         {children}
       </div>
       </div>

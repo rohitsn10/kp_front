@@ -123,7 +123,7 @@ const SidebarItems= ({item})=>{
 }
 
   return (
-    <aside className="w-60 bg-white shadow-lg fixed h-full border-r border-gray-300 ">
+    <aside className="w-60 bg-white shadow-lg fixed h-full border-r border-gray-300  overflow-y-auto">
       <div className='flex flex-col mt-4 items-center gap-1'>
         <div>
           <img className='h-[120px] w-[120px]' src={logoImg}/>

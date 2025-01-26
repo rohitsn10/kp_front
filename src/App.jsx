@@ -13,6 +13,7 @@ import MasterPage from "./pages/master.jsx";
 import UserPage from "./pages/user.jsx";
 import ProjectDetails from "./components/pages/projects/ProjectDetails.jsx";
 import ProjectOverview from "./components/pages/projects/ProjectOverview.jsx";
+import CreateUserForm from "./components/pages/users/createusers/createUserForm.jsx";
 
 function App() {
   const showToast = () => {
@@ -23,10 +24,12 @@ function App() {
     <div>
       <Routes>
         <Route path="/login" element={<Login />} />
-
         <Route path="/" element={<MainLayout><Home/></MainLayout>} />
         <Route path="/landbank" element={<MainLayout><Landbank/></MainLayout>} />
+        {/* Users */}
         <Route path="/user" element={<MainLayout><UserPage/></MainLayout>} />
+        <Route path="/user/create" element={<MainLayout><CreateUserForm/></MainLayout>}/>
+
         <Route path="/tracking" element={<MainLayout><TrackingPage/></MainLayout>} />
         <Route path="/reports" element={<MainLayout><ReportsPage/></MainLayout>} />
         <Route path="/master" element={<MainLayout><MasterPage/></MainLayout>} />
