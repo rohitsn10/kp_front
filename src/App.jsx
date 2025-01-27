@@ -14,6 +14,7 @@ import UserPage from "./pages/user.jsx";
 import ProjectDetails from "./components/pages/projects/ProjectDetails.jsx";
 import ProjectOverview from "./components/pages/projects/ProjectOverview.jsx";
 import CreateUserForm from "./components/pages/users/createusers/createUserForm.jsx";
+import AddProject from "./components/pages/projects/AddProject.jsx";
 
 function App() {
   const showToast = () => {
@@ -39,7 +40,7 @@ function App() {
         <Route path="/project/main-activites" element={<MainLayout><>Main Activity</></MainLayout>} />
         <Route path="/project/sub-activites" element={<MainLayout><>Sub Activity</></MainLayout>} />
         <Route path="/project/multiple-activites" element={<MainLayout><>Multiple</></MainLayout>} />
-
+        <Route path="/project/add-projects" element={<MainLayout><AddProject/></MainLayout>} />
       </Routes>
 
       <ToastContainer />
