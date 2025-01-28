@@ -14,41 +14,33 @@ import {
 import { RiEditFill } from 'react-icons/ri';
 // import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import { AiOutlineStop } from "react-icons/ai";
-
-
-function ProjectSubActivityPage() {
-
+function ProjectMultipleListing() {
   // const [activityFilter, setActivityFilter] = useState('');
   const [subActivityFilter, setSubActivityFilter] = useState('');
-
+  const [multipleActivity,setmultipleActivity]=useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5); // Default rows per page
   
   const rows = [
-    { sr: 1, type: "Solar", subActivity: "Sub Activity name 1", addedDate: "2024-01-01" },
-    { sr: 2, type: "Wind", subActivity: "Sub Activity name 2", addedDate: "2024-01-05" },
-    { sr: 3, type: "Solar", subActivity: "Sub Activity name 3", addedDate: "2024-01-10" },
-    { sr: 4, type: "Wind", subActivity: "Sub Activity name 4", addedDate: "2024-01-15" },
-    { sr: 5, type: "Solar", subActivity: "Sub Activity name 5", addedDate: "2024-01-20" },
-    { sr: 6, type: "Wind", subActivity: "Sub Activity name 6", addedDate: "2024-01-25" },
-    { sr: 7, type: "Solar", subActivity: "Sub Activity name 7", addedDate: "2024-02-01" },
-    { sr: 8, type: "Wind", subActivity: "Sub Activity name 8", addedDate: "2024-02-05" },
-    { sr: 9, type: "Solar", subActivity: "Sub Activity name 9", addedDate: "2024-02-10" },
-    { sr: 10, type: "Wind", subActivity: "Sub Activity name 10", addedDate: "2024-02-15" },
-    { sr: 11, type: "Solar", subActivity: "Sub Activity name 11", addedDate: "2024-03-01" },
-    { sr: 12, type: "Wind", subActivity: "Sub Activity name 12", addedDate: "2024-03-05" },
-    { sr: 13, type: "Solar", subActivity: "Sub Activity name 13", addedDate: "2024-03-10" },
-    { sr: 14, type: "Wind", subActivity: "Sub Activity name 14", addedDate: "2024-03-15" },
-    { sr: 15, type: "Solar", subActivity: "Sub Activity name 15", addedDate: "2024-03-20" },
-    { sr: 16, type: "Wind", subActivity: "Sub Activity name 16", addedDate: "2024-04-01" },
-    { sr: 17, type: "Solar", subActivity: "Sub Activity name 17", addedDate: "2024-04-05" },
-    { sr: 18, type: "Wind", subActivity: "Sub Activity name 18", addedDate: "2024-04-10" },
-    { sr: 19, type: "Solar", subActivity: "Sub Activity name 19", addedDate: "2024-04-15" },
-    { sr: 20, type: "Wind", subActivity: "Sub Activity name 20", addedDate: "2024-04-20" },
+    { sr: 1, type: "Solar", multipleActivityName: "Activity 1", addedDate: "2024-01-01" },
+    { sr: 2, type: "Wind", multipleActivityName: "Activity 2", addedDate: "2024-01-05" },
+    { sr: 3, type: "Solar", multipleActivityName: "Activity 3", addedDate: "2024-01-10" },
+    { sr: 4, type: "Wind", multipleActivityName: "Activity 4", addedDate: "2024-01-15" },
+    { sr: 5, type: "Solar", multipleActivityName: "Activity 5", addedDate: "2024-01-20" },
+    { sr: 6, type: "Wind", multipleActivityName: "Activity 6", addedDate: "2024-01-25" },
+    { sr: 7, type: "Solar", multipleActivityName: "Activity 7", addedDate: "2024-02-01" },
+    { sr: 8, type: "Wind", multipleActivityName: "Activity 8", addedDate: "2024-02-05" },
+    { sr: 9, type: "Solar", multipleActivityName: "Activity 9", addedDate: "2024-02-10" },
+    { sr: 10, type: "Wind", multipleActivityName: "Activity 10", addedDate: "2024-02-15" },
+    { sr: 11, type: "Solar", multipleActivityName: "Activity 11", addedDate: "2024-03-01" },
+    { sr: 12, type: "Wind", multipleActivityName: "Activity 12", addedDate: "2024-03-05" },
+    { sr: 13, type: "Solar", multipleActivityName: "Activity 13", addedDate: "2024-03-10" },
+    { sr: 14, type: "Wind", multipleActivityName: "Activity 14", addedDate: "2024-03-15" },
+    { sr: 15, type: "Solar", multipleActivityName: "Activity 15", addedDate: "2024-03-20" },
   ];
   // Filter rows based on search
   const filteredRows = rows.filter((row) =>
-    row.subActivity.toLowerCase().includes(subActivityFilter.toLowerCase())
+    row.multipleActivityName.toLowerCase().includes(multipleActivity.toLowerCase())
   );
 
   // Pagination handlers
@@ -72,9 +64,9 @@ function ProjectSubActivityPage() {
       <div className="flex flex-row my-6 px-10 items-center justify-between">
         <div className="flex items-center">
           <TextField
-            value={subActivityFilter}
+            value={multipleActivity}
             placeholder="Search"
-            onChange={(e) => setSubActivityFilter(e.target.value)}
+            onChange={(e) => setmultipleActivity(e.target.value)}
             variant="outlined"
             size="small"
             style={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
@@ -82,7 +74,7 @@ function ProjectSubActivityPage() {
         </div>
         
         <div className="flex-grow flex justify-center">
-          <h2 className="text-3xl text-[#29346B] font-semibold">Sub Activity Listing</h2>
+          <h2 className="text-2xl text-[#29346B] font-semibold">Multiple Activities Listing</h2>
         </div>
         
         <div className="flex items-center">
@@ -96,7 +88,7 @@ function ProjectSubActivityPage() {
               textTransform: 'none' 
             }}
           >
-            Add Sub-Activity
+            Add Activity
           </Button>
         </div>
       </div>
@@ -112,7 +104,7 @@ function ProjectSubActivityPage() {
                 Type
               </TableCell>
               <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Sub-Activity Name
+                Multiple Activity Name
               </TableCell>
               <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
                 Added Date
@@ -128,7 +120,7 @@ function ProjectSubActivityPage() {
               <TableRow key={row.id}>
                 <TableCell align="center" style={{ fontSize: '16px' }}>{row.sr}</TableCell>
                 <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row.type}</TableCell>
-                <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row.subActivity}</TableCell>
+                <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row.multipleActivityName}</TableCell>
                 <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row.addedDate}</TableCell>
                 <TableCell align="center" style={{
                   display: 'flex',
@@ -178,4 +170,4 @@ function ProjectSubActivityPage() {
   );
 }
 
-export default ProjectSubActivityPage
+export default ProjectMultipleListing

@@ -16,9 +16,10 @@ import ProjectOverview from "./components/pages/projects/ProjectOverview.jsx";
 import CreateUserForm from "./components/pages/users/createusers/createUserForm.jsx";
 import AddProject from "./components/pages/projects/AddProject.jsx";
 import ProjectSubActivityPage from "./pages/projects/projects-subactivity-listing/index.jsx";
-import ProjectActivityListing from "./pages/projects/projects-activity-listing/index.jsx";
+// import ProjectActivityListing from "./pages/projects/projects-activity-listing/index.jsx";
 import ProjectMainActivityPage from "./pages/projects/projects-main-activity/index.jsx";
 import ProjectCategoryPage from "./pages/projects/projects-category/index.jsx";
+import ProjectMultipleListing from "./pages/projects/projects-multiple-activity/index.jsx";
 
 function App() {
   const showToast = () => {
@@ -43,9 +44,10 @@ function App() {
         <Route path="/project/categories" element={<MainLayout><ProjectCategoryPage/></MainLayout>} />
         <Route path="/project/main-activites" element={<MainLayout><ProjectMainActivityPage/></MainLayout>} />
         <Route path="/project/sub-activites" element={<MainLayout><ProjectSubActivityPage/></MainLayout>} />
-        <Route path="/project/multiple-activites" element={<MainLayout><ProjectActivityListing/></MainLayout>} />
+        <Route path="/project/multiple-activites" element={<MainLayout><ProjectMultipleListing/></MainLayout>} />
         <Route path="/project/add-projects" element={<MainLayout><AddProject/></MainLayout>} />
       </Routes>
+      
 
       <ToastContainer />
     </div>
