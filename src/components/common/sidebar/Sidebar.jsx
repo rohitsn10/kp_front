@@ -130,7 +130,7 @@ const SidebarItems= ({item})=>{
         </div>
       </div>
       <nav className="p-4 space-y-2">
-        {sidebarConstant.map((item)=><SidebarItems item={item}/>)}
+        {sidebarConstant.map((item,index)=><SidebarItems key={index} item={item}/>)}
       </nav>
   </aside>
   )

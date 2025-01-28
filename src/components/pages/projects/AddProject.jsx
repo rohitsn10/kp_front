@@ -38,7 +38,25 @@ function AddProject() {
       formName: 'document',
       formValue: null,
       formType: 'file'
-    }
+    },
+    {
+      formLabel: 'Upload Document',
+      formLength: 'half',
+      formTitle: '',
+      placeHolder: '',
+      formName: 'document',
+      formValue: null,
+      formType: 'file'
+    },
+    {
+      formLabel: 'Upload Document',
+      formLength: 'half',
+      formTitle: '',
+      placeHolder: '',
+      formName: 'document',
+      formValue: null,
+      formType: 'file'
+    },
   ]);
 
   // Handle input changes dynamically, including file uploads
@@ -72,8 +90,9 @@ function AddProject() {
 
   return (
     <div className="w-full h-screen p-2 flex justify-center items-start">
+    {/* <h2 className='text-2xl'>Add Project</h2> */}
       <form
-        className="bg-white grid grid-cols-2 w-[50%] rounded-md my-8"
+        className="bg-white p-4 grid grid-cols-2 w-[50%] rounded-md my-8"
         onSubmit={handleSubmit}
       >
         {formData?.map((item, index) => (
@@ -89,12 +108,12 @@ function AddProject() {
             formHandle={formInputHandle} // Pass the input handler
           />
         ))}
-        <div className="col-span-2 flex justify-end p-2">
+        <div className="col-span-2 flex justify-center p-2">
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded-md"
+            className="text-white text-2xl bg-orange-400 px-24 py-2 rounded-md "
           >
-            Submit
+            SUBMIT
           </button>
         </div>
       </form>
