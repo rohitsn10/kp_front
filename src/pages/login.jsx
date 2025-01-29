@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import loginImg from '../assets/mainBackgroundImage.png'
 import logoImg from '../assets/logo.png'
 import { toast } from 'react-toastify';
-import { login } from '../services/auth';
+import { login } from '../services/auth'; 
 
 function Login() {
     const showToast = () => {
@@ -12,7 +12,8 @@ function Login() {
     const [inputForm,setInputForm]=useState({
         name:'',
         email:'',
-        password:''
+        password:'',
+        login_type:'desktop'
     })
     const handleInput=(e)=>{
         setInputForm({...inputForm,[e.target.name]:e.target.value})
@@ -20,11 +21,7 @@ function Login() {
 
     const handleFormSubmit = async(e) => {
         e.preventDefault();
-        if (inputForm?.name.trim() === '') {
-            toast.error("Please add an user Name");
-            return; // Stop form submission
-          }
-        // Validation checks
+
         if (inputForm?.email.trim() === '') {
           toast.error("Please add an email");
           return; // Stop form submission
@@ -34,29 +31,30 @@ function Login() {
           toast.error("Please add a password");
           return; 
         }
-        const loginData = {
-          username: inputForm.name, // You can adjust this field name as needed
-          password: inputForm.password,
-          group_id: inputForm.email // You can replace this with actual logic for group_id
-      };
 
-      try {
-        const response = await login(loginData);
-        
-        if (response && response.data) {
-            toast.success("Login successful!");
-            window.location.href = '/dashboard';
-        }
-        } catch (error) {
-            console.error('Login error:', error);
-            toast.error('Login failed. Please try again.');
-        }
+        try {
+          const formData = new FormData();
+          formData.append("email", inputForm.email);
+          formData.append("password", inputForm.password);
+          formData.append("login_type", inputForm.login_type);
 
-        console.log(inputForm);
-        toast.success("Details!");
+          const response = await login(formData);
 
-      };
+          if (response.status) {
+              toast.success(response.message);
 
+              // Store token in sessionStorage
+              sessionStorage.setItem("token", response.data.token);
+
+              // Redirect after login
+              window.location.href = '/';
+          } else {
+              toast.error(response.message);
+          }
+      } catch (error) {
+          toast.error(error.message || 'Login failed. Please try again.');
+      }
+      }
     return (
   <div className="h-[100vh] w-[100vw] bg-white-500 flex flex-row">
         <div className='h-[100vh] w-[70vw]'>

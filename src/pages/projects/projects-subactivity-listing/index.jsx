@@ -14,16 +14,18 @@ import {
 import { RiEditFill } from 'react-icons/ri';
 // import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import { AiOutlineStop } from "react-icons/ai";
+import ProjectSubActivityModal from '../../../components/pages/projects/ProjectSubActivity/ProjectSubActivityModal';
 
 
 function ProjectSubActivityPage() {
 
   // const [activityFilter, setActivityFilter] = useState('');
   const [subActivityFilter, setSubActivityFilter] = useState('');
-
+  const [subActivityInput,setSubActivityInput]=useState('')
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5); // Default rows per page
-  
+  const [open,setOpen]=useState(false);
+
   const rows = [
     { sr: 1, type: "Solar", subActivity: "Sub Activity name 1", addedDate: "2024-01-01" },
     { sr: 2, type: "Wind", subActivity: "Sub Activity name 2", addedDate: "2024-01-05" },
@@ -95,6 +97,7 @@ function ProjectSubActivityPage() {
               fontSize: '16px',
               textTransform: 'none' 
             }}
+            onClick={()=>setOpen(!open)}
           >
             Add Sub-Activity
           </Button>
@@ -174,6 +177,12 @@ function ProjectSubActivityPage() {
           }}
         />
       </TableContainer>
+      <ProjectSubActivityModal
+        open={open}
+        setOpen={setOpen}
+        subActivityInput={subActivityInput}
+        setSubActivityInput={setSubActivityInput}
+      />
     </div>
   );
 }

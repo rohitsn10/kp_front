@@ -14,12 +14,15 @@ import {
 import { RiEditFill } from 'react-icons/ri';
 // import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import { AiOutlineStop } from "react-icons/ai";
+import ProjectMultipleActivity from '../../../components/pages/projects/ProjectMultipleActivity/ProjectMultipleActivity';
 function ProjectMultipleListing() {
   // const [activityFilter, setActivityFilter] = useState('');
   const [subActivityFilter, setSubActivityFilter] = useState('');
   const [multipleActivity,setmultipleActivity]=useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5); // Default rows per page
+  const [open,setOpen]=useState(false);
+  const [multipleActivityInput,setMultipleActInput]=useState('')
   
   const rows = [
     { sr: 1, type: "Solar", multipleActivityName: "Activity 1", addedDate: "2024-01-01" },
@@ -87,6 +90,7 @@ function ProjectMultipleListing() {
               fontSize: '16px',
               textTransform: 'none' 
             }}
+            onClick={()=>setOpen(!open)}
           >
             Add Activity
           </Button>
@@ -166,6 +170,12 @@ function ProjectMultipleListing() {
           }}
         />
       </TableContainer>
+      <ProjectMultipleActivity
+          open={open}
+          setOpen={setOpen}
+          multipleActivityInput={multipleActivityInput}
+          setMultipleActInput={setMultipleActInput}
+      />
     </div>
   );
 }

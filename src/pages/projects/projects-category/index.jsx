@@ -12,12 +12,14 @@ import {
   TablePagination 
 } from '@mui/material';
 import { RiEditFill } from 'react-icons/ri';
+import ProjectCategoryModal from '../../../components/pages/projects/ProjectCategory/CreateCategoryDialog';
 
 function ProjectCategoryPage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5); // Default rows per page
-  
+  const [rowsPerPage, setRowsPerPage] = useState(5);  
+    const [open,setOpen]=useState(false);
+    const [categoryInput, setCategoryInput] = useState('');
   const rows = [
     { sr: 141, id: 1, categoryName: "Category 1" },
     { sr: 294, id: 2, categoryName: "Category 2" },
@@ -86,12 +88,13 @@ function ProjectCategoryPage() {
               fontSize: '16px',
               textTransform: 'none' 
             }}
+            onClick={()=>setOpen(!open)}
           >
             Add Category
           </Button>
         </div>
       </div>
-            
+
       <TableContainer style={{ borderRadius: '8px', overflow: 'hidden' }}>
         <Table>
           <TableHead>
@@ -147,6 +150,12 @@ function ProjectCategoryPage() {
           }}
         />
       </TableContainer>
+      <ProjectCategoryModal
+        open={open}
+        setOpen={setOpen}
+        categoryInput={categoryInput}
+        setCategoryInput={setCategoryInput}
+      />
     </div>
   );
 }

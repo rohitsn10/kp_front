@@ -14,11 +14,15 @@ import {
 import { RiEditFill } from 'react-icons/ri';
 // import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import { AiOutlineStop } from "react-icons/ai";
+import CreateProjectActivity from '../../../components/pages/projects/ProjectActivity/CreateProjectActivity';
 
 function ProjectMainActivityPage() {
     const [activityFilter, setActivityFilter] = useState('');
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5); // Default rows per page
+    
+    const [open,setOpen]=useState(false);
+    const [mainActivityInput, setMainActivityInput] = useState('');
     
     const rows = [
         { sr: 1, type: "Solar", activityName: "Activity 1", addedDate: "2024-01-01", action: "Completed" },
@@ -86,6 +90,7 @@ function ProjectMainActivityPage() {
                 fontSize: '16px',
                 textTransform: 'none' 
               }}
+              onClick={()=>setOpen(!open)}
             >
               Add Activity
             </Button>
@@ -165,6 +170,12 @@ function ProjectMainActivityPage() {
             }}
           />
         </TableContainer>
+              <CreateProjectActivity
+                open={open}
+                setOpen={setOpen}
+                mainActivityInput={mainActivityInput}
+                setMainActivityInput={setMainActivityInput}
+              />
       </div>
     );
 }

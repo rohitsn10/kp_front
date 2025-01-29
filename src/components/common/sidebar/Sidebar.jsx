@@ -91,7 +91,7 @@ const SidebarItems= ({item})=>{
     <Link to={item?.links}>
       <div 
         onClick={() => (item.subNavs ? handleToggleDropdown(item.name) : null)}
-       className={`block px-4 py-3 rounded cursor-pointer hover:bg-gray-200 text-gray-700 ${currPath==item?.links? 'bg-gray-100':''}`}>
+       className={`block px-4 py-3 rounded cursor-pointer hover:bg-gray-200 text-gray-700 ${currPath==item?.links? 'bg-gray-200':''}`}>
       <div className="flex justify-between items-center">
         <div className='flex flex-row gap-4'>
           <div className="h-[20px] w-[20px]">{item?.icons}</div>
@@ -104,13 +104,13 @@ const SidebarItems= ({item})=>{
       </div>
       {/* {openDropdown === item.name && item.subNavs && ( */}
       {openDropdown === item.name && item.subNavs && (
-          <div className="pl-8 space-y-2">
+          <div className="pl-8 space-y-1">
             {item.subNavs.map((subItem) => (
               <Link
                 key={subItem.links}
                 to={subItem.links}
                 className={`block px-4 py-2 rounded hover:bg-gray-200 text-gray-600 ${
-                  currPath === subItem.links ? 'bg-gray-100' : ''
+                  currPath === subItem.links ? 'bg-gray-200' : ''
                 }`}
               >
                 {subItem.subName}

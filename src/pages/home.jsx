@@ -8,6 +8,7 @@ import ProjectListingTable from '../components/pages/home-dashboard/ProjectListi
 import CriticalActivityTable from '../components/pages/home-dashboard/CriticalActivityTable'
 
 function Home() {
+  console.log(import.meta.env.VITE_API_KEY);
   return (
     <div className="grid gap-8 grid-cols-12 px-4 border-2">
       <div className='col-span-12'>
