@@ -7,6 +7,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Autocomplete } from '@mui/material';
 import { UploadFile } from '@mui/icons-material';
+import { useGetLandCategoriesQuery } from '../../../api/users/categoryApi';
 
 export default function LandActivityModal({
   open,
@@ -15,7 +16,9 @@ export default function LandActivityModal({
   setLandActivityInput,
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedEnergy, setSelectedEnergy] = useState(null);
   const [landTitle, setLandTitle] = useState('');
+  const { data: categories, isLoading, isError } = useGetLandCategoriesQuery();
   const [files, setFiles] = useState({
     landLocation: [],
     landSurveyNumber: [],
@@ -33,6 +36,11 @@ export default function LandActivityModal({
     { label: 'Industrial', value: 'industrial' },
   ];
 
+  const energyOptions = [
+    { label: 'Solar', value: 'solar' },
+    { label: 'Wind', value: 'wind' },
+  ];
+
   const handleClose = () => {
     setOpen(false);
   };
@@ -47,6 +55,7 @@ export default function LandActivityModal({
   const handleSubmit = () => {
     console.log("Land Title:", landTitle);
     console.log("Selected Category:", selectedCategory);
+    console.log("Selected Energy:", selectedEnergy);
     console.log("Files:", files);
   };
 
@@ -64,7 +73,7 @@ export default function LandActivityModal({
         }}
       >
         <DialogTitle className="text-[#29346B] text-2xl font-semibold mb-5">
-          Add Land Activity
+          Add Land
         </DialogTitle>
         <DialogContent>
           <label className="block mb-1 text-[#29346B] text-lg font-semibold">
@@ -78,12 +87,13 @@ export default function LandActivityModal({
             onChange={(e) => setLandTitle(e.target.value)}
           />
 
+          {/* Select Category Autocomplete */}
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
             Select Category
           </label>
           <Autocomplete
-            options={categoryOptions}
-            getOptionLabel={(option) => option.label}
+            options={categories?.data || []} // Use categories from the API response
+            getOptionLabel={(option) => option.category_name} // Display category_name
             value={selectedCategory}
             onChange={(event, newValue) => setSelectedCategory(newValue)}
             renderInput={(params) => (
@@ -92,6 +102,37 @@ export default function LandActivityModal({
                 {...params}
                 variant="outlined"
                 placeholder="Search and select a category"
+                fullWidth
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    border: '1px solid #FACC15', // Yellow border
+                    borderBottom: '4px solid #FACC15',
+                    borderRadius: '6px', // Rounded corners
+                  },
+                  '& .MuiOutlinedInput-root.Mui-focused': {
+                    border: 'none',
+                    borderRadius: '4px',
+                  },
+                }}
+              />
+            )}
+          />
+
+          {/* Energy Type Autocomplete */}
+          <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            Select Energy Type
+          </label>
+          <Autocomplete
+            options={energyOptions}
+            getOptionLabel={(option) => option.label}
+            value={selectedEnergy}
+            onChange={(event, newValue) => setSelectedEnergy(newValue)}
+            renderInput={(params) => (
+              <TextField
+                className="outline-none"
+                {...params}
+                variant="outlined"
+                placeholder="Search and select an energy type"
                 fullWidth
                 sx={{
                   '& .MuiOutlinedInput-root': {

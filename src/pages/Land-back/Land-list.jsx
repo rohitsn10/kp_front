@@ -89,7 +89,7 @@ function LandListing() {
             }}
             onClick={() => setOpen(!open)}
           >
-            Add Land Activity
+            Add Land
           </Button>
         </div>
       </div>
