@@ -11,6 +11,7 @@ import TrackingPage from "./pages/tracking.jsx";
 import ReportsPage from "./pages/reports.jsx";
 import MasterPage from "./pages/master.jsx";
 import UserPage from "./pages/user.jsx";
+import Loction from "./pages/Loction.jsx";
 import ProjectDetails from "./components/pages/projects/ProjectDetails.jsx";
 import ProjectOverview from "./components/pages/projects/ProjectOverview.jsx";
 import CreateUserForm from "./components/pages/users/createusers/createUserForm.jsx";
@@ -31,7 +32,10 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<MainLayout><Home/></MainLayout>} />
+          {/* {Landbank} */}
           <Route path="/landbank" element={<MainLayout><Landbank/></MainLayout>} />
+          <Route path="/location" element={<MainLayout><Loction/></MainLayout>} />
+        
           {/* Users */}
           <Route path="/user" element={<MainLayout><UserPage/></MainLayout>} />
           <Route path="/user/create" element={<MainLayout><CreateUserForm/></MainLayout>}/>
