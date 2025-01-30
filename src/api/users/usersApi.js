@@ -9,7 +9,7 @@ export const userApi = createApi({
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
-      headers.set('Content-Type', 'application/json');
+      // headers.set('Content-Type', 'application/json');
       return headers;
     },
   }),
@@ -30,14 +30,22 @@ export const userApi = createApi({
       }),
       invalidatesTags: [{ type: 'Users', id: 'LIST' }],
     }),
-    updateUser:builder.mutation({
-      query:()=>({
-        url:"user_profile/user_update",
-        method:'PUT',
-        body:userData
+    updateUser: builder.mutation({
+      query: ({ userId, formData }) => 
+        ({
+        url: `user_profile/admin_can_update_user/${userId}`,
+        method: 'PUT',
+        body: formData,
+      }),
+            
+    }),
+    updateUserStatus:builder.mutation({
+      query:({userId})=>({
+        url: `user_profile/user_activate_or_deactivate/${userId}`,
+        method: 'PUT',
       })
     })
   }),
 });
 
-export const { useFetchUsersQuery, useCreateUserMutation,useUpdateUserMutation } = userApi;
+export const { useFetchUsersQuery, useCreateUserMutation,useUpdateUserMutation,useUpdateUserStatusMutation } = userApi;
