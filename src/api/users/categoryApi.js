@@ -13,11 +13,38 @@ export const landCategoryApi = createApi({
     },
   }),
   endpoints: (builder) => ({
+
     createLandCategory: builder.mutation({
       query: (categoryData) => ({
-        url: "land_module/land_category_create", 
+        url: "land_module/land_category_create", // The endpoint for category creation
         method: "POST", 
-        body: categoryData, 
+        body: {
+          category_name: categoryData.name, // Adjusted to match the form data you're sending
+        },
+        headers: {
+          "Content-Type": "application/json", // Set the content type to application/json
+        }
+      }),
+    }),
+    updateLandCategory: builder.mutation({
+      query: ({ id, categoryData }) => ({
+        url: `land_module/land_category_update/${id}`, // Dynamic URL with category ID
+        method: "PUT",
+        body: {
+          category_name: categoryData.name, // The name field from categoryData
+        },
+        headers: {
+          "Content-Type": "application/json", // Set the content type to application/json
+        },
+      }),
+    }),
+    deleteLandCategory: builder.mutation({
+      query: (id) => ({
+        url: `land_module/land_category_update/${id}`, // Dynamic URL with category ID
+        method: "DELETE", 
+        headers: {
+          "Content-Type": "application/json", // Set the content type to application/json
+        },
       }),
     }),
     getLandCategories: builder.query({
@@ -26,10 +53,13 @@ export const landCategoryApi = createApi({
         method: "GET", 
       }),
     }),
+    
   }),
 });
 
 export const {
   useCreateLandCategoryMutation,
   useGetLandCategoriesQuery,
+  useUpdateLandCategoryMutation,
+  useDeleteLandCategoryMutation
 } = landCategoryApi;

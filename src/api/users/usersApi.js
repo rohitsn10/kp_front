@@ -14,6 +14,7 @@ export const userApi = createApi({
     },
   }),
   endpoints: (builder) => ({
+
     fetchUsers: builder.query({
       query: () => ({
         url: 'user_profile/user_create',
@@ -44,8 +45,33 @@ export const userApi = createApi({
         url: `user_profile/user_activate_or_deactivate/${userId}`,
         method: 'PUT',
       })
-    })
+    }),
+    updateUserPassword:builder.mutation({
+      // query:({userId,password})=>({
+      //   url:`/user_profile/admin_can_reset_passowrd/${userId}`,
+      //   method:'PUT',
+      //   body:password
+      // })
+      query: ({ userId, password }) => {
+        const formData = new FormData();
+        formData.append('password', password);  // Add password to FormData
+        
+        return {
+          url: `/user_profile/admin_can_reset_passowrd/${userId}`,
+          method: 'PUT',
+          body: formData,  // Send FormData in the request body
+        };
+      },
+
+    }),
+    fetchDepartment: builder.query({
+      query: (departmentName) => ({
+        url: 'user_profile/create_get_department',
+        method: 'GET',
+        params: { department_name: departmentName },
+      }),
+    }),
   }),
 });
 
-export const { useFetchUsersQuery, useCreateUserMutation,useUpdateUserMutation,useUpdateUserStatusMutation } = userApi;
+export const { useFetchUsersQuery, useCreateUserMutation,useUpdateUserMutation,useUpdateUserStatusMutation,useUpdateUserPasswordMutation,useFetchDepartmentQuery } = userApi;

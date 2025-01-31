@@ -15,6 +15,7 @@ import { RiEditFill } from 'react-icons/ri';
 // import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import { AiOutlineStop } from "react-icons/ai";
 import ProjectSubActivityModal from '../../../components/pages/projects/ProjectSubActivity/ProjectSubActivityModal';
+import { useGetSubActivitiesQuery } from '../../../api/users/subActivityApi';
 
 
 function ProjectSubActivityPage() {
@@ -52,6 +53,8 @@ function ProjectSubActivityPage() {
   const filteredRows = rows.filter((row) =>
     row.subActivity.toLowerCase().includes(subActivityFilter.toLowerCase())
   );
+  const {data}=useGetSubActivitiesQuery();
+  console.log(data)
 
   // Pagination handlers
   const handleChangePage = (event, newPage) => {
