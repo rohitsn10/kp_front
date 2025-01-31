@@ -1,36 +1,36 @@
 import React, { useState } from 'react';
 import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import { Autocomplete } from '@mui/material';
+import { useCreateLandCategoryMutation } from '../../../../api/users/categoryApi';
+import { Dialog, DialogActions, DialogContent } from '@mui/material';
 
 export default function ProjectCategoryModal({
   open,
   setOpen,
   categoryInput,
   setCategoryInput,
+  refetch
 }) {
-  const [selectedCategory, setSelectedCategory] = useState(null);
-
-  const categoryOptions = [
-    { label: 'Technology', value: 'technology' },
-    { label: 'Healthcare', value: 'healthcare' },
-    { label: 'Education', value: 'education' },
-    { label: 'Finance', value: 'finance' },
-  ];
+  const [createLandCategory, { isLoading, error, isSuccess }] = useCreateLandCategoryMutation();
 
   const handleClose = () => {
     setOpen(false);
   };
-  const handleSubmit=()=>{
-    console.log("Category Input:",categoryInput)
-    console.log("Category Dropdown:",selectedCategory)
 
-  }
+  const handleSubmit = async () => {
+     const categoryData = {
+      name: categoryInput, // Assuming the API expects a 'name' field
+    };
+
+    try {
+      await createLandCategory(categoryData).unwrap(); // .unwrap() gives you the result directly or throws an error
+      setCategoryInput(''); // Clear input on success
+      refetch();
+      setOpen(false); // Close the modal on success
+      
+    } catch (err) {
+      console.error("Error creating category:", err);
+    }
+  };
 
   return (
     <React.Fragment>
@@ -42,7 +42,6 @@ export default function ProjectCategoryModal({
         PaperProps={{
           style: {
             width: '600px',
-
           },
         }}
       >
@@ -56,68 +55,35 @@ export default function ProjectCategoryModal({
             className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none "
             value={categoryInput}
             placeholder="Enter Category Name"
-            onChange={(e) =>{setCategoryInput(e.target.value)}}
-          />
-
-          <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-            Select Category
-          </label>
-          <Autocomplete
-            options={categoryOptions}
-            getOptionLabel={(option) => option.label}
-            value={selectedCategory}
-            onChange={(event, newValue) => setSelectedCategory(newValue)}
-            renderInput={(params) => (
-              <TextField
-              className='outline-none'
-
-                {...params}
-                variant="outlined"
-                placeholder="Search and select a category"
-                fullWidth
-                sx={{
-                '& .MuiOutlinedInput-root': {
-                  border: '1px solid #FACC15', // Yellow border
-                  borderBottom:'4px solid #FACC15',
-                  borderRadius: '6px', // Rounded corners
-                },
-                '& .MuiOutlinedInput-root.Mui-focused': {
-                    border:'none',
-                      borderRadius: '4px'
-                    },
-              }}
-              />
-            )}
+            onChange={(e) => setCategoryInput(e.target.value)}
           />
         </DialogContent>
         <DialogActions
-  sx={{
-    justifyContent: 'center', // Centers the button horizontally
-    padding: '20px', // Adds spacing around the button
-  }}
->
-  <Button
-    onClick={handleSubmit}
-    type="submit"
-    sx={{
-      backgroundColor: '#F6812D', // Orange background color
-      color: '#FFFFFF', // White text color
-      fontSize: '16px', // Slightly larger text
-      padding: '6px 36px', // Makes the button bigger (adjust width here)
-      width: '200px', // Explicit width for larger button
-      borderRadius: '8px', // Rounded corners
-      textTransform: 'none', // Disables uppercase transformation
-      fontWeight: 'bold', // Makes the text bold
-      '&:hover': {
-        backgroundColor: '#E66A1F', // Slightly darker orange on hover
-      },
-    }}
-  >
-    Submit
-  </Button>
-</DialogActions>
-
-
+          sx={{
+            justifyContent: 'center', // Centers the button horizontally
+            padding: '20px', // Adds spacing around the button
+          }}
+        >
+          <Button
+            onClick={handleSubmit}
+            disabled={isLoading} // Disable button while loading
+            sx={{
+              backgroundColor: '#F6812D', // Orange background color
+              color: '#FFFFFF', // White text color
+              fontSize: '16px', // Slightly larger text
+              padding: '6px 36px', // Makes the button bigger (adjust width here)
+              width: '200px', // Explicit width for larger button
+              borderRadius: '8px', // Rounded corners
+              textTransform: 'none', // Disables uppercase transformation
+              fontWeight: 'bold', // Makes the text bold
+              '&:hover': {
+                backgroundColor: '#E66A1F', // Slightly darker orange on hover
+              },
+            }}
+          >
+            {isLoading ? 'Adding...' : 'Add Category'}
+          </Button>
+        </DialogActions>
       </Dialog>
     </React.Fragment>
   );
