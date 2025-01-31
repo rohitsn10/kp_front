@@ -6,8 +6,9 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Autocomplete } from '@mui/material';
-import { UploadFile } from '@mui/icons-material';
 import { useGetLandCategoriesQuery } from '../../../api/users/categoryApi';
+import { useCreateLandBankMasterMutation } from '../../../api/users/landbankApi';
+import { toast } from 'react-toastify'; // Import toast
 
 export default function LandActivityModal({
   open,
@@ -28,6 +29,8 @@ export default function LandActivityModal({
     proposedGSS: [],
     transmissionLine: [],
   });
+
+  const [createLandBankMaster] = useCreateLandBankMasterMutation(); // Initialize the mutation hook
 
   const categoryOptions = [
     { label: 'Agricultural', value: 'agricultural' },
@@ -52,11 +55,52 @@ export default function LandActivityModal({
     });
   };
 
-  const handleSubmit = () => {
-    console.log("Land Title:", landTitle);
-    console.log("Selected Category:", selectedCategory);
-    console.log("Selected Energy:", selectedEnergy);
-    console.log("Files:", files);
+  const handleSubmit = async () => {
+    const formData = new FormData();
+
+    // Append text fields
+    formData.append('land_category_id', selectedCategory?.id || '');
+    formData.append('land_name', landTitle);
+    formData.append('solar_or_winds', selectedEnergy?.label || '');
+
+    // Append files
+    files.landLocation.forEach((file, index) => {
+      formData.append('land_location_files', file);
+    });
+
+    files.landSurveyNumber.forEach((file, index) => {
+      formData.append('land_survey_number_files', file);
+    });
+
+    files.keyPlan.forEach((file, index) => {
+      formData.append('land_key_plan_files', file);
+    });
+
+    files.approachRoad.forEach((file, index) => {
+      formData.append('land_approach_road_files', file);
+    });
+
+    files.coordinates.forEach((file, index) => {
+      formData.append('land_co_ordinates_files', file);
+    });
+
+    files.proposedGSS.forEach((file, index) => {
+      formData.append('land_proposed_gss_files', file);
+    });
+
+    files.transmissionLine.forEach((file, index) => {
+      formData.append('land_transmission_line_files', file);
+    });
+
+    try {
+      const response = await createLandBankMaster(formData).unwrap();
+      console.log('Response:', response);
+      toast.success('Land bank created successfully!'); // Success toast
+      handleClose(); // Close the modal on successful submission
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Failed to create land bank. Please try again.'); // Error toast
+    }
   };
 
   return (
