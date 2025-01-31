@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
+import { useCreateLandBankLocationMutation } from '../../../api/users/locationApi';
+import { useGetLandBankMasterQuery } from '../../../api/users/landbankApi';
+import { toast } from 'react-toastify';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
 
 export default function LocationModal({
   open,
@@ -12,18 +16,49 @@ export default function LocationModal({
   locationInput,
   setLocationInput,
 }) {
-  const [nearbyArea, setNearbyArea] = useState(''); // State for Nearby Area
-  const [landArea, setLandArea] = useState(''); // State for Land Area
+  const [nearbyArea, setNearbyArea] = useState('');
+  const [landArea, setLandArea] = useState('');
+  const [selectedLandBank, setSelectedLandBank] = useState(null); // State for selected land bank
+
+  // Fetch land bank data
+  const { data: landBankData, isLoading, error } = useGetLandBankMasterQuery();
+
+  // Using the mutation hook
+  const [createLandBankLocation] = useCreateLandBankLocationMutation();
 
   const handleClose = () => {
     setOpen(false);
   };
 
-  const handleSubmit = () => {
-    console.log("Location Name:", locationInput);
-    console.log("Nearby Area:", nearbyArea);
-    console.log("Land Area:", landArea);
+  const handleSubmit = async () => {
+    if (!selectedLandBank) {
+      toast.error('Please select a land bank!');
+      return;
+    }
+
+    const formData = {
+      land_bank_id: selectedLandBank.id, 
+      land_bank_location_name: locationInput,
+      total_land_area: landArea,
+      near_by_area: nearbyArea,
+    };
+
+    try {
+      await createLandBankLocation(formData).unwrap(); 
+      toast.success('Location added successfully!');
+
+      handleClose();
+    } catch (error) {
+
+      toast.error('Failed to add location!');
+      console.error('Error creating location:', error);
+    }
   };
+
+  const landBankOptions = landBankData?.data?.map((landBank) => ({
+    id: landBank.id,
+    land_name: landBank.land_name,
+  })) || [];
 
   return (
     <React.Fragment>
@@ -42,16 +77,34 @@ export default function LocationModal({
           Add Location
         </DialogTitle>
         <DialogContent>
-          {/* Location Name Input */}
           <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-            Location Name
+            Select Land Bank
           </label>
-          <input
-            type="text"
-            className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-            value={locationInput}
-            placeholder="Enter Location Name"
-            onChange={(e) => setLocationInput(e.target.value)}
+          <Autocomplete
+            options={landBankOptions}
+            getOptionLabel={(option) => option.land_name}
+            value={selectedLandBank}
+            onChange={(event, newValue) => setSelectedLandBank(newValue)}
+            loading={isLoading}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                variant="outlined"
+                placeholder="Search and select a land bank"
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    border: "1px solid #FACC15",
+                    borderBottom: "4px solid #FACC15",
+                    borderRadius: "6px",
+                  },
+                  "& .MuiOutlinedInput-root.Mui-focused": {
+                    border: "none",
+                    borderRadius: "4px",
+                  },
+                }}
+              />
+            )}
           />
 
           {/* Nearby Area Input */}
@@ -81,24 +134,24 @@ export default function LocationModal({
 
         <DialogActions
           sx={{
-            justifyContent: 'center', // Centers the button horizontally
-            padding: '20px', // Adds spacing around the button
+            justifyContent: 'center',
+            padding: '20px', 
           }}
         >
           <Button
             onClick={handleSubmit}
             type="submit"
             sx={{
-              backgroundColor: '#F6812D', // Orange background color
-              color: '#FFFFFF', // White text color
-              fontSize: '16px', // Slightly larger text
-              padding: '6px 36px', // Makes the button bigger (adjust width here)
-              width: '200px', // Explicit width for larger button
-              borderRadius: '8px', // Rounded corners
-              textTransform: 'none', // Disables uppercase transformation
-              fontWeight: 'bold', // Makes the text bold
+              backgroundColor: '#F6812D', 
+              color: '#FFFFFF', 
+              fontSize: '16px', 
+              padding: '6px 36px', 
+              width: '200px', 
+              borderRadius: '8px', 
+              textTransform: 'none', 
+              fontWeight: 'bold', 
               '&:hover': {
-                backgroundColor: '#E66A1F', // Slightly darker orange on hover
+                backgroundColor: '#E66A1F', 
               },
             }}
           >
