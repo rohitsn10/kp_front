@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { RiEditFill } from 'react-icons/ri';
 import LocationModal from '../../components/pages/Location/createLocation';
+import { useGetLandBankLocationsQuery } from '../../api/users/locationApi';
 
 function LocationListing() {
   const [locationFilter, setLocationFilter] = useState('');
@@ -20,24 +21,21 @@ function LocationListing() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [open, setOpen] = useState(false);
   const [locationInput, setLocationInput] = useState('');
-  
-  const rows = [
-    { sr: 1, locationName: "Location 1", totalArea: "100 sq.ft", addedDate: "2024-01-01" },
-    { sr: 2, locationName: "Location 2", totalArea: "200 sq.ft", addedDate: "2024-01-05" },
-    { sr: 3, locationName: "Location 3", totalArea: "300 sq.ft", addedDate: "2024-01-10" },
-    { sr: 4, locationName: "Location 4", totalArea: "400 sq.ft", addedDate: "2024-01-15" },
-    { sr: 5, locationName: "Location 5", totalArea: "500 sq.ft", addedDate: "2024-01-20" },
-    { sr: 6, locationName: "Location 6", totalArea: "600 sq.ft", addedDate: "2024-01-25" },
-    { sr: 7, locationName: "Location 7", totalArea: "700 sq.ft", addedDate: "2024-02-01" },
-    { sr: 8, locationName: "Location 8", totalArea: "800 sq.ft", addedDate: "2024-02-05" },
-    { sr: 9, locationName: "Location 9", totalArea: "900 sq.ft", addedDate: "2024-02-10" },
-    { sr: 10, locationName: "Location 10", totalArea: "1000 sq.ft", addedDate: "2024-02-15" },
-    { sr: 11, locationName: "Location 11", totalArea: "1100 sq.ft", addedDate: "2024-03-01" },
-    { sr: 12, locationName: "Location 12", totalArea: "1200 sq.ft", addedDate: "2024-03-05" },
-    { sr: 13, locationName: "Location 13", totalArea: "1300 sq.ft", addedDate: "2024-03-10" },
-    { sr: 14, locationName: "Location 14", totalArea: "1400 sq.ft", addedDate: "2024-03-15" },
-    { sr: 15, locationName: "Location 15", totalArea: "1500 sq.ft", addedDate: "2024-03-20" },
-  ];
+
+  // Use the hook to fetch data
+  const { data, error, isLoading } = useGetLandBankLocationsQuery();
+
+  // Handle loading and error states
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  // Extract the rows from the fetched data
+  const rows = data?.data?.map((item, index) => ({
+    sr: index + 1,
+    locationName: item.land_bank_name,
+    totalArea: item.total_land_area,
+    addedDate: new Date(item.created_at).toLocaleDateString(),
+  })) || [];
 
   const filteredRows = rows.filter((row) =>
     row.locationName.toLowerCase().includes(locationFilter.toLowerCase())

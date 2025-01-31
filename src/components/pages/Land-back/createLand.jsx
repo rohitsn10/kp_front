@@ -8,7 +8,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { Autocomplete } from '@mui/material';
 import { useGetLandCategoriesQuery } from '../../../api/users/categoryApi';
 import { useCreateLandBankMasterMutation } from '../../../api/users/landbankApi';
-import { toast } from 'react-toastify'; // Import toast
+import { toast } from 'react-toastify'; 
 
 export default function LandActivityModal({
   open,
@@ -30,7 +30,7 @@ export default function LandActivityModal({
     transmissionLine: [],
   });
 
-  const [createLandBankMaster] = useCreateLandBankMasterMutation(); // Initialize the mutation hook
+  const [createLandBankMaster,refetch] = useCreateLandBankMasterMutation(); 
 
   const categoryOptions = [
     { label: 'Agricultural', value: 'agricultural' },
@@ -58,12 +58,11 @@ export default function LandActivityModal({
   const handleSubmit = async () => {
     const formData = new FormData();
 
-    // Append text fields
+
     formData.append('land_category_id', selectedCategory?.id || '');
     formData.append('land_name', landTitle);
     formData.append('solar_or_winds', selectedEnergy?.label || '');
 
-    // Append files
     files.landLocation.forEach((file, index) => {
       formData.append('land_location_files', file);
     });
@@ -95,11 +94,12 @@ export default function LandActivityModal({
     try {
       const response = await createLandBankMaster(formData).unwrap();
       console.log('Response:', response);
-      toast.success('Land bank created successfully!'); // Success toast
-      handleClose(); // Close the modal on successful submission
+      toast.success('Land bank created successfully!'); 
+      handleClose(); 
+      
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Failed to create land bank. Please try again.'); // Error toast
+      toast.error('Failed to create land bank. Please try again.'); 
     }
   };
 
@@ -290,24 +290,24 @@ export default function LandActivityModal({
 
         <DialogActions
           sx={{
-            justifyContent: 'center', // Centers the button horizontally
-            padding: '20px', // Adds spacing around the button
+            justifyContent: 'center', 
+            padding: '20px', 
           }}
         >
           <Button
             onClick={handleSubmit}
             type="submit"
             sx={{
-              backgroundColor: '#f6812d', // Orange background color
-              color: '#FFFFFF', // White text color
-              fontSize: '16px', // Slightly larger text
-              padding: '6px 36px', // Makes the button bigger (adjust width here)
-              width: '200px', // Explicit width for larger button
-              borderRadius: '8px', // Rounded corners
-              textTransform: 'none', // Disables uppercase transformation
-              fontWeight: 'bold', // Makes the text bold
+              backgroundColor: '#f6812d', 
+              color: '#FFFFFF', 
+              fontSize: '16px',
+              padding: '6px 36px',
+              width: '200px', 
+              borderRadius: '8px', 
+              textTransform: 'none', 
+              fontWeight: 'bold', 
               '&:hover': {
-                backgroundColor: '#E66A1F', // Slightly darker orange on hover
+                backgroundColor: '#E66A1F',
               },
             }}
           >
