@@ -36,10 +36,7 @@ function ProjectMainActivityPage() {
     const [updatedActivityType, setUpdatedActivityType] = useState('');
 
     // Fetch activities using RTK Query
-    const { data, error, isLoading } = useGetActivitiesQuery({
-        solar_or_wind: "Solar",
-        activity_name: "Project First Activity"
-    });
+    const { data, error, isLoading,refetch } = useGetActivitiesQuery();
     console.log("Project Main activity:",data)
     // Update activity mutation hook
     const [updateActivity, { isLoading: isUpdating }] = useUpdateActivityMutation();
@@ -92,6 +89,7 @@ function ProjectMainActivityPage() {
                 }
             }).unwrap();
             setEditModalOpen(false); // Close the modal after successful update
+            refetch()
         } catch (error) {
             console.error("Failed to update activity:", error);
         }

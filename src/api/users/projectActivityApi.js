@@ -13,7 +13,7 @@ export const activityApi = createApi({
     },
   }),
   endpoints: (builder) => ({
-    // Create Activity (POST requ est)
+    // Create Activity (POST request)
     createActivity: builder.mutation({
       query: (activityData) => ({
         url: "activity_module/create_activity",

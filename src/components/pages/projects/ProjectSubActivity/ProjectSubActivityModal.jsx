@@ -13,6 +13,7 @@ export default function ProjectSubActivityModal({
   open,
   setOpen,
   setSubActivityInput: setParentSubActivityInput,
+  refetch
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [subActivityInput, setSubActivityInput] = useState('');
@@ -64,6 +65,7 @@ export default function ProjectSubActivityModal({
       setSubActivityNames([]);
       setSelectedCategory(null);
       setOpen(false);
+      refetch();
     } catch (err) {
       console.error('Error creating sub-activity:', err);
     }
@@ -90,7 +92,6 @@ export default function ProjectSubActivityModal({
           <label className="block mb-1 text-[#29346B] text-lg font-semibold">
             Sub-Activity Names
           </label>
-
           {/* Dynamic input for adding sub-activities */}
           <div>
             <TextField
@@ -115,7 +116,7 @@ export default function ProjectSubActivityModal({
               onClick={handleAddSubActivity}
               variant="contained"
               color="primary"
-              sx={{ mt: 2 }}
+              sx={{ mt: 2 ,backgroundColor: '#FF8C00'}}
             >
               Add Sub-Activity
             </Button>
