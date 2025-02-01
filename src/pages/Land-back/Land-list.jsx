@@ -22,6 +22,7 @@ import { useGetLandBankMasterQuery } from "../../api/users/landbankApi";
 import LandApproveModal from "../../components/pages/Land-back/approveLand";
 import EditLandModal from "../../components/pages/Land-back/edit-land";
 import { useNavigate } from "react-router-dom";
+import AssessmentFormModal from "../../components/pages/Land-back/sfa-form";
 
 function LandListing() {
   const { data, error, isLoading, refetch } = useGetLandBankMasterQuery();
@@ -29,6 +30,7 @@ function LandListing() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [openAddLandModal, setOpenAddLandModal] = useState(false);
   const [openApproveModal, setOpenApproveModal] = useState(false);
+  const [openSfaModal,setOpenSfaModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false); // State for EditLandModal
   const [selectedLand, setSelectedLand] = useState(null);
   const navigate = useNavigate();
@@ -53,7 +55,14 @@ function LandListing() {
     setSelectedLand(land);
     setOpenApproveModal(true);
   };
-
+  const handleSfaModalClose = ()=>{
+    setOpenSfaModal(false)
+  }
+  const handleSfaClick=(land)=>{
+    setSelectedLand(land);
+    console.log(land)
+    setOpenSfaModal(true)
+  }
   // Handler for opening EditLandModal
   const handleEditClick = (land) => {
     setSelectedLand(land); // Set the selected land data
@@ -190,13 +199,15 @@ function LandListing() {
                     style={{ cursor: "pointer", color: "#29346B" }} // SFA icon
                     title="SFA"
                     onClick={() => {
+                      handleSfaClick(row)
                       // Add functionality for SFA icon click
-                      console.log("SFA clicked for land:", row);
+                      // console.log("SFA clicked for land:", row);
                     }}
                   />
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            }
           </TableBody>
         </Table>
 
@@ -215,6 +226,7 @@ function LandListing() {
       <LandActivityModal
         open={openAddLandModal}
         setOpen={setOpenAddLandModal}
+        // refetch={refetch}
       />
 
       {/* Approve Land Modal */}
@@ -229,6 +241,11 @@ function LandListing() {
         open={openEditModal} // State to control the modal
         setOpen={setOpenEditModal} // Function to close the modal
         selectedLand={selectedLand} // Pass the selected land data
+      />
+      <AssessmentFormModal
+        handleClose={handleSfaModalClose}
+        open={openSfaModal}
+        selectedLand={selectedLand}
       />
     </div>
   );

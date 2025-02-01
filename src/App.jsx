@@ -24,13 +24,6 @@ import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
 function App() {
   return (
     <div>
-
-        {/* <Routes>
-          <Route path="/login" element={<Login />} />
-//           <Route path="/" element={<MainLayout><Home/></MainLayout>} />
-          {/* {Landbank} */}
-{/* //           <Route path="/landbank" element={<MainLayout><Landbank/></MainLayout>} />
-//           <Route path="/location" element={<MainLayout><Loction/></MainLayout>} /> */} 
       <Routes>
         <Route path="/login" element={<Login />} />
 
