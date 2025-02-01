@@ -22,10 +22,9 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
     sfaTransmissionFiles: [],
     approvedReportFiles: [],
     selectedUsers: [],
-    timeline: "", // Add the timeline field here
+    timeline: "", 
   });
   const { data: userData, isLoading } = useFetchUsersQuery();
-
   const handleSubmit = () => {
     console.log("Form submit", formData);
     console.log("Selected Data", selectedLand);
@@ -42,7 +41,6 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
   const handleUserChange = (event, value) => {
     setFormData({ ...formData, selectedUsers: value });
   };
-
   const inputStyles = {
     "& .MuiOutlinedInput-root": {
       border: "1px solid #FACC15",
@@ -55,9 +53,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
       borderBottom: "4px solid #E6A015",
     },
   };
-
-  const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
-
+  const today = new Date().toISOString().split("T")[0]; 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
       <DialogTitle
@@ -70,7 +66,6 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
       >
         SFA Form
       </DialogTitle>
-
       <DialogContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -195,7 +190,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
               margin="dense"
               sx={inputStyles}
               inputProps={{
-                min: today, // Prevent selecting past dates
+                min: today, 
               }}
             />
           </div>

@@ -6,16 +6,15 @@ import TextField from "@mui/material/TextField";
 import { useGetLandCategoriesQuery } from "../../../api/users/categoryApi";
 import { useLocation } from "react-router-dom";
 import { useUpdateDataAfterApprovalLandBankMutation } from "../../../api/users/landbankApi";
+import { useNavigate } from 'react-router-dom';
 
 export default function AddLandDoc() {
   const location = useLocation();
   const { landData } = location.state || {};
-  const [nearbyArea, setNearbyArea] = useState("");
-  const [landArea, setLandArea] = useState("");
-  const [selectedLandBank, setSelectedLandBank] = useState(null);
   const [locationInput, setLocationInput] = useState(landData.land_name);
-  const { data: categories, isLoading, isError } = useGetLandCategoriesQuery();
+  const { data: categories } = useGetLandCategoriesQuery();
   const [selectedCategory, setSelectedCategory] = useState(landData.land_category);
+  const navigate = useNavigate();
   const [fileInputs, setFileInputs] = useState({
     dilr: null,
     na65Permission: null,
@@ -140,6 +139,7 @@ export default function AddLandDoc() {
 
       if (result.data) {
         toast.success("Data updated successfully!");
+        navigate('/landbank'); 
       } else if (result.error) {
         toast.error("Failed to update data. Please try again.");
       }
