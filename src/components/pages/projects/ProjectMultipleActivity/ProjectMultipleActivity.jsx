@@ -85,7 +85,7 @@ export default function ProjectMultipleActivity({
           <h2 className="text-[#29346B] text-2xl font-semibold mb-5">Add Multiple Activities</h2>
 
           {/* Input Field */}
-          <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+          {/* <label className="block mb-1 text-[#29346B] text-lg font-semibold">
             Activity Name
           </label>
           <input
@@ -94,7 +94,7 @@ export default function ProjectMultipleActivity({
             value={multipleActivityInput}
             placeholder="Enter Activity Name"
             onChange={(e) => setMultipleActInput(e.target.value)}
-          />
+          /> */}
 
           {/* Project Activity Dropdown */}
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">

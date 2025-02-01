@@ -207,6 +207,7 @@ function ProjectMainActivityPage() {
                 setOpen={setOpen}
                 mainActivityInput={mainActivityInput}
                 setMainActivityInput={setMainActivityInput}
+                refetch={refetch}
             />
         </div>
     );

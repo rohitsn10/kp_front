@@ -6,6 +6,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import { Autocomplete } from '@mui/material';
 import { useCreateActivityMutation } from '../../../../api/users/projectActivityApi';
+import { toast } from 'react-toastify';
 // import { useCreateActivityMutation } from '../../../store/api/activityApi';
 // useCreateActivityMutation
 export default function CreateProjectActivity({
@@ -13,6 +14,7 @@ export default function CreateProjectActivity({
   setOpen,
   mainActivityInput,
   setMainActivityInput,
+  refetch
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [createActivity, { isLoading }] = useCreateActivityMutation(); // RTK mutation
@@ -28,7 +30,8 @@ export default function CreateProjectActivity({
 
   const handleSubmit = async () => {
     if (!mainActivityInput || !selectedCategory) {
-      alert('Please fill in all fields.');
+      // alert('Please fill in all fields.');
+      toast.error("Please fill all fields")
       return;
     }
 
@@ -38,10 +41,12 @@ export default function CreateProjectActivity({
         activityName: mainActivityInput,
       }).unwrap();
 
-      alert('Activity added successfully!');
+      // alert('Activity added successfully!');
+      toast.success("Activity added successfully!")
       setMainActivityInput('');
       setSelectedCategory(null);
       setOpen(false);
+      refetch()
     } catch (error) {
       console.error('Failed to add activity:', error);
       alert('Error adding activity. Please try again.');
