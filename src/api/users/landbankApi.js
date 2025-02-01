@@ -39,9 +39,21 @@ export const landBankApi = createApi({
         method: "PUT",
         body: formData, // Send the formData with other parameters
       }),
-    }),   
+    }),
+    updateDataAfterApprovalLandBank: builder.mutation({
+      query: (formData) => ({
+        url: "land_module/update_data_after_approval_land_bank",
+        method: "POST",
+        body: formData,
+      }),
+    }),
   }),
 });
 
-export const { useCreateLandBankMasterMutation, useGetLandBankMasterQuery,useApproveLandBankByHodMutation,useUpdateLandBankMasterMutation, } =
-  landBankApi;
+export const {
+  useCreateLandBankMasterMutation,
+  useGetLandBankMasterQuery,
+  useApproveLandBankByHodMutation,
+  useUpdateLandBankMasterMutation,
+  useUpdateDataAfterApprovalLandBankMutation,
+} = landBankApi;

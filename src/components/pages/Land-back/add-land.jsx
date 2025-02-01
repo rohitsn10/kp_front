@@ -5,6 +5,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import { useGetLandCategoriesQuery } from "../../../api/users/categoryApi";
 import { useLocation } from "react-router-dom";
+import { useUpdateDataAfterApprovalLandBankMutation } from "../../../api/users/landbankApi";
 
 export default function AddLandDoc() {
   const location = useLocation();
@@ -14,11 +15,7 @@ export default function AddLandDoc() {
   const [selectedLandBank, setSelectedLandBank] = useState(null);
   const [locationInput, setLocationInput] = useState(landData.land_name);
   const { data: categories, isLoading, isError } = useGetLandCategoriesQuery();
-  const [selectedCategory, setSelectedCategory] = useState(
-    categories?.data.find(
-      (category) => category.id === landData.land_category
-    ) || null
-  );
+  const [selectedCategory, setSelectedCategory] = useState(landData.land_category);
   const [fileInputs, setFileInputs] = useState({
     dilr: null,
     na65Permission: null,
@@ -43,36 +40,117 @@ export default function AddLandDoc() {
     listofapprovalreq: null,
     otherApprovals: null,
   });
+
+  // Use the mutation hook
+  const [updateDataAfterApproval, { isLoading: isUpdating }] =
+    useUpdateDataAfterApprovalLandBankMutation();
+
   const handleFileChange = (e, field) => {
     const file = e.target.files[0];
     if (file) {
       setFileInputs((prevState) => ({ ...prevState, [field]: file }));
     }
   };
-  const handleSubmit = () => {
-    if (!selectedLandBank) {
-      toast.error("Please select a land bank!");
-      return;
-    }
+
+  const handleSubmit = async () => {
     if (!fileInputs.na65Permission) {
       toast.error("NA/65 Permission is mandatory!");
       return;
     }
-    const formData = {
-      land_bank_id: selectedLandBank.id,
-      land_bank_location_name: locationInput,
-      total_land_area: landArea,
-      near_by_area: nearbyArea,
-      files: fileInputs,
-    };
-    console.log(formData);
-    toast.success("Location added successfully!");
+
+    const formData = new FormData();
+
+    formData.append("dilr_attachment_file", fileInputs.dilr);
+    formData.append(
+      "na_65b_permission_attachment_file",
+      fileInputs.na65Permission
+    );
+    formData.append(
+      "revenue_7_12_records_attachment",
+      fileInputs.revenueRecords
+    );
+    formData.append(
+      "noc_from_forest_and_amp_attachment_file",
+      fileInputs.nocForestDepartment
+    );
+    formData.append(
+      "noc_from_geology_and_mining_office_attachment_file",
+      fileInputs.nocGeologyMining
+    );
+    formData.append(
+      "approvals_required_for_transmission_attachment_file",
+      fileInputs.listofapprovalreq
+    );
+    formData.append("canal_crossing_attachment_file", fileInputs.canalCrossing);
+    formData.append("lease_deed_attachment_file", fileInputs.leaseDeed);
+    formData.append(
+      "railway_crossing_attachment_file",
+      fileInputs.railwayCrossing
+    );
+    formData.append(
+      "any_gas_pipeline_crossing_attachment_file",
+      fileInputs.gasPipelineCrossing
+    );
+    formData.append(
+      "road_crossing_permission_attachment_file",
+      fileInputs.roadCrossing
+    );
+    formData.append(
+      "any_transmission_line_crossing_permission_attachment_file",
+      fileInputs.transmissionLineCrossing
+    );
+    formData.append(
+      "any_transmission_line_shifting_permission_attachment_file",
+      fileInputs.anylineshiftpermisson
+    );
+    formData.append(
+      "gram_panchayat_permission_attachment_file",
+      fileInputs.gramPanchayatPermission
+    );
+    formData.append(
+      "municipal_corporation_permission_file",
+      fileInputs.municipalCorporationPermission
+    );
+    formData.append(
+      "list_of_other_approvals_land_file",
+      fileInputs.otherApprovals
+    );
+    formData.append("title_search_report_file", fileInputs.tsr);
+    formData.append(
+      "coordinate_verification_file",
+      fileInputs.coordinateVerification
+    );
+    formData.append("encumbrance_noc_file", fileInputs.encumbranceNoc);
+    formData.append(
+      "developer_permission_file",
+      fileInputs.developerPermission
+    );
+    formData.append(
+      "noc_from_ministry_of_defence_file",
+      fileInputs.nocMinistryOfDefence
+    );
+    formData.append(
+      "list_of_approvals_required_for_transmission_line_file",
+      fileInputs.listofapprovalreq
+    );
+    formData.append("land_bank_id", landData.id); // Replace "1" with the actual land bank ID if dynamic
+
+    try {
+      const result = await updateDataAfterApproval(formData);
+
+      if (result.data) {
+        toast.success("Data updated successfully!");
+      } else if (result.error) {
+        toast.error("Failed to update data. Please try again.");
+      }
+    } catch (error) {
+      toast.error("An error occurred. Please try again.");
+    }
   };
   return (
     <div className="p-6 max-w-4xl max-h-[900px] overflow-y-auto mx-auto bg-white rounded-md shadow-md my-10">
       <h2 className="text-2xl font-semibold text-[#29346B] mb-5">Add Land</h2>
 
-      {/* Land Title */}
       <label className="block mb-1 text-[#29346B] text-lg font-semibold">
         Land Title
       </label>
@@ -120,10 +198,8 @@ export default function AddLandDoc() {
           />
         )}
       />
-      {/* File Uploads Section */}
       <div className="mt-6">
         <div className="flex justify-between mb-4">
-          {/* DILR & NA/65 Permission Upload */}
           <div className="w-[48%]">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               DILR (Upload)

@@ -27,7 +27,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
   const { data: userData, isLoading } = useFetchUsersQuery();
 
   const handleSubmit = () => {
-    console.log("Form submit",formData);
+    console.log("Form submit", formData);
     console.log("Selected Data", selectedLand);
   };
 
@@ -44,15 +44,15 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
   };
 
   const inputStyles = {
-    '& .MuiOutlinedInput-root': {
-      border: '1px solid #FACC15',
-      borderBottom: '4px solid #FACC15',
-      borderRadius: '6px',
-      padding: '2px',
+    "& .MuiOutlinedInput-root": {
+      border: "1px solid #FACC15",
+      borderBottom: "4px solid #FACC15",
+      borderRadius: "6px",
+      padding: "2px",
     },
-    '& .MuiOutlinedInput-root.Mui-focused': {
-      outline: 'none',
-      borderBottom: '4px solid #E6A015',
+    "& .MuiOutlinedInput-root.Mui-focused": {
+      outline: "none",
+      borderBottom: "4px solid #E6A015",
     },
   };
 
@@ -60,14 +60,23 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-      <DialogTitle sx={{ color: '#29346B', fontSize: '27px', fontWeight: '600', marginBottom: '10px' }}>
+      <DialogTitle
+        sx={{
+          color: "#29346B",
+          fontSize: "27px",
+          fontWeight: "600",
+          marginBottom: "10px",
+        }}
+      >
         SFA Form
       </DialogTitle>
 
       <DialogContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <h2 className="text-[#29346B] font-semibold text-lg">Date of Assessment</h2>
+            <h2 className="text-[#29346B] font-semibold text-lg">
+              Date of Assessment
+            </h2>
             <TextField
               fullWidth
               type="date"
@@ -80,7 +89,9 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
             />
           </div>
           <div>
-            <h2 className="text-[#29346B] font-semibold text-lg">Site Visit Date</h2>
+            <h2 className="text-[#29346B] font-semibold text-lg">
+              Site Visit Date
+            </h2>
             <TextField
               fullWidth
               type="date"
@@ -93,7 +104,9 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
             />
           </div>
           <div>
-            <h2 className="text-[#29346B] font-semibold text-lg">Status of Site Visit</h2>
+            <h2 className="text-[#29346B] font-semibold text-lg">
+              Status of Site Visit
+            </h2>
             <TextField
               fullWidth
               select
@@ -111,7 +124,9 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
             </TextField>
           </div>
           <div>
-            <h2 className="text-[#29346B] font-semibold text-lg">Approval Status</h2>
+            <h2 className="text-[#29346B] font-semibold text-lg">
+              Approval Status
+            </h2>
             <TextField
               fullWidth
               select
@@ -129,7 +144,9 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
             </TextField>
           </div>
           <div>
-            <h2 className="text-[#29346B] font-semibold text-lg">Enter Land Title</h2>
+            <h2 className="text-[#29346B] font-semibold text-lg">
+              Enter Land Title
+            </h2>
             <TextField
               fullWidth
               type="text"
@@ -144,10 +161,18 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
 
           {/* User Selection */}
           <div>
-            <h2 className="text-[#29346B] font-semibold text-lg">Select Users</h2>
+            <h2 className="text-[#29346B] font-semibold text-lg">
+              Select Users
+            </h2>
             <Autocomplete
               multiple
-              options={userData ? userData.filter(user => user.full_name).map(user => user.full_name) : []}
+              options={
+                userData
+                  ? userData
+                      .filter((user) => user.full_name)
+                      .map((user) => user.full_name)
+                  : []
+              }
               getOptionLabel={(option) => option}
               value={formData.selectedUsers}
               onChange={handleUserChange}
@@ -185,7 +210,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
             type="file"
             multiple
             onChange={(e) => handleFileChange(e, "sfaLandFiles")}
-            className="w-full border p-2 rounded-md"
+            className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline-none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl bg-white-500"
           />
 
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
@@ -195,7 +220,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
             type="file"
             multiple
             onChange={(e) => handleFileChange(e, "sfaTransmissionFiles")}
-            className="w-full border p-2 rounded-md"
+            className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline-none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl bg-white-500"
           />
 
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
@@ -205,7 +230,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
             type="file"
             multiple
             onChange={(e) => handleFileChange(e, "approvedReportFiles")}
-            className="w-full border p-2 rounded-md"
+            className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline-none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl bg-white-500"
           />
         </div>
       </DialogContent>
