@@ -21,7 +21,7 @@ const store = configureStore({
   .concat(userApi.middleware)
   .concat(landBankApi.middleware)
   .concat(landCategoryApi.middleware)
-  .concat(landLocationApi.middleware),
+  .concat(landLocationApi.middleware)
   .concat(activityApi.middleware)
   .concat(subActivityApi.middleware)
 });

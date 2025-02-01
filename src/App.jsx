@@ -21,6 +21,7 @@ import ProjectSubActivityPage from "./pages/projects/projects-subactivity-listin
 import ProjectMainActivityPage from "./pages/projects/projects-main-activity/index.jsx";
 import ProjectCategoryPage from "./pages/projects/projects-category/index.jsx";
 import ProjectMultipleListing from "./pages/projects/projects-multiple-activity/index.jsx";
+import AddLandDoc from "./components/pages/Land-back/add-land.jsx";
 
 function App() {
   const showToast = () => {
@@ -35,6 +36,7 @@ function App() {
           {/* {Landbank} */}
           <Route path="/landbank" element={<MainLayout><Landbank/></MainLayout>} />
           <Route path="/location" element={<MainLayout><Loction/></MainLayout>} />
+          <Route path="/add-land-doc" element={<MainLayout><AddLandDoc/></MainLayout>} />
         
           {/* Users */}
           <Route path="/user" element={<MainLayout><UserPage/></MainLayout>} />

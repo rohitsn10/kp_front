@@ -26,8 +26,22 @@ export const landBankApi = createApi({
         method: "GET",
       }),
     }),
+    approveLandBankByHod: builder.mutation({
+      query: (data) => ({
+        url: `land_module/approve_land_bank_by_hod/${data.id}`,
+        method: "PUT",
+        body: data.formData, // Send the formData with other parameters
+      }),
+    }),
+    updateLandBankMaster: builder.mutation({
+      query: ({ id, formData }) => ({
+        url: `land_module/update_land_bank_master/${id}`,
+        method: "PUT",
+        body: formData, // Send the formData with other parameters
+      }),
+    }),   
   }),
 });
 
-export const { useCreateLandBankMasterMutation, useGetLandBankMasterQuery } =
+export const { useCreateLandBankMasterMutation, useGetLandBankMasterQuery,useApproveLandBankByHodMutation,useUpdateLandBankMasterMutation, } =
   landBankApi;

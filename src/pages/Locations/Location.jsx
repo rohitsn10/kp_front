@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { RiEditFill } from 'react-icons/ri';
 import LocationModal from '../../components/pages/Location/createLocation';
+import EditLocationModal from '../../components/pages/Location/editLocation'; // Import the EditLocationModal
 import { useGetLandBankLocationsQuery } from '../../api/users/locationApi';
 
 function LocationListing() {
@@ -20,21 +21,25 @@ function LocationListing() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [open, setOpen] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false); // State for EditLocationModal
   const [locationInput, setLocationInput] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState(null); // State for selected location
 
   // Use the hook to fetch data
-  const { data, error, isLoading } = useGetLandBankLocationsQuery();
+  const { data, error, isLoading, refetch } = useGetLandBankLocationsQuery();
 
   // Handle loading and error states
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
-  // Extract the rows from the fetched data
   const rows = data?.data?.map((item, index) => ({
     sr: index + 1,
+    id: item.id, // Include the id for editing
     locationName: item.land_bank_name,
     totalArea: item.total_land_area,
     addedDate: new Date(item.created_at).toLocaleDateString(),
+    nearByArea: item.near_by_area, // Include near_by_area for editing
+    landBankId: item.land_bank_id, // Include land_bank_id for editing
   })) || [];
 
   const filteredRows = rows.filter((row) =>
@@ -54,6 +59,17 @@ function LocationListing() {
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
+
+  const handleModalClose = () => {
+    setOpen(false);
+    refetch();  // Trigger refetch after the modal closes
+  };
+
+  // Handler for opening EditLocationModal
+  const handleEditClick = (location) => {
+    setSelectedLocation(location); // Set the selected location data
+    setOpenEditModal(true); // Open the EditLocationModal
+  };
 
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[70%] mx-auto my-8 rounded-md">
@@ -129,6 +145,7 @@ function LocationListing() {
                       textAlign: 'center' 
                     }}
                     title="Edit"
+                    onClick={() => handleEditClick(row)} // Open EditLocationModal on click
                   />
                 </TableCell>
               </TableRow>
@@ -150,11 +167,25 @@ function LocationListing() {
           }}
         />
       </TableContainer>
+
+      {/* Add Location Modal */}
       <LocationModal
         open={open}
         setOpen={setOpen}
         locationInput={locationInput}
         setLocationInput={setLocationInput}
+        onClose={handleModalClose}
+      />
+
+      {/* Edit Location Modal */}
+      <EditLocationModal
+        open={openEditModal} // State to control the modal
+        setOpen={setOpenEditModal} // Function to close the modal
+        locationToEdit={selectedLocation} // Pass the selected location data
+        onClose={() => {
+          setOpenEditModal(false); // Close the modal
+          refetch(); // Refetch data after editing
+        }}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -12,22 +12,36 @@ import {
   TablePagination,
 } from "@mui/material";
 import { RiEditFill } from "react-icons/ri";
-import { AiOutlineStop, AiOutlineCheck } from "react-icons/ai";
+import {
+  AiOutlineStop,
+  AiOutlineCheck,
+  AiOutlineFileText,
+} from "react-icons/ai"; // Added AiOutlineFileText for SFA icon
 import LandActivityModal from "../../components/pages/Land-back/createLand";
 import { useGetLandBankMasterQuery } from "../../api/users/landbankApi";
 import LandApproveModal from "../../components/pages/Land-back/approveLand";
+import EditLandModal from "../../components/pages/Land-back/edit-land";
+import { useNavigate } from "react-router-dom";
 
 function LandListing() {
-  const { data, error, isLoading } = useGetLandBankMasterQuery();
+  const { data, error, isLoading, refetch } = useGetLandBankMasterQuery();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [openAddLandModal, setOpenAddLandModal] = useState(false);
   const [openApproveModal, setOpenApproveModal] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false); // State for EditLandModal
   const [selectedLand, setSelectedLand] = useState(null);
+  const navigate = useNavigate();
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
+
+  useEffect(() => {
+    if (!open) {
+      refetch();
+    }
+  }, [open, refetch]);
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
@@ -38,6 +52,12 @@ function LandListing() {
     console.log("--------------------------------", land);
     setSelectedLand(land);
     setOpenApproveModal(true);
+  };
+
+  // Handler for opening EditLandModal
+  const handleEditClick = (land) => {
+    setSelectedLand(land); // Set the selected land data
+    setOpenEditModal(true); // Open the EditLandModal
   };
 
   if (isLoading) return <div>Loading...</div>;
@@ -94,6 +114,8 @@ function LandListing() {
               <TableCell align="center">Land Name</TableCell>
               <TableCell align="center">Create Date</TableCell>
               <TableCell align="center">Action</TableCell>
+              <TableCell align="center">Approve</TableCell>
+              <TableCell align="center">SFA</TableCell> {/* New SFA Column */}
             </TableRow>
           </TableHead>
 
@@ -127,12 +149,51 @@ function LandListing() {
                     <RiEditFill
                       style={{ cursor: "pointer", color: "#61D435" }}
                       title="Edit"
+                      onClick={() => handleEditClick(row)} // Open EditLandModal on click
                     />
                     <AiOutlineStop
                       style={{ cursor: "pointer", color: "red" }}
                       title="Delete"
                     />
                   </div>
+                </TableCell>
+                <TableCell align="center">
+                  {row.land_bank_status === "Approved" ? (
+                    <span
+                      style={{
+                        cursor: "pointer",
+                        color: "#F6812D",
+                        fontWeight: "bold",
+                        textDecoration: "underline",
+                      }}
+                      onClick={() =>
+                        navigate("/add-land-doc", { state: { landData: row } })
+                      }
+                    >
+                      Approve
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        cursor: "not-allowed",
+                        color: "#A0A0A0", // Grayed out color for disabled state
+                        fontWeight: "bold",
+                        textDecoration: "none",
+                      }}
+                    >
+                      Approve
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell align="center">
+                  <AiOutlineFileText
+                    style={{ cursor: "pointer", color: "#29346B" }} // SFA icon
+                    title="SFA"
+                    onClick={() => {
+                      // Add functionality for SFA icon click
+                      console.log("SFA clicked for land:", row);
+                    }}
+                  />
                 </TableCell>
               </TableRow>
             ))}
@@ -154,14 +215,20 @@ function LandListing() {
       <LandActivityModal
         open={openAddLandModal}
         setOpen={setOpenAddLandModal}
-        // landActivityInput={landActivityInput}
-        // setLandActivityInput={setLandActivityInput}
       />
 
+      {/* Approve Land Modal */}
       <LandApproveModal
         open={openApproveModal}
         setOpen={setOpenApproveModal}
         selectedLand={selectedLand} // Pass the selected land data to the modal
+      />
+
+      {/* Edit Land Modal */}
+      <EditLandModal
+        open={openEditModal} // State to control the modal
+        setOpen={setOpenEditModal} // Function to close the modal
+        selectedLand={selectedLand} // Pass the selected land data
       />
     </div>
   );

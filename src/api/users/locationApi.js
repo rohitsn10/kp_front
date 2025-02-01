@@ -28,10 +28,18 @@ export const landLocationApi = createApi({
         method: "GET",
       }),
     }),
+    updateLandBankLocation: builder.mutation({
+      query: (data) => ({
+        url: `land_module/update_land_bank_location/${data.id}`,
+        method: "PUT",
+        body: data,
+      }),
+    }),
   }),
 });
 
 export const {
   useCreateLandBankLocationMutation,
   useGetLandBankLocationsQuery,
+  useUpdateLandBankLocationMutation 
 } = landLocationApi;
