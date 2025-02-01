@@ -45,7 +45,7 @@ export default function EditLandModal({
       );
       setSelectedEnergy(
         energyOptions.find(
-          (energy) => energy.value === selectedLand.solar_or_winds.toLowerCase()
+          (energy) => energy.value === selectedLand.solar_or_winds?.toLowerCase()
         ) || null
       );
 

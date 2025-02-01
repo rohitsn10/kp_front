@@ -7,19 +7,21 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Autocomplete } from '@mui/material';
 import { useGetLandCategoriesQuery } from '../../../api/users/categoryApi';
-import { useCreateLandBankMasterMutation } from '../../../api/users/landbankApi';
+import { useCreateLandBankMasterMutation, useGetLandBankMasterQuery } from '../../../api/users/landbankApi';
 import { toast } from 'react-toastify'; 
 
 export default function LandActivityModal({
   open,
   setOpen,
   landActivityInput,
-  setLandActivityInput,
+  setLandActivityInput
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedEnergy, setSelectedEnergy] = useState(null);
   const [landTitle, setLandTitle] = useState('');
   const { data: categories, isLoading, isError } = useGetLandCategoriesQuery();
+    const { data, refetch } = useGetLandBankMasterQuery();
+  
   const [files, setFiles] = useState({
     landLocation: [],
     landSurveyNumber: [],
@@ -30,7 +32,7 @@ export default function LandActivityModal({
     transmissionLine: [],
   });
 
-  const [createLandBankMaster,refetch] = useCreateLandBankMasterMutation(); 
+  const [createLandBankMaster] = useCreateLandBankMasterMutation(); 
 
 
 
@@ -90,6 +92,7 @@ export default function LandActivityModal({
       const response = await createLandBankMaster(formData).unwrap();
       console.log('Response:', response);
       toast.success('Land bank created successfully!'); 
+      refetch()
       handleClose(); 
       
     } catch (error) {
