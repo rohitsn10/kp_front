@@ -17,12 +17,20 @@ import ProjectSubActivityPage from "./pages/projects/projects-subactivity-listin
 import ProjectMainActivityPage from "./pages/projects/projects-main-activity/index.jsx";
 import ProjectCategoryPage from "./pages/projects/projects-category/index.jsx";
 import ProjectMultipleListing from "./pages/projects/projects-multiple-activity/index.jsx";
+import AddLandDoc from "./components/pages/Land-back/add-land.jsx";
 import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
 function App() {
   return (
     <div>
+
+        <Routes>
+          <Route path="/login" element={<Login />} />
+//           <Route path="/" element={<MainLayout><Home/></MainLayout>} />
+          {/* {Landbank} */}
+//           <Route path="/landbank" element={<MainLayout><Landbank/></MainLayout>} />
+//           <Route path="/location" element={<MainLayout><Loction/></MainLayout>} />
       <Routes>
         <Route path="/login" element={<Login />} />
 
@@ -35,12 +43,21 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         
         <Route
           path="/landbank"
           element={
             <ProtectedRoute>
               <MainLayout><Landbank /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+             <Route
+          path="/add-land-doc"
+          element={
+            <ProtectedRoute>
+              <MainLayout><AddLandDoc /></MainLayout>
             </ProtectedRoute>
           }
         />

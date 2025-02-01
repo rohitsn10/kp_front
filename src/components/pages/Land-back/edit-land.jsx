@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -7,14 +7,13 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Autocomplete } from '@mui/material';
 import { useGetLandCategoriesQuery } from '../../../api/users/categoryApi';
-import { useCreateLandBankMasterMutation } from '../../../api/users/landbankApi';
-import { toast } from 'react-toastify'; 
+import { useUpdateLandBankMasterMutation } from '../../../api/users/landbankApi';
+import { toast } from 'react-toastify';
 
-export default function LandActivityModal({
+export default function EditLandModal({
   open,
   setOpen,
-  landActivityInput,
-  setLandActivityInput,
+  selectedLand, // Pass the selected land data to pre-fill the form
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedEnergy, setSelectedEnergy] = useState(null);
@@ -30,14 +29,38 @@ export default function LandActivityModal({
     transmissionLine: [],
   });
 
-  const [createLandBankMaster,refetch] = useCreateLandBankMasterMutation(); 
-
-
+  const [updateLandBankMaster] = useUpdateLandBankMasterMutation(); // Use update mutation
 
   const energyOptions = [
     { label: 'Solar', value: 'solar' },
     { label: 'Wind', value: 'wind' },
   ];
+
+  // Pre-fill the form when selectedLand changes
+  useEffect(() => {
+    if (selectedLand) {
+      setLandTitle(selectedLand.land_name);
+      setSelectedCategory(
+        categories?.data.find((cat) => cat.id === selectedLand.land_category_id) || null
+      );
+      setSelectedEnergy(
+        energyOptions.find(
+          (energy) => energy.value === selectedLand.solar_or_winds.toLowerCase()
+        ) || null
+      );
+
+      // Set files from selectedLand (if files are already uploaded)
+      setFiles({
+        landLocation: selectedLand.land_location_files || [],
+        landSurveyNumber: selectedLand.land_survey_number_files || [],
+        keyPlan: selectedLand.land_key_plan_files || [],
+        approachRoad: selectedLand.land_approach_road_files || [],
+        coordinates: selectedLand.land_co_ordinates_files || [],
+        proposedGSS: selectedLand.land_proposed_gss_files || [],
+        transmissionLine: selectedLand.land_transmission_line_files || [],
+      });
+    }
+  }, [selectedLand, categories]);
 
   const handleClose = () => {
     setOpen(false);
@@ -53,48 +76,30 @@ export default function LandActivityModal({
   const handleSubmit = async () => {
     const formData = new FormData();
 
-
+    // Append text fields
     formData.append('land_category_id', selectedCategory?.id || '');
     formData.append('land_name', landTitle);
     formData.append('solar_or_winds', selectedEnergy?.label || '');
 
-    files.landLocation.forEach((file, index) => {
-      formData.append('land_location_files', file);
-    });
-
-    files.landSurveyNumber.forEach((file, index) => {
-      formData.append('land_survey_number_files', file);
-    });
-
-    files.keyPlan.forEach((file, index) => {
-      formData.append('land_key_plan_files', file);
-    });
-
-    files.approachRoad.forEach((file, index) => {
-      formData.append('land_approach_road_files', file);
-    });
-
-    files.coordinates.forEach((file, index) => {
-      formData.append('land_co_ordinates_files', file);
-    });
-
-    files.proposedGSS.forEach((file, index) => {
-      formData.append('land_proposed_gss_files', file);
-    });
-
-    files.transmissionLine.forEach((file, index) => {
-      formData.append('land_transmission_line_files', file);
+    // Append files
+    Object.entries(files).forEach(([field, fileList]) => {
+      fileList.forEach((file) => {
+        formData.append(`${field}_files`, file);
+      });
     });
 
     try {
-      const response = await createLandBankMaster(formData).unwrap();
+      const response = await updateLandBankMaster({
+        id: selectedLand.id, // Pass the land bank ID for updating
+        formData, // Pass the form data
+      }).unwrap();
+
       console.log('Response:', response);
-      toast.success('Land bank created successfully!'); 
-      handleClose(); 
-      
+      toast.success('Land bank updated successfully!');
+      handleClose();
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Failed to create land bank. Please try again.'); 
+      toast.error('Failed to update land bank. Please try again.');
     }
   };
 
@@ -112,7 +117,7 @@ export default function LandActivityModal({
         }}
       >
         <DialogTitle className="text-[#29346B] text-2xl font-semibold mb-5">
-          Add Land
+          Edit Land
         </DialogTitle>
         <DialogContent>
           <label className="block mb-1 text-[#29346B] text-lg font-semibold">
@@ -131,8 +136,8 @@ export default function LandActivityModal({
             Select Category
           </label>
           <Autocomplete
-            options={categories?.data || []} // Use categories from the API response
-            getOptionLabel={(option) => option.category_name} // Display category_name
+            options={categories?.data || []}
+            getOptionLabel={(option) => option.category_name}
             value={selectedCategory}
             onChange={(event, newValue) => setSelectedCategory(newValue)}
             renderInput={(params) => (
@@ -144,9 +149,9 @@ export default function LandActivityModal({
                 fullWidth
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    border: '1px solid #FACC15', // Yellow border
+                    border: '1px solid #FACC15',
                     borderBottom: '4px solid #FACC15',
-                    borderRadius: '6px', // Rounded corners
+                    borderRadius: '6px',
                   },
                   '& .MuiOutlinedInput-root.Mui-focused': {
                     border: 'none',
@@ -175,9 +180,9 @@ export default function LandActivityModal({
                 fullWidth
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    border: '1px solid #FACC15', // Yellow border
+                    border: '1px solid #FACC15',
                     borderBottom: '4px solid #FACC15',
-                    borderRadius: '6px', // Rounded corners
+                    borderRadius: '6px',
                   },
                   '& .MuiOutlinedInput-root.Mui-focused': {
                     border: 'none',
@@ -285,28 +290,28 @@ export default function LandActivityModal({
 
         <DialogActions
           sx={{
-            justifyContent: 'center', 
-            padding: '20px', 
+            justifyContent: 'center',
+            padding: '20px',
           }}
         >
           <Button
             onClick={handleSubmit}
             type="submit"
             sx={{
-              backgroundColor: '#f6812d', 
-              color: '#FFFFFF', 
+              backgroundColor: '#f6812d',
+              color: '#FFFFFF',
               fontSize: '16px',
               padding: '6px 36px',
-              width: '200px', 
-              borderRadius: '8px', 
-              textTransform: 'none', 
-              fontWeight: 'bold', 
+              width: '200px',
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 'bold',
               '&:hover': {
                 backgroundColor: '#E66A1F',
               },
             }}
           >
-            Submit
+            Update
           </Button>
         </DialogActions>
       </Dialog>

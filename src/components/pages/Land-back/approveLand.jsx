@@ -7,7 +7,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { Autocomplete } from "@mui/material";
 import { useGetLandCategoriesQuery } from "../../../api/users/categoryApi";
-import { useCreateLandBankMasterMutation } from "../../../api/users/landbankApi";
+import { useApproveLandBankByHodMutation } from "../../../api/users/landbankApi";
 import { toast } from "react-toastify";
 
 export default function LandApproveModal({ open, setOpen, selectedLand }) {
@@ -24,8 +24,9 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
     proposedGSS: [],
     transmissionLine: [],
   });
+  const [approvalReport, setApprovalReport] = useState([]);
 
-  const [createLandBankMaster] = useCreateLandBankMasterMutation();
+  const [approveLandBankByHod] = useApproveLandBankByHodMutation();
 
   const categoryOptions = categories?.data || [];
   const energyOptions = [
@@ -71,29 +72,44 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
     });
   };
 
+  const handleApprovalReportChange = (e) => {
+    setApprovalReport([...Array.from(e.target.files)]);
+  };
+
+  const handleFilePreview = (file) => {
+    if (file.url) {
+      window.open(file.url, "_blank");
+    } else {
+      // Handle local file preview if needed
+      const fileURL = URL.createObjectURL(file);
+      window.open(fileURL, "_blank");
+    }
+  };
+
   const handleSubmit = async () => {
     const formData = new FormData();
 
-    // Append text fields
+    // Append required fields
     formData.append("land_category_id", selectedCategory?.id || "");
-    formData.append("land_name", landTitle);
-    formData.append("solar_or_winds", selectedEnergy?.label || "");
+    formData.append("land_bank_status", "Approved");
 
-    // Append files
-    Object.entries(files).forEach(([field, fileList]) => {
-      fileList.forEach((file) => {
-        formData.append(`${field}_files`, file);
-      });
+    // Append approval report files
+    approvalReport.forEach((file) => {
+      formData.append("approved_report_files", file);
     });
 
     try {
-      const response = await createLandBankMaster(formData).unwrap();
+      const response = await approveLandBankByHod({
+        id: selectedLand.id, // Pass the land bank ID from selectedLand
+        formData, // Pass the formData
+      }).unwrap();
+
       console.log("Response:", response);
-      toast.success("Land bank created successfully!");
+      toast.success("Land bank approved successfully!");
       handleClose();
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Failed to create land bank. Please try again.");
+      toast.error("Failed to approve land bank. Please try again.");
     }
   };
 
@@ -190,34 +206,30 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
             <div className="flex justify-between mb-4">
               <div className="w-[48%]">
                 <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                  Land Location (Upload)
+                  Land Location (View Only)
                 </label>
-                <input
-                  type="file"
-                  multiple
-                  className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline-none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl bg-white-500"
-                  onChange={(e) => handleFileChange(e, "landLocation")}
-                />
                 {files.landLocation.map((file, index) => (
-                  <div key={index} className="text-sm text-gray-600">
+                  <div
+                    key={index}
+                    className="text-sm text-gray-600 cursor-pointer hover:underline"
+                    onClick={() => handleFilePreview(file)}
+                  >
                     {file.url || file.name}
                   </div>
                 ))}
               </div>
 
-              {/* Land Survey Number Upload */}
+              {/* Land Survey Number View Only */}
               <div className="w-[48%]">
                 <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                  Land Survey Number (Upload)
+                  Land Survey Number (View Only)
                 </label>
-                <input
-                  type="file"
-                  multiple
-                  className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline-none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl bg-white-500"
-                  onChange={(e) => handleFileChange(e, "landSurveyNumber")}
-                />
                 {files.landSurveyNumber.map((file, index) => (
-                  <div key={index} className="text-sm text-gray-600">
+                  <div
+                    key={index}
+                    className="text-sm text-gray-600 cursor-pointer hover:underline"
+                    onClick={() => handleFilePreview(file)}
+                  >
                     {file.url || file.name}
                   </div>
                 ))}
@@ -225,37 +237,33 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
             </div>
 
             <div className="flex justify-between mb-4">
-              {/* Key Plan Upload */}
+              {/* Key Plan View Only */}
               <div className="w-[48%]">
                 <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                  Key Plan (Upload)
+                  Key Plan (View Only)
                 </label>
-                <input
-                  type="file"
-                  multiple
-                  className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline-none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl bg-white-500"
-                  onChange={(e) => handleFileChange(e, "keyPlan")}
-                />
                 {files.keyPlan.map((file, index) => (
-                  <div key={index} className="text-sm text-gray-600">
+                  <div
+                    key={index}
+                    className="text-sm text-gray-600 cursor-pointer hover:underline"
+                    onClick={() => handleFilePreview(file)}
+                  >
                     {file.url || file.name}
                   </div>
                 ))}
               </div>
 
-              {/* Approach Road Upload */}
+              {/* Approach Road View Only */}
               <div className="w-[48%]">
                 <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                  Approach Road (Upload)
+                  Approach Road (View Only)
                 </label>
-                <input
-                  type="file"
-                  multiple
-                  className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline-none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl bg-white-500"
-                  onChange={(e) => handleFileChange(e, "approachRoad")}
-                />
                 {files.approachRoad.map((file, index) => (
-                  <div key={index} className="text-sm text-gray-600">
+                  <div
+                    key={index}
+                    className="text-sm text-gray-600 cursor-pointer hover:underline"
+                    onClick={() => handleFilePreview(file)}
+                  >
                     {file.url || file.name}
                   </div>
                 ))}
@@ -263,57 +271,69 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
             </div>
 
             <div className="flex justify-between mb-4">
-              {/* Coordinates Upload */}
+              {/* Coordinates View Only */}
               <div className="w-[48%]">
                 <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                  Coordinates (Upload)
+                  Coordinates (View Only)
                 </label>
-                <input
-                  type="file"
-                  multiple
-                  className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline-none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl bg-white-500"
-                  onChange={(e) => handleFileChange(e, "coordinates")}
-                />
                 {files.coordinates.map((file, index) => (
-                  <div key={index} className="text-sm text-gray-600">
+                  <div
+                    key={index}
+                    className="text-sm text-gray-600 cursor-pointer hover:underline"
+                    onClick={() => handleFilePreview(file)}
+                  >
                     {file.url || file.name}
                   </div>
                 ))}
               </div>
 
-              {/* Proposed GSS Upload */}
+              {/* Proposed GSS View Only */}
               <div className="w-[48%]">
                 <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                  Proposed GSS (Upload)
+                  Proposed GSS (View Only)
                 </label>
-                <input
-                  type="file"
-                  multiple
-                  className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline-none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl bg-white-500"
-                  onChange={(e) => handleFileChange(e, "proposedGSS")}
-                />
                 {files.proposedGSS.map((file, index) => (
-                  <div key={index} className="text-sm text-gray-600">
+                  <div
+                    key={index}
+                    className="text-sm text-gray-600 cursor-pointer hover:underline"
+                    onClick={() => handleFilePreview(file)}
+                  >
                     {file.url || file.name}
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Transmission Line Upload */}
+            {/* Transmission Line View Only */}
             <div className="w-full mb-4">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Transmission Line (Upload)
+                Transmission Line (View Only)
+              </label>
+              {files.transmissionLine.map((file, index) => (
+                <div
+                  key={index}
+                  className="text-sm text-gray-600 cursor-pointer hover:underline"
+                  onClick={() => handleFilePreview(file)}
+                >
+                  {file.url || file.name}
+                </div>
+              ))}
+            </div>
+
+            {/* Attach Approval Report Upload */}
+            <div className="w-full mb-4">
+              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+                Attach Approval Report (Upload)
               </label>
               <input
                 type="file"
                 multiple
                 className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline-none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl bg-white-500"
-                onChange={(e) => handleFileChange(e, "transmissionLine")}
+                onChange={handleApprovalReportChange}
               />
-              {files.transmissionLine.map((file, index) => (
+              {approvalReport.map((file, index) => (
                 <div key={index} className="text-sm text-gray-600">
-                  {file.url || file.name}
+                  {file.name}
                 </div>
               ))}
             </div>
