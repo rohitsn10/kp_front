@@ -36,22 +36,37 @@ export const subActivityApi = createApi({
       }),
     }),
     updateSubActivity: builder.mutation({
-        query: ({ id, subActivityNames }) => ({
+        query: ({ id, subActivityNames }) => 
+          ({
           url: `activity_module/update_sub_activity/${id}`, // Endpoint for updating sub-activity
           method: "PUT",
           body: {
-            sub_activity_names: subActivityNames, // The new sub-activity names array
+            name: subActivityNames, // The new sub-activity names array
           },
-          headers: {
-            "Content-Type": "application/json", // Set the content type to application/json
-          },
+          // headers: {
+          //   "Content-Type": "application/json", // Set the content type to application/json
+          // },
         }),
       }),
-
+      deleteSubActivity: builder.mutation({
+        query: (id) => ({
+          url: `activity_module/update_sub_activity/${id}`, // Endpoint for deleting sub-activity
+          method: "DELETE",
+        }),
+      }),
+      getDropdownSubActivities: builder.query({
+        query: (activityId) => ({
+          url: `activity_module/dropdown_get_sub_activity/${activityId}`, // Endpoint for fetching sub-activities based on activity ID
+          method: "GET",
+        }),
+      }),
   }),
 });
 
 export const {
   useCreateSubActivityMutation, // Hook to call the create sub-activity mutation
-  useGetSubActivitiesQuery,useUpdateSubActivityMutation // Hook to get sub-activities list
+  useGetSubActivitiesQuery,useUpdateSubActivityMutation,
+  useDeleteSubActivityMutation,
+  useGetDropdownSubActivitiesQuery
+  // Hook to get sub-activities list
 } = subActivityApi;

@@ -74,7 +74,7 @@ function Login() {
             </div>
             <div>
                 <form onSubmit={(e)=>handleFormSubmit(e)} className='flex flex-col w-[70%] mx-auto gap-4 my-8'>
-                    <input type='text' name='name'  value={inputForm?.name} className='border border-b-4 p-2 rounded-md outline-none' onChange={handleInput} placeholder='Name'/>
+                    {/* <input type='text' name='name'  value={inputForm?.name} className='border border-b-4 p-2 rounded-md outline-none' onChange={handleInput} placeholder='Name'/> */}
                     <input type='email' name='email'  value={inputForm?.email} className='border border-b-4 p-2  rounded-md  outline-none'  onChange={handleInput} placeholder='Email'/>
                     <input type='password'  onChange={handleInput} name='password' value={inputForm?.password} className='border border-b-4 p-2  rounded-md outline-none'  placeholder='Password'/> 
                     <button type='submit' className='bg-blue-500 hover:bg-blue-700 p-2 text-white rounded-md'>Login</button>

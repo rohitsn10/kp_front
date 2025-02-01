@@ -38,7 +38,8 @@ function UserTable() {
       const showErrorToast = (message)=>{
         toast.error(message)
       }
-  console.log(users)
+  // console.log(users)
+
   // State for User filter
     const [userFilter, setUserFilter] = useState('');
     // State for page 
@@ -67,7 +68,7 @@ function UserTable() {
 
 
     const { data:departmentData, error:DepartmentError, isLoading:DepartmentLoading } = useFetchDepartmentQuery();
-    console.log("Department data",departmentData)
+    // console.log("Department data",departmentData)
     const [updateUserStatus] = useUpdateUserStatusMutation();
     
     const [newPassword,setNewPassword] = useState('');
@@ -125,7 +126,7 @@ function UserTable() {
       try {
         // Add your password reset API call here
        let response = await updateUserPassword({ userId: selectedUserForPassword.id, password: newPassword });
-       console.log(response)
+      //  console.log(response)
        if(!response?.data?.status){
         showErrorToast("Something went wrong.")
        }else{
@@ -141,11 +142,16 @@ function UserTable() {
     const handleCloseModal = () => setOpen(false);
 
     const handleSaveUser = async () => {
+      if (!email || !fullName || !phone) {
+        toast.error('Please fill in all the required fields (email, full name, department, phone).');
+        return; // Exit the function if any field is missing
+      }
+
       const userPayload = { email, full_name: fullName, phone, address, password, user_role: userRole };
         
       if (isEditMode) {
         let editPayload = { email, full_name: fullName, phone, address, user_role: userRole,dob,department,designation,profileImage };
-        console.log("Edit payload",editPayload)
+        // console.log("Edit payload",editPayload)
         const formData = new FormData();
         
         // Append all the text fields
@@ -155,7 +161,7 @@ function UserTable() {
         formData.append('address', address);
         formData.append('user_role', JSON.stringify(userRole));
         formData.append('dob', dob);
-        formData.append('department', department);
+        formData.append('department_id', department);
         formData.append('designation', designation);
         if (profileImage) {
           formData.append('profile_image', profileImage);
@@ -166,17 +172,18 @@ function UserTable() {
       } else {
 
         await createUser(userPayload);
+        toast.success('User created successfully!');
         refetch();
       }
       handleCloseModal();
     };
 
     const filteredRows = isLoading || !users ? [] : users.filter((row) =>
-      row.full_name.toLowerCase().includes(userFilter.toLowerCase())
+      row.full_name?.toLowerCase().includes(userFilter?.toLowerCase())
     );
     const handleUpdateStatus = async(id)=>{
       try{
-        console.log("User ID: status  ",id)
+        // console.log("User ID: status  ",id)
         await updateUserStatus({userId:id});
         // console.log("Status update success.")
         refetch();
@@ -471,7 +478,7 @@ function UserTable() {
                 // disabled={true}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
-                className="border m-1 p-3 rounded-md w-full bg-gray-200 border-yellow-300 border-b-4 border-b-yellow-400 mb-2 focus:outline-none"
+                className="border m-1 p-3 rounded-md w-full  border-yellow-300 border-b-4 border-b-yellow-400 mb-2 focus:outline-none"
               />
             </div>
 
@@ -623,26 +630,10 @@ function UserTable() {
                 }
                 label="Admin 1"
               />
-                            {/* <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={userRole.includes(1)}
-                    onChange={(e) => {
-                      const updatedRoles = e.target.checked
-                        ? [...userRole, 2]
-                        : userRole.filter((role) => role !== 1);
-                      setUserRole(updatedRoles);
-                    }}
-                  />
-                }
-                label="Manager"
-              /> */}
             </div>
 
           </div>
         </DialogContent>
-
-
                 <DialogActions 
                   sx={{
                     display:'flex',

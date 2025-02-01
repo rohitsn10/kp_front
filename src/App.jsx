@@ -1,5 +1,4 @@
-// App.jsx
-import { Route, Routes } from "react-router";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Login from './pages/login.jsx';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -12,51 +11,170 @@ import ReportsPage from "./pages/reports.jsx";
 import MasterPage from "./pages/master.jsx";
 import UserPage from "./pages/user.jsx";
 import Loction from "./pages/Loction.jsx";
-import ProjectDetails from "./components/pages/projects/ProjectDetails.jsx";
-import ProjectOverview from "./components/pages/projects/ProjectOverview.jsx";
 import CreateUserForm from "./components/pages/users/createusers/createUserForm.jsx";
 import AddProject from "./components/pages/projects/AddProject.jsx";
 import ProjectSubActivityPage from "./pages/projects/projects-subactivity-listing/index.jsx";
-// import ProjectActivityListing from "./pages/projects/projects-activity-listing/index.jsx";
 import ProjectMainActivityPage from "./pages/projects/projects-main-activity/index.jsx";
 import ProjectCategoryPage from "./pages/projects/projects-category/index.jsx";
 import ProjectMultipleListing from "./pages/projects/projects-multiple-activity/index.jsx";
 import AddLandDoc from "./components/pages/Land-back/add-land.jsx";
+import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
+// import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
 function App() {
-  const showToast = () => {
-    toast.success("This is a success toast!");
-  };
-  
   return (
     <div>
+
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<MainLayout><Home/></MainLayout>} />
+//           <Route path="/" element={<MainLayout><Home/></MainLayout>} />
           {/* {Landbank} */}
-          <Route path="/landbank" element={<MainLayout><Landbank/></MainLayout>} />
-          <Route path="/location" element={<MainLayout><Loction/></MainLayout>} />
-          <Route path="/add-land-doc" element={<MainLayout><AddLandDoc/></MainLayout>} />
+//           <Route path="/landbank" element={<MainLayout><Landbank/></MainLayout>} />
+//           <Route path="/location" element={<MainLayout><Loction/></MainLayout>} />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+
+        {/* Protected Routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <MainLayout><Home /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
         
-          {/* Users */}
-          <Route path="/user" element={<MainLayout><UserPage/></MainLayout>} />
-          <Route path="/user/create" element={<MainLayout><CreateUserForm/></MainLayout>}/>
+        <Route
+          path="/landbank"
+          element={
+            <ProtectedRoute>
+              <MainLayout><Landbank /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+             <Route
+          path="/add-land-doc"
+          element={
+            <ProtectedRoute>
+              <MainLayout><AddLandDoc /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
 
-          <Route path="/tracking" element={<MainLayout><TrackingPage/></MainLayout>} />
-          <Route path="/reports" element={<MainLayout><ReportsPage/></MainLayout>} />
-          <Route path="/master" element={<MainLayout><MasterPage/></MainLayout>} />
-          {/* Project Section */}
-          <Route path="project" element={<MainLayout><ProjectPage /></MainLayout>} />
-          <Route path="/project/categories" element={<MainLayout><ProjectCategoryPage/></MainLayout>} />
-          <Route path="/project/main-activites" element={<MainLayout><ProjectMainActivityPage/></MainLayout>} />
-          <Route path="/project/sub-activites" element={<MainLayout><ProjectSubActivityPage/></MainLayout>} />
-          <Route path="/project/multiple-activites" element={<MainLayout><ProjectMultipleListing/></MainLayout>} />
-          <Route path="/project/add-projects" element={<MainLayout><AddProject/></MainLayout>} />
-        </Routes>
-        <ToastContainer />
+        <Route
+          path="/location"
+          element={
+            <ProtectedRoute>
+              <MainLayout><Loction /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/user"
+          element={
+            <ProtectedRoute>
+              <MainLayout><UserPage /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/user/create"
+          element={
+            <ProtectedRoute>
+              <MainLayout><CreateUserForm /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/tracking"
+          element={
+            <ProtectedRoute>
+              <MainLayout><TrackingPage /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <MainLayout><ReportsPage /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/master"
+          element={
+            <ProtectedRoute>
+              <MainLayout><MasterPage /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Project Section */}
+        <Route
+          path="/project"
+          element={
+            <ProtectedRoute>
+              <MainLayout><ProjectPage /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/project/categories"
+          element={
+            <ProtectedRoute>
+              <MainLayout><ProjectCategoryPage /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/project/main-activities"
+          element={
+            <ProtectedRoute>
+              <MainLayout><ProjectMainActivityPage /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/project/sub-activities"
+          element={
+            <ProtectedRoute>
+              <MainLayout><ProjectSubActivityPage /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/project/multiple-activities"
+          element={
+            <ProtectedRoute>
+              <MainLayout><ProjectMultipleListing /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/project/add-projects"
+          element={
+            <ProtectedRoute>
+              <MainLayout><AddProject /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+      <ToastContainer />
     </div>
-
-  );
+  );  
 }
 
 export default App;

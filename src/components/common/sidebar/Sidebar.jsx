@@ -48,15 +48,15 @@ function Sidebar() {
       },
       {
         subName:'Main activities',
-        links:'/project/main-activites'
+        links:'/project/main-activities'
       },
       {
         subName:'Sub-activities',
-        links:'/project/sub-activites'
+        links:'/project/sub-activities'
       },
       {
         subName:'Multiple activities',
-        links:'/project/multiple-activites'
+        links:'/project/multiple-activities'
       }
       ]
     },
