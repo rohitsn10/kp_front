@@ -10,6 +10,8 @@ import {
   Autocomplete,
 } from "@mui/material";
 import { useFetchUsersQuery } from "../../../api/users/usersApi";
+import { useAddSfaDataToLandBankMutation } from "../../../api/users/landbankApi";
+import { toast } from "react-toastify"; // Import toast for notifications
 
 const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
   const [formData, setFormData] = useState({
@@ -22,12 +24,54 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
     sfaTransmissionFiles: [],
     approvedReportFiles: [],
     selectedUsers: [],
-    timeline: "", 
+    timeline: "",
   });
+
   const { data: userData, isLoading } = useFetchUsersQuery();
-  const handleSubmit = () => {
-    console.log("Form submit", formData);
-    console.log("Selected Data", selectedLand);
+  const [addSfaDataToLandBank] = useAddSfaDataToLandBankMutation(); // Initialize the mutation hook
+
+  const handleSubmit = async () => {
+    try {
+      // Create a FormData object
+      const formDataToSend = new FormData();
+
+      // Append all fields to the FormData object
+      formDataToSend.append("timeline", formData.timeline);
+      formDataToSend.append(
+        "land_sfa_assigned_to_users",
+        formData.selectedUsers.join(",")
+      ); // Convert array to string
+      formDataToSend.append("status_of_site_visit", formData.siteVisitStatus);
+      formDataToSend.append("date_of_assessment", formData.assessmentDate);
+      formDataToSend.append("site_visit_date", formData.siteVisitDate);
+
+      // Append files
+      Array.from(formData.sfaLandFiles).forEach((file) => {
+        formDataToSend.append("land_sfa_file", file);
+      });
+
+      Array.from(formData.sfaTransmissionFiles).forEach((file) => {
+        formDataToSend.append("sfa_for_transmission_line_gss_files", file);
+      });
+
+      Array.from(formData.approvedReportFiles).forEach((file) => {
+        formDataToSend.append("approved_report_file", file);
+      });
+
+      // Call the mutation
+      const response = await addSfaDataToLandBank({
+        id: selectedLand.id, // Use the selected land ID
+        formData: formDataToSend,
+      }).unwrap();
+
+      // Handle success
+      toast.success("SFA data added successfully!");
+      handleClose(); // Close the modal
+    } catch (error) {
+      // Handle error
+      toast.error("Failed to add SFA data. Please try again.");
+      console.error("Error:", error);
+    }
   };
 
   const handleChange = (e) => {
@@ -41,6 +85,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
   const handleUserChange = (event, value) => {
     setFormData({ ...formData, selectedUsers: value });
   };
+
   const inputStyles = {
     "& .MuiOutlinedInput-root": {
       border: "1px solid #FACC15",
@@ -53,7 +98,9 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
       borderBottom: "4px solid #E6A015",
     },
   };
-  const today = new Date().toISOString().split("T")[0]; 
+
+  const today = new Date().toISOString().split("T")[0];
+
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
       <DialogTitle
@@ -161,16 +208,17 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
             </h2>
             <Autocomplete
               multiple
-              options={
-                userData
-                  ? userData
-                      .filter((user) => user.full_name)
-                      .map((user) => user.full_name)
-                  : []
-              }
-              getOptionLabel={(option) => option}
-              value={formData.selectedUsers}
-              onChange={handleUserChange}
+              options={userData ? userData.map((user) => user) : []} 
+              getOptionLabel={(option) => option.full_name}
+              value={formData.selectedUsers.map((userId) =>
+                userData.find((user) => user.id === userId)
+              )} 
+              onChange={(event, value) => {
+                setFormData({
+                  ...formData,
+                  selectedUsers: value.map((user) => user.id),
+                });
+              }}
               renderInput={(params) => (
                 <TextField {...params} placeholder="Users" sx={inputStyles} />
               )}
@@ -190,7 +238,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
               margin="dense"
               sx={inputStyles}
               inputProps={{
-                min: today, 
+                min: today,
               }}
             />
           </div>
@@ -231,7 +279,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
       </DialogContent>
       <DialogActions sx={{ justifyContent: "center", padding: "20px" }}>
         <Button
-          onClick={() => handleSubmit(formData)}
+          onClick={handleSubmit}
           type="submit"
           sx={{
             backgroundColor: "#f6812d",

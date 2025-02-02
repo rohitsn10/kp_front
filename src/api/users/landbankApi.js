@@ -47,6 +47,13 @@ export const landBankApi = createApi({
         body: formData,
       }),
     }),
+    addSfaDataToLandBank: builder.mutation({
+      query: ({ id, formData }) => ({
+        url: `land_module/add_sfa_data_to_land_bank/${id}`,
+        method: "PUT",
+        body: formData,
+      }),
+    }),
   }),
 });
 
@@ -56,4 +63,5 @@ export const {
   useApproveLandBankByHodMutation,
   useUpdateLandBankMasterMutation,
   useUpdateDataAfterApprovalLandBankMutation,
+  useAddSfaDataToLandBankMutation,
 } = landBankApi;
