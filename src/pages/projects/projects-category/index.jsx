@@ -135,7 +135,7 @@ function ProjectCategoryPage() {
                                 <TableCell align="center" style={{ fontSize: '20px', color: '#1D2652' }}>
                                     {row.category_name}
                                 </TableCell>
-                                <TableCell align="center">
+                                {/* <TableCell align="center">
                                     <RiEditFill
                                       style={{ cursor: 'pointer', color: '#61D435', fontSize: '23px' }}
                                       title="Edit"
@@ -148,11 +148,33 @@ function ProjectCategoryPage() {
                                     <DeleteIcon style={{ cursor: 'pointer', color: 'red', fontSize: '23px' }}
                                       title="Delete"
                                       onClick={() => {
-                                        setCategoryToDelete(row); // Set the category to delete
-                                        setDeleteConfirmationOpen(true); // Open confirmation dialog
+                                        setCategoryToDelete(row); 
+                                        setDeleteConfirmationOpen(true); 
                                       }}
                                     />
-                                </TableCell>
+                                </TableCell> */}
+                                <TableCell align="center">
+    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+        <RiEditFill
+            style={{ cursor: 'pointer', color: '#61D435', fontSize: '23px' }}
+            title="Edit"
+            onClick={() => {
+                setSelectedCategory(row);
+                setUpdatedCategoryName(row.category_name);
+                setEditModalOpen(true);
+            }}
+        />
+        <DeleteIcon
+            style={{ cursor: 'pointer', color: 'red', fontSize: '23px' }}
+            title="Delete"
+            onClick={() => {
+                setCategoryToDelete(row); // Set the category to delete
+                setDeleteConfirmationOpen(true); // Open confirmation dialog
+            }}
+        />
+    </div>
+</TableCell>
+
                             </TableRow>
                         ))}
                     </TableBody>
@@ -231,7 +253,7 @@ function ProjectCategoryPage() {
                         onChange={(e) => setUpdatedCategoryName(e.target.value)}
                     />
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ justifyContent: 'center', padding: '20px' }}>
                     <Button
                         onClick={handleUpdateCategory}
                         disabled={isUpdating}
@@ -240,7 +262,7 @@ function ProjectCategoryPage() {
                             color: '#FFFFFF',
                             fontSize: '16px',
                             padding: '6px 36px',
-                            width: '200px',
+                            width: '250px',
                             borderRadius: '8px',
                             textTransform: 'none',
                             fontWeight: 'bold',

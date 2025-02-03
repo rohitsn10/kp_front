@@ -1,183 +1,144 @@
-import React, { useState } from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
-  Button, 
-  TextField,
-  TablePagination 
-} from '@mui/material';
-import { RiEditFill } from 'react-icons/ri';
-// import DoDisturbIcon from '@mui/icons-material/DoDisturb';
-import { AiOutlineStop } from "react-icons/ai";
-import ProjectMultipleActivity from '../../../components/pages/projects/ProjectMultipleActivity/ProjectMultipleActivity';
-function ProjectMultipleListing() {
-  // const [activityFilter, setActivityFilter] = useState('');
-  const [subActivityFilter, setSubActivityFilter] = useState('');
-  const [multipleActivity,setmultipleActivity]=useState('');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5); // Default rows per page
-  const [open,setOpen]=useState(false);
-  const [multipleActivityInput,setMultipleActInput]=useState('')
-  
-  const rows = [
-    { sr: 1, type: "Solar", multipleActivityName: "Activity 1", addedDate: "2024-01-01" },
-    { sr: 2, type: "Wind", multipleActivityName: "Activity 2", addedDate: "2024-01-05" },
-    { sr: 3, type: "Solar", multipleActivityName: "Activity 3", addedDate: "2024-01-10" },
-    { sr: 4, type: "Wind", multipleActivityName: "Activity 4", addedDate: "2024-01-15" },
-    { sr: 5, type: "Solar", multipleActivityName: "Activity 5", addedDate: "2024-01-20" },
-    { sr: 6, type: "Wind", multipleActivityName: "Activity 6", addedDate: "2024-01-25" },
-    { sr: 7, type: "Solar", multipleActivityName: "Activity 7", addedDate: "2024-02-01" },
-    { sr: 8, type: "Wind", multipleActivityName: "Activity 8", addedDate: "2024-02-05" },
-    { sr: 9, type: "Solar", multipleActivityName: "Activity 9", addedDate: "2024-02-10" },
-    { sr: 10, type: "Wind", multipleActivityName: "Activity 10", addedDate: "2024-02-15" },
-    { sr: 11, type: "Solar", multipleActivityName: "Activity 11", addedDate: "2024-03-01" },
-    { sr: 12, type: "Wind", multipleActivityName: "Activity 12", addedDate: "2024-03-05" },
-    { sr: 13, type: "Solar", multipleActivityName: "Activity 13", addedDate: "2024-03-10" },
-    { sr: 14, type: "Wind", multipleActivityName: "Activity 14", addedDate: "2024-03-15" },
-    { sr: 15, type: "Solar", multipleActivityName: "Activity 15", addedDate: "2024-03-20" },
-  ];
-  // Filter rows based on search
-  const filteredRows = rows.filter((row) =>
-    row.multipleActivityName.toLowerCase().includes(multipleActivity.toLowerCase())
-  );
+import React, { useState } from "react";
+import { Accordion, AccordionSummary, AccordionDetails, Typography, List, ListItem, ListItemText, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Grid } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useGetSubSubActivityQuery, useUpdateSubSubActivityMutation } from "../../../api/users/multipleActivityApi.js";
+import ProjectMultipleActivityModal from "../../../components/pages/projects/ProjectMultipleActivity/ProjectMultipleActivity.jsx";
 
-  // Pagination handlers
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+function ProjectMultipleActivity() {
+  const { data, refetch } = useGetSubSubActivityQuery();
+  const [updateSubSubActivity] = useUpdateSubSubActivityMutation();
+  const [expanded, setExpanded] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [editValue, setEditValue] = useState("");
+  const [open, setOpen] = useState(false);
+  const [openCreateModal, setOpenCreateModal] = useState(false);
+
+  const handleChange = (panel) => (event, isExpanded) => {
+    setExpanded(isExpanded ? panel : false);
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handleEditClick = (id, name) => {
+    setEditId(id);
+    setEditValue(name);
+    setOpen(true);
   };
 
-  // Get current page rows
-  const currentRows = filteredRows.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  const handleClose = () => {
+    setOpen(false);
+    setEditId(null);
+    setEditValue("");
+  };
+
+  const handleUpdate = async () => {
+    if (editId) {
+      await updateSubSubActivity({ id: editId, subSubActivityName: editValue });
+      handleClose();
+      refetch();
+    }
+  };
 
   return (
-    <div className="bg-white p-4 md:w-[90%] lg:w-[70%] mx-auto my-8 rounded-md">
-      <div className="flex flex-row my-6 px-10 items-center justify-between">
-        <div className="flex items-center">
-          <TextField
-            value={multipleActivity}
-            placeholder="Search"
-            onChange={(e) => setmultipleActivity(e.target.value)}
-            variant="outlined"
-            size="small"
-            style={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
-          />
-        </div>
-        
-        <div className="flex-grow flex justify-center">
-          <h2 className="text-2xl text-[#29346B] font-semibold">Multiple Activities Listing</h2>
-        </div>
-        
-        <div className="flex items-center">
-          <Button
-            variant="contained"
-            style={{ 
-              backgroundColor: '#FF8C00', 
-              color: 'white', 
-              fontWeight: 'bold', 
-              fontSize: '16px',
-              textTransform: 'none' 
-            }}
-            onClick={()=>setOpen(!open)}
-          >
-            Add Activity
-          </Button>
-        </div>
-      </div>
-            
-      <TableContainer style={{ borderRadius: '8px', overflow: 'hidden' }}>
-        <Table>
-          <TableHead>
-            <TableRow style={{ backgroundColor: '#F2EDED' }}>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Sr No.
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Type
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Multiple Activity Name
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Added Date
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Action
-              </TableCell>
-            </TableRow>
-          </TableHead>
+    <div className="bg-white shadow-lg p-6 w-[90%] lg:w-[70%] mx-auto my-8 rounded-lg">
 
-          <TableBody>
-            {currentRows.map((row) => (
-              <TableRow key={row.id}>
-                <TableCell align="center" style={{ fontSize: '16px' }}>{row.sr}</TableCell>
-                <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row.type}</TableCell>
-                <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row.multipleActivityName}</TableCell>
-                <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row.addedDate}</TableCell>
-                <TableCell align="center" style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap:20
-                }}>
-                  <RiEditFill
-                    style={{ 
-                      cursor: 'pointer', 
-                      color: '#61D435', 
-                      fontSize: '23px', 
-                      textAlign: 'center' 
-                    }}
-                    title="Edit"
-                  />
-                  <AiOutlineStop
-                    style={{  
-                      cursor: 'pointer', 
-                      color: 'red', 
-                      fontSize: '23px', 
-                      textAlign: 'center' 
-                    }}
-                    title="Edit"
-                  />
-                </TableCell>
-              </TableRow>
+      <Grid container sx={{
+        margin:"20px"
+      }}  alignItems="center">
+  <Grid item xs={12} textAlign="center">
+    <Typography variant="h4" sx={{ color: "#29346B", fontWeight: "bold" }} gutterBottom>
+    Project Multiple Activities
+    </Typography>
+  </Grid>
+
+  <Grid item xs={12} sm={6}>
+    {/* <TextField
+      fullWidth
+      label="Search by Project Name"
+      variant="outlined"
+      margin="dense"
+      sx={{width:'250px'}}
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+    /> */}
+  </Grid>
+
+  <Grid item xs={12} sm={6} textAlign="right">
+    <Button 
+      variant="contained"
+      style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
+      onClick={() => { setOpenCreateModal(!openCreateModal) }}
+    >
+      Add Sub Activity
+    </Button>
+  </Grid>
+</Grid>
+
+
+      {data?.data?.map((project) => (
+        <Accordion
+          key={project.project_activity_id}
+          expanded={expanded === project.project_activity_id}
+          onChange={handleChange(project.project_activity_id)}
+          sx={{ borderRadius: "8px", mb: 2 }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              {project.project_activity_name} ({project.solar_or_wind})
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {project.sub_activity.map((sub) => (
+              <Accordion key={sub.sub_activity_id} sx={{ borderRadius: "8px", mb: 2 }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                    {sub.sub_activity_name.length > 0 ? sub.sub_activity_name[0] : "--"}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <List>
+                    {sub.sub_sub_activities.map((subSub) => (
+                      <ListItem key={subSub.sub_sub_activity_id} secondaryAction={
+                        <>
+                          <Button variant="contained" color="primary" size="small" sx={{ mr: 1 }} onClick={() => handleEditClick(subSub.sub_sub_activity_id, subSub.sub_sub_activity_name)}>Edit</Button>
+                          <Button variant="contained" color="error" size="small">Delete</Button>
+                        </>
+                      }>
+                        <ListItemText primary={subSub.sub_sub_activity_name} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </AccordionDetails>
+              </Accordion>
             ))}
-          </TableBody>
-        </Table>
-
-        {/* Pagination */}
-        <TablePagination
-          component="div"
-          count={filteredRows.length}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5, 10, 25]}
-          style={{
-            borderTop: '1px solid #e0e0e0'
-          }}
-        />
-      </TableContainer>
-      <ProjectMultipleActivity
-          open={open}
-          setOpen={setOpen}
-          multipleActivityInput={multipleActivityInput}
-          setMultipleActInput={setMultipleActInput}
+          </AccordionDetails>
+        </Accordion>
+      ))}
+      
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Edit Sub-Sub Activity</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Sub-Sub Activity Name"
+            type="text"
+            fullWidth
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="secondary">Cancel</Button>
+          <Button onClick={handleUpdate} color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
+      <ProjectMultipleActivityModal
+          open={openCreateModal}
+          setOpen={setOpenCreateModal}
+          // multipleActivityInput={multipleActivityInput}
+          // setMultipleActInput={setMultipleActInput}
       />
     </div>
   );
 }
 
-export default ProjectMultipleListing
+export default ProjectMultipleActivity;

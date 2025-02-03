@@ -35,8 +35,17 @@ export const multipleActivityApi = createApi({
       query: (data) => ({
         url: "activity_module/get_sub_sub_activity",
         method: "GET",
-        params: {
-          sub_sub_activity_names: data.subSubActivityNames,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
+    updateSubSubActivity: builder.mutation({
+      query: ({ id, subSubActivityName }) => ({
+        url: `activity_module/update_sub_sub_activity/${id}`,
+        method: "PUT",
+        body: {
+          sub_sub_activity_name: subSubActivityName,
         },
         headers: {
           "Content-Type": "application/json",
@@ -48,5 +57,6 @@ export const multipleActivityApi = createApi({
 
 export const {
   useCreateSubSubActivityMutation, // Hook for creating sub-sub activities
-  useGetSubSubActivityQuery, // Hook for fetching sub-sub activities
+  useGetSubSubActivityQuery,
+  useUpdateSubSubActivityMutation // Hook for fetching sub-sub activities
 } = multipleActivityApi;

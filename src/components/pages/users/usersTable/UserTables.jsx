@@ -27,7 +27,8 @@ import { RiEditFill, RiLockPasswordLine } from 'react-icons/ri';
 import { AiOutlineStop } from "react-icons/ai";
 import { useCreateUserMutation, useFetchDepartmentQuery, useFetchUsersQuery, useUpdateUserMutation, useUpdateUserPasswordMutation, useUpdateUserStatusMutation } from '../../../../api/users/usersApi';
 import { toast } from 'react-toastify';
-
+import { Camera } from '@mui/icons-material';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
 
 function UserTable() {
   // User Data fetch
@@ -126,7 +127,6 @@ function UserTable() {
       try {
         // Add your password reset API call here
        let response = await updateUserPassword({ userId: selectedUserForPassword.id, password: newPassword });
-      //  console.log(response)
        if(!response?.data?.status){
         showErrorToast("Something went wrong.")
        }else{
@@ -143,7 +143,7 @@ function UserTable() {
 
     const handleSaveUser = async () => {
       if (!email || !fullName || !phone) {
-        toast.error('Please fill in all the required fields (email, full name, department, phone).');
+        toast.error('Please fill in all the required fields (email, full name, phone).');
         return; // Exit the function if any field is missing
       }
 
@@ -291,11 +291,11 @@ function UserTable() {
                   Name
                 </TableCell>
                 <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                  User Role
+                 Designation
                 </TableCell>
-                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                  Department
-                </TableCell>
+                {/* <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
+                Department
+                </TableCell> */}
                 <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
                   Email
                 </TableCell>
@@ -320,15 +320,15 @@ function UserTable() {
                   <TableCell align="center" style={{ fontSize: '16px' }}>1</TableCell>
                   <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row?.id}</TableCell>
                   <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652', maxWidth: '200px', overflowX: 'auto' }}>{row.full_name}</TableCell>
-                  <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>--</TableCell>
-                  <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>--</TableCell>
+                  <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row?.designation || '--'}</TableCell>
+                  {/* <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row?.department == 1 ?"Accounts": row?.department == 2?"Finance":'--' || '--'}</TableCell> */}
                   <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652', maxWidth: '200px', overflowX: 'auto' }}>{row?.email}</TableCell>
                   <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652', maxWidth: '200px', overflowX: 'auto' }}>{row?.phone}</TableCell>
                   <TableCell align="center" style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap:20
+                    // display: 'flex',
+                    // justifyContent: 'center',
+                    // alignItems: 'center',
+                    // gap:20
                   }}>
                     <RiEditFill
                       style={{ 
@@ -345,6 +345,7 @@ function UserTable() {
                         setSelectedUserId(row?.id)
                       }} 
                     />
+                    {/* <h2>Edit</h2> */}
                     {/* <AiOutlineStop
                       style={{ 
                         cursor: 'pointer', 
@@ -435,37 +436,33 @@ function UserTable() {
                 className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 mb-2 focus:outline-none"
               />
             </div>
-            {isEditMode && (
+            {/* {isEditMode && (
               <div className='bg-white'>
                 <div className='bg-yellow-300 w-[100px] h-[100px] rounded-full'>
                   <input type="file" className='border border-red-500' onChange={(e) => setProfileImage(e.target.files[0])}>
                   </input>
                 </div>
-                {/* <div className="flex justify-center mt-8">
-                    <div className="relative">
-                      <img
-                        src={row?.profile_image}
-                        alt="Profile"
-                        className="w-24 h-24 rounded-full object-cover"
-                      />
-                      <button
-                        onClick={() => document.getElementById('file-input').click()}
-                        className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-black bg-opacity-50 text-white flex items-center justify-center text-sm"
-                      >
-                        +
-                      </button>
-                    </div>
-                    <input
-                      type="file"
-                      id="file-input"
-                      className="hidden"
-                      accept="image/*"
-                      
-                    />
-                </div> */}
               </div>
               )
-            }
+            } */}
+            {isEditMode && (
+  <div className="flex flex-col items-center space-y-2">
+    <label htmlFor="file-upload" className="cursor-pointer">
+      <div className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+        <CameraAltIcon className="w-16 h-16 text-white" />
+      </div>
+    </label>
+    <input
+      id="file-upload"
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) => setProfileImage(URL.createObjectURL(e.target.files[0]))}
+    />
+    {/* import  from '@mui/icons-material/CameraAlt'; */}
+    <p className="text-blue-900 font-medium text-sm">Add Photo</p>
+  </div>
+)}
             {/* Email Input */}
             <div className='col-span-2 md:col-span-1'>
               <label htmlFor="email" className="block text-lg font-medium text-gray-700">
@@ -497,8 +494,6 @@ function UserTable() {
               />
             </div>
 
-
-
             {!isEditMode && (
               <div className='col-span-2 md:col-span-1'>
               <label htmlFor="password" className="block text-lg font-medium text-gray-700">
@@ -515,22 +510,6 @@ function UserTable() {
               </div>
             )}
 
-            {/* Department ID */}
-            {/* {isEditMode && (
-              <div className='col-span-2 md:col-span-1'>
-              <label htmlFor="department" className="block text-lg font-medium text-gray-700">
-                Department
-                </label>
-                <input
-                  id="department"
-                  type="text"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  placeholder="Department"
-                  className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 mb-2 focus:outline-none"
-                />
-              </div>
-            )} */}
             {isEditMode && (
       <div className='col-span-2 md:col-span-1'>
         <FormControl fullWidth>

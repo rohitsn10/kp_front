@@ -53,11 +53,18 @@ export const activityApi = createApi({
         },
       }),
     }),
+    deleteActivity: builder.mutation({
+      query: (id) => ({
+        url: `activity_module/update_activity/${id}`, // Dynamic ID in URL
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
 export const { 
   useCreateActivityMutation, 
   useGetActivitiesQuery, 
-  useUpdateActivityMutation 
+  useUpdateActivityMutation,
+  useDeleteActivityMutation
 } = activityApi;

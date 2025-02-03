@@ -22,7 +22,7 @@ import {
 import { RiEditFill } from 'react-icons/ri';
 import { AiOutlineStop } from "react-icons/ai";
 import CreateProjectActivity from '../../../components/pages/projects/ProjectActivity/CreateProjectActivity';
-import { useGetActivitiesQuery, useUpdateActivityMutation } from '../../../api/users/projectActivityApi';
+import { useGetActivitiesQuery, useUpdateActivityMutation, useDeleteActivityMutation } from '../../../api/users/projectActivityApi';
 
 function ProjectMainActivityPage() {
     const [activityFilter, setActivityFilter] = useState('');
@@ -36,10 +36,25 @@ function ProjectMainActivityPage() {
     const [updatedActivityType, setUpdatedActivityType] = useState('');
 
     // Fetch activities using RTK Query
-    const { data, error, isLoading,refetch } = useGetActivitiesQuery();
-    console.log("Project Main activity:",data)
+    const { data, error, isLoading, refetch } = useGetActivitiesQuery();
+    
     // Update activity mutation hook
     const [updateActivity, { isLoading: isUpdating }] = useUpdateActivityMutation();
+    
+    // Delete activity mutation hook
+    const [deleteActivity, { isLoading: isDeleting }] = useDeleteActivityMutation();
+
+    // Handle delete activity
+    const handleDeleteActivity = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this activity?")) return;
+
+        try {
+            await deleteActivity(id).unwrap();
+            refetch(); // Refresh the list after deletion
+        } catch (error) {
+            console.error("Failed to delete activity:", error);
+        }
+    };
 
     // Handle loading & error states
     if (isLoading) return <CircularProgress />;
@@ -57,7 +72,7 @@ function ProjectMainActivityPage() {
 
     // Filter rows based on search input
     const filteredRows = rows.filter((row) =>
-        row.activityName.toLowerCase().includes(activityFilter.toLowerCase())
+        row.activityName?.toLowerCase().includes(activityFilter?.toLowerCase())
     );
 
     // Pagination handlers
@@ -89,7 +104,7 @@ function ProjectMainActivityPage() {
                 }
             }).unwrap();
             setEditModalOpen(false); // Close the modal after successful update
-            refetch()
+            refetch();
         } catch (error) {
             console.error("Failed to update activity:", error);
         }
@@ -136,6 +151,7 @@ function ProjectMainActivityPage() {
                                 <TableCell align="center">{row.activityName}</TableCell>
                                 <TableCell align="center">{row.addedDate}</TableCell>
                                 <TableCell align="center" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20 }}>
+                                    {/* Edit Icon */}
                                     <RiEditFill
                                         style={{ cursor: 'pointer', color: '#61D435', fontSize: '23px' }}
                                         title="Edit"
@@ -146,7 +162,12 @@ function ProjectMainActivityPage() {
                                             setEditModalOpen(true);
                                         }}
                                     />
-                                    <AiOutlineStop style={{ cursor: 'pointer', color: 'red', fontSize: '23px' }} title="Stop" />
+                                    {/* Delete Icon */}
+                                    <AiOutlineStop
+                                        style={{ cursor: 'pointer', color: 'red', fontSize: '23px' }}
+                                        title="Delete"
+                                        onClick={() => handleDeleteActivity(row.id)}
+                                    />
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -178,7 +199,6 @@ function ProjectMainActivityPage() {
                         onChange={(e) => setUpdatedActivityName(e.target.value)}
                         margin="normal"
                     />
-                    {/* Activity Type Dropdown */}
                     <FormControl fullWidth margin="normal">
                         <InputLabel>Activity Type</InputLabel>
                         <Select
@@ -200,15 +220,6 @@ function ProjectMainActivityPage() {
                     </Button>
                 </DialogActions>
             </Dialog>
-
-            {/* Modal for Creating Activity */}
-            <CreateProjectActivity
-                open={open}
-                setOpen={setOpen}
-                mainActivityInput={mainActivityInput}
-                setMainActivityInput={setMainActivityInput}
-                refetch={refetch}
-            />
         </div>
     );
 }

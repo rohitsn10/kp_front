@@ -8,9 +8,10 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { Autocomplete } from '@mui/material';
 import { useGetActivitiesQuery } from '../../../../api/users/projectActivityApi';
 import { useGetDropdownSubActivitiesQuery } from '../../../../api/users/subActivityApi';
-import { useCreateSubSubActivityMutation } from '../../../../api/users/multipleActivityApi'; // Import the mutation hook
+import { useCreateSubSubActivityMutation, useGetSubSubActivityQuery } from '../../../../api/users/multipleActivityApi'; // Import the mutation hook
+import { toast } from 'react-toastify';
 
-export default function ProjectMultipleActivity({
+export default function ProjectMultipleActivityModal({
   open,
   setOpen,
   multipleActivityInput,
@@ -22,6 +23,7 @@ export default function ProjectMultipleActivity({
 
   // Fetching activities using useGetActivitiesQuery hook
   const { data: activityData, error: activityError, isLoading: activityLoading } = useGetActivitiesQuery();
+  const { refetch } = useGetSubSubActivityQuery();
 
   // Fetching sub-activities using useGetDropdownSubActivitiesQuery hook
   const { data: subActivityData, error: subActivityError, isLoading: subActivityLoading } = useGetDropdownSubActivitiesQuery(selectedProjectActivity?.value, {
@@ -36,6 +38,10 @@ export default function ProjectMultipleActivity({
   };
 
   const handleSubmit = () => {
+    if (!selectedProjectActivity || !selectedSubActivity || !subSubActivityNames.trim()) {
+      toast.error('Please fill in all required fields!');
+      return;
+    }
     // Prepare the data to be sent
     const subSubActivityData = {
       projectActivityId: selectedProjectActivity?.value,
@@ -47,11 +53,14 @@ export default function ProjectMultipleActivity({
     createSubSubActivity(subSubActivityData)
       .then((response) => {
         console.log('Sub-Sub Activity Created:', response.data);
+        toast.success('Multiple Activity Created Successfully!');
+        refetch()
         // Handle success (you can close the dialog or show a success message)
         setOpen(false);
       })
       .catch((error) => {
         console.error('Error creating sub-sub activity:', error);
+        toast.error('Error creating sub-sub activity!');
         // Handle error (you can show an error message if needed)
       });
   };
