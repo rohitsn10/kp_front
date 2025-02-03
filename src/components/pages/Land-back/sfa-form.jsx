@@ -26,11 +26,50 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
     selectedUsers: [],
     timeline: "",
   });
-
+// console.log(selectedLand)
   const { data: userData, isLoading } = useFetchUsersQuery();
   const [addSfaDataToLandBank] = useAddSfaDataToLandBankMutation(); // Initialize the mutation hook
 
   const handleSubmit = async () => {
+
+    if (!formData.assessmentDate) {
+      toast.error("Please fill in the Date of Assessment.");
+      return;
+    }
+    if (!formData.siteVisitDate) {
+      toast.error("Please fill in the Site Visit Date.");
+      return;
+    }
+    if (!formData.siteVisitStatus) {
+      toast.error("Please select the Status of Site Visit.");
+      return;
+    }
+    if (!formData.approvalStatus) {
+      toast.error("Please select the Approval Status.");
+      return;
+    }
+    if (!formData.selectedUsers.length) {
+      toast.error("Please select at least one User.");
+      return;
+    }
+    if (!formData.timeline) {
+      toast.error("Please fill in the Timeline.");
+      return;
+    }
+    if (!formData.sfaLandFiles.length) {
+      toast.error("Please upload SFA for Land1.");
+      return;
+    }
+    if (!formData.sfaTransmissionFiles.length) {
+      toast.error("Please upload SFA for Transmission Line & GSS.");
+      return;
+    }
+    if (!formData.approvedReportFiles.length) {
+      toast.error("Please upload Approved Report.");
+      return;
+    }
+
+    
     try {
       // Create a FormData object
       const formDataToSend = new FormData();
@@ -117,7 +156,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <h2 className="text-[#29346B] font-semibold text-lg">
-              Date of Assessment
+              Date of Assessment<span className="text-red-600"> *</span>
             </h2>
             <TextField
               fullWidth
@@ -132,7 +171,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
           </div>
           <div>
             <h2 className="text-[#29346B] font-semibold text-lg">
-              Site Visit Date
+              Site Visit Date<span className="text-red-600"> *</span>
             </h2>
             <TextField
               fullWidth
@@ -147,7 +186,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
           </div>
           <div>
             <h2 className="text-[#29346B] font-semibold text-lg">
-              Status of Site Visit
+              Status of Site Visit<span className="text-red-600"> *</span>
             </h2>
             <TextField
               fullWidth
@@ -167,7 +206,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
           </div>
           <div>
             <h2 className="text-[#29346B] font-semibold text-lg">
-              Approval Status
+              Approval Status<span className="text-red-600"> *</span>
             </h2>
             <TextField
               fullWidth
@@ -187,14 +226,14 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
           </div>
           <div>
             <h2 className="text-[#29346B] font-semibold text-lg">
-              Enter Land Title
+              Land Title
             </h2>
             <TextField
               fullWidth
               type="text"
-              placeholder="Enter Land Title"
-              value={formData.landTitle}
-              onChange={handleChange}
+              placeholder="Land Title"
+              value={selectedLand?.land_name}
+              // onChange={handleChange}
               name="landTitle"
               sx={inputStyles}
               variant="outlined"
@@ -204,7 +243,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
           {/* User Selection */}
           <div>
             <h2 className="text-[#29346B] font-semibold text-lg">
-              Select Users
+              Select Users<span className="text-red-600"> *</span>
             </h2>
             <Autocomplete
               multiple
@@ -227,7 +266,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
 
           {/* Timeline Date Picker (Future dates only) */}
           <div>
-            <h2 className="text-[#29346B] font-semibold text-lg">Timeline</h2>
+            <h2 className="text-[#29346B] font-semibold text-lg">Timeline <span className="text-red-600"> *</span></h2>
             <TextField
               fullWidth
               type="date"
@@ -247,7 +286,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
         {/* File Uploads */}
         <div className="mt-4">
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-            SFA for Land1 (Upload)
+            SFA for Land1 (Upload) <span className="text-red-600"> *</span>
           </label>
           <input
             type="file"
@@ -257,7 +296,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
           />
 
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-            SFA for Transmission Line & GSS (Upload)
+            SFA for Transmission Line & GSS (Upload) <span className="text-red-600"> *</span>
           </label>
           <input
             type="file"
@@ -267,7 +306,7 @@ const AssessmentFormModal = ({ open, handleClose, selectedLand }) => {
           />
 
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-            Approved Report (Upload)
+            Approved Report (Upload) <span className="text-red-600"> *</span>
           </label>
           <input
             type="file"

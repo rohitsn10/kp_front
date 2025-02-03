@@ -54,6 +54,13 @@ export const landBankApi = createApi({
         body: formData,
       }),
     }),
+    deleteLandBankLocation: builder.mutation({
+      query: (id) => ({
+        url: `land_module/update_land_bank_location/${id}`,
+        method: "DELETE",
+      }),
+    }),
+
   }),
 });
 
@@ -64,4 +71,5 @@ export const {
   useUpdateLandBankMasterMutation,
   useUpdateDataAfterApprovalLandBankMutation,
   useAddSfaDataToLandBankMutation,
+  useDeleteLandBankLocationMutation
 } = landBankApi;

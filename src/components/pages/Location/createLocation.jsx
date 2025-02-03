@@ -18,7 +18,7 @@ export default function LocationModal({
   setLocationInput,
 }) {
   const [nearbyArea, setNearbyArea] = useState('');
-  const [landArea, setLandArea] = useState('');
+  const [landArea, setLandArea] = useState('');  // keep as string for input handling
   const [selectedLandBank, setSelectedLandBank] = useState(null); // State for selected land bank
 
   // Fetch land bank data
@@ -38,19 +38,22 @@ export default function LocationModal({
       return;
     }
 
+    if (!landArea) {
+      toast.error('Please mention Land Area!');
+      return;
+    }
     const formData = {
       land_bank_id: selectedLandBank.id, 
       land_bank_location_name: locationInput,
-      total_land_area: landArea,
+      total_land_area: parseFloat(landArea),  // Convert to number here
       near_by_area: nearbyArea,
     };
-   
+
     try {
       await createLandBankLocation(formData).unwrap(); 
       toast.success('Location added successfully!');
       handleClose();
     } catch (error) {
-
       toast.error('Failed to add location!');
       console.error('Error creating location:', error);
     }
@@ -79,7 +82,7 @@ export default function LocationModal({
         </DialogTitle>
         <DialogContent>
           <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-            Select Land Bank
+            Select Land Bank <span className="text-red-600"> *</span>
           </label>
           <Autocomplete
             options={landBankOptions}
@@ -122,14 +125,14 @@ export default function LocationModal({
 
           {/* Land Area Input */}
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-            Land Area
+            Land Area <span className="text-red-600"> *</span>
           </label>
           <input
-            type="text"
+            type="number"  // Change input type to number
             className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
             value={landArea}
             placeholder="Enter Land Area"
-            onChange={(e) => setLandArea(e.target.value)}
+            onChange={(e) => setLandArea(e.target.value)}  // This will now be a string
           />
         </DialogContent>
 

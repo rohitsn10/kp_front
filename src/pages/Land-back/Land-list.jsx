@@ -23,14 +23,18 @@ import LandApproveModal from "../../components/pages/Land-back/approveLand";
 import EditLandModal from "../../components/pages/Land-back/edit-land";
 import { useNavigate } from "react-router-dom";
 import AssessmentFormModal from "../../components/pages/Land-back/sfa-form";
-
+import DeleteIcon from '@mui/icons-material/Delete';
+import { useDeleteLandBankLocationMutation } from "../../api/users/landbankApi"; // Import delete mutation
+// useDeleteLandBankLocationMutation
 function LandListing() {
   const { data, error, isLoading, refetch } = useGetLandBankMasterQuery();
+  const [deleteLandBankLocation] = useDeleteLandBankLocationMutation(); // Hook to delete land location
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [openAddLandModal, setOpenAddLandModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [openApproveModal, setOpenApproveModal] = useState(false);
-  const [openSfaModal,setOpenSfaModal] = useState(false);
+  const [openSfaModal, setOpenSfaModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false); // State for EditLandModal
   const [selectedLand, setSelectedLand] = useState(null);
   const navigate = useNavigate();
@@ -51,47 +55,63 @@ function LandListing() {
   };
 
   const handleApproveClick = (land) => {
-    console.log("--------------------------------", land);
     setSelectedLand(land);
     setOpenApproveModal(true);
   };
-  const handleSfaModalClose = ()=>{
-    setOpenSfaModal(false)
-  }
-  const handleSfaClick=(land)=>{
+
+  const handleSfaModalClose = () => {
+    setOpenSfaModal(false);
+  };
+
+  const handleSfaClick = (land) => {
     setSelectedLand(land);
-    console.log(land)
-    setOpenSfaModal(true)
-  }
+    setOpenSfaModal(true);
+  };
+
   // Handler for opening EditLandModal
   const handleEditClick = (land) => {
-    setSelectedLand(land); // Set the selected land data
+    setSelectedLand(land);
     setOpenEditModal(true); // Open the EditLandModal
+  };
+
+  // Handle delete action
+  const handleDeleteClick = async (landId) => {
+    console.log(landId)
+    try {
+      await deleteLandBankLocation(landId).unwrap(); // Call the delete mutation
+      alert("Land location deleted successfully!");
+      refetch(); // Re-fetch data after deletion to refresh the table
+    } catch (error) {
+      console.error("Error deleting land location:", error);
+      alert("Failed to delete land location!");
+    }
   };
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error occurred!</div>;
 
-  const currentRows =
-    data?.data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) ||
-    [];
+  const filteredRows = data?.data?.filter((row) =>
+    row?.land_name?.toLowerCase().includes(searchQuery?.toLowerCase())
+  ) || [];
+
+  const currentRows = filteredRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[70%] mx-auto my-8 rounded-md">
       <div className="flex flex-row my-6 px-10 items-center justify-between">
         <div className="flex items-center">
           <TextField
-            placeholder="Search"
+            placeholder="Search by Land Name"
             variant="outlined"
             size="small"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             style={{ backgroundColor: "#f9f9f9", borderRadius: "8px" }}
           />
         </div>
 
         <div className="flex-grow flex justify-center">
-          <h2 className="text-2xl text-[#29346B] font-semibold">
-            Land Listing
-          </h2>
+          <h2 className="text-2xl text-[#29346B] font-semibold">Land Listing</h2>
         </div>
 
         <div className="flex items-center">
@@ -111,20 +131,20 @@ function LandListing() {
         </div>
       </div>
 
-      <TableContainer style={{ borderRadius: "10px", overflow: "hidden" }}>
+      <TableContainer style={{ borderRadius: "10px", overflow: "hidden", overflowX: "auto" }}>
         <Table>
           <TableHead>
             <TableRow style={{ backgroundColor: "#F2EDED" }}>
               <TableCell align="center">Sr No.</TableCell>
-              <TableCell align="center">Energy Type</TableCell>
-              <TableCell align="center">Status</TableCell>
-              <TableCell align="center">User Full Name</TableCell>
-              <TableCell align="center">Category</TableCell>
               <TableCell align="center">Land Name</TableCell>
+              <TableCell align="center">Category</TableCell>
+              <TableCell align="center">Energy Type</TableCell>
+              <TableCell align="center">User Full Name</TableCell>
+              <TableCell align="center">Status</TableCell>
               <TableCell align="center">Create Date</TableCell>
               <TableCell align="center">Action</TableCell>
               <TableCell align="center">Approve</TableCell>
-              <TableCell align="center">SFA</TableCell> {/* New SFA Column */}
+              <TableCell align="center">SFA</TableCell>
             </TableRow>
           </TableHead>
 
@@ -132,24 +152,14 @@ function LandListing() {
             {currentRows.map((row, index) => (
               <TableRow key={row.id}>
                 <TableCell align="center">{index + 1}</TableCell>
-                <TableCell align="center">{row.solar_or_winds}</TableCell>
-                <TableCell align="center">{row.land_bank_status}</TableCell>
+                <TableCell align="center">{row?.land_name}</TableCell>
+                <TableCell align="center">{row?.land_category_name}</TableCell>
+                <TableCell align="center">{row?.solar_or_winds}</TableCell>
+                <TableCell align="center">{row.user_full_name || "N/A"}</TableCell>
+                <TableCell align="center">{row?.land_bank_status}</TableCell>
+                <TableCell align="center">{new Date(row.created_at).toLocaleDateString()}</TableCell>
                 <TableCell align="center">
-                  {row.user_full_name || "N/A"}
-                </TableCell>
-                <TableCell align="center">{row.land_category_name}</TableCell>
-                <TableCell align="center">{row.land_name}</TableCell>
-                <TableCell align="center">
-                  {new Date(row.created_at).toLocaleDateString()}
-                </TableCell>
-                <TableCell align="center">
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "10px",
-                    }}
-                  >
+                  <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
                     <AiOutlineCheck
                       style={{ cursor: "pointer", color: "green" }}
                       title="Approve"
@@ -160,9 +170,10 @@ function LandListing() {
                       title="Edit"
                       onClick={() => handleEditClick(row)} // Open EditLandModal on click
                     />
-                    <AiOutlineStop
-                      style={{ cursor: "pointer", color: "red" }}
+                    <DeleteIcon
+                      style={{ cursor: "pointer", color: "#df3d34", fontSize: "15px" }}
                       title="Delete"
+                      onClick={() => handleDeleteClick(row.id)} // Trigger delete on click
                     />
                   </div>
                 </TableCell>
@@ -185,9 +196,8 @@ function LandListing() {
                     <span
                       style={{
                         cursor: "not-allowed",
-                        color: "#A0A0A0", // Grayed out color for disabled state
+                        color: "#A0A0A0",
                         fontWeight: "bold",
-                        textDecoration: "none",
                       }}
                     >
                       Approve
@@ -198,16 +208,11 @@ function LandListing() {
                   <AiOutlineFileText
                     style={{ cursor: "pointer", color: "#29346B" }} // SFA icon
                     title="SFA"
-                    onClick={() => {
-                      handleSfaClick(row)
-                      // Add functionality for SFA icon click
-                      // console.log("SFA clicked for land:", row);
-                    }}
+                    onClick={() => handleSfaClick(row)}
                   />
                 </TableCell>
               </TableRow>
-            ))
-            }
+            ))}
           </TableBody>
         </Table>
 
@@ -223,30 +228,16 @@ function LandListing() {
       </TableContainer>
 
       {/* Add Land Modal */}
-      <LandActivityModal
-        open={openAddLandModal}
-        setOpen={setOpenAddLandModal}
-        // refetch={refetch}
-      />
+      <LandActivityModal open={openAddLandModal} setOpen={setOpenAddLandModal} />
 
       {/* Approve Land Modal */}
-      <LandApproveModal
-        open={openApproveModal}
-        setOpen={setOpenApproveModal}
-        selectedLand={selectedLand} // Pass the selected land data to the modal
-      />
+      <LandApproveModal open={openApproveModal} setOpen={setOpenApproveModal} selectedLand={selectedLand} />
 
       {/* Edit Land Modal */}
-      <EditLandModal
-        open={openEditModal} // State to control the modal
-        setOpen={setOpenEditModal} // Function to close the modal
-        selectedLand={selectedLand} // Pass the selected land data
-      />
-      <AssessmentFormModal
-        handleClose={handleSfaModalClose}
-        open={openSfaModal}
-        selectedLand={selectedLand}
-      />
+      <EditLandModal open={openEditModal} setOpen={setOpenEditModal} selectedLand={selectedLand} />
+
+      {/* SFA Modal */}
+      <AssessmentFormModal handleClose={handleSfaModalClose} open={openSfaModal} selectedLand={selectedLand} />
     </div>
   );
 }

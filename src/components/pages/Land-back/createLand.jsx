@@ -21,7 +21,7 @@ export default function LandActivityModal({
   const [landTitle, setLandTitle] = useState('');
   const { data: categories, isLoading, isError } = useGetLandCategoriesQuery();
     const { data, refetch } = useGetLandBankMasterQuery();
-  
+  // console.log(selectedEnergy,landTitle,selectedCategory)
   const [files, setFiles] = useState({
     landLocation: [],
     landSurveyNumber: [],
@@ -55,6 +55,18 @@ export default function LandActivityModal({
   const handleSubmit = async () => {
     const formData = new FormData();
 
+    if (!selectedCategory?.id || !landTitle || !selectedEnergy?.label) {
+      if (!selectedCategory?.id) {
+          toast.error('Land category is required.');
+      }
+      if (!landTitle) {
+          toast.error('Land name is required.');
+      }
+      if (!selectedEnergy?.label) {
+          toast.error('Energy type (Solar/Wind) is required.');
+      }
+      return; // Stop function execution if validation fails
+  }
 
     formData.append('land_category_id', selectedCategory?.id || '');
     formData.append('land_name', landTitle);
@@ -119,7 +131,7 @@ export default function LandActivityModal({
         </DialogTitle>
         <DialogContent>
           <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-            Land Title
+            Land Title<span className="text-red-600"> *</span>
           </label>
           <input
             type="text"
@@ -131,7 +143,7 @@ export default function LandActivityModal({
 
           {/* Select Category Autocomplete */}
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-            Select Category
+            Select Category<span className="text-red-600"> *</span>
           </label>
           <Autocomplete
             options={categories?.data || []} // Use categories from the API response
@@ -162,7 +174,7 @@ export default function LandActivityModal({
 
           {/* Energy Type Autocomplete */}
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-            Select Energy Type
+            Select Energy Type<span className="text-red-600"> *</span>
           </label>
           <Autocomplete
             options={energyOptions}

@@ -49,6 +49,7 @@ function UserTable() {
     
     // State for Input fields:
     const [open, setOpen] = useState(false);
+    
     const [isEditMode, setIsEditMode] = useState(false);
     const [email, setEmail] = useState('');
     const [fullName, setFullName] = useState('');
@@ -62,6 +63,7 @@ function UserTable() {
     const [department, setDepartment] = useState('');
     const [designation, setDesignation] = useState('');
     const [profileImage, setProfileImage] = useState(null);
+    const [previewImage, setPreviewImage] = useState(null);
     const [selectedUserId, setSelectedUserId] = useState(null);
 
     const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
@@ -79,6 +81,7 @@ function UserTable() {
 
     const [updateUserPassword] =useUpdateUserPasswordMutation();
     const handleOpenModal = (user = null) => {
+      console.log(user)
       if (user) {
         setIsEditMode(true);
         setEmail(user?.email || '');
@@ -89,7 +92,9 @@ function UserTable() {
         setDob(user?.dob || '');
         setDepartment(user?.department || '');
         setDesignation(user?.designation || '');
-        setProfileImage(null);
+        // setProfileImage(null);
+        setProfileImage(user?.profile_image || null);
+
         setSelectedUserId(user?.id);
       } else {
         setIsEditMode(false);
@@ -326,9 +331,9 @@ function UserTable() {
             </TableHead>
   
             <TableBody>
-              {currentRows?.map((row) => (
+              {currentRows?.map((row,index) => (
                 <TableRow key={row.id}>
-                  <TableCell align="center" style={{ fontSize: '16px' }}>1</TableCell>
+                  <TableCell align="center" style={{ fontSize: '16px' }}>{index+1}</TableCell>
                   <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row?.id}</TableCell>
                   <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652', maxWidth: '200px', overflowX: 'auto' }}>{row.full_name}</TableCell>
                   <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row?.designation || '--'}</TableCell>
@@ -456,7 +461,7 @@ function UserTable() {
               </div>
               )
             } */}
-            {isEditMode && (
+            {/* {isEditMode && (
   <div className="flex flex-col items-center space-y-2">
     <label htmlFor="file-upload" className="cursor-pointer">
       <div className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
@@ -469,12 +474,117 @@ function UserTable() {
       accept="image/*"
       className="hidden"
       onChange={(e) => setProfileImage(e.target.files[0])}
-      // onChange={(e) => setProfileImage(URL.createObjectURL(e.target.files[0]))}
     />
-    {/* import  from '@mui/icons-material/CameraAlt'; */}
-    <p className="text-blue-900 font-medium text-sm">Add Photo</p>
+    <p className="text-blue-900 font-medium text-sm">Upload Photo</p>
+  </div>
+)} */}
+{/* {isEditMode && (
+  <div className="flex flex-col items-center space-y-2">
+    <label htmlFor="file-upload" className="cursor-pointer">
+      {profileImage &&  profileImage !== "http://127.0.0.1:8000/media/profile_image/default_profile.jpeg" ? (
+        <img
+          src={profileImage}
+          alt="Profile"
+          className="w-24 h-24 rounded-full object-cover shadow-lg"
+        />
+      ) : (
+        <div className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+          <CameraAltIcon className="w-16 h-16 text-white" />
+        </div>
+      )}
+    </label>
+    <input
+      id="file-upload"
+      type="file"
+      accept="image/*"
+      className="hidden"
+      // onChange={(e) => setProfileImage(URL.createObjectURL(e.target.files[0]))}
+      onChange={(e) => {
+        const file = e.target.files[0];
+        // setPreviewImage(URL.createObjectURL(file));
+        // setProfileImage(e.target.files[0])}
+        if (file) {
+            setProfileImage(file); // Store the actual file for upload
+            setPreviewImage(URL.createObjectURL(file)); // Store the preview URL for display
+          }
+      }}
+    />
+    <p className="text-blue-900 font-medium text-sm">Upload Photo</p>
+  </div>
+)} */}
+{/* {isEditMode && (
+  <div className="flex flex-col items-center space-y-2">
+    <label htmlFor="file-upload" className="cursor-pointer">
+    {}
+      {previewImage ? (
+        <img
+          src={previewImage}
+          alt="Profile"
+          className="w-24 h-24 rounded-full object-cover shadow-lg"
+        />
+      ) : (
+        <div className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+          <CameraAltIcon className="w-16 h-16 text-white" />
+        </div>
+      )}
+    </label>
+    <input
+      id="file-upload"
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) => {
+        const file = e.target.files[0];
+        if (file) {
+          setProfileImage(file); // Store the actual file for upload
+          setPreviewImage(URL.createObjectURL(file)); // Store the preview URL for display
+        }
+      }}
+    />
+    <p className="text-blue-900 font-medium text-sm">Upload Photo</p>
+  </div>
+)} */}
+
+{isEditMode && (
+  <div className="flex flex-col items-center space-y-2">
+    <label htmlFor="file-upload" className="cursor-pointer">
+      {previewImage ? (
+        <img
+          src={previewImage} // Show new preview if available
+          alt="Profile"
+          className="w-24 h-24 rounded-full object-cover shadow-lg"
+        />
+      ) : profileImage && profileImage !== "http://127.0.0.1:8000/media/profile_image/default_profile.jpeg" ? (
+        <img
+          src={typeof profileImage === "string" ? profileImage : URL.createObjectURL(profileImage)} // Show old profile image
+          alt="Profile"
+          className="w-24 h-24 rounded-full object-cover shadow-lg"
+        />
+      ) : (
+        <div className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+          <CameraAltIcon className="w-16 h-16 text-white" />
+        </div>
+      )}
+    </label>
+    <input
+      id="file-upload"
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) => {
+        const file = e.target.files[0];
+        if (file) {
+          setProfileImage(file); // Store the actual file for upload
+          setPreviewImage(URL.createObjectURL(file)); // Store the preview URL for display
+        }
+      }}
+    />
+    <p className="text-blue-900 font-medium text-sm">Upload Photo</p>
   </div>
 )}
+
+
+
             {/* Email Input */}
             <div className='col-span-2 md:col-span-1'>
               <label htmlFor="email" className="block text-lg font-medium text-gray-700">
@@ -583,6 +693,7 @@ function UserTable() {
                   id="dob"
                   type="date"
                   value={dob}
+                  max={new Date().toISOString().split("T")[0]}
                   onChange={(e) => setDob(e.target.value)}
                   placeholder="Date of Birth"
                   className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 mb-2 focus:outline-none"
