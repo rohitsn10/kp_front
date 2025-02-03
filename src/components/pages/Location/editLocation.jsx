@@ -57,13 +57,13 @@ export default function EditLocationModal({
     };
 
     try {
-      await updateLandBankLocation(formData).unwrap();
-      toast.success('Location updated successfully!');
-      handleClose();
-    } catch (error) {
-      toast.error('Failed to update location!');
-      console.error('Error updating location:', error);
-    }
+        await updateLandBankLocation(formData).unwrap();
+        toast.success('Location updated successfully!');
+        handleClose();
+      } catch (error) {
+        toast.error('Failed to update location!');
+        console.error('Error updating location:', error);
+      }
   };
 
   const landBankOptions = landBankData?.data?.map((landBank) => ({

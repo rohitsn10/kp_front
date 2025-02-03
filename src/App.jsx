@@ -24,7 +24,6 @@ import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
 function App() {
   return (
     <div>
-
       <Routes>
         <Route path="/login" element={<Login />} />
 

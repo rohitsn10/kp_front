@@ -214,7 +214,9 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
                     className="text-sm text-gray-600 cursor-pointer hover:underline"
                     onClick={() => handleFilePreview(file)}
                   >
-                    {file.url || file.name}
+                    <p className="inline-block px-4 py-2 bg-[#F6812D] text-white rounded-md hover:bg-[#E66A1F] transition-colors duration-200">
+                      View File
+                    </p>
                   </div>
                 ))}
               </div>
@@ -230,7 +232,9 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
                     className="text-sm text-gray-600 cursor-pointer hover:underline"
                     onClick={() => handleFilePreview(file)}
                   >
-                    {file.url || file.name}
+                    <p className="inline-block px-4 py-2 bg-[#F6812D] text-white rounded-md hover:bg-[#E66A1F] transition-colors duration-200">
+                      View File
+                    </p>
                   </div>
                 ))}
               </div>
@@ -248,7 +252,9 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
                     className="text-sm text-gray-600 cursor-pointer hover:underline"
                     onClick={() => handleFilePreview(file)}
                   >
-                    {file.url || file.name}
+                    <p className="inline-block px-4 py-2 bg-[#F6812D] text-white rounded-md hover:bg-[#E66A1F] transition-colors duration-200">
+                      View File
+                    </p>
                   </div>
                 ))}
               </div>
@@ -264,7 +270,9 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
                     className="text-sm text-gray-600 cursor-pointer hover:underline"
                     onClick={() => handleFilePreview(file)}
                   >
-                    {file.url || file.name}
+                    <p className="inline-block px-4 py-2 bg-[#F6812D] text-white rounded-md hover:bg-[#E66A1F] transition-colors duration-200">
+                      View File
+                    </p>
                   </div>
                 ))}
               </div>
@@ -282,7 +290,9 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
                     className="text-sm text-gray-600 cursor-pointer hover:underline"
                     onClick={() => handleFilePreview(file)}
                   >
-                    {file.url || file.name}
+                    <p className="inline-block px-4 py-2 bg-[#F6812D] text-white rounded-md hover:bg-[#E66A1F] transition-colors duration-200">
+                      View File
+                    </p>
                   </div>
                 ))}
               </div>
@@ -298,7 +308,9 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
                     className="text-sm text-gray-600 cursor-pointer hover:underline"
                     onClick={() => handleFilePreview(file)}
                   >
-                    {file.url || file.name}
+                    <p className="inline-block px-4 py-2 bg-[#F6812D] text-white rounded-md hover:bg-[#E66A1F] transition-colors duration-200">
+                      View File
+                    </p>
                   </div>
                 ))}
               </div>
@@ -315,7 +327,9 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
                   className="text-sm text-gray-600 cursor-pointer hover:underline"
                   onClick={() => handleFilePreview(file)}
                 >
-                  {file.url || file.name}
+                  <p className="inline-block px-4 py-2 bg-[#F6812D] text-white rounded-md hover:bg-[#E66A1F] transition-colors duration-200">
+                    View File
+                  </p>
                 </div>
               ))}
             </div>
