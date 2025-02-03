@@ -166,14 +166,25 @@ function UserTable() {
         if (profileImage) {
           formData.append('profile_image', profileImage);
         }
+        // else{
+        //   toast.error('Please select a profile image.');
+        //   return;
+        // }
+        console.log("ProfilePic,",profileImage)
         await updateUser({userId:selectedUserId,formData:formData}); 
 
         refetch();
       } else {
 
-        await createUser(userPayload);
-        toast.success('User created successfully!');
-        refetch();
+        let response = await createUser(userPayload);
+        // console.log(response);
+        if(response?.data?.status){
+          toast.success('User created successfully!');
+          refetch();
+        }else{
+          toast.error(response?.data?.message)
+        }
+
       }
       handleCloseModal();
     };
@@ -457,7 +468,8 @@ function UserTable() {
       type="file"
       accept="image/*"
       className="hidden"
-      onChange={(e) => setProfileImage(URL.createObjectURL(e.target.files[0]))}
+      onChange={(e) => setProfileImage(e.target.files[0])}
+      // onChange={(e) => setProfileImage(URL.createObjectURL(e.target.files[0]))}
     />
     {/* import  from '@mui/icons-material/CameraAlt'; */}
     <p className="text-blue-900 font-medium text-sm">Add Photo</p>
