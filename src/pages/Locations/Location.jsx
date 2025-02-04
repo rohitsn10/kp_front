@@ -14,7 +14,8 @@ import {
 import { RiEditFill } from 'react-icons/ri';
 import LocationModal from '../../components/pages/Location/createLocation';
 import EditLocationModal from '../../components/pages/Location/editLocation'; // Import the EditLocationModal
-import { useGetLandBankLocationsQuery } from '../../api/users/locationApi';
+import { useDeleteLandBankLocationMutation, useGetLandBankLocationsQuery } from '../../api/users/locationApi';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 function LocationListing() {
   const [locationFilter, setLocationFilter] = useState('');
@@ -24,10 +25,21 @@ function LocationListing() {
   const [openEditModal, setOpenEditModal] = useState(false); // State for EditLocationModal
   const [locationInput, setLocationInput] = useState('');
   const [selectedLocation, setSelectedLocation] = useState(null); // State for selected location
+  const [deleteLandBankLocation] = useDeleteLandBankLocationMutation();
 
   // Use the hook to fetch data
   const { data, error, isLoading, refetch } = useGetLandBankLocationsQuery();
-
+  const handleDelete = async (id) => {
+    try {
+      await deleteLandBankLocation(id).unwrap(); // Perform the deletion
+      alert("Land location deleted successfully!");
+      refetch(); // Refresh the data after deletion
+    } catch (error) {
+      console.error("Error deleting land location:", error);
+      alert("Failed to delete land location!");
+    }
+  };
+  
   // Handle loading and error states
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -147,6 +159,18 @@ function LocationListing() {
                     title="Edit"
                     onClick={() => handleEditClick(row)} // Open EditLocationModal on click
                   />
+                          {/* <Button
+          variant="outlined"
+          color="error"
+          onClick={() => handleDelete(row.id)} // Delete the location
+        >
+          Delete
+        </Button> */}
+        <DeleteIcon
+                      style={{ cursor: "pointer", color: "#df3d34", fontSize: "20px" }}
+                      title="Delete"
+                      onClick={() => handleDelete(row.id)} // Trigger delete on click
+                    />
                 </TableCell>
               </TableRow>
             ))}

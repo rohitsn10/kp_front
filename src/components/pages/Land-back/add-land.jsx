@@ -148,11 +148,11 @@ export default function AddLandDoc() {
     }
   };
   return (
-    <div className="p-6 max-w-4xl max-h-[900px] overflow-y-auto mx-auto bg-white rounded-md shadow-md my-10">
+    <div className="p-6 max-w-4xl max-h-[95%] overflow-y-auto mx-auto bg-white rounded-md shadow-md my-10">
       <h2 className="text-2xl font-semibold text-[#29346B] mb-5">Add Land</h2>
 
       <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-        Land Title
+        Land Title <span className="text-red-600"> *</span>
       </label>
       <input
         type="text"
@@ -164,7 +164,7 @@ export default function AddLandDoc() {
 
       {/* Category */}
       <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-        Select Category
+        Select Category <span className="text-red-600"> *</span>
       </label>
       <Autocomplete
         options={categories?.data || []}
@@ -202,7 +202,7 @@ export default function AddLandDoc() {
         <div className="flex justify-between mb-4">
           <div className="w-[48%]">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              DILR (Upload)
+              DILR (Upload) <span className="text-red-600"> *</span>
             </label>
             <input
               type="file"
@@ -212,7 +212,7 @@ export default function AddLandDoc() {
           </div>
           <div className="w-[48%]">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              NA/65B Permission (Upload)
+              NA/65B Permission (Upload) <span className="text-red-600"> *</span>
             </label>
             <input
               type="file"
@@ -227,7 +227,7 @@ export default function AddLandDoc() {
           {/* 7/12 Revenue Records & TSR Upload */}
           <div className="w-[48%]">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              7/12 Revenue Records (Upload)
+              7/12 Revenue Records (Upload) <span className="text-red-600"> *</span>
             </label>
             <input
               type="file"
@@ -237,7 +237,7 @@ export default function AddLandDoc() {
           </div>
           <div className="w-[48%]">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              TSR - Title Search Report (Upload)
+              TSR - Title Search Report (Upload) <span className="text-red-600"> *</span>
             </label>
             <input
               type="file"

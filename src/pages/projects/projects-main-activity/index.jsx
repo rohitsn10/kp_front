@@ -220,6 +220,13 @@ function ProjectMainActivityPage() {
                     </Button>
                 </DialogActions>
             </Dialog>
+            <CreateProjectActivity
+                open={open}
+                setOpen={setOpen}
+                mainActivityInput={mainActivityInput}
+                setMainActivityInput={setMainActivityInput}
+                refetch={refetch}
+            />
         </div>
     );
 }

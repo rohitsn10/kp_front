@@ -76,7 +76,7 @@ function LandListing() {
 
   // Handle delete action
   const handleDeleteClick = async (landId) => {
-    console.log(landId)
+    // console.log(landId)
     try {
       await deleteLandBankLocation(landId).unwrap(); // Call the delete mutation
       alert("Land location deleted successfully!");

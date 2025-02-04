@@ -441,7 +441,7 @@ function UserTable() {
             {/* Full Name Input */}
             <div className='col-span-2 md:col-span-1'>
               <label htmlFor="fullName" className="block text-lg font-medium text-gray-700">
-                Full Name
+                Full Name <span className="text-red-600"> *</span>
               </label>
               <input
                 id="fullName"
@@ -588,7 +588,7 @@ function UserTable() {
             {/* Email Input */}
             <div className='col-span-2 md:col-span-1'>
               <label htmlFor="email" className="block text-lg font-medium text-gray-700">
-                Email
+                Email <span className="text-red-600"> *</span>
               </label>
               <input
                 id="email"
@@ -604,7 +604,7 @@ function UserTable() {
             {/* Phone Input */}
             <div className='col-span-2 md:col-span-1'>
               <label htmlFor="phone" className="block text-lg font-medium text-gray-700">
-                Phone
+                Phone <span className="text-red-600"> *</span>
               </label>
               <input
                 id="phone"
@@ -619,7 +619,7 @@ function UserTable() {
             {!isEditMode && (
               <div className='col-span-2 md:col-span-1'>
               <label htmlFor="password" className="block text-lg font-medium text-gray-700">
-                  Password
+                  Password <span className="text-red-600"> *</span>
                 </label>
                 <input
                   id="password"

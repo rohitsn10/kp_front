@@ -49,7 +49,7 @@ export default function CreateProjectActivity({
       refetch()
     } catch (error) {
       console.error('Failed to add activity:', error);
-      alert('Error adding activity. Please try again.');
+      // alert('Error adding activity. Please try again.');
     }
   };
 

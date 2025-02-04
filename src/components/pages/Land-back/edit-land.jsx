@@ -117,11 +117,11 @@ export default function EditLandModal({
         }}
       >
         <DialogTitle className="text-[#29346B] text-2xl font-semibold mb-5">
-          Edit Land
+          Edit Land 
         </DialogTitle>
         <DialogContent>
           <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-            Land Title
+            Land Title <span className="text-red-600"> *</span>
           </label>
           <input
             type="text"
@@ -133,7 +133,7 @@ export default function EditLandModal({
 
           {/* Select Category Autocomplete */}
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-            Select Category
+            Select Category <span className="text-red-600"> *</span>
           </label>
           <Autocomplete
             options={categories?.data || []}
@@ -164,7 +164,7 @@ export default function EditLandModal({
 
           {/* Energy Type Autocomplete */}
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-            Select Energy Type
+            Select Energy Type <span className="text-red-600"> *</span>
           </label>
           <Autocomplete
             options={energyOptions}

@@ -35,11 +35,18 @@ export const landLocationApi = createApi({
         body: data,
       }),
     }),
+    deleteLandBankLocation: builder.mutation({
+      query: (id) => ({
+        url: `land_module/update_land_bank_location/${id}`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
 export const {
   useCreateLandBankLocationMutation,
   useGetLandBankLocationsQuery,
-  useUpdateLandBankLocationMutation 
+  useUpdateLandBankLocationMutation,
+  useDeleteLandBankLocationMutation
 } = landLocationApi;
