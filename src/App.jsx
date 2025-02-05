@@ -19,6 +19,9 @@ import ProjectCategoryPage from "./pages/projects/projects-category/index.jsx";
 import ProjectMultipleListing from "./pages/projects/projects-multiple-activity/index.jsx";
 import AddLandDoc from "./components/pages/Land-back/add-land.jsx";
 import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
+import ProjectListingTable from "./pages/projects/index.jsx";
+// import SFAPage from "./pages/Sfa-page/index.jsx";
+import SiteVisitTable from "./pages/Sfa-page/index.jsx";
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
 function App() {
@@ -114,7 +117,7 @@ function App() {
           path="/project"
           element={
             <ProtectedRoute>
-              <MainLayout><ProjectPage /></MainLayout>
+              <MainLayout><ProjectListingTable /></MainLayout>
             </ProtectedRoute>
           }
         />
@@ -160,6 +163,14 @@ function App() {
           element={
             <ProtectedRoute>
               <MainLayout><AddProject /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sfa-page"
+          element={
+            <ProtectedRoute>
+              <MainLayout><SiteVisitTable /></MainLayout>
             </ProtectedRoute>
           }
         />

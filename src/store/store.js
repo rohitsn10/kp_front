@@ -6,6 +6,7 @@ import { landLocationApi } from "../api/users/locationApi.js";
 import { activityApi } from "../api/users/projectActivityApi.js";
 import { subActivityApi } from "../api/users/subActivityApi.js";
 import { multipleActivityApi } from "../api/users/multipleActivityApi.js";
+import { sfaApi } from "../api/sfa/sfaApi.js";
 
 
 const store = configureStore({
@@ -16,7 +17,8 @@ const store = configureStore({
     [landLocationApi.reducerPath]: landLocationApi.reducer,
     [activityApi.reducerPath]: activityApi.reducer,
     [subActivityApi.reducerPath]:subActivityApi.reducer,
-    [multipleActivityApi.reducerPath]:multipleActivityApi.reducer
+    [multipleActivityApi.reducerPath]:multipleActivityApi.reducer,
+    [sfaApi.reducerPath]:sfaApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -27,6 +29,7 @@ const store = configureStore({
   .concat(activityApi.middleware)
   .concat(subActivityApi.middleware)
   .concat(multipleActivityApi.middleware)
+  .concat(sfaApi.middleware)
 });
 
 export default store;
