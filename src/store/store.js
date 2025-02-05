@@ -7,6 +7,7 @@ import { activityApi } from "../api/users/projectActivityApi.js";
 import { subActivityApi } from "../api/users/subActivityApi.js";
 import { multipleActivityApi } from "../api/users/multipleActivityApi.js";
 import { projectApi } from "../api/users/projectApi.js";
+import { documentApi } from "../api/users/documentApi.js";
 
 
 const store = configureStore({
@@ -19,6 +20,7 @@ const store = configureStore({
     [subActivityApi.reducerPath]:subActivityApi.reducer,
     [multipleActivityApi.reducerPath]:multipleActivityApi.reducer,
     [projectApi.reducerPath]: projectApi.reducer,
+    [documentApi.reducerPath]: documentApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -30,6 +32,7 @@ const store = configureStore({
   .concat(subActivityApi.middleware)
   .concat(multipleActivityApi.middleware)
   .concat(projectApi.middleware)
+  .concat(documentApi.middleware)
 });
 
 export default store;

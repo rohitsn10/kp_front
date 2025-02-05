@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -15,6 +15,9 @@ import { RiEditFill } from 'react-icons/ri';
 import AddDocumentModal from '../../components/pages/Documents/add-documents';
 import EditDocumentModal from '../../components/pages/Documents/edit-documents';
 
+// Assuming you have the hook useGetDocumentsQuery imported
+import { useGetDocumentsQuery } from '../../api/users/documentApi';
+
 function DocumentListing() {
   const [documentFilter, setDocumentFilter] = useState('');
   const [page, setPage] = useState(0);
@@ -23,50 +26,22 @@ function DocumentListing() {
   const [openEdit, setOpenEdit] = useState(false); 
   const [selectedDocument, setSelectedDocument] = useState(null);
 
-  // Mock data for documents
-  const mockDocuments = [
-    {
-      id: 1,
-      document_name: 'Project Plan',
-      document_number: 'DOC-001',
-      project_name: 'Green Valley',
-      confidential_level: 'High',
-      created_at: '2023-10-01',
-      created_by_full_name: 'John Doe',
-    },
-    {
-      id: 2,
-      document_name: 'Budget Report',
-      document_number: 'DOC-002',
-      project_name: 'Blue Horizon',
-      confidential_level: 'Medium',
-      created_at: '2023-10-05',
-      created_by_full_name: 'Jane Smith',
-    },
-    {
-      id: 3,
-      document_name: 'Risk Assessment',
-      document_number: 'DOC-003',
-      project_name: 'Red Sky',
-      confidential_level: 'Low',
-      created_at: '2023-10-10',
-      created_by_full_name: 'Alice Johnson',
-    },
-    // Add more mock data as needed
-  ];
+  // Fetch documents from the API using the hook
+  const { data, isLoading, isError } = useGetDocumentsQuery();
 
-  const rows = mockDocuments.map((item, index) => ({
+  const rows = data?.data.map((item, index) => ({
     sr: index + 1,
     id: item.id,
     documentName: item.document_name,
     documentNumber: item.document_number,
-    projectName: item.project_name,
-    confidentialLevel: item.confidential_level,
+    projectName: item.project_name, // You may need to map this if you have a project name to display
+    confidentialLevel: item.confidentiallevel,
     createdAt: new Date(item.created_at).toLocaleDateString(),
-    createdByFullName: item.created_by_full_name,
+    createdByFullName: item.created_by_full_name, // You can map this to the user name if needed
+    keywords: item.keywords, // New field for keywords
   }));
 
-  const filteredRows = rows.filter((row) =>
+  const filteredRows = rows?.filter((row) =>
     row.documentName.toLowerCase().includes(documentFilter.toLowerCase())
   );
 
@@ -79,7 +54,7 @@ function DocumentListing() {
     setPage(0);
   };
 
-  const currentRows = filteredRows.slice(
+  const currentRows = filteredRows?.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
@@ -88,9 +63,17 @@ function DocumentListing() {
     setOpen(false);
   };
 
-  const handleEditClick = (document) => {
-    setSelectedDocument(document);  // Set the selected document to edit
-    setOpenEdit(true);  // Open the edit modal
+  const handleEditModalClose = () => {
+    setOpenEdit(false);
+  };
+  const handleEditClick = (rowId) => {
+
+    const fullDocument = data?.data.find((item) => item.id === rowId);
+    
+    if (fullDocument) {
+      setSelectedDocument(fullDocument);  // Set the selected full document
+      setOpenEdit(true);  // Open the edit modal
+    }
   };
 
   return (
@@ -154,13 +137,16 @@ function DocumentListing() {
                 Created By
               </TableCell>
               <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
+                Keywords
+              </TableCell>
+              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
                 Action
               </TableCell>
             </TableRow>
           </TableHead>
 
           <TableBody>
-            {currentRows.map((row) => (
+            {currentRows?.map((row) => (
               <TableRow key={row.sr}>
                 <TableCell align="center" style={{ fontSize: '16px' }}>{row.sr}</TableCell>
                 <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row.documentName}</TableCell>
@@ -169,6 +155,7 @@ function DocumentListing() {
                 <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row.confidentialLevel}</TableCell>
                 <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row.createdAt}</TableCell>
                 <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row.createdByFullName}</TableCell>
+                <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652' }}>{row.keywords}</TableCell>
                 <TableCell align="center">
                   <RiEditFill
                     style={{ 
@@ -178,7 +165,7 @@ function DocumentListing() {
                       textAlign: 'center' 
                     }}
                     title="Edit"
-                    onClick={() => handleEditClick(row)} // Handle edit click
+                    onClick={() => handleEditClick(row.id)}
                   />
                 </TableCell>
               </TableRow>
@@ -189,7 +176,7 @@ function DocumentListing() {
         {/* Pagination */}
         <TablePagination
           component="div"
-          count={filteredRows.length}
+          count={filteredRows?.length || 0}
           page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
@@ -203,7 +190,7 @@ function DocumentListing() {
 
       <EditDocumentModal
         open={openEdit}
-        onClose={handleModalClose}
+        onClose={handleEditModalClose}
         document={selectedDocument} 
       />
 
