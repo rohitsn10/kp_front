@@ -74,7 +74,7 @@ function LocationListing() {
 
   const handleModalClose = () => {
     setOpen(false);
-    refetch();  // Trigger refetch after the modal closes
+    refetch();  
   };
 
   // Handler for opening EditLocationModal

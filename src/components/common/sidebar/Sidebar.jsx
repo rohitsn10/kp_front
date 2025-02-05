@@ -26,7 +26,12 @@ function Sidebar() {
       name: 'Location',
       icons: <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/google-map-icon.png" alt="Location" width="40" height="40" />,
       links: "/location"
-    },    
+    },  
+    {
+      name: 'Documents',
+      icons: <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTS08KOBuqfP4UnLQ6StvxJnp-qJ5w-Y9zC3Q&s" alt="Document" width="40" height="40" />,
+      links: "/documents"
+    },   
     {
       name:'User',
       icons:<svg width="24" height="24" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">

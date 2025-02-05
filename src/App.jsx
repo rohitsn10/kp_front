@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import Login from './pages/login.jsx';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import Login from "./pages/login.jsx";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Home from "./pages/home.jsx";
 import MainLayout from "./layouts/mainLayout.jsx";
 import Landbank from "./pages/landbank.jsx";
@@ -22,6 +22,7 @@ import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
 import ProjectListingTable from "./pages/projects/index.jsx";
 // import SFAPage from "./pages/Sfa-page/index.jsx";
 import SiteVisitTable from "./pages/Sfa-page/index.jsx";
+import DocumentListing from "./pages/Document.jsx/Document-list.jsx";
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
 function App() {
@@ -35,25 +36,30 @@ function App() {
           path="/"
           element={
             <ProtectedRoute>
-              <MainLayout><Home /></MainLayout>
+              <MainLayout>
+                <Home />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
 
-        
         <Route
           path="/landbank"
           element={
             <ProtectedRoute>
-              <MainLayout><Landbank /></MainLayout>
+              <MainLayout>
+                <Landbank />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
-             <Route
+        <Route
           path="/add-land-doc"
           element={
             <ProtectedRoute>
-              <MainLayout><AddLandDoc /></MainLayout>
+              <MainLayout>
+                <AddLandDoc />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -62,16 +68,29 @@ function App() {
           path="/location"
           element={
             <ProtectedRoute>
-              <MainLayout><Loction /></MainLayout>
+              <MainLayout>
+                <Loction />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/documents"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <DocumentListing />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/user"
           element={
             <ProtectedRoute>
-              <MainLayout><UserPage /></MainLayout>
+              <MainLayout>
+                <UserPage />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -80,7 +99,9 @@ function App() {
           path="/user/create"
           element={
             <ProtectedRoute>
-              <MainLayout><CreateUserForm /></MainLayout>
+              <MainLayout>
+                <CreateUserForm />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -89,7 +110,9 @@ function App() {
           path="/tracking"
           element={
             <ProtectedRoute>
-              <MainLayout><TrackingPage /></MainLayout>
+              <MainLayout>
+                <TrackingPage />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -98,7 +121,9 @@ function App() {
           path="/reports"
           element={
             <ProtectedRoute>
-              <MainLayout><ReportsPage /></MainLayout>
+              <MainLayout>
+                <ReportsPage />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -107,7 +132,9 @@ function App() {
           path="/master"
           element={
             <ProtectedRoute>
-              <MainLayout><MasterPage /></MainLayout>
+              <MainLayout>
+                <MasterPage />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -117,7 +144,9 @@ function App() {
           path="/project"
           element={
             <ProtectedRoute>
-              <MainLayout><ProjectListingTable /></MainLayout>
+              <MainLayout>
+                <ProjectListingTable />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -126,7 +155,9 @@ function App() {
           path="/project/categories"
           element={
             <ProtectedRoute>
-              <MainLayout><ProjectCategoryPage /></MainLayout>
+              <MainLayout>
+                <ProjectCategoryPage />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -135,7 +166,9 @@ function App() {
           path="/project/main-activities"
           element={
             <ProtectedRoute>
-              <MainLayout><ProjectMainActivityPage /></MainLayout>
+              <MainLayout>
+                <ProjectMainActivityPage />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -144,7 +177,9 @@ function App() {
           path="/project/sub-activities"
           element={
             <ProtectedRoute>
-              <MainLayout><ProjectSubActivityPage /></MainLayout>
+              <MainLayout>
+                <ProjectSubActivityPage />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -153,7 +188,9 @@ function App() {
           path="/project/multiple-activities"
           element={
             <ProtectedRoute>
-              <MainLayout><ProjectMultipleListing /></MainLayout>
+              <MainLayout>
+                <ProjectMultipleListing />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -162,7 +199,9 @@ function App() {
           path="/project/add-projects"
           element={
             <ProtectedRoute>
-              <MainLayout><AddProject /></MainLayout>
+              <MainLayout>
+                <AddProject />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -178,7 +217,7 @@ function App() {
       </Routes>
       <ToastContainer />
     </div>
-  );  
+  );
 }
 
 export default App;
