@@ -22,7 +22,7 @@ import { useGetLandBankMasterQuery } from "../../api/users/landbankApi";
 import LandApproveModal from "../../components/pages/Land-back/approveLand";
 import EditLandModal from "../../components/pages/Land-back/edit-land";
 import { useNavigate } from "react-router-dom";
-import AssessmentFormModal from "../../components/pages/Land-back/sfa-form";
+// import AssessmentFormModal from "../../components/pages/Land-back/sfa-form";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDeleteLandBankLocationMutation } from "../../api/users/landbankApi"; // Import delete mutation
 // useDeleteLandBankLocationMutation
@@ -237,7 +237,7 @@ function LandListing() {
       <EditLandModal open={openEditModal} setOpen={setOpenEditModal} selectedLand={selectedLand} />
 
       {/* SFA Modal */}
-      <AssessmentFormModal handleClose={handleSfaModalClose} open={openSfaModal} selectedLand={selectedLand} />
+      {/* <AssessmentFormModal handleClose={handleSfaModalClose} open={openSfaModal} selectedLand={selectedLand} /> */}
     </div>
   );
 }
