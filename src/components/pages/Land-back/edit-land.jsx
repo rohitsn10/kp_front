@@ -9,12 +9,13 @@ import {
   MenuItem,
   Link,
 } from '@mui/material';
+import { useUpdateLandBankMasterMutation } from '../../../api/users/landbankApi';
 // import { useUpdateLandBankMutation } from '../../../api/landBank/landBankApi';
 // import { landBankApi,useUpdateLandBankMutation } from '../../../api/users/landbankApi';
 // landBankApi
 
 function EditLandBankModal({ open, handleClose, activeItem }) {
-  console.log(activeItem)
+  console.log(activeItem);
   const [formData, setFormData] = useState({
     land_bank_id: "",
     land_category_id: "",
@@ -34,7 +35,7 @@ function EditLandBankModal({ open, handleClose, activeItem }) {
     land_proposed_gss_files: [],
     land_transmission_line_files: [],
   });
-
+  const [updateLandBankMaster] = useUpdateLandBankMasterMutation();
   // States for removed files
   const [removedFiles, setRemovedFiles] = useState({
     land_attach_approval_report_files: [],
@@ -127,17 +128,17 @@ function EditLandBankModal({ open, handleClose, activeItem }) {
     Object.keys(removedFiles).forEach(fileType => {
       if (removedFiles[fileType].length > 0) {
         formDataToSend.append(
-          `remove_${fileType}`,
+          `${fileType}_to_remove`,
           removedFiles[fileType].join(',')
         );
       }
     });
 
     try {
-      // await updateLandBank({ 
-      //   land_bank_id: formData.land_bank_id, 
-      //   formData: formDataToSend 
-      // }).unwrap();
+      await updateLandBankMaster({ 
+        id: formData.land_bank_id, 
+        formData: formDataToSend 
+      }).unwrap();
       handleClose();
     } catch (error) {
       console.error('Error updating Land Bank:', error);
@@ -177,14 +178,22 @@ function EditLandBankModal({ open, handleClose, activeItem }) {
             const isRemoved = removedFiles[fieldName].includes(file.id);
             return (
               <div key={index} className="flex items-center gap-4 py-2">
+                <div className='flex flex-row gap-2'>
+                <p>{index+1}.</p>
                 <Link 
                   href={file.url} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className={isRemoved ? "line-through" : ""}
                 >
-                  {file.url.split('/').pop()}
+                  <p className='text-gray-800'>{file.url.split('/').pop()}</p>
                 </Link>
+                </div>
+                <Button 
+                  href={file.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >View File</Button>
                 <Button
                   onClick={() => handleRemoveFile(file.id, fieldName)}
                   color={isRemoved ? "secondary" : "error"}
