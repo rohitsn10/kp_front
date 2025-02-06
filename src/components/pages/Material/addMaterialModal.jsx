@@ -1,46 +1,68 @@
-import React, { useState } from 'react';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import { Autocomplete } from '@mui/material';
-
+import React, { useState } from "react";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import { Autocomplete } from "@mui/material";
+import { useGetMainProjectsQuery } from "../../../api/users/projectApi";
+import { useGetActivitiesQuery } from "../../../api/users/projectActivityApi";
+import { useGetDropdownSubActivitiesQuery } from "../../../api/users/subActivityApi";
+import { useGetSubSubActivityQuery } from "../../../api/users/multipleActivityApi";
 export default function AddMaterialModal({ open, setOpen }) {
-  const [vendorName, setVendorName] = useState('');
-  const [materialName, setMaterialName] = useState('');
-  const [uom, setUom] = useState('');
-  const [price, setPrice] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [prNumber, setPrNumber] = useState('');
-  const [poNumber, setPoNumber] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [projectId, setProjectId] = useState(null);
-  const [projectActivityId, setProjectActivityId] = useState(null);
-  const [subActivityId, setSubActivityId] = useState(null);
-  const [subSubActivityId, setSubSubActivityId] = useState(null);
+  const [vendorName, setVendorName] = useState("");
+  const [materialName, setMaterialName] = useState("");
+  const [uom, setUom] = useState("");
+  const [price, setPrice] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [prNumber, setPrNumber] = useState("");
+  const [poNumber, setPoNumber] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [selectedSubActivity, setSelectedSubActivity] = useState(null);
+  const [selectedSubSubActivity, setSelectedSubSubActivity] = useState(null);
+  const [selectedProjectActivity, setSelectedProjectActivity] = useState(null);
+  const {
+    data: activityData,
+    error: activityError,
+    isLoading: activityLoading,
+  } = useGetActivitiesQuery();
+  const {
+    data: subActivityData,
+    error: subActivityError,
+    isLoading: subActivityLoading,
+  } = useGetDropdownSubActivitiesQuery(selectedProjectActivity?.value, {
+    skip: !selectedProjectActivity, // Skip fetching until a project activity is selected
+  });
+  const [projectName, setProjectName] = useState("");
+  const {
+    data: subSubActivityData,
+    error: subSubActivityError,
+    isLoading: subSubActivityLoading,
+  } = useGetSubSubActivityQuery(
+    selectedSubActivity?.value,
+    { skip: !selectedSubActivity } // Skip fetching until a sub activity is selected
+  );
 
-  const projectOptions = [
-    { label: 'Project 1', value: '1' },
-    { label: 'Project 2', value: '2' },
-  ];
+  const { data: projects, error, isLoading } = useGetMainProjectsQuery();
 
-  const projectActivityOptions = [
-    { label: 'Activity 1', value: '1' },
-    { label: 'Activity 2', value: '2' },
-  ];
+  const activityOptions =
+    activityData?.data?.map((item) => ({
+      label: item.activity_name,
+      value: item.id,
+    })) || [];
 
-  const subActivityOptions = [
-    { label: 'Sub Activity 1', value: '1' },
-    { label: 'Sub Activity 2', value: '2' },
-  ];
+  const subActivityOptions =
+    subActivityData?.data?.[0]?.sub_activity?.map((item) => ({
+      label: item.sub_activity_name,
+      value: item.sub_activity_id,
+    })) || [];
 
-  const subSubActivityOptions = [
-    { label: 'Sub Sub Activity 1', value: '1' },
-    { label: 'Sub Sub Activity 2', value: '2' },
-  ];
-
+  const subSubActivityOptions =
+    subSubActivityData?.data?.[0]?.sub_activity?.map((item) => ({
+      label: item.sub_sub_activities[0]?.sub_sub_activity_name || "N/A", // Using the sub_sub_activity_name from the API response
+      value: item.sub_sub_activities[0]?.sub_sub_activity_id || 0,
+    })) || [];
   const handleClose = () => {
     setOpen(false);
   };
@@ -56,10 +78,10 @@ export default function AddMaterialModal({ open, setOpen }) {
       prNumber,
       poNumber,
       quantity,
-      projectId,
-      projectActivityId,
-      subActivityId,
-      subSubActivityId,
+      projectName,
+      selectedProjectActivity,
+      selectedSubActivity,
+      selectedSubSubActivity,
     });
     handleClose();
   };
@@ -73,7 +95,7 @@ export default function AddMaterialModal({ open, setOpen }) {
         maxWidth="md"
         PaperProps={{
           style: {
-            width: '600px',
+            width: "600px",
           },
         }}
       >
@@ -196,58 +218,73 @@ export default function AddMaterialModal({ open, setOpen }) {
           <div className="flex justify-between mb-4">
             <div className="w-[48%]">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Project ID<span className="text-red-600"> *</span>
+                Project Name <span className="text-red-600"> *</span>
               </label>
-              <Autocomplete
-                options={projectOptions}
-                getOptionLabel={(option) => option.label}
-                value={projectId}
-                onChange={(event, newValue) => setProjectId(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    variant="outlined"
-                    placeholder="Select Project"
-                    fullWidth
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        border: '1px solid #FACC15',
-                        borderBottom: '4px solid #FACC15',
-                        borderRadius: '6px',
-                      },
-                      '& .MuiOutlinedInput-root.Mui-focused': {
-                        border: 'none',
-                        borderRadius: '4px',
-                      },
-                    }}
-                  />
-                )}
-              />
+              {isLoading ? (
+                <p>Loading projects...</p>
+              ) : error ? (
+                <p>Error fetching projects</p>
+              ) : (
+                <Autocomplete
+                  options={projects?.data || []}
+                  getOptionLabel={(option) => option.project_name}
+                  value={
+                    projects?.data?.find(
+                      (project) => project.id === projectName
+                    ) || null
+                  }
+                  onChange={(event, newValue) =>
+                    setProjectName(newValue?.id || "")
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      variant="outlined"
+                      placeholder="Select Project"
+                      fullWidth
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          border: "1px solid #FACC15",
+                          borderBottom: "4px solid #FACC15",
+                          borderRadius: "6px",
+                        },
+                        "& .MuiOutlinedInput-root.Mui-focused": {
+                          border: "none",
+                          borderRadius: "4px",
+                        },
+                      }}
+                    />
+                  )}
+                />
+              )}
             </div>
             <div className="w-[48%]">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Project Activity ID<span className="text-red-600"> *</span>
+                Select Project Activity
               </label>
               <Autocomplete
-                options={projectActivityOptions}
+                options={activityOptions}
                 getOptionLabel={(option) => option.label}
-                value={projectActivityId}
-                onChange={(event, newValue) => setProjectActivityId(newValue)}
+                value={selectedProjectActivity}
+                onChange={(event, newValue) => {
+                  setSelectedProjectActivity(newValue);
+                  setSelectedSubActivity(null); // Reset sub-activity when activity changes
+                }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     variant="outlined"
-                    placeholder="Select Project Activity"
+                    placeholder="Search and select a project activity"
                     fullWidth
                     sx={{
-                      '& .MuiOutlinedInput-root': {
-                        border: '1px solid #FACC15',
-                        borderBottom: '4px solid #FACC15',
-                        borderRadius: '6px',
+                      "& .MuiOutlinedInput-root": {
+                        border: "1px solid #FACC15", // Yellow border
+                        borderBottom: "4px solid #FACC15",
+                        borderRadius: "6px", // Rounded corners
                       },
-                      '& .MuiOutlinedInput-root.Mui-focused': {
-                        border: 'none',
-                        borderRadius: '4px',
+                      "& .MuiOutlinedInput-root.Mui-focused": {
+                        border: "none",
+                        borderRadius: "4px",
                       },
                     }}
                   />
@@ -259,28 +296,29 @@ export default function AddMaterialModal({ open, setOpen }) {
           <div className="flex justify-between mb-4">
             <div className="w-[48%]">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Sub Activity ID<span className="text-red-600"> *</span>
+                Select Sub Activity
               </label>
               <Autocomplete
                 options={subActivityOptions}
                 getOptionLabel={(option) => option.label}
-                value={subActivityId}
-                onChange={(event, newValue) => setSubActivityId(newValue)}
+                value={selectedSubActivity}
+                onChange={(event, newValue) => setSelectedSubActivity(newValue)}
+                disabled={!selectedProjectActivity} // Disable until a project activity is selected
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     variant="outlined"
-                    placeholder="Select Sub Activity"
+                    placeholder="Search and select a sub activity"
                     fullWidth
                     sx={{
-                      '& .MuiOutlinedInput-root': {
-                        border: '1px solid #FACC15',
-                        borderBottom: '4px solid #FACC15',
-                        borderRadius: '6px',
+                      "& .MuiOutlinedInput-root": {
+                        border: "1px solid #FACC15", // Yellow border
+                        borderBottom: "4px solid #FACC15",
+                        borderRadius: "6px", // Rounded corners
                       },
-                      '& .MuiOutlinedInput-root.Mui-focused': {
-                        border: 'none',
-                        borderRadius: '4px',
+                      "& .MuiOutlinedInput-root.Mui-focused": {
+                        border: "none",
+                        borderRadius: "4px",
                       },
                     }}
                   />
@@ -289,13 +327,16 @@ export default function AddMaterialModal({ open, setOpen }) {
             </div>
             <div className="w-[48%]">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Sub Sub Activity ID<span className="text-red-600"> *</span>
+                Sub Sub Activity <span className="text-red-600"> *</span>
               </label>
               <Autocomplete
                 options={subSubActivityOptions}
                 getOptionLabel={(option) => option.label}
-                value={subSubActivityId}
-                onChange={(event, newValue) => setSubSubActivityId(newValue)}
+                value={selectedSubSubActivity}
+                onChange={(event, newValue) =>
+                  setSelectedSubSubActivity(newValue)
+                }
+                disabled={!selectedSubActivity} // Disable until a sub activity is selected
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -303,16 +344,16 @@ export default function AddMaterialModal({ open, setOpen }) {
                     placeholder="Select Sub Sub Activity"
                     fullWidth
                     sx={{
-                      '& .MuiOutlinedInput-root': {
-                        border: '1px solid #FACC15',
-                        borderBottom: '4px solid #FACC15',
-                        borderRadius: '6px',
-                      },
-                      '& .MuiOutlinedInput-root.Mui-focused': {
-                        border: 'none',
-                        borderRadius: '4px',
-                      },
-                    }}
+                        "& .MuiOutlinedInput-root": {
+                          border: "1px solid #FACC15", // Yellow border
+                          borderBottom: "4px solid #FACC15",
+                          borderRadius: "6px", // Rounded corners
+                        },
+                        "& .MuiOutlinedInput-root.Mui-focused": {
+                          border: "none",
+                          borderRadius: "4px",
+                        },
+                      }}
                   />
                 )}
               />
@@ -322,24 +363,24 @@ export default function AddMaterialModal({ open, setOpen }) {
 
         <DialogActions
           sx={{
-            justifyContent: 'center',
-            padding: '20px',
+            justifyContent: "center",
+            padding: "20px",
           }}
         >
           <Button
             onClick={handleSubmit}
             type="submit"
             sx={{
-              backgroundColor: '#f6812d',
-              color: '#FFFFFF',
-              fontSize: '16px',
-              padding: '6px 36px',
-              width: '200px',
-              borderRadius: '8px',
-              textTransform: 'none',
-              fontWeight: 'bold',
-              '&:hover': {
-                backgroundColor: '#E66A1F',
+              backgroundColor: "#f6812d",
+              color: "#FFFFFF",
+              fontSize: "16px",
+              padding: "6px 36px",
+              width: "200px",
+              borderRadius: "8px",
+              textTransform: "none",
+              fontWeight: "bold",
+              "&:hover": {
+                backgroundColor: "#E66A1F",
               },
             }}
           >

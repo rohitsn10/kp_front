@@ -102,6 +102,11 @@ export default function AddDocumentModal({ open, setOpen, onClose }) {
       borderRadius: "4px",
     },
   };
+  const handleFileChange = (e) => {
+    // Get the file list from the input element
+    const files = Array.from(e.target.files);  // Convert FileList to Array
+    setDocumentAttachments((prevFiles) => [...prevFiles, ...files]); // Add new files to existing ones
+  };
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
@@ -199,11 +204,11 @@ export default function AddDocumentModal({ open, setOpen, onClose }) {
           Select Status <span className="text-red-600"> *</span>
         </label>
         <FormControl fullWidth variant="outlined" sx={{ marginBottom: "15px" }}>
-          <InputLabel>Status</InputLabel>
+    
           <Select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            label="Status"
+         
             sx={commonInputStyles} // Applying the same styles as the text fields
           >
             {STATUS_CHOICES.map((statusChoice, index) => (
@@ -244,7 +249,7 @@ export default function AddDocumentModal({ open, setOpen, onClose }) {
         <input
           type="file"
           className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline:none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl"
-          onChange={(e) => setDocumentAttachments(e.target.files)}
+          onChange={handleFileChange}
           multiple
         />
 
