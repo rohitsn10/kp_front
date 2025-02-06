@@ -28,7 +28,6 @@ export default function EditDocumentModal({ open, onClose, document }) {
   const [comments, setComments] = useState("");
   const [documentAttachments, setDocumentAttachments] = useState(null);
   const [assignedUsers, setAssignedUsers] = useState([]); 
-console.log("what i get ",document)
   const { data: projects, error, isLoading } = useGetMainProjectsQuery();
   const { data: userData } = useFetchUsersQuery();
 

@@ -28,7 +28,7 @@ function Sidebar() {
       links: "/location"
     },  
     {
-      name: 'Documents',
+      name: 'Document Management',
       icons: <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTS08KOBuqfP4UnLQ6StvxJnp-qJ5w-Y9zC3Q&s" alt="Document" width="40" height="40" />,
       links: "/documents"
     },   
@@ -65,6 +65,11 @@ function Sidebar() {
       }
       ]
     },
+    {
+      name: 'Material Management',
+      icons: <img src="https://cdn.iconscout.com/icon/premium/png-256-thumb/raw-material-4186345-3472642.png" alt="material" width="100" height="100" />,
+      links: "/material-management"
+    },     
     {
       name:'Tracking',
       icons:<svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -26,7 +26,7 @@ export default function AddDocumentModal({ open, setOpen, onClose }) {
   const [status, setStatus] = useState("");
   const [keywords, setKeywords] = useState("");
   const [comments, setComments] = useState("");
-  const [documentAttachments, setDocumentAttachments] = useState(null);
+  const [documentAttachments, setDocumentAttachments] = useState([]);
   const [assignedUsers, setAssignedUsers] = useState([]); // Store as an array of user IDs
 
   const { data: projects, error, isLoading } = useGetMainProjectsQuery();

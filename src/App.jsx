@@ -19,7 +19,9 @@ import ProjectCategoryPage from "./pages/projects/projects-category/index.jsx";
 import ProjectMultipleListing from "./pages/projects/projects-multiple-activity/index.jsx";
 import AddLandDoc from "./components/pages/Land-back/add-land.jsx";
 import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
-import DocumentListing from "./pages/Document.jsx/Document-list.jsx";
+import DocumentListing from "./pages/Document/Document-list.jsx";
+import UploadedDocumentListing from "./components/pages/Documents/uploaded-document.jsx";
+import MaterialManagementListing from "./pages/Material/MaterialManagement.jsx";
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
 function App() {
@@ -77,6 +79,26 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <DocumentListing />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/uploaded-documents"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <UploadedDocumentListing />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/material-management"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <MaterialManagementListing />
               </MainLayout>
             </ProtectedRoute>
           }

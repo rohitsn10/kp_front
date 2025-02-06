@@ -1,13 +1,12 @@
 import React from 'react'
-import DocumentListing from './Document.jsx/Document-list'
+import DocumentListing from './Document/Document-list'
 
-function Landbank() {
+function Document() {
   return (
     <div className='text-2xl text-white'>
       <DocumentListing/>
-    Document List
     </div>
   )
 }
 
-export default Landbank
+export default Document
