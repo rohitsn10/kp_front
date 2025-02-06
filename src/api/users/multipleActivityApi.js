@@ -52,11 +52,23 @@ export const multipleActivityApi = createApi({
         },
       }),
     }),
+    deleteSubSubActivity: builder.mutation({
+      query: ({ id }) => ({
+        url: `activity_module/update_sub_sub_activity/${id}`,
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
+    
   }),
 });
 
 export const {
   useCreateSubSubActivityMutation, // Hook for creating sub-sub activities
   useGetSubSubActivityQuery,
-  useUpdateSubSubActivityMutation // Hook for fetching sub-sub activities
+  useUpdateSubSubActivityMutation,
+  useDeleteSubSubActivityMutation
+  // Hook for fetching sub-sub activities
 } = multipleActivityApi;

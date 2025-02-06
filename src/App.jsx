@@ -22,6 +22,10 @@ import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
 import DocumentListing from "./pages/Document/Document-list.jsx";
 import UploadedDocumentListing from "./components/pages/Documents/uploaded-document.jsx";
 import MaterialManagementListing from "./pages/Material/MaterialManagement.jsx";
+import ProjectListingTable from "./pages/projects/index.jsx";
+// import SFAPage from "./pages/Sfa-page/index.jsx";
+import SiteVisitTable from "./pages/Sfa-page/index.jsx";
+import DocumentListing from "./pages/Document.jsx/Document-list.jsx";
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
 function App() {
@@ -164,7 +168,7 @@ function App() {
           element={
             <ProtectedRoute>
               <MainLayout>
-                <ProjectPage />
+                <ProjectListingTable />
               </MainLayout>
             </ProtectedRoute>
           }
@@ -221,6 +225,14 @@ function App() {
               <MainLayout>
                 <AddProject />
               </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sfa-page"
+          element={
+            <ProtectedRoute>
+              <MainLayout><SiteVisitTable /></MainLayout>
             </ProtectedRoute>
           }
         />

@@ -22,7 +22,7 @@ import { useGetLandBankMasterQuery } from "../../api/users/landbankApi";
 import LandApproveModal from "../../components/pages/Land-back/approveLand";
 import EditLandModal from "../../components/pages/Land-back/edit-land";
 import { useNavigate } from "react-router-dom";
-import AssessmentFormModal from "../../components/pages/Land-back/sfa-form";
+// import AssessmentFormModal from "../../components/pages/Land-back/sfa-form";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDeleteLandBankLocationMutation } from "../../api/users/landbankApi"; // Import delete mutation
 // useDeleteLandBankLocationMutation
@@ -48,7 +48,9 @@ function LandListing() {
       refetch();
     }
   }, [open, refetch]);
-
+  const handleCloseModal = ()=>{
+    setOpenEditModal(false)
+  }
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -234,10 +236,13 @@ function LandListing() {
       <LandApproveModal open={openApproveModal} setOpen={setOpenApproveModal} selectedLand={selectedLand} />
 
       {/* Edit Land Modal */}
-      <EditLandModal open={openEditModal} setOpen={setOpenEditModal} selectedLand={selectedLand} />
+      <EditLandModal open={openEditModal} setOpen={setOpenEditModal} activeItem={selectedLand} handleClose={handleCloseModal} 
 
+
+      />
+      
       {/* SFA Modal */}
-      <AssessmentFormModal handleClose={handleSfaModalClose} open={openSfaModal} selectedLand={selectedLand} />
+      {/* <AssessmentFormModal handleClose={handleSfaModalClose} open={openSfaModal} selectedLand={selectedLand} /> */}
     </div>
   );
 }
