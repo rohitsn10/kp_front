@@ -48,7 +48,9 @@ function LandListing() {
       refetch();
     }
   }, [open, refetch]);
-
+  const handleCloseModal = ()=>{
+    setOpenEditModal(false)
+  }
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -234,8 +236,11 @@ function LandListing() {
       <LandApproveModal open={openApproveModal} setOpen={setOpenApproveModal} selectedLand={selectedLand} />
 
       {/* Edit Land Modal */}
-      <EditLandModal open={openEditModal} setOpen={setOpenEditModal} selectedLand={selectedLand} />
+      <EditLandModal open={openEditModal} setOpen={setOpenEditModal} activeItem={selectedLand} handleClose={handleCloseModal} 
 
+
+      />
+      
       {/* SFA Modal */}
       {/* <AssessmentFormModal handleClose={handleSfaModalClose} open={openSfaModal} selectedLand={selectedLand} /> */}
     </div>

@@ -97,26 +97,6 @@ function AssessmentFormUpdateModal({ open, handleClose, activeItem }) {
       formDataToSend.append('sfa_for_transmission_line_gss_files', file); // Append each new file to 'sfa_for_transmission_line_gss_files'
     });
 
-    // Append files to remove (if any)
-    // removeLandSfaFiles.forEach((fileId) => {
-    //   formDataToSend.append('remove_land_sfa_file', fileId); // Append fileId for removal
-    // });
-
-    // removeSfaForTransmissionFiles.forEach((fileId) => {
-    //   formDataToSend.append('remove_sfa_for_transmission_line_gss_files', fileId); // Append fileId for removal
-    // });
-    // if (removeLandSfaFiles.length > 0) {
-    //   removeLandSfaFiles.forEach((fileId) => {
-    //     formDataToSend.append('remove_land_sfa_file', fileId); // Append fileId for removal
-    //   });
-    // }
-  
-    // if (removeSfaForTransmissionFiles.length > 0) {
-    //   removeSfaForTransmissionFiles.forEach((fileId) => {
-    //     formDataToSend.append('remove_sfa_for_transmission_line_gss_files', fileId); // Append fileId for removal
-    //   });
-    // }
-
     if (removeLandSfaFiles.length > 0) {
       formDataToSend.append('remove_land_sfa_file', removeLandSfaFiles.join(',')); // Join array of fileIds into a string
     }
