@@ -25,6 +25,7 @@ import MaterialManagementListing from "./pages/Material/MaterialManagement.jsx";
 import ProjectListingTable from "./pages/projects/index.jsx";
 // import SFAPage from "./pages/Sfa-page/index.jsx";
 import SiteVisitTable from "./pages/Sfa-page/index.jsx";
+import EditLandApproveDoc from "./components/pages/Land-bank/editLandBankApprove.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
@@ -66,6 +67,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+                <Route
+          path="/edit-land-doc/:id"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <EditLandApproveDoc />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
 
         <Route
           path="/location"

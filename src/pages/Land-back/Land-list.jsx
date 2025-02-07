@@ -146,6 +146,7 @@ function LandListing() {
               <TableCell align="center">Create Date</TableCell>
               <TableCell align="center">Action</TableCell>
               <TableCell align="center">Approve</TableCell>
+              <TableCell align="center">Edit Approve</TableCell>
               <TableCell align="center">SFA</TableCell>
             </TableRow>
           </TableHead>
@@ -207,6 +208,33 @@ function LandListing() {
                   )}
                 </TableCell>
                 <TableCell align="center">
+                  {row.land_bank_status === "Approved" ? (
+                    <span
+                      style={{
+                        cursor: "pointer",
+                        color: "#F6812D",
+                        fontWeight: "bold",
+                        textDecoration: "underline",
+                      }}
+                      onClick={() =>
+                        navigate(`/edit-land-doc/${row.id}`, { state: { landData: row } })
+                      }
+                    >
+                     Edit Approve
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        cursor: "not-allowed",
+                        color: "#A0A0A0",
+                        fontWeight: "bold",
+                      }}
+                    >
+                     Edit Approve
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell align="center">
                   <AiOutlineFileText
                     style={{ cursor: "pointer", color: "#29346B" }} // SFA icon
                     title="SFA"
@@ -237,7 +265,6 @@ function LandListing() {
 
       {/* Edit Land Modal */}
       <EditLandModal open={openEditModal} setOpen={setOpenEditModal} activeItem={selectedLand} handleClose={handleCloseModal} 
-
 
       />
       
