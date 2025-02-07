@@ -60,6 +60,13 @@ export const landBankApi = createApi({
         method: "DELETE",
       }),
     }),
+    approveRejectLandBankStatus: builder.mutation({
+      query: ({ id, land_bank_status }) => ({
+        url: `land_module/approve_reject_land_bank_status/${id}`,
+        method: "PUT",
+        body: { land_bank_status },
+      }),
+    }),
 
   }),
 }); 
@@ -71,5 +78,6 @@ export const {
   useUpdateLandBankMasterMutation,
   useUpdateDataAfterApprovalLandBankMutation,
   useAddSfaDataToLandBankMutation,
-  useDeleteLandBankLocationMutation
+  useDeleteLandBankLocationMutation,
+  useApproveRejectLandBankStatusMutation,
 } = landBankApi;
