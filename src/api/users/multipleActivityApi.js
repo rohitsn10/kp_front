@@ -61,7 +61,15 @@ export const multipleActivityApi = createApi({
         },
       }),
     }),
-    
+    getSubSubActivityDropdown: builder.query({
+      query: (subActivityId) => ({
+        url: `activity_module/get_sub_sub_activity?sub_activity_id=${subActivityId}`, 
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
   }),
 });
 
@@ -69,6 +77,7 @@ export const {
   useCreateSubSubActivityMutation, // Hook for creating sub-sub activities
   useGetSubSubActivityQuery,
   useUpdateSubSubActivityMutation,
-  useDeleteSubSubActivityMutation
+  useDeleteSubSubActivityMutation,
+  useGetSubSubActivityDropdownQuery,
   // Hook for fetching sub-sub activities
 } = multipleActivityApi;
