@@ -4,6 +4,7 @@ import { RiEditFill } from 'react-icons/ri';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddMaterialModal from '../../components/pages/Material/addMaterialModal';
 import EditMaterialModal from '../../components/pages/Material/editMaterialModel';
+import { useGetMaterialsQuery } from '../../api/users/materialApi';
 
 function MaterialManagementListing() {
   const [materialFilter, setMaterialFilter] = useState('');
@@ -13,44 +14,40 @@ function MaterialManagementListing() {
   const [openEditModal, setOpenEditModal] = useState(false); // State for Edit Material Modal
   const [selectedMaterial, setSelectedMaterial] = useState(null); // State for selected material
 
-  // Mock data for material management
-  const mockData = [
-    { 
-      id: 1, materialName: "Steel Beam", vendorName: "Vendor A", projectName: "Project X", uom: "Piece", 
-      price: "₹50000", prNumber: "PR12345", poNumber: "PO12345", quantity: 100, 
-      projectActivityName: "Construction", projectSubActivityName: "Foundation", projectSubSubActivityName: "Excavation" 
-    },
-    { 
-      id: 2, materialName: "Concrete", vendorName: "Vendor B", projectName: "Project Y", uom: "Ton", 
-      price: "₹38460", prNumber: "PR12346", poNumber: "PO12346", quantity: 200, 
-      projectActivityName: "Construction", projectSubActivityName: "Walls", projectSubSubActivityName: "Concrete Pour" 
-    },
-    { 
-      id: 3, materialName: "Cement", vendorName: "Vendor C", projectName: "Project Z", uom: "Bag", 
-      price: "₹37420", prNumber: "PR12347", poNumber: "PO12347", quantity: 500, 
-      projectActivityName: "Construction", projectSubActivityName: "Foundation", projectSubSubActivityName: "Mixing" 
-    }
-  ];
+  // Fetch data using the useGetMaterialsQuery hook
+  const { data: materialsData, isLoading, isError } = useGetMaterialsQuery();
 
-  const rows = mockData.map((item, index) => ({
+  // If the data is still loading or an error occurs, show a loading message or handle the error
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isError) {
+    return <div>Error fetching materials data</div>;
+  }
+
+  // Map the fetched data to the format you want
+  const rows = materialsData?.data?.map((item, index) => ({
     sr: index + 1,
     id: item.id, 
-    materialName: item.materialName,
-    vendorName: item.vendorName,
-    projectName: item.projectName,
+    materialName: item.material_name,
+    vendorName: item.vendor_name,
+    projectName: item.project_name,
     uom: item.uom,
     price: item.price,
-    prNumber: item.prNumber,
-    poNumber: item.poNumber,
+    prNumber: item.PR_number,
+    poNumber: item.PO_number,
     quantity: item.quantity,
     projectActivityName: item.projectActivityName,
     projectSubActivityName: item.projectSubActivityName,
     projectSubSubActivityName: item.projectSubSubActivityName,
-  }));
+    status:item.status,
+    paymentstatus:item.payment_status
+  })) || [];
 
   const filteredRows = rows.filter((row) =>
-    row.materialName.toLowerCase().includes(materialFilter.toLowerCase())
-  );
+    row.materialName && row.materialName.toLowerCase().includes(materialFilter.toLowerCase())
+  )
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -60,7 +57,13 @@ function MaterialManagementListing() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+  const handleModalClose = () => {
+    openAddModal(false);
+  };
 
+  const handleEditModalClose=()=>{
+    openEditModal(false);
+  };
   const currentRows = filteredRows.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
@@ -77,7 +80,7 @@ function MaterialManagementListing() {
   };
 
   return (
-    <div className="bg-white p-4 md:w-[90%] lg:w-[70%] mx-auto my-8 rounded-md">
+    <div className="bg-white p-4 md:w-[90%] lg:w-[80%] mx-auto my-8 rounded-md">
       <div className="flex flex-row my-6 px-10 items-center justify-between">
         <div className="flex items-center">
           <TextField
@@ -199,14 +202,14 @@ function MaterialManagementListing() {
       />
 
       {/* Add Material Modal */}
-      <AddMaterialModal open={openAddModal} setOpen={setOpenAddModal} />
+      <AddMaterialModal open={openAddModal} setOpen={setOpenAddModal} onClose={handleModalClose}/>
 
       {/* Edit Material Modal */}
       <EditMaterialModal
         open={openEditModal}
         setOpen={setOpenEditModal}
         materialToEdit={selectedMaterial}
-        onClose={() => setOpenEditModal(false)}
+        onClose={handleEditModalClose}
       />
     </div>
   );

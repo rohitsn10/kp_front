@@ -10,8 +10,11 @@ import { useGetMainProjectsQuery } from "../../../api/users/projectApi";
 import { useGetActivitiesQuery } from "../../../api/users/projectActivityApi";
 import { useGetDropdownSubActivitiesQuery } from "../../../api/users/subActivityApi";
 import { useGetSubSubActivityQuery } from "../../../api/users/multipleActivityApi";
-export default function AddMaterialModal({ open, setOpen }) {
+import { useCreateMaterialMutation } from "../../../api/users/materialApi";
+import { toast } from "react-toastify";
+export default function AddMaterialModal({ open, setOpen,onClose }) {
   const [vendorName, setVendorName] = useState("");
+  const [createMaterial] = useCreateMaterialMutation();
   const [materialName, setMaterialName] = useState("");
   const [uom, setUom] = useState("");
   const [price, setPrice] = useState("");
@@ -19,9 +22,12 @@ export default function AddMaterialModal({ open, setOpen }) {
   const [prNumber, setPrNumber] = useState("");
   const [poNumber, setPoNumber] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [status, setStatus] = useState(""); // New state for status
+  const [paymentStatus, setPaymentStatus] = useState(""); // New state for payment status
   const [selectedSubActivity, setSelectedSubActivity] = useState(null);
   const [selectedSubSubActivity, setSelectedSubSubActivity] = useState(null);
   const [selectedProjectActivity, setSelectedProjectActivity] = useState(null);
+  const [projectName, setProjectName] = useState("");
   const {
     data: activityData,
     error: activityError,
@@ -34,7 +40,7 @@ export default function AddMaterialModal({ open, setOpen }) {
   } = useGetDropdownSubActivitiesQuery(selectedProjectActivity?.value, {
     skip: !selectedProjectActivity, // Skip fetching until a project activity is selected
   });
-  const [projectName, setProjectName] = useState("");
+
   const {
     data: subSubActivityData,
     error: subSubActivityError,
@@ -43,15 +49,12 @@ export default function AddMaterialModal({ open, setOpen }) {
     selectedSubActivity?.value,
     { skip: !selectedSubActivity } // Skip fetching until a sub activity is selected
   );
-
   const { data: projects, error, isLoading } = useGetMainProjectsQuery();
-
   const activityOptions =
     activityData?.data?.map((item) => ({
       label: item.activity_name,
       value: item.id,
     })) || [];
-
   const subActivityOptions =
     subActivityData?.data?.[0]?.sub_activity?.map((item) => ({
       label: item.sub_activity_name,
@@ -64,26 +67,46 @@ export default function AddMaterialModal({ open, setOpen }) {
       value: item.sub_sub_activities[0]?.sub_sub_activity_id || 0,
     })) || [];
   const handleClose = () => {
-    setOpen(false);
+    onClose();
   };
 
-  const handleSubmit = () => {
-    // Handle form submission logic here
-    console.log({
-      vendorName,
-      materialName,
-      uom,
-      price,
-      endDate,
-      prNumber,
-      poNumber,
-      quantity,
-      projectName,
-      selectedProjectActivity,
-      selectedSubActivity,
-      selectedSubSubActivity,
-    });
-    handleClose();
+  const handleSubmit = async () => {
+    const formData = {
+      vendor_name: vendorName,
+      material_name: materialName,
+      uom: uom,
+      price: price,
+      end_date: endDate,
+      PR_number: prNumber,
+      PO_number: poNumber,
+      quantity: quantity,
+      status: status, // Include status
+      payment_status: paymentStatus, // Include payment_status
+      project_id: projectName,
+      projectactivity_id: selectedProjectActivity?.value,
+      subactivity_id: selectedSubActivity?.value,
+      sub_sub_activity_id: selectedSubSubActivity?.value,
+    };
+
+    try {
+      // Trigger the mutation and wait for the response
+      const response = await createMaterial(formData).unwrap();
+      console.log("Material created successfully:", response);
+
+      // Show success toast
+      toast.success("Material created successfully!", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+
+      handleClose(); // Close the modal
+    } catch (error) {
+      console.error("Error creating material:", error);
+
+      // Show error toast
+      toast.error("Error creating material. Please try again.", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    }
   };
 
   return (
@@ -213,7 +236,32 @@ export default function AddMaterialModal({ open, setOpen }) {
               />
             </div>
           </div>
-
+          <div className="flex justify-between mb-4">
+            <div className="w-[48%]">
+              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+                Status
+              </label>
+              <input
+                type="text"
+                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+                value={status}
+                placeholder="Enter Status"
+                onChange={(e) => setStatus(e.target.value)}
+              />
+            </div>
+            <div className="w-[48%]">
+              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+                Payment Status
+              </label>
+              <input
+                type="text"
+                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+                value={paymentStatus}
+                placeholder="Enter Payment Status"
+                onChange={(e) => setPaymentStatus(e.target.value)}
+              />
+            </div>
+          </div>
           {/* Dropdowns for Project, Activity, Sub Activity, and Sub Sub Activity */}
           <div className="flex justify-between mb-4">
             <div className="w-[48%]">
@@ -344,16 +392,16 @@ export default function AddMaterialModal({ open, setOpen }) {
                     placeholder="Select Sub Sub Activity"
                     fullWidth
                     sx={{
-                        "& .MuiOutlinedInput-root": {
-                          border: "1px solid #FACC15", // Yellow border
-                          borderBottom: "4px solid #FACC15",
-                          borderRadius: "6px", // Rounded corners
-                        },
-                        "& .MuiOutlinedInput-root.Mui-focused": {
-                          border: "none",
-                          borderRadius: "4px",
-                        },
-                      }}
+                      "& .MuiOutlinedInput-root": {
+                        border: "1px solid #FACC15", // Yellow border
+                        borderBottom: "4px solid #FACC15",
+                        borderRadius: "6px", // Rounded corners
+                      },
+                      "& .MuiOutlinedInput-root.Mui-focused": {
+                        border: "none",
+                        borderRadius: "4px",
+                      },
+                    }}
                   />
                 )}
               />
