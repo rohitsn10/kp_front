@@ -69,6 +69,15 @@ export const multipleActivityApi = createApi({
           "Content-Type": "application/json",
         },
       }),
+    }), 
+    getMultipleSubSubActivities: builder.mutation({
+      query: (subActivityIds) => ({
+        url: "activity_module/multiplte_id_wise_listing_sub_sub_activitys",
+        method: "POST",
+        body: {
+          sub_activity_ids: subActivityIds, // Pass an array of sub-activity IDs
+        },
+      }),
     }),
   }),
 });
@@ -79,5 +88,6 @@ export const {
   useUpdateSubSubActivityMutation,
   useDeleteSubSubActivityMutation,
   useGetSubSubActivityDropdownQuery,
+  useGetMultipleSubSubActivitiesMutation 
   // Hook for fetching sub-sub activities
 } = multipleActivityApi;

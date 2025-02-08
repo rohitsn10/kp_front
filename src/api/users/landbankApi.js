@@ -40,13 +40,6 @@ export const landBankApi = createApi({
         body: formData, // Send the formData with other parameters
       }),
     }),
-    updateDataAfterApprovalLandBank: builder.mutation({
-      query: (formData) => ({
-        url: "land_module/update_data_after_approval_land_bank",
-        method: "POST",
-        body: formData,
-      }),
-    }),
     addSfaDataToLandBank: builder.mutation({
       query: ({ id, formData }) => ({
         url: `land_module/add_sfa_data_to_land_bank/${id}`,
@@ -60,7 +53,33 @@ export const landBankApi = createApi({
         method: "DELETE",
       }),
     }),
-
+    approveRejectLandBankStatus: builder.mutation({
+      query: ({ id, land_bank_status }) => ({
+        url: `land_module/approve_reject_land_bank_status/${id}`,
+        method: "PUT",
+        body: { land_bank_status },
+      }),
+    }),
+    addDataAfterApprovalLandBank: builder.mutation({
+      query: (formData) => ({
+        url: "land_module/add_data_after_approval_land_bank",
+        method: "POST",
+        body: formData,
+      }),
+    }),  
+    updateDataAfterApprovalLandBank: builder.mutation({
+      query: ({ id, formData }) => ({
+        url: `land_module/update_data_after_approval_land_bank/${id}`,
+        method: "PUT",
+        body: formData,
+      }),
+    }),
+    getLandBankApproveData: builder.query({
+      query: (id) => ({
+        url: `land_module/get_land_bank_id_wise_22_forms_data/${id}`,
+        method: "GET",
+      }),
+    }),
   }),
 }); 
 
@@ -69,7 +88,11 @@ export const {
   useGetLandBankMasterQuery,
   useApproveLandBankByHodMutation,
   useUpdateLandBankMasterMutation,
-  useUpdateDataAfterApprovalLandBankMutation,
   useAddSfaDataToLandBankMutation,
-  useDeleteLandBankLocationMutation
+  useDeleteLandBankLocationMutation,
+  useApproveRejectLandBankStatusMutation,
+  useAddDataAfterApprovalLandBankMutation,
+  // useUpdateLandBankApproveDataMutation,
+  useUpdateDataAfterApprovalLandBankMutation,
+  useGetLandBankApproveDataQuery
 } = landBankApi;

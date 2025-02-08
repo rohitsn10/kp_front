@@ -10,6 +10,7 @@ import { sfaApi } from "../api/sfa/sfaApi.js";
 import { projectApi } from "../api/users/projectApi.js";
 import { documentApi } from "../api/users/documentApi.js";
 import { materialApi } from "../api/users/materialApi.js";
+import { companyApi } from "../api/company/companyApi.js";
 
 
 const store = configureStore({
@@ -25,6 +26,7 @@ const store = configureStore({
     [projectApi.reducerPath]: projectApi.reducer,
     [documentApi.reducerPath]: documentApi.reducer,
     [materialApi.reducerPath]: materialApi.reducer,
+    [companyApi.reducerPath]:companyApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -39,6 +41,7 @@ const store = configureStore({
   .concat(projectApi.middleware)
   .concat(documentApi.middleware)
   .concat(materialApi.middleware)
+  .concat(companyApi.middleware)
 });
 
 export default store;
