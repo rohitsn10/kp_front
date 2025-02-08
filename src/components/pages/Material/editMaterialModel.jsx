@@ -10,6 +10,7 @@ import { useGetMainProjectsQuery } from "../../../api/users/projectApi";
 import { useGetActivitiesQuery } from "../../../api/users/projectActivityApi";
 import { useGetDropdownSubActivitiesQuery } from "../../../api/users/subActivityApi";
 import { useGetSubSubActivityQuery } from "../../../api/users/multipleActivityApi";
+import { useUpdateMaterialMutation } from "../../../api/users/materialApi";
 
 export default function EditMaterialModal({
   open,
@@ -18,6 +19,7 @@ export default function EditMaterialModal({
   onClose,
 }) {
   // Initialize state with materialToEdit data
+  console.log("materialin edit ",materialToEdit)
   const [vendorName, setVendorName] = useState("");
   const [materialName, setMaterialName] = useState("");
   const [uom, setUom] = useState("");
@@ -26,6 +28,9 @@ export default function EditMaterialModal({
   const [prNumber, setPrNumber] = useState("");
   const [poNumber, setPoNumber] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [status, setStatus] = useState(""); // New state for status
+  const [paymentStatus, setPaymentStatus] = useState(""); // New state for payment status
+  const [projectName, setProjectName] = useState("");
   const [selectedSubActivity, setSelectedSubActivity] = useState(null);
   const [selectedSubSubActivity, setSelectedSubSubActivity] = useState(null);
   const [selectedProjectActivity, setSelectedProjectActivity] = useState(null);
@@ -41,7 +46,7 @@ export default function EditMaterialModal({
   } = useGetDropdownSubActivitiesQuery(selectedProjectActivity?.value, {
     skip: !selectedProjectActivity, // Skip fetching until a project activity is selected
   });
-  const [projectName, setProjectName] = useState("");
+  const [updateMaterial] = useUpdateMaterialMutation();
   const {
     data: subSubActivityData,
     error: subSubActivityError,
@@ -81,35 +86,53 @@ export default function EditMaterialModal({
       setPrNumber(materialToEdit.prNumber);
       setPoNumber(materialToEdit.poNumber);
       setQuantity(materialToEdit.quantity);
-    //   setProjectId(materialToEdit.projectId);
-    //   setProjectActivityId(materialToEdit.projectActivityId);
-    //   setSubActivityId(materialToEdit.subActivityId);
-    //   setSubSubActivityId(materialToEdit.subSubActivityId);
+      setStatus(materialToEdit.status);
+      setPaymentStatus(materialToEdit.paymentstatus);
+      //   setProjectId(materialToEdit.projectId);
+      //   setProjectActivityId(materialToEdit.projectActivityId);
+      //   setSubActivityId(materialToEdit.subActivityId);
+      //   setSubSubActivityId(materialToEdit.subSubActivityId);
     }
   }, [materialToEdit]);
 
   const handleClose = () => {
-    setOpen(false);
+   
     onClose(); // Close parent modal as well
   };
 
-  const handleSubmit = () => {
-    // Handle form submission logic for editing
-    console.log({
-      vendorName,
-      materialName,
-      uom,
-      price,
-      endDate,
-      prNumber,
-      poNumber,
-      quantity,
-      projectId,
-      projectActivityId,
-      subActivityId,
-      subSubActivityId,
-    });
-    handleClose();
+  const handleSubmit = async () => {
+    // Prepare the data for update
+    const updatedMaterial = {
+      vendor_name: vendorName,
+      material_name: materialName,
+      uom: uom,
+      price: price,
+      end_date: endDate,
+      PR_number: prNumber,
+      PO_number: poNumber,
+      quantity: quantity,
+      project_id: projectName,
+      projectactivity_id: selectedProjectActivity?.value,
+      subactivity_id: selectedSubActivity?.value,
+      sub_sub_activity_id: selectedSubSubActivity?.value,
+    };
+
+    // API call to update material
+    try {
+      const response = await updateMaterial({
+        id: materialToEdit.id, // Pass the material ID for updating
+        data: updatedMaterial,
+      });
+
+      if (response?.data?.status) {
+        toast.success('Material updated successfully!');
+        handleClose();
+      } else {
+        toast.error('Error updating material.');
+      }
+    } catch (error) {
+      toast.error('Error: ' + error.message);
+    }
   };
 
   return (
@@ -236,6 +259,32 @@ export default function EditMaterialModal({
                 value={quantity}
                 placeholder="Enter Quantity"
                 onChange={(e) => setQuantity(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex justify-between mb-4">
+            <div className="w-[48%]">
+              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+                Status
+              </label>
+              <input
+                type="text"
+                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+                value={status}
+                placeholder="Enter Status"
+                onChange={(e) => setStatus(e.target.value)}
+              />
+            </div>
+            <div className="w-[48%]">
+              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+                Payment Status
+              </label>
+              <input
+                type="text"
+                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+                value={paymentStatus}
+                placeholder="Enter Payment Status"
+                onChange={(e) => setPaymentStatus(e.target.value)}
               />
             </div>
           </div>

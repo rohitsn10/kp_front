@@ -9,6 +9,7 @@ import { multipleActivityApi } from "../api/users/multipleActivityApi.js";
 import { sfaApi } from "../api/sfa/sfaApi.js";
 import { projectApi } from "../api/users/projectApi.js";
 import { documentApi } from "../api/users/documentApi.js";
+import { materialApi } from "../api/users/materialApi.js";
 import { companyApi } from "../api/company/companyApi.js";
 import { expenseApi } from "../api/expense/expenseApi.js";
 import { clientDataApi } from "../api/client/clientApi.js";
@@ -27,6 +28,7 @@ const store = configureStore({
     [sfaApi.reducerPath]:sfaApi.reducer,
     [projectApi.reducerPath]: projectApi.reducer,
     [documentApi.reducerPath]: documentApi.reducer,
+    [materialApi.reducerPath]: materialApi.reducer,
     [companyApi.reducerPath]:companyApi.reducer,
     [expenseApi.reducerPath]:expenseApi.reducer,
     [clientDataApi.reducerPath]:clientDataApi.reducer,
@@ -44,6 +46,7 @@ const store = configureStore({
   .concat(sfaApi.middleware)
   .concat(projectApi.middleware)
   .concat(documentApi.middleware)
+  .concat(materialApi.middleware)
   .concat(companyApi.middleware)
   .concat(expenseApi.middleware)
   .concat(clientDataApi.middleware)
