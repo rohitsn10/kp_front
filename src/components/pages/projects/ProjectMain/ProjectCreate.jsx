@@ -46,7 +46,7 @@ function ProjectCreate({ open, handleClose }) {
     const [subCategory, setSubCategory] = useState(null);
     const [activity, setActivity] = useState(null);
     const [subActivities, setSubActivities] = useState([]);
-    console.log("Sub categories id",subActivities)
+    // console.log("Sub categories id",subActivities)
     const [spoc, setSpoc] = useState(null);
     const [criticalActivity, setCriticalActivity] = useState(null);
     const [selectedMultipleActivities, setSelectedMultipleActivities] = useState([]);
@@ -163,7 +163,7 @@ function ProjectCreate({ open, handleClose }) {
         }
     }, [subSubActivitiesData]);
 
-    console.log("Select Checkeeer",selectedMultipleActivities)
+    // console.log("Select Checkeeer",selectedMultipleActivities)
     const inputStyles = {
         "& .MuiOutlinedInput-root": {
             border: "1px solid #FACC15",
@@ -270,7 +270,7 @@ function ProjectCreate({ open, handleClose }) {
             toast.error("At least one Multiple Activity is required");
             isValid = false;
         }
-        console.log("New new new check",selectedMultipleActivities);
+        // console.log("New new new check",selectedMultipleActivities);
         if (!spoc) {
             toast.error("SPOC selection is required");
             isValid = false;
@@ -301,7 +301,7 @@ function ProjectCreate({ open, handleClose }) {
             project_sub_activity_ids: subActivities.map(Number),
             project_sub_sub_activity_ids:  selectedMultipleActivities.map(item =>item.id)
         };
-        console.log("Submitting form",submissionData)
+        // console.log("Submitting form",submissionData)
         try {
             const response = await createMainProject(submissionData).unwrap(); // Call mutation & unwrap response
             console.log("Project Created:", response);
@@ -565,7 +565,7 @@ function ProjectCreate({ open, handleClose }) {
         getOptionLabel={(option) => option.name || ''}
         value={selectedMultipleActivities}
         onChange={(_, newValue) => {
-            console.log("new check",newValue)
+            // console.log("new check",newValue)
             setSelectedMultipleActivities(newValue);
         }}
         isOptionEqualToValue={(option, value) => {
