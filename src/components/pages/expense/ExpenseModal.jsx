@@ -62,8 +62,10 @@ export default function ExpenseModal({ open, setOpen, refetch,id }) {
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
       <DialogContent>
         <h2 className="text-[#29346B] text-2xl font-semibold mb-5">Add Expense</h2>
-        
+        <div className='flex flex-col gap-3 '>
         {/* Expense Name */}
+        <label className="block mb-1 text-[#29346B] text-lg font-semibold">Expense Name</label>
+
         <TextField
           label="Expense Name"
           variant="outlined"
@@ -73,7 +75,8 @@ export default function ExpenseModal({ open, setOpen, refetch,id }) {
           className="mb-4"
           required
         />
-        
+                <label className="block mb-1 text-[#29346B] text-lg font-semibold">Expense Amount</label>
+
         {/* Expense Amount */}
         <TextField
           label="Expense Amount"
@@ -85,7 +88,7 @@ export default function ExpenseModal({ open, setOpen, refetch,id }) {
           className="mb-4"
           required
         />
-        
+                        <label className="block mb-1 text-[#29346B] text-lg font-semibold">Expense Notes</label>
         {/* Notes */}
         <TextField
           label="Notes"
@@ -137,8 +140,13 @@ export default function ExpenseModal({ open, setOpen, refetch,id }) {
             {files.length === 0 && "At least one file is required."}
           </div>
         </div>
+        </div>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{
+        marginBottom:'20px',
+        display:'flex',
+        justifyContent:'center'
+      }}>
         <Button onClick={handleClose} color="secondary">Cancel</Button>
         <Button
           onClick={handleSubmit}

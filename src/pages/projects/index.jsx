@@ -57,22 +57,24 @@ const navigate = useNavigate();
     setPage(0);
   };
 
+  
   const currentRows = projectData?.data?.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
 
   return (
-    <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
+    <div className="bg-white p-4 md:w-[90%] lg:w-[80%] mx-auto my-8 rounded-md pt-5">
       <div className="grid grid-cols-3 items-center p-4 mb-5">
-        <TextField
-          value={projectFilter}
-          placeholder="Search"
-          onChange={(e) => setProjectFilter(e.target.value)}
-          variant="outlined"
-          size="small"
-          style={{ backgroundColor: '#f9f9f9', borderRadius: '8px', maxWidth: '200px' }}
-        />
+      <TextField
+  value={projectFilter}
+  placeholder="Search"
+  onChange={(e) => setProjectFilter(e.target.value?.toLowerCase())}  // Ensure lowercase search
+  variant="outlined"
+  size="small"
+  style={{ backgroundColor: '#f9f9f9', borderRadius: '8px', maxWidth: '200px' }}
+/>
+
         <h2 className="text-3xl text-[#29346B] font-semibold text-center">Project Listing</h2>
         <div className="flex justify-end">
           <Button
@@ -106,18 +108,18 @@ const navigate = useNavigate();
             <Table>
               <TableHead>
                 <TableRow style={{ backgroundColor: '#F2EDED' }}>
-                  <TableCell align="center">Sr No.</TableCell>
-                  <TableCell align="center">Project Name</TableCell>
-                  <TableCell align="center">Activity</TableCell>
-                  <TableCell align="center">Deadline</TableCell>
-                  <TableCell align="center">Alloted Land Area</TableCell>
-                  <TableCell align="center">LandBank Name</TableCell>
-                  {/* <TableCell align="center">Status</TableCell> */}
-                  <TableCell align="center">Action</TableCell>
-                  {/* <TableCell align="center">Client details</TableCell> */}
-                  <TableCell align="center">Expense</TableCell>
-                  <TableCell align="center" width={180}>Client Details</TableCell>
-                  <TableCell align="center">WO PO</TableCell>
+                <TableCell align="center" width={50}>Sr No.</TableCell>
+        <TableCell align="center" width={180}>Project Name</TableCell>
+        <TableCell align="center" width={150}>Activity</TableCell>
+        <TableCell align="center" width={130}>Deadline</TableCell>
+        <TableCell align="center" width={150}>Alloted Land Area</TableCell>
+        <TableCell align="center" width={180}>LandBank Name</TableCell>
+        <TableCell align="center" width={120}>Action</TableCell>
+        <TableCell align="center" width={220}>Expense</TableCell>
+        <TableCell align="center" width={220}>Add Client Details</TableCell>
+        <TableCell align="center" width={220}>View Client Details</TableCell>
+        <TableCell align="center" width={220}>Add WO PO</TableCell>
+        <TableCell align="center" width={220}>View WO PO</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -125,9 +127,9 @@ const navigate = useNavigate();
                   <TableRow key={project.id}>
                     <TableCell align="center">{index + 1 + page * rowsPerPage}</TableCell>
                     <TableCell align="center">{project.project_name}</TableCell>
-                    <TableCell align="center">{project.project_activity_name}</TableCell>
+                    <TableCell align="center" sx={{minWidth: '100px'}}>{project.project_activity_name}</TableCell>
                     <TableCell align="center">{project.end_date}</TableCell>
-                    <TableCell align="center">{project.alloted_land_area}</TableCell>
+                    <TableCell align="center" sx={{minWidth: '100px'}}>{project.alloted_land_area}</TableCell>
                     <TableCell align="center">{project.landbank_name}</TableCell>
                     {/* <TableCell align="center">{project.status}</TableCell> */}
                     <TableCell align="center" 
@@ -146,6 +148,7 @@ const navigate = useNavigate();
         <Button
           variant="contained"
           color="primary"
+          sx={{ minWidth: '100px' }}
           size="small"
           onClick={() => {
             navigate(`/project/expense/${project?.id}`)
@@ -161,10 +164,31 @@ const navigate = useNavigate();
           variant="contained"
           color="secondary"
           size="small"
+          sx={{
+            fontSize:'11px',
+            padding:'4px',
+            minWidth: '100px'
+          }}
           onClick={() => {
             navigate(`/project/client_details/${project?.id}`)
             }}        >
-          Client Details
+        Add Client Details
+        </Button>
+      </TableCell>
+      <TableCell align="center">
+        <Button
+          variant="contained"
+          color="secondary"
+          size="small"
+          sx={{
+            fontSize:'11px',
+            padding:'4px',
+            minWidth: '100px'
+          }}
+          onClick={() => {
+            navigate(`/project/client_details/${project?.id}`)
+            }}        >
+        View Client Details
         </Button>
       </TableCell>
 
@@ -172,14 +196,28 @@ const navigate = useNavigate();
       <TableCell align="center">
         <Button
           variant="contained"
-          style={{ backgroundColor: '#FF8C00', color: 'white' }}
+          style={{ backgroundColor: '#FF8C00',
+           color: 'white',minWidth: '100px' }}
           size="small"
           onClick={() => {
             setOpenWpoModal(true)
             setActiveProject(project?.id)
           }}
         >
-          WOPO
+         Add WOPO
+        </Button>
+      </TableCell>
+      <TableCell align="center">
+        <Button
+          variant="contained"
+          style={{ backgroundColor: '#FF8C00', color: 'white',minWidth: '110px' }}
+          size="small"
+          onClick={() => {
+            setOpenWpoModal(true)
+            setActiveProject(project?.id)
+          }}
+        >
+         View WOPO
         </Button>
       </TableCell>
 
