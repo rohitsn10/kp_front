@@ -19,6 +19,7 @@ import ProjectUpdate from '../../components/pages/projects/ProjectMain/ProjectUp
 import { useGetMainProjectsQuery } from '../../api/users/projectApi';
 import { useNavigate } from 'react-router-dom';
 import ProjectWpo from '../../components/pages/projects/ProjectWPO/ProjectWpo';
+import ProjectWpoViewModal from '../../components/pages/projects/ProjectWPO/ProjectWpoView';
 
 const dummyProjects = [
   { id: 1, name: "Project Alpha", activity: "Design", deadline: "2025-03-01", estimatedCompletion: "2 months", contactPerson: "John Doe", status: "Ongoing" },
@@ -35,6 +36,7 @@ const ProjectListingTable = () => {
   const [openWpoModal,setOpenWpoModal]=useState(false);
   const [activeProject,setActiveProject]=useState();
   const {data:projectData,isLoading:ProjectLoading,error:ProjectError,refetch} = useGetMainProjectsQuery()
+  const [openWpoViewModal,setOpenWpoView]=useState(false);
   // console.log(projectData?.data)
 const navigate = useNavigate();
   const handleCloseCreateModal = ()=>{
@@ -56,6 +58,10 @@ const navigate = useNavigate();
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+  const handleCloseWpoViewModal = ()=>{
+    setOpenWpoView(false)
+    setActiveProject(null)
+  }
 
   
   const currentRows = projectData?.data?.slice(
@@ -186,7 +192,7 @@ const navigate = useNavigate();
             minWidth: '100px'
           }}
           onClick={() => {
-            navigate(`/project/client_details/${project?.id}`)
+            navigate(`/project/view_client_details/${project?.id}`)
             }}        >
         View Client Details
         </Button>
@@ -213,7 +219,7 @@ const navigate = useNavigate();
           style={{ backgroundColor: '#FF8C00', color: 'white',minWidth: '110px' }}
           size="small"
           onClick={() => {
-            setOpenWpoModal(true)
+            setOpenWpoView(true)
             setActiveProject(project?.id)
           }}
         >
@@ -239,11 +245,16 @@ const navigate = useNavigate();
         </>
       )}
   
-      <ProjectCreate open={createModal} handleClose={handleCloseCreateModal} />
+      <ProjectCreate open={createModal} handleClose={handleCloseCreateModal} refetch={refetch} />
       <ProjectUpdate open={updateModal} handleClose={handleCloseUpdateModal} />
       <ProjectWpo open={openWpoModal} 
       projectId={activeProject}
       handleClose={handleCloseWpoModal}
+        refetch={refetch}
+      />
+    <ProjectWpoViewModal open={openWpoViewModal} 
+      projectId={activeProject}
+      handleClose={handleCloseWpoViewModal}
         refetch={refetch}
       />
     </div>

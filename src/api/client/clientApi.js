@@ -20,7 +20,10 @@ export const clientDataApi = createApi({
         body: formData,
       }),
     }),
+    getClientData: builder.query({
+      query: (id) => `project_module/create_client_data?id=${id}`,
+    }),
   }),
 });
 
-export const { useCreateClientDataMutation } = clientDataApi;
+export const { useCreateClientDataMutation,useGetClientDataQuery  } = clientDataApi;

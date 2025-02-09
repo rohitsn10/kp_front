@@ -10,7 +10,7 @@ import { useGetLandBankMasterQuery } from '../../../../api/users/landbankApi';
 import { toast } from 'react-toastify';
 import { useCreateMainProjectMutation } from '../../../../api/users/projectApi';
 // import { useFetchUsersQuery } from '../api/userApi';
-function ProjectCreate({ open, handleClose }) {
+function ProjectCreate({ open, handleClose,refetch }) {
     const { data: usersData, isLoading } = useFetchUsersQuery();
     const spocOptions = usersData?.map(user => ({
       id: user.id,
@@ -305,13 +305,44 @@ function ProjectCreate({ open, handleClose }) {
         try {
             const response = await createMainProject(submissionData).unwrap(); // Call mutation & unwrap response
             console.log("Project Created:", response);
-            alert("Project Created Successfully!");
+            refetch()
+            handleClose()
+
+            // alert("Project Created Successfully!");
           } catch (err) {
             console.error("Error creating project:", err);
             alert("Failed to create project");
           }
       
     };
+
+    useEffect(() => {
+        if (!open) {
+            setCompanyName('');
+            setProjectName('');
+            setSelectedLandId(null);
+            setProjectLocation('');
+            setStartDate('');
+            setEndDate('');
+            setCodDate('');
+            setCommittedDate('');
+            setTotalArea('');
+            setCapacity('');
+            setNumDays('');
+            setProjectCategory(null);
+            setSubCategory(null);
+            setActivity(null);
+            setSubActivities([]);
+            setSpoc(null);
+            setCriticalActivity(null);
+            setSelectedMultipleActivities([]);
+            setMultipleActivities([]);
+            setCiUtility(null);
+            setCppIpp(null);
+            setElectricityLine(null);
+            setAreaError('');
+        }
+    }, [open]);
 
     return (
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">

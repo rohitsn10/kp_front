@@ -28,6 +28,7 @@ import SiteVisitTable from "./pages/Sfa-page/index.jsx";
 import EditLandApproveDoc from "./components/pages/Land-bank/editLandBankApprove.jsx";
 import ProjectExpense from "./pages/projects/project-expense/index.jsx";
 import CreateClientDetails from "./pages/projects/project-client-details/index.jsx";
+import ViewClientDetails from "./pages/projects/project-view-client-details/index.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
@@ -97,6 +98,18 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <CreateClientDetails />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+
+        <Route
+          path="/project/view_client_details/:projectId"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ViewClientDetails />
               </MainLayout>
             </ProtectedRoute>
           }
