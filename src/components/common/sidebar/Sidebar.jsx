@@ -23,9 +23,9 @@ function Sidebar() {
       links:"/landbank"
     },
     {
-      name: 'Location',
+      name: 'SFA',
       icons: <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/google-map-icon.png" alt="Location" width="40" height="40" />,
-      links: "/location"
+      links: "/sfa-page"
     },  
     {
       name: 'Document Management',

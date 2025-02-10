@@ -117,10 +117,10 @@ const navigate = useNavigate();
                 <TableCell align="center" width={50}>Sr No.</TableCell>
         <TableCell align="center" width={180}>Project Name</TableCell>
         <TableCell align="center" width={150}>Activity</TableCell>
-        <TableCell align="center" width={130}>Deadline</TableCell>
+        {/* <TableCell align="center" width={130}>Deadline</TableCell> */}
         <TableCell align="center" width={150}>Alloted Land Area</TableCell>
         <TableCell align="center" width={180}>LandBank Name</TableCell>
-        <TableCell align="center" width={120}>Action</TableCell>
+        {/* <TableCell align="center" width={120}>Action</TableCell> */}
         <TableCell align="center" width={220}>Expense</TableCell>
         <TableCell align="center" width={220}>Add Client Details</TableCell>
         <TableCell align="center" width={220}>View Client Details</TableCell>
@@ -134,11 +134,11 @@ const navigate = useNavigate();
                     <TableCell align="center">{index + 1 + page * rowsPerPage}</TableCell>
                     <TableCell align="center">{project.project_name}</TableCell>
                     <TableCell align="center" sx={{minWidth: '100px'}}>{project.project_activity_name}</TableCell>
-                    <TableCell align="center">{project.end_date}</TableCell>
+                    {/* <TableCell align="center">{project.end_date}</TableCell> */}
                     <TableCell align="center" sx={{minWidth: '100px'}}>{project.alloted_land_area}</TableCell>
                     <TableCell align="center">{project.landbank_name}</TableCell>
                     {/* <TableCell align="center">{project.status}</TableCell> */}
-                    <TableCell align="center" 
+                    {/* <TableCell align="center" 
                     style={{ display: 'flex', justifyContent: 'center',alignItems:'center', gap: 10 }}
                     >
                       <RiEditFill
@@ -149,7 +149,7 @@ const navigate = useNavigate();
                         style={{ cursor: 'pointer', color: 'red', fontSize: '23px' }}
                         title="Delete"
                       />
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell align="center">
         <Button
           variant="contained"

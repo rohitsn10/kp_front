@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
+import { useCreateClientDataMutation } from "../../../api/client/clientApi";
 
 function CreateClientDetails() {
     const { projectId } = useParams();
+    const [createClientData] = useCreateClientDataMutation(); 
     const [formData, setFormData] = useState({
         client_name: "",
         contact_number: "",
@@ -59,15 +61,18 @@ function CreateClientDetails() {
         });
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/project_module/create_client_data", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer YOUR_ACCESS_TOKEN`,
-                },
-                body: data,
-            });
-            const result = await response.json();
-            console.log("Success:", result);
+            // const response = await fetch("http://127.0.0.1:8000/project_module/create_client_data", {
+            //     method: "POST",
+            //     headers: {
+            //         Authorization: `Bearer YOUR_ACCESS_TOKEN`,
+            //     },
+            //     body: data,
+            // });
+            // const result = await response.json();
+            // console.log("Success:", result);
+            const result = await createClientData(data).unwrap(); // unwrap the result to handle success or error
+            console.log("Success")
+
         } catch (error) {
             console.error("Error:", error);
         }

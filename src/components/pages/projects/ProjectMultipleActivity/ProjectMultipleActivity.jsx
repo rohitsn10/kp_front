@@ -171,7 +171,7 @@ export default function ProjectMultipleActivityModal({
 
           {/* Sub-Sub Activity Name */}
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-            Sub-Sub Activity Name
+            Multiple Activity Name
           </label>
           <TextField
             value={subSubActivityNames}

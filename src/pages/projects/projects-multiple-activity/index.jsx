@@ -45,7 +45,7 @@ function ProjectMultipleActivity() {
     <div className="bg-white shadow-lg p-6 w-[90%] lg:w-[70%] mx-auto my-8 rounded-lg">
       {/* <h2 className="text-3xl border text-center text-[]">Project Multiple Activities</h2> */}
     <Typography variant="h4" fontWeight="bold" color="#29346B" align="center" gutterBottom>
-            Project Sub Activities
+            Project Multiple Activities
     </Typography>
     <div className="flex flex-row justify-between my-4 items-center">
       <TextField
@@ -63,7 +63,7 @@ function ProjectMultipleActivity() {
       style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold',padding:"10px", fontSize: '16px', textTransform: 'none' }}
       onClick={() => { setOpenCreateModal(!openCreateModal) }}
     >
-      Add Sub Activity
+      Add Multi Activity
     </Button>
     </div>
       {/* <Grid container sx={{

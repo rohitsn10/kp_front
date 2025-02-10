@@ -147,7 +147,7 @@ function LandListing() {
               <TableCell align="center">Action</TableCell>
               <TableCell align="center">Approve</TableCell>
               <TableCell align="center">Edit Approve</TableCell>
-              <TableCell align="center">SFA</TableCell>
+              {/* <TableCell align="center">SFA</TableCell> */}
             </TableRow>
           </TableHead>
 
@@ -234,13 +234,13 @@ function LandListing() {
                     </span>
                   )}
                 </TableCell>
-                <TableCell align="center">
+                {/* <TableCell align="center">
                   <AiOutlineFileText
                     style={{ cursor: "pointer", color: "#29346B" }} // SFA icon
                     title="SFA"
                     onClick={() => handleSfaClick(row)}
                   />
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>

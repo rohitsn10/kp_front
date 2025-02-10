@@ -23,6 +23,7 @@ import { RiEditFill } from 'react-icons/ri';
 import { AiOutlineStop } from "react-icons/ai";
 import CreateProjectActivity from '../../../components/pages/projects/ProjectActivity/CreateProjectActivity';
 import { useGetActivitiesQuery, useUpdateActivityMutation, useDeleteActivityMutation } from '../../../api/users/projectActivityApi';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 function ProjectMainActivityPage() {
     const [activityFilter, setActivityFilter] = useState('');
@@ -163,11 +164,12 @@ function ProjectMainActivityPage() {
                                         }}
                                     />
                                     {/* Delete Icon */}
-                                    <AiOutlineStop
+                                    <DeleteIcon
                                         style={{ cursor: 'pointer', color: 'red', fontSize: '23px' }}
                                         title="Delete"
                                         onClick={() => handleDeleteActivity(row.id)}
                                     />
+                                    {/* <DeleteIcon/> */}
                                 </TableCell>
                             </TableRow>
                         ))}
