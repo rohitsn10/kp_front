@@ -113,9 +113,9 @@ const SiteVisitTable = () => {
             <TableRow style={{ backgroundColor: '#F2EDED' }}>
               <TableCell align="center">SFA Name</TableCell>
               <TableCell align="center">Site Visit Date</TableCell>
-              <TableCell align="center">Status of Site Visit</TableCell>
+              {/* <TableCell align="center">Status of Site Visit</TableCell> */}
               <TableCell align="center">Approval Status</TableCell>
-              <TableCell align="center">Land Bank Status</TableCell>
+              <TableCell align="center">Category</TableCell>
               <TableCell align="center">Action</TableCell>
             </TableRow>
           </TableHead>
@@ -123,9 +123,12 @@ const SiteVisitTable = () => {
             {currentRows.length > 0 ? currentRows.map((row) => (
               <TableRow key={row.id}>
                 <TableCell align="center">{row.sfa_name || 'N/A'}</TableCell>
-                <TableCell align="center">{row.site_visit_date || 'N/A'}</TableCell>
+                {/* <TableCell align="center">{row.site_visit_date || 'N/A'}</TableCell> */}
+                {/* new Date(row.created_at).toLocaleDateString() */}
+                <TableCell align="center">{new Date(row.site_visit_date).toLocaleDateString() || 'N/A'}</TableCell>
+
                 <TableCell align="center">{row.status_of_site_visit || 'N/A'}</TableCell>
-                <TableCell align="center">{row.land_bank_status || 'Pending'}</TableCell>
+                {/* <TableCell align="center">{row.land_bank_status || 'Pending'}</TableCell> */}
                 <TableCell align="center">{row.land_category_name || 'N/A'}</TableCell>
                 <TableCell align="center" style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
                   <RiEditFill onClick={()=>{
@@ -185,11 +188,13 @@ const SiteVisitTable = () => {
         open={openUpdateSfa}
         handleClose={handleSfaUpdateClose}
         activeItem={activeItem}
+        refetch={refetch}
       />
       <AssessmentFormApproval
           open={openApproveSfa}
           handleClose={handleSfaApproveClose}
           activeItem={activeItem}
+          refetch={refetch}
       />
       <CreateLandBankModal
           open={openCreateLandBank}

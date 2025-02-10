@@ -20,7 +20,8 @@ import { useUpdateLandBankStatusMutation } from '../../../api/sfa/sfaApi';
 const AssessmentFormApproval = ({
   open,
   handleClose,
-  activeItem
+  activeItem,
+  refetch
 }) => {
 
   const [landBankStatus, setLandBankStatus] = useState('');
@@ -63,6 +64,7 @@ const AssessmentFormApproval = ({
       // Make API call to update status
       await updateLandBankStatus({ land_bank_id: land_sfa_data_id, formData });
       toast.success("SFA Status updated successfully!");
+      refetch();
       handleClose(); // Close the modal on success
     } catch (error) {
       console.error("Error:", error);
@@ -146,7 +148,7 @@ const AssessmentFormApproval = ({
             label="Land Bank Status"
             fullWidth
           >
-            <MenuItem value="Pending">Pending</MenuItem>
+            {/* <MenuItem value="Pending">Pending</MenuItem> */}
             <MenuItem value="Rejected">Rejected</MenuItem>
             <MenuItem value="Approved">Approved</MenuItem>
           </Select>

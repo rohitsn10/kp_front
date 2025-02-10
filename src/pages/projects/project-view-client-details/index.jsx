@@ -8,8 +8,11 @@ function ViewClientDetails() {
     // const [loading, setLoading] = useState(true);
     // const [error, setError] = useState(null);
     const { data: clientFetchData, error, isLoading } = useGetClientDataQuery(projectId);
-    const clientData = clientFetchData?.data[0]
+    const clientData = clientFetchData?.data[0];
+
     console.log(clientData)
+    console.log("Total Details",clientFetchData)
+
     if (isLoading) return <p className="text-center">Loading...</p>;
     if (error) return <p className="text-center text-red-500">Error fetching data</p>;
 
@@ -39,11 +42,12 @@ function ViewClientDetails() {
             {/* File Attachments */}
             <h3 className="text-xl font-semibold text-[#29346B] mt-6 mb-3">Attachments</h3>
             <div className="grid grid-cols-2 gap-4">
-                <FileItem label="MSME Certificate" files={clientData.msme_certificate} />
-                <FileItem label="Aadhar Card" files={clientData.adhar_card} />
-                <FileItem label="PAN Card" files={clientData.pan_card} />
+                <FileItem label="MSME Certificate" files={clientData.msme_certificate_attachments} />
+                <FileItem label="Aadhar Card" files={clientData.adhar_card_attachments} />
+                <FileItem label="PAN Card" files={clientData.pan_card_attachments} />
                 <FileItem label="Third Authority Aadhar Attachments" files={clientData.third_authority_adhar_card_attachments} />
-                <FileItem label="Third Authority PAN Attachments" files={clientData.third_authortity_pan_card_attachments} />
+                <FileItem label="Third Authority PAN Attachments" files={clientData.third_authority_pan_card_attachments
+} />
             </div>
         </div>
     );
@@ -64,12 +68,12 @@ const FileItem = ({ label, files }) => (
             files.map((file, index) => (
                 <div key={index}>
                     <a 
-                        href={file} 
+                        href={file?.url} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-blue-600 underline ml-2"
                     >
-                        View
+                        View File
                     </a>
                 </div>
             ))

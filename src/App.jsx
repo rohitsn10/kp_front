@@ -29,6 +29,7 @@ import EditLandApproveDoc from "./components/pages/Land-bank/editLandBankApprove
 import ProjectExpense from "./pages/projects/project-expense/index.jsx";
 import CreateClientDetails from "./pages/projects/project-client-details/index.jsx";
 import ViewClientDetails from "./pages/projects/project-view-client-details/index.jsx";
+import ViewProjectDetails from "./pages/projects/project-view-details/index.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
@@ -103,6 +104,17 @@ function App() {
           }
         />
         
+
+        <Route
+          path="/project/view_projects_details/:projectId"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ViewProjectDetails />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/project/view_client_details/:projectId"

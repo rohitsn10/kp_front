@@ -43,6 +43,12 @@ export const projectApi = createApi({
         method: "DELETE",
       }),
     }),
+    getProjectDataById: builder.query({
+      query: (projectId) => ({
+        url: `project_module/project_id_wise_get_project_data/${projectId}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -50,5 +56,6 @@ export const {
   useCreateMainProjectMutation,
   useGetMainProjectsQuery,
   useUpdateMainProjectMutation,
-  useDeleteMainProjectMutation
+  useDeleteMainProjectMutation,
+  useGetProjectDataByIdQuery
 } = projectApi;

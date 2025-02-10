@@ -41,9 +41,39 @@ function CreateClientDetails() {
         });
     };
 
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     const data = new FormData();
+    //     data.append("project_id", projectId);
+        
+    //     // Append regular form fields
+    //     Object.keys(formData).forEach((key) => {
+    //         if (key !== "files") {
+    //             data.append(key, formData[key]);
+    //         }
+    //     });
+        
+    //     // Append multiple files
+    //     Object.keys(formData.files).forEach((key) => {
+    //         formData.files[key].forEach((file, index) => {
+    //             data.append(`${key}[${index}]`, file);
+    //         });
+    //     });
+
+    //     try {
+    //         const result = await createClientData(data).unwrap(); // unwrap the result to handle success or error
+            
+
+    //     } catch (error) {
+    //         console.error("Error:", error);
+    //     }
+    // };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const data = new FormData();
+        
+        // Append project_id
         data.append("project_id", projectId);
         
         // Append regular form fields
@@ -53,28 +83,21 @@ function CreateClientDetails() {
             }
         });
         
-        // Append multiple files
+        // Append files with the correct field names
         Object.keys(formData.files).forEach((key) => {
-            formData.files[key].forEach((file, index) => {
-                data.append(`${key}[${index}]`, file);
+            formData.files[key].forEach((file) => {
+                // Remove the array index notation from the field name
+                data.append(key, file);
             });
         });
-
+    
         try {
-            // const response = await fetch("http://127.0.0.1:8000/project_module/create_client_data", {
-            //     method: "POST",
-            //     headers: {
-            //         Authorization: `Bearer YOUR_ACCESS_TOKEN`,
-            //     },
-            //     body: data,
-            // });
-            // const result = await response.json();
-            // console.log("Success:", result);
-            const result = await createClientData(data).unwrap(); // unwrap the result to handle success or error
-            console.log("Success")
-
+            const result = await createClientData(data).unwrap();
+            console.log("Success:", result);
+            // Handle success (e.g., show notification, redirect, etc.)
         } catch (error) {
             console.error("Error:", error);
+            // Handle error (e.g., show error message)
         }
     };
 

@@ -120,8 +120,11 @@ const navigate = useNavigate();
         {/* <TableCell align="center" width={130}>Deadline</TableCell> */}
         <TableCell align="center" width={150}>Alloted Land Area</TableCell>
         <TableCell align="center" width={180}>LandBank Name</TableCell>
+        <TableCell align="center" width={180}>Project Created At:</TableCell>
+        <TableCell align="center" width={180}>Project End Date:</TableCell>
         {/* <TableCell align="center" width={120}>Action</TableCell> */}
         <TableCell align="center" width={220}>Expense</TableCell>
+        <TableCell align="center" width={220}>View Details</TableCell>
         <TableCell align="center" width={220}>Add Client Details</TableCell>
         <TableCell align="center" width={220}>View Client Details</TableCell>
         <TableCell align="center" width={220}>Add WO PO</TableCell>
@@ -137,6 +140,11 @@ const navigate = useNavigate();
                     {/* <TableCell align="center">{project.end_date}</TableCell> */}
                     <TableCell align="center" sx={{minWidth: '100px'}}>{project.alloted_land_area}</TableCell>
                     <TableCell align="center">{project.landbank_name}</TableCell>
+                    {/* <TableCell align="center">{project?.start_date}</TableCell> */}
+                    <TableCell align="center">{new Date(project?.start_date).toLocaleDateString() || 'N/A'}</TableCell>
+                    <TableCell align="center">{new Date(project?.end_date).toLocaleDateString() || 'N/A'}</TableCell>
+                    {/*  */}
+                    {/* <TableCell align="center">{project?.end_date}</TableCell> */}
                     {/* <TableCell align="center">{project.status}</TableCell> */}
                     {/* <TableCell align="center" 
                     style={{ display: 'flex', justifyContent: 'center',alignItems:'center', gap: 10 }}
@@ -163,6 +171,22 @@ const navigate = useNavigate();
           Expense
         </Button>
       </TableCell>
+
+      <TableCell align="center">
+        <Button
+          variant="contained"
+          color="primary"
+          style={{ backgroundColor: '#27d865',
+            color: 'white',minWidth: '120px' }}
+          size="small"
+          onClick={() => {
+            navigate(`/project/view_projects_details/${project?.id}`)
+            }}
+        >
+          View Details
+        </Button>
+      </TableCell>
+
 
       {/* Client Details Button */}
       <TableCell align="center">

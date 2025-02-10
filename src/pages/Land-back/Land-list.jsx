@@ -117,7 +117,7 @@ function LandListing() {
         </div>
 
         <div className="flex items-center">
-          <Button
+          {/* <Button
             variant="contained"
             style={{
               backgroundColor: "#f6812d",
@@ -129,7 +129,8 @@ function LandListing() {
             onClick={() => setOpenAddLandModal(true)} // Open Add Land modal
           >
             Add Land
-          </Button>
+          </Button> */}
+            <h3 className="text-2xl">Filters</h3>           
         </div>
       </div>
 
@@ -152,7 +153,7 @@ function LandListing() {
           </TableHead>
 
           <TableBody>
-            {currentRows.map((row, index) => (
+            {currentRows?.map((row, index) => (
               <TableRow key={row.id}>
                 <TableCell align="center">{index + 1}</TableCell>
                 <TableCell align="center">{row?.land_name}</TableCell>

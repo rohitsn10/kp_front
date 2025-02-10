@@ -139,7 +139,7 @@ function ProjectMainActivityPage() {
                             <TableCell align="center">Sr No.</TableCell>
                             <TableCell align="center">Type</TableCell>
                             <TableCell align="center">Activity Name</TableCell>
-                            <TableCell align="center">Added Date</TableCell>
+                            {/* <TableCell align="center">Added Date</TableCell> */}
                             <TableCell align="center">Action</TableCell>
                         </TableRow>
                     </TableHead>
@@ -150,7 +150,7 @@ function ProjectMainActivityPage() {
                                 <TableCell align="center">{row.sr}</TableCell>
                                 <TableCell align="center">{row.type}</TableCell>
                                 <TableCell align="center">{row.activityName}</TableCell>
-                                <TableCell align="center">{row.addedDate}</TableCell>
+                                {/* <TableCell align="center">{row.addedDate}</TableCell> */}
                                 <TableCell align="center" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20 }}>
                                     {/* Edit Icon */}
                                     <RiEditFill
