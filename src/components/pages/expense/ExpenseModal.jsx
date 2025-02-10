@@ -1,60 +1,74 @@
 import React, { useState } from 'react';
 import Button from '@mui/material/Button';
-import { useCreateExpenseMutation } from '../../../api/expense/expenseApi'; // Import your createExpense hook
+import { useCreateExpenseMutation } from '../../../api/expense/expenseApi';
 import { Dialog, DialogActions, DialogContent, TextField, Autocomplete, CircularProgress } from '@mui/material';
-import { useGetLandCategoriesQuery } from '../../../api/users/categoryApi'; // Import the category API hook
+import { useGetLandCategoriesQuery } from '../../../api/users/categoryApi';
 
-export default function ExpenseModal({ open, setOpen, refetch,id }) {
-
-  const [projectID,setProjectID] = useState(id);
+export default function ExpenseModal({ open, setOpen, refetch, id }) {
+  const [projectID, setProjectID] = useState(id);
   const [expenseName, setExpenseName] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
   const [notes, setNotes] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null); // State to store selected category ID
-  const [selectedCategoryLabel, setSelectedCategoryLabel] = useState(''); // State to store the selected category label
-  const [files, setFiles] = useState([]); // State to store uploaded files
-  const [createExpense, { isLoading, error, isSuccess }] = useCreateExpenseMutation();
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [selectedCategoryLabel, setSelectedCategoryLabel] = useState('');
+  const [files, setFiles] = useState([]);
+  const [createExpense, { isLoading }] = useCreateExpenseMutation();
 
-  const { data: categories } = useGetLandCategoriesQuery(); // Fetch categories
+  const { data: categories } = useGetLandCategoriesQuery();
 
   const handleClose = () => {
     setOpen(false);
+    // Reset form when closing
+    resetForm();
   };
 
   const handleFileChange = (e) => {
-    setFiles(e.target.files);
+    setFiles(Array.from(e.target.files));
+  };
+
+  const resetForm = () => {
+    setExpenseName('');
+    setExpenseAmount('');
+    setNotes('');
+    setSelectedCategoryId(null);
+    setSelectedCategoryLabel('');
+    setFiles([]);
   };
 
   const handleSubmit = async () => {
-    // Validation before submission
+    // Validation
     if (!projectID || !expenseName || !expenseAmount || !selectedCategoryId || files.length === 0) {
       alert("All fields are required, including at least one file.");
       return;
     }
 
-    const expenseData = {
-      project_id:projectID,
-      expense_name: expenseName,
-      expense_amount: expenseAmount,
-      notes: notes,
-      category_id: selectedCategoryId, // Add the selected category ID
-      expense_document_attachments: Array.from(files), // Convert FileList to an array
-    };
-
     try {
-      // Call createExpense mutation with expenseData
-      await createExpense(expenseData).unwrap();
-      // Reset form fields after successful submission
-      setExpenseName('');
-      setExpenseAmount('');
-      setNotes('');
-      setSelectedCategoryId(null); // Clear the category after submission
-      setSelectedCategoryLabel(''); // Clear the category label after submission
-      setFiles([]); // Clear the files after submission
-      refetch(); // Refresh the data after adding an expense
-      setOpen(false); // Close the modal after submission
+      // Create FormData instance
+      const formData = new FormData();
+      
+      // Append all text fields
+      formData.append('project_id', projectID);
+      formData.append('expense_name', expenseName);
+      formData.append('expense_amount', expenseAmount);
+      formData.append('notes', notes);
+      formData.append('category_id', selectedCategoryId);
+      
+      // Append files
+      files.forEach(file => {
+        formData.append('expense_document_attachments', file);
+      });
+
+      // Submit the form
+      await createExpense(formData).unwrap();
+      
+      // On success
+      refetch();
+      resetForm();
+      setOpen(false);
+      
     } catch (err) {
       console.error("Error creating expense:", err);
+      alert("Failed to create expense. Please try again.");
     }
   };
 
@@ -62,102 +76,106 @@ export default function ExpenseModal({ open, setOpen, refetch,id }) {
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
       <DialogContent>
         <h2 className="text-[#29346B] text-2xl font-semibold mb-5">Add Expense</h2>
-        <div className='flex flex-col gap-3 '>
-        {/* Expense Name */}
-        <label className="block mb-1 text-[#29346B] text-lg font-semibold">Expense Name</label>
-
-        <TextField
-          label="Expense Name"
-          variant="outlined"
-          fullWidth
-          value={expenseName}
-          onChange={(e) => setExpenseName(e.target.value)}
-          className="mb-4"
-          required
-        />
-                <label className="block mb-1 text-[#29346B] text-lg font-semibold">Expense Amount</label>
-
-        {/* Expense Amount */}
-        <TextField
-          label="Expense Amount"
-          type="number"
-          variant="outlined"
-          fullWidth
-          value={expenseAmount}
-          onChange={(e) => setExpenseAmount(e.target.value)}
-          className="mb-4"
-          required
-        />
-                        <label className="block mb-1 text-[#29346B] text-lg font-semibold">Expense Notes</label>
-        {/* Notes */}
-        <TextField
-          label="Notes"
-          variant="outlined"
-          fullWidth
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="mb-4"
-        />
-        
-        {/* Category Dropdown (Autocomplete) */}
-        <div className="flex flex-col gap-2 mb-4">
-          <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-            Category
-          </label>
-          <Autocomplete
-            options={categories?.data?.map((category) => ({
-              id: category.id,
-              label: category.category_name, // Display category name
-            })) || []}
-            value={selectedCategoryLabel ? { label: selectedCategoryLabel } : null} // Display selected label
-            onChange={(_, value) => {
-              setSelectedCategoryLabel(value?.label || ''); // Set the label value for display
-              setSelectedCategoryId(value?.id || null); // Set the ID of the selected category
-            }} 
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                fullWidth
-                placeholder="Select Category"
-              />
-            )}
-          />
-        </div>
-
-        {/* File Upload */}
-        <div className="flex flex-col gap-2 mb-4">
-          <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-            Upload Documents
-          </label>
-          <input
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            className="border p-2"
+        <div className='flex flex-col gap-3'>
+          {/* Expense Name */}
+          <label className="block mb-1 text-[#29346B] text-lg font-semibold">Expense Name</label>
+          <TextField
+            label="Expense Name"
+            variant="outlined"
+            fullWidth
+            value={expenseName}
+            onChange={(e) => setExpenseName(e.target.value)}
+            className="mb-4"
             required
           />
-          <div className="text-sm text-[#FF0000] mt-1">
-            {files.length === 0 && "At least one file is required."}
+
+          <label className="block mb-1 text-[#29346B] text-lg font-semibold">Expense Amount</label>
+          <TextField
+            label="Expense Amount"
+            type="number"
+            variant="outlined"
+            fullWidth
+            value={expenseAmount}
+            onChange={(e) => setExpenseAmount(e.target.value)}
+            className="mb-4"
+            required
+          />
+
+          <label className="block mb-1 text-[#29346B] text-lg font-semibold">Expense Notes</label>
+          <TextField
+            label="Notes"
+            variant="outlined"
+            fullWidth
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="mb-4"
+          />
+          
+          {/* Category Dropdown */}
+          <div className="flex flex-col gap-2 mb-4">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Category
+            </label>
+            <Autocomplete
+              options={categories?.data?.map((category) => ({
+                id: category.id,
+                label: category.category_name,
+              })) || []}
+              value={selectedCategoryLabel ? { label: selectedCategoryLabel } : null}
+              onChange={(_, value) => {
+                setSelectedCategoryLabel(value?.label || '');
+                setSelectedCategoryId(value?.id || null);
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  fullWidth
+                  placeholder="Select Category"
+                />
+              )}
+            />
           </div>
-        </div>
+
+          {/* File Upload */}
+          <div className="flex flex-col gap-2 mb-4">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Upload Documents
+            </label>
+            <input
+              type="file"
+              multiple
+              onChange={handleFileChange}
+              className="border p-2"
+              required
+              accept=".pdf,.doc,.docx,.xlsx,.xls"
+            />
+            <div className="text-sm text-[#FF0000] mt-1">
+              {files.length === 0 && "At least one file is required."}
+            </div>
+            {files.length > 0 && (
+              <div className="text-sm text-green-600 mt-1">
+                {files.length} file(s) selected
+              </div>
+            )}
+          </div>
         </div>
       </DialogContent>
       <DialogActions sx={{
-        marginBottom:'20px',
-        display:'flex',
-        justifyContent:'center'
+        marginBottom: '20px',
+        display: 'flex',
+        justifyContent: 'center'
       }}>
         <Button onClick={handleClose} color="secondary">Cancel</Button>
         <Button
           onClick={handleSubmit}
-          disabled={isLoading || !expenseName || !expenseAmount || !selectedCategoryId || files.length === 0} // Disable if fields are empty
+          disabled={isLoading || !expenseName || !expenseAmount || !selectedCategoryId || files.length === 0}
           style={{
             backgroundColor: '#F6812D',
             color: '#FFFFFF',
             fontWeight: 'bold',
           }}
         >
-          {isLoading ? 'Adding...' : 'Add Expense'}
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Add Expense'}
         </Button>
       </DialogActions>
     </Dialog>

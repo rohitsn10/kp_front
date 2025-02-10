@@ -3,47 +3,46 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const expenseApi = createApi({
   reducerPath: "expenseApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_KEY, 
+    baseUrl: import.meta.env.VITE_API_KEY,
     prepareHeaders: (headers) => {
-      const token = sessionStorage.getItem("token"); 
+      const token = sessionStorage.getItem("token");
       if (token) {
-        headers.set("Authorization", `Bearer ${token}`); 
+        headers.set("Authorization", `Bearer ${token}`);
       }
+      // Remove Content-Type header for FormData
+      headers.delete("Content-Type");
       return headers;
     },
   }),
   endpoints: (builder) => ({
     createExpense: builder.mutation({
-      query: (expenseData) => {
-        const formData = new FormData();
-        formData.append("project_id", expenseData.project_id);
-        formData.append("category_id", expenseData.category_id);
-        formData.append("expense_name", expenseData.expense_name);
-        formData.append("expense_amount", expenseData.expense_amount);
-        formData.append("notes", expenseData.notes);
-        if (expenseData.expense_document_attachments) {
-          formData.append(
-            "expense_document_attachments",
-            expenseData.expense_document_attachments
-          );
-        }
-
-        return {
-          url: "project_module/create_expense_data",
-          method: "POST",
-          body: formData,
-        };
-      },
+      query: (formData) => ({
+        url: "project_module/create_expense_data",
+        method: "POST",
+        body: formData,
+        formData: true,
+      }),
     }),
     getExpenses: builder.query({
-        query: (projectId) => {
-          return {
-            url: `project_module/create_expense_data?project_id=${projectId}`,
-            method: "GET",
-          };
-        },
+      query: (projectId) => ({
+        url: `project_module/create_expense_data?project_id=${projectId}`,
+        method: "GET",
       }),
+    }),
+    updateExpense: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `project_module/update_expense_data/${id}`,
+        method: "PUT",
+        body: data,
+        formData: true,
+      }),
+      // Invalidate the getExpenses cache after successful update
+      invalidates: (result, error, { id }) => [
+        { type: 'Expenses' },
+        { type: 'Expenses', id }
+      ],
+    }),
   }),
 });
 
-export const { useCreateExpenseMutation,useGetExpensesQuery  } = expenseApi;
+export const { useCreateExpenseMutation,useUpdateExpenseMutation, useGetExpensesQuery } = expenseApi;

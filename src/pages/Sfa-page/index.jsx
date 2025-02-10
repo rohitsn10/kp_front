@@ -95,7 +95,7 @@ const SiteVisitTable = () => {
           size="small"
           style={{ backgroundColor: '#f9f9f9', borderRadius: '8px', maxWidth: '200px' }}
         />
-        <h2 className="text-3xl text-[#29346B] font-semibold text-center">Site Visit Table</h2>
+        <h2 className="text-3xl text-[#29346B] font-semibold text-center">SFA Listing</h2>
         <div className="flex justify-end">
           <Button
           onClick={()=>{setOpenCreateSpa(true)}}

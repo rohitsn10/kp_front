@@ -13,9 +13,13 @@ import {
   Alert,
   Button,
   TextField,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
+// import { Pencil } from 'lucide-react';
 import { useGetExpensesQuery } from '../../../api/expense/expenseApi';
 import ExpenseModal from '../../../components/pages/expense/ExpenseModal';
+import ExpenseUpdateModal from '../../../components/pages/expense/UpdateExpenseModal';
 
 function ProjectExpensePage() {
   const { projectId } = useParams();
@@ -23,8 +27,20 @@ function ProjectExpensePage() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState(null);
 
   const { data, isLoading, error, refetch } = useGetExpensesQuery(projectId);
+
+  const handleOpenUpdateModal = (expense) => {
+    setSelectedExpense(expense);
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleCloseUpdateModal = () => {
+    setIsUpdateModalOpen(false);
+    setSelectedExpense(null);
+  };
 
   if (isLoading) {
     return (
@@ -54,7 +70,6 @@ function ProjectExpensePage() {
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[70%] mx-auto my-8 rounded-md">
       <div className="flex flex-row justify-between items-center py-6 mx-10">
-        {/* Search Input */}
         <TextField
           label="Search Expense"
           variant="outlined"
@@ -74,7 +89,7 @@ function ProjectExpensePage() {
             backgroundColor: '#F6812D',
             color: '#FFFFFF',
             fontWeight: 'bold',
-            padding:'10px'
+            padding: '10px'
           }}
         >
           Add Expense
@@ -89,6 +104,7 @@ function ProjectExpensePage() {
               <TableCell align="center">Expense Name</TableCell>
               <TableCell align="center">Project Name</TableCell>
               <TableCell align="center">Amount</TableCell>
+              <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
 
@@ -100,11 +116,23 @@ function ProjectExpensePage() {
                   <TableCell align="center">{row.expense_name}</TableCell>
                   <TableCell align="center">{row.project_name}</TableCell>
                   <TableCell align="center">{row.expense_amount}</TableCell>
+                  <TableCell align="center">
+                    <Tooltip title="Edit Expense">
+                      <IconButton
+                        onClick={() => handleOpenUpdateModal(row)}
+                        size="small"
+                        style={{ color: '#29346B' }}
+                      >
+                        {/* <Pencil className="h-5 w-5" /> */}
+                        Edit
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} align="center">
+                <TableCell colSpan={5} align="center">
                   No expenses found
                 </TableCell>
               </TableRow>
@@ -126,7 +154,19 @@ function ProjectExpensePage() {
         />
       </TableContainer>
 
-      <ExpenseModal open={open} setOpen={setOpen} refetch={refetch} id={projectId} />
+      <ExpenseModal 
+        open={open} 
+        setOpen={setOpen} 
+        refetch={refetch} 
+        id={projectId} 
+      />
+      
+      <ExpenseUpdateModal
+        open={isUpdateModalOpen}
+        setOpen={handleCloseUpdateModal}
+        refetch={refetch}
+        expenseData={selectedExpense}
+      />
     </div>
   );
 }
