@@ -8,8 +8,19 @@ function ViewClientDetails() {
     // const [loading, setLoading] = useState(true);
     // const [error, setError] = useState(null);
     const { data: clientFetchData, error, isLoading } = useGetClientDataQuery(projectId);
-    // const clientData = clientFetchData?.data[1];
-    // console.log(clientFetchData)
+    const clientData = clientFetchData?.data[0];
+    console.log("Client details:",)
+
+    if (!clientData) {
+        return (
+            <div className="p-6 max-w-4xl mx-auto bg-white rounded-md shadow-md my-10">
+
+            <p className="text-center text-gray-500 text-lg">
+                Client details not found, please add.
+            </p>
+            </div>
+        );
+    }
 
     // console.log(clientData)
     // console.log("Total Details",clientFetchData)
@@ -19,7 +30,7 @@ function ViewClientDetails() {
 
     return (
         <div className="p-6 max-w-4xl mx-auto bg-white rounded-md shadow-md my-10">
-            {/* <h2 className="text-2xl text-center font-semibold text-[#29346B] mb-5">
+            <h2 className="text-2xl text-center font-semibold text-[#29346B] mb-5">
                 View Client Details
             </h2>
 
@@ -48,7 +59,7 @@ function ViewClientDetails() {
                 <FileItem label="Third Authority Aadhar Attachments" files={clientData?.third_authority_adhar_card_attachments} />
                 <FileItem label="Third Authority PAN Attachments" files={clientData?.third_authority_pan_card_attachments
 } />
-            </div> */}
+            </div>
         </div>
     );
 }

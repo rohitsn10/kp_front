@@ -83,7 +83,7 @@ export default function CreateProjectActivity({
             <TextField
               {...params}
               variant="outlined"
-              placeholder="Select a category"
+              placeholder="Select a Activity Type"
               fullWidth
               sx={{
                 '& .MuiOutlinedInput-root': {

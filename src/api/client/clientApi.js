@@ -21,7 +21,7 @@ export const clientDataApi = createApi({
       }),
     }),
     getClientData: builder.query({
-      query: (id) => `project_module/create_client_data?id=${id}`,
+      query: (id) => `project_module/project_id_wise_get_client_data/${id}`,
     }),
   }),
 });

@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useCreateClientDataMutation } from "../../../api/client/clientApi";
+import { Button } from "@mui/material";
+import { toast } from "react-toastify";
 
 function CreateClientDetails() {
     const { projectId } = useParams();
     const [createClientData] = useCreateClientDataMutation(); 
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         client_name: "",
         contact_number: "",
@@ -93,8 +96,11 @@ function CreateClientDetails() {
     
         try {
             const result = await createClientData(data).unwrap();
+
             console.log("Success:", result);
             // Handle success (e.g., show notification, redirect, etc.)
+            navigate('/project');
+            toast.success("Client Data added Successfully")
         } catch (error) {
             console.error("Error:", error);
             // Handle error (e.g., show error message)
@@ -144,8 +150,17 @@ function CreateClientDetails() {
                         </div>
                     ))}
                 </div>
-                
-                <button type="submit" className="bg-[#29346B] text-white py-2 px-6 rounded-md">Submit</button>
+                <div className="flex flex-row justify-center items-center">
+                    {/* <button type="submit" className="bg-[#FF8C00]  text-white py-2 px-6 rounded-md">Submit</button> */}
+                    <Button
+                    type="submit"
+                    variant="contained"
+                    style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
+                    onClick={() => setOpen(true)}
+                >
+                    Add Category
+                </Button>
+                </div>
             </form>
         </div>
     );

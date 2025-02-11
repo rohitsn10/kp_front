@@ -3,6 +3,8 @@ import logoImg from '../../../assets/logo.png'
 import { Link, useLocation, useNavigation } from 'react-router-dom';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
+import { LuMapPinPlusInside } from "react-icons/lu";
+import { TbMapPlus } from "react-icons/tb";
 function Sidebar() {
   const location = useLocation();
   const currPath = location.pathname;
@@ -24,7 +26,9 @@ function Sidebar() {
     },
     {
       name: 'SFA',
-      icons: <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/google-map-icon.png" alt="Location" width="40" height="40" />,
+      // icons: <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/google-map-icon.png" alt="Location" width="50" height="50" />,
+      icons: <TbMapPlus className='w-[22px] h-[22px]'/>,
+      // LuMapPinPlusInside
       links: "/sfa-page"
     },  
     {
@@ -34,7 +38,7 @@ function Sidebar() {
     },   
     {
       name:'User',
-      icons:<svg width="24" height="24" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+      icons:<svg width="22" height="22" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M13 0C14.7239 0 16.3772 0.684819 17.5962 1.90381C18.8152 3.12279 19.5 4.77609 19.5 6.5C19.5 8.22391 18.8152 9.87721 17.5962 11.0962C16.3772 12.3152 14.7239 13 13 13C11.2761 13 9.62279 12.3152 8.40381 11.0962C7.18482 9.87721 6.5 8.22391 6.5 6.5C6.5 4.77609 7.18482 3.12279 8.40381 1.90381C9.62279 0.684819 11.2761 0 13 0ZM13 3.25C12.138 3.25 11.3114 3.59241 10.7019 4.2019C10.0924 4.8114 9.75 5.63805 9.75 6.5C9.75 7.36195 10.0924 8.1886 10.7019 8.7981C11.3114 9.40759 12.138 9.75 13 9.75C13.862 9.75 14.6886 9.40759 15.2981 8.7981C15.9076 8.1886 16.25 7.36195 16.25 6.5C16.25 5.63805 15.9076 4.8114 15.2981 4.2019C14.6886 3.59241 13.862 3.25 13 3.25ZM13 14.625C17.3388 14.625 26 16.7862 26 21.125V26H0V21.125C0 16.7862 8.66125 14.625 13 14.625ZM13 17.7125C8.17375 17.7125 3.0875 20.085 3.0875 21.125V22.9125H22.9125V21.125C22.9125 20.085 17.8263 17.7125 13 17.7125Z" fill="#F88141"/>
       </svg>
       ,
@@ -42,7 +46,7 @@ function Sidebar() {
     },
     {
       name:'Project',
-      icons:<svg width="24" height="24" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+      icons:<svg width="22" height="22" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M13 13V5M6.33333 15.6667V5M19.6667 18.3333V5M4.2 1H21.8C22.6487 1 23.4626 1.33714 24.0627 1.93726C24.6629 2.53737 25 3.35131 25 4.2V21.8C25 22.6487 24.6629 23.4626 24.0627 24.0627C23.4626 24.6629 22.6487 25 21.8 25H4.2C3.35131 25 2.53737 24.6629 1.93726 24.0627C1.33714 23.4626 1 22.6487 1 21.8V4.2C1 3.77977 1.08277 3.36365 1.24359 2.97541C1.4044 2.58717 1.64011 2.23441 1.93726 1.93726C2.53737 1.33714 3.35131 1 4.2 1Z" stroke="#C12463" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>          
       ,
