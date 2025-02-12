@@ -15,7 +15,7 @@ function MaterialManagementListing() {
   const [selectedMaterial, setSelectedMaterial] = useState(null); // State for selected material
 
   // Fetch data using the useGetMaterialsQuery hook
-  const { data: materialsData, isLoading, isError } = useGetMaterialsQuery();
+  const { data: materialsData, isLoading, isError,refetch } = useGetMaterialsQuery();
 
   // If the data is still loading or an error occurs, show a loading message or handle the error
   if (isLoading) {
@@ -58,11 +58,11 @@ function MaterialManagementListing() {
     setPage(0);
   };
   const handleModalClose = () => {
-    openAddModal(false);
+    setOpenAddModal(false);
   };
 
   const handleEditModalClose=()=>{
-    openEditModal(false);
+    setOpenEditModal(false);
   };
   const currentRows = filteredRows.slice(
     page * rowsPerPage,
@@ -144,7 +144,7 @@ function MaterialManagementListing() {
               <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
                 Quantity
               </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
+              {/* <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
                 Project Activity Name
               </TableCell>
               <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
@@ -152,7 +152,7 @@ function MaterialManagementListing() {
               </TableCell>
               <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
                 Project Sub-Sub Activity Name
-              </TableCell>
+              </TableCell> */}
               <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
                 Actions
               </TableCell>
@@ -170,9 +170,9 @@ function MaterialManagementListing() {
                 <TableCell align="center">{row.prNumber}</TableCell>
                 <TableCell align="center">{row.poNumber}</TableCell>
                 <TableCell align="center">{row.quantity}</TableCell>
-                <TableCell align="center">{row.projectActivityName}</TableCell>
+                {/* <TableCell align="center">{row.projectActivityName}</TableCell>
                 <TableCell align="center">{row.projectSubActivityName}</TableCell>
-                <TableCell align="center">{row.projectSubSubActivityName}</TableCell>
+                <TableCell align="center">{row.projectSubSubActivityName}</TableCell> */}
                 <TableCell align="center">
                   <div className="flex justify-center items-center space-x-2">
                     <RiEditFill

@@ -10,9 +10,10 @@ import { useGetMainProjectsQuery } from "../../../api/users/projectApi";
 import { useGetActivitiesQuery } from "../../../api/users/projectActivityApi";
 import { useGetDropdownSubActivitiesQuery } from "../../../api/users/subActivityApi";
 import { useGetSubSubActivityQuery } from "../../../api/users/multipleActivityApi";
-import { useCreateMaterialMutation } from "../../../api/users/materialApi";
+import { useCreateMaterialMutation, useGetMaterialsQuery } from "../../../api/users/materialApi";
 import { toast } from "react-toastify";
 export default function AddMaterialModal({ open, setOpen,onClose }) {
+  const {refetch}=useGetMaterialsQuery()
   const [vendorName, setVendorName] = useState("");
   const [createMaterial] = useCreateMaterialMutation();
   const [materialName, setMaterialName] = useState("");
@@ -71,6 +72,30 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
   };
 
   const handleSubmit = async () => {
+    const trimmedVendorName = vendorName?.trim();
+    const trimmedMaterialName = materialName?.trim();
+
+    if (!trimmedVendorName || !trimmedMaterialName || !uom || !price || !endDate || !prNumber || !poNumber || !quantity || !selectedProjectActivity || !selectedSubSubActivity || !selectedSubActivity || !projectName) {
+      toast.error("Please fill all required fields.");
+      return;
+    }
+  
+    // Ensure price and quantity are positive numbers
+    if (isNaN(price) || price <= 0) {
+      toast.error("Price must be a positive number.");
+      return;
+    }
+  
+    if (isNaN(quantity) || quantity <= 0) {
+      toast.error("Quantity must be a positive number.");
+      return;
+    }
+  
+    // Validate end date (should be in the future)
+    if (new Date(endDate) <= new Date()) {
+      toast.error("End date must be a future date.");
+      return;
+    }
     const formData = {
       vendor_name: vendorName,
       material_name: materialName,
@@ -80,8 +105,8 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
       PR_number: prNumber,
       PO_number: poNumber,
       quantity: quantity,
-      status: status, // Include status
-      payment_status: paymentStatus, // Include payment_status
+      // status: status, // Include status
+      // payment_status: paymentStatus, // Include payment_status
       project_id: projectName,
       projectactivity_id: selectedProjectActivity?.value,
       subactivity_id: selectedSubActivity?.value,
@@ -91,22 +116,36 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
     try {
       // Trigger the mutation and wait for the response
       const response = await createMaterial(formData).unwrap();
+      // if
       console.log("Material created successfully:", response);
-
+      if(response.status){
+        toast.success("Material created successfully!");
+      }else{
+        toast.error("Something went wrong.")
+      }
       // Show success toast
-      toast.success("Material created successfully!", {
-        position: toast.POSITION.TOP_RIGHT,
-      });
-
-      handleClose(); // Close the modal
+      setVendorName("");
+      setMaterialName("");
+      setUom("")
+      setPrice("")
+      setEndDate("")
+      setPrNumber("")
+      setPoNumber("")
+      setQuantity("")
+      setSelectedSubActivity(null)
+      setSelectedSubSubActivity(null)
+      setSelectedProjectActivity(null)
+      setProjectName("")
+      refetch();
+       // Close the modal
     } catch (error) {
       console.error("Error creating material:", error);
-
       // Show error toast
       toast.error("Error creating material. Please try again.", {
         position: toast.POSITION.TOP_RIGHT,
       });
     }
+    handleClose();
   };
 
   return (
@@ -236,7 +275,7 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
               />
             </div>
           </div>
-          <div className="flex justify-between mb-4">
+          {/* <div className="flex justify-between mb-4">
             <div className="w-[48%]">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
                 Status
@@ -261,7 +300,7 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
                 onChange={(e) => setPaymentStatus(e.target.value)}
               />
             </div>
-          </div>
+          </div> */}
           {/* Dropdowns for Project, Activity, Sub Activity, and Sub Sub Activity */}
           <div className="flex justify-between mb-4">
             <div className="w-[48%]">
@@ -308,7 +347,7 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
             </div>
             <div className="w-[48%]">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Select Project Activity
+                Select Project Activity<span className="text-red-600"> *</span>
               </label>
               <Autocomplete
                 options={activityOptions}
@@ -344,7 +383,7 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
           <div className="flex justify-between mb-4">
             <div className="w-[48%]">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Select Sub Activity
+                Select Sub Activity<span className="text-red-600"> *</span>
               </label>
               <Autocomplete
                 options={subActivityOptions}
@@ -375,7 +414,7 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
             </div>
             <div className="w-[48%]">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Sub Sub Activity <span className="text-red-600"> *</span>
+                Multi Activity<span className="text-red-600"> *</span>
               </label>
               <Autocomplete
                 options={subSubActivityOptions}

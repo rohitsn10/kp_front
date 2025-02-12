@@ -34,7 +34,7 @@ export const materialApi = createApi({
     updateMaterial: builder.mutation({
       query: (data) => ({
         url: `material_management/material_management_update/${data.id}`, // Make sure this is the correct endpoint
-        method: "POST",
+        method: "PUT",
         body: data,
       }),
     }),
