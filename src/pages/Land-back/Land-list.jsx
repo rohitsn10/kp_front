@@ -146,8 +146,8 @@ function LandListing() {
               <TableCell align="center">Status</TableCell>
               <TableCell align="center">Create Date</TableCell>
               <TableCell align="center">Action</TableCell>
-              <TableCell align="center">Approve</TableCell>
-              <TableCell align="center">Edit Approve</TableCell>
+              <TableCell align="center">Attachments</TableCell>
+              <TableCell align="center">Edit Attachments</TableCell>
               {/* <TableCell align="center">SFA</TableCell> */}
             </TableRow>
           </TableHead>
@@ -194,7 +194,7 @@ function LandListing() {
                         navigate("/add-land-doc", { state: { landData: row } })
                       }
                     >
-                      Approve
+                    Add Attachments
                     </span>
                   ) : (
                     <span
@@ -204,7 +204,7 @@ function LandListing() {
                         fontWeight: "bold",
                       }}
                     >
-                      Approve
+                      Attachments
                     </span>
                   )}
                 </TableCell>
@@ -221,7 +221,7 @@ function LandListing() {
                         navigate(`/edit-land-doc/${row.id}`, { state: { landData: row } })
                       }
                     >
-                     Edit Approve
+                     Edit Attachments
                     </span>
                   ) : (
                     <span
@@ -231,7 +231,7 @@ function LandListing() {
                         fontWeight: "bold",
                       }}
                     >
-                     Edit Approve
+                     Edit Attachments
                     </span>
                   )}
                 </TableCell>

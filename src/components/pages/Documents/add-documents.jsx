@@ -15,7 +15,7 @@ import {
 import { toast } from "react-toastify";
 import { useGetMainProjectsQuery } from "../../../api/users/projectApi";
 import { useFetchUsersQuery } from "../../../api/users/usersApi";
-import { useCreateDocumentMutation } from "../../../api/users/documentApi"; // Import your mutation hook
+import { useCreateDocumentMutation, useGetDocumentsQuery } from "../../../api/users/documentApi"; // Import your mutation hook
 
 export default function AddDocumentModal({ open, setOpen, onClose }) {
   const [documentName, setDocumentName] = useState("");
@@ -28,6 +28,7 @@ export default function AddDocumentModal({ open, setOpen, onClose }) {
   const [comments, setComments] = useState("");
   const [documentAttachments, setDocumentAttachments] = useState([]);
   const [assignedUsers, setAssignedUsers] = useState([]); // Store as an array of user IDs
+  const { refetch } = useGetDocumentsQuery();
 
   const { data: projects, error, isLoading } = useGetMainProjectsQuery();
   const { data: userData } = useFetchUsersQuery();
@@ -82,6 +83,7 @@ export default function AddDocumentModal({ open, setOpen, onClose }) {
     try {
       const response = await createDocument(formData).unwrap(); // Call the API mutation
       toast.success("Document added successfully!");
+      refetch();
       handleClose();
     } catch (error) {
       toast.error("Error adding document: " + error.message);

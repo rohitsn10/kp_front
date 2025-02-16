@@ -30,6 +30,7 @@ import ProjectExpense from "./pages/projects/project-expense/index.jsx";
 import CreateClientDetails from "./pages/projects/project-client-details/index.jsx";
 import ViewClientDetails from "./pages/projects/project-view-client-details/index.jsx";
 import ViewProjectDetails from "./pages/projects/project-view-details/index.jsx";
+import DocumentPattern from "./pages/dummy/index.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
@@ -143,6 +144,16 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <DocumentListing />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+                <Route
+          path="/path"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <DocumentPattern />
               </MainLayout>
             </ProtectedRoute>
           }

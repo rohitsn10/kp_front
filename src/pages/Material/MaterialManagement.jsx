@@ -1,35 +1,45 @@
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Button, TablePagination } from '@mui/material';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Button,
+  TablePagination,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from '@mui/material';
 import { RiEditFill } from 'react-icons/ri';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddMaterialModal from '../../components/pages/Material/addMaterialModal';
 import EditMaterialModal from '../../components/pages/Material/editMaterialModel';
-import { useGetMaterialsQuery } from '../../api/users/materialApi';
+import { useGetMaterialsQuery, useDeleteMaterialMutation } from '../../api/users/materialApi';
 
 function MaterialManagementListing() {
   const [materialFilter, setMaterialFilter] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [openAddModal, setOpenAddModal] = useState(false); // State for Add Material Modal
-  const [openEditModal, setOpenEditModal] = useState(false); // State for Edit Material Modal
-  const [selectedMaterial, setSelectedMaterial] = useState(null); // State for selected material
+  const [openAddModal, setOpenAddModal] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [openConfirmModal, setOpenConfirmModal] = useState(false);
+  const [materialToDelete, setMaterialToDelete] = useState(null);
 
-  // Fetch data using the useGetMaterialsQuery hook
-  const { data: materialsData, isLoading, isError,refetch } = useGetMaterialsQuery();
+  const { data: materialsData, isLoading, isError, refetch } = useGetMaterialsQuery();
+  const [deleteMaterial] = useDeleteMaterialMutation();
 
-  // If the data is still loading or an error occurs, show a loading message or handle the error
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error fetching materials data</div>;
 
-  if (isError) {
-    return <div>Error fetching materials data</div>;
-  }
-
-  // Map the fetched data to the format you want
   const rows = materialsData?.data?.map((item, index) => ({
     sr: index + 1,
-    id: item.id, 
+    id: item.id,
     materialName: item.material_name,
     vendorName: item.vendor_name,
     projectName: item.project_name,
@@ -38,128 +48,71 @@ function MaterialManagementListing() {
     prNumber: item.PR_number,
     poNumber: item.PO_number,
     quantity: item.quantity,
-    projectActivityName: item.projectActivityName,
-    projectSubActivityName: item.projectSubActivityName,
-    projectSubSubActivityName: item.projectSubSubActivityName,
-    status:item.status,
-    paymentstatus:item.payment_status
+    status: item.status,
   })) || [];
 
   const filteredRows = rows.filter((row) =>
     row.materialName && row.materialName.toLowerCase().includes(materialFilter.toLowerCase())
-  )
+  );
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
+  const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-  const handleModalClose = () => {
-    setOpenAddModal(false);
-  };
 
-  const handleEditModalClose=()=>{
-    setOpenEditModal(false);
-  };
-  const currentRows = filteredRows.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
-  // Handler for opening Edit Modal
   const handleEditClick = (material) => {
-    setSelectedMaterial(material); 
+    setSelectedMaterial(material);
     setOpenEditModal(true);
   };
 
-  const handleDelete = (id) => {
-    alert(`Delete material with ID: ${id}`);
+  const handleDeleteClick = (id) => {
+    setMaterialToDelete(id);
+    setOpenConfirmModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (materialToDelete) {
+      await deleteMaterial(materialToDelete);
+      refetch();
+      setOpenConfirmModal(false);
+    }
   };
 
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[80%] mx-auto my-8 rounded-md">
       <div className="flex flex-row my-6 px-10 items-center justify-between">
-        <div className="flex items-center">
-          <TextField
-            value={materialFilter}
-            placeholder="Search Material"
-            onChange={(e) => setMaterialFilter(e.target.value)}
-            variant="outlined"
-            size="small"
-            style={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
-          />
-        </div>
-
-        <div className="flex-grow flex justify-center">
-          <h2 className="text-2xl text-[#29346B] font-semibold">Material Management</h2>
-        </div>
-        <div className="flex items-center">
-          <Button
-            variant="contained"
-            style={{
-              backgroundColor: "#f6812d",
-              color: "white",
-              fontWeight: "bold",
-              fontSize: "16px",
-              textTransform: "none",
-            }}
-            onClick={() => setOpenAddModal(true)} // Open Add Material modal
-          >
-            Add Material
-          </Button>
-        </div>
+        <TextField
+          value={materialFilter}
+          placeholder="Search Material"
+          onChange={(e) => setMaterialFilter(e.target.value)}
+          variant="outlined"
+          size="small"
+        />
+        <h2 className="text-2xl text-[#29346B] font-semibold">Material Management</h2>
+        <Button variant="contained" style={{ backgroundColor: "#f6812d", color: "white" }} onClick={() => setOpenAddModal(true)}>
+          Add Material
+        </Button>
       </div>
 
-      <TableContainer style={{ borderRadius: '8px', overflow: 'auto' }}>
+      <TableContainer>
         <Table>
           <TableHead>
-            <TableRow style={{ backgroundColor: '#F2EDED' }}>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Sr No.
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Material Name
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Vendor Name
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Project Name
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                UOM
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Price
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                PR Number
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                PO Number
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Quantity
-              </TableCell>
-              {/* <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Project Activity Name
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Project Sub-Activity Name
-              </TableCell>
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Project Sub-Sub Activity Name
-              </TableCell> */}
-              <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67', fontSize: '16px' }}>
-                Actions
-              </TableCell>
+            <TableRow>
+              <TableCell align="center">Sr No.</TableCell>
+              <TableCell align="center">Material Name</TableCell>
+              <TableCell align="center">Vendor Name</TableCell>
+              <TableCell align="center">Project Name</TableCell>
+              <TableCell align="center">UOM</TableCell>
+              <TableCell align="center">Price</TableCell>
+              <TableCell align="center">PR Number</TableCell>
+              <TableCell align="center">PO Number</TableCell>
+              <TableCell align="center">Quantity</TableCell>
+              <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {currentRows.map((row) => (
+            {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
               <TableRow key={row.id}>
                 <TableCell align="center">{row.sr}</TableCell>
                 <TableCell align="center">{row.materialName}</TableCell>
@@ -170,19 +123,10 @@ function MaterialManagementListing() {
                 <TableCell align="center">{row.prNumber}</TableCell>
                 <TableCell align="center">{row.poNumber}</TableCell>
                 <TableCell align="center">{row.quantity}</TableCell>
-                {/* <TableCell align="center">{row.projectActivityName}</TableCell>
-                <TableCell align="center">{row.projectSubActivityName}</TableCell>
-                <TableCell align="center">{row.projectSubSubActivityName}</TableCell> */}
                 <TableCell align="center">
                   <div className="flex justify-center items-center space-x-2">
-                    <RiEditFill
-                      onClick={() => handleEditClick(row)}
-                      className="cursor-pointer text-[#f6812d] text-xl"
-                    />
-                    <DeleteIcon
-                      onClick={() => handleDelete(row.id)}
-                      className="cursor-pointer text-red-600 text-xl"
-                    />
+                    <RiEditFill onClick={() => handleEditClick(row)} className="cursor-pointer text-[#f6812d] text-xl" />
+                    <DeleteIcon onClick={() => handleDeleteClick(row.id)} className="cursor-pointer text-red-600 text-xl" />
                   </div>
                 </TableCell>
               </TableRow>
@@ -190,7 +134,6 @@ function MaterialManagementListing() {
           </TableBody>
         </Table>
       </TableContainer>
-
       <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component="div"
@@ -201,16 +144,19 @@ function MaterialManagementListing() {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
 
-      {/* Add Material Modal */}
-      <AddMaterialModal open={openAddModal} setOpen={setOpenAddModal} onClose={handleModalClose}/>
+      <AddMaterialModal open={openAddModal} setOpen={setOpenAddModal} />
+      <EditMaterialModal open={openEditModal} setOpen={setOpenEditModal} materialToEdit={selectedMaterial} />
 
-      {/* Edit Material Modal */}
-      <EditMaterialModal
-        open={openEditModal}
-        setOpen={setOpenEditModal}
-        materialToEdit={selectedMaterial}
-        onClose={handleEditModalClose}
-      />
+      <Dialog open={openConfirmModal} onClose={() => setOpenConfirmModal(false)}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>Are you sure you want to delete this material?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenConfirmModal(false)}>Cancel</Button>
+          <Button onClick={confirmDelete} color="error">Delete</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

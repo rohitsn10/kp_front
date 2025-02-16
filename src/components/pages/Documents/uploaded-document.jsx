@@ -3,7 +3,7 @@ import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRo
 import { RiDeleteBin6Line } from 'react-icons/ri';
 import { useLocation } from 'react-router-dom'; // Import useLocation
 import ViewFileModal from './ViewFileModal';
-import { useDeleteUploadedDocumentMutation } from '../../../api/users/documentApi';
+import { useDeleteUploadedDocumentMutation, useGetDocumentsQuery } from '../../../api/users/documentApi';
 
 function UploadedDocumentListing() {
   const [documentFilter, setDocumentFilter] = useState('');
@@ -11,6 +11,7 @@ function UploadedDocumentListing() {
   const [documentToDelete, setDocumentToDelete] = useState(null);
   const [openFileModal, setOpenFileModal] = useState(false); 
   const [selectedFile, setSelectedFile] = useState(null);
+  
 
   // Get the data passed via location
   const location = useLocation();

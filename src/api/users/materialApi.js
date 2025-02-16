@@ -31,21 +31,29 @@ export const materialApi = createApi({
     }),
 
     // Update Material (assuming you have an endpoint for updating materials)
+    // updateMaterial: builder.mutation({
+    //   query: (data) => ({
+    //     url: `material_management/material_management_update/${data.id}`, // Make sure this is the correct endpoint
+    //     method: "PUT",
+    //     body: data,
+    //   }),
+    // }),
     updateMaterial: builder.mutation({
-      query: (data) => ({
-        url: `material_management/material_management_update/${data.id}`, // Make sure this is the correct endpoint
+      query: ({ id, formData }) => ({
+        url: `material_management/material_management_update/${id}`,
         method: "PUT",
-        body: data,
+        body: formData,
+        // Add this to properly handle FormData
+        formData: true,
       }),
     }),
-
-    // Delete Material
     deleteMaterial: builder.mutation({
       query: (id) => ({
-        url: `material_management/delete_material/${id}`, // Make sure this is the correct endpoint
+        url: `material_management/material_management_update/${id}`,
         method: "DELETE",
       }),
     }),
+    // Delete Material
   }),
 });
 
@@ -53,5 +61,5 @@ export const {
   useCreateMaterialMutation,
   useGetMaterialsQuery,
   useUpdateMaterialMutation,
-  useDeleteMaterialMutation,
+  useDeleteMaterialMutation
 } = materialApi;

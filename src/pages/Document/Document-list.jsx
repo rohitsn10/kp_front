@@ -38,9 +38,9 @@ function DocumentListing() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState(null); // Store the document to be deleted
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useGetDocumentsQuery();
+  const { data, isLoading, isError,refetch } = useGetDocumentsQuery();
   const [deleteDocument] = useDeleteDocumentMutation(); // Hook for deleting a document
-
+  console.log("Edit Select:",selectedDocument)
   const rows = data?.data.map((item, index) => ({
     sr: index + 1,
     id: item.id,
@@ -102,6 +102,7 @@ function DocumentListing() {
         .then(() => {
           setOpenDeleteDialog(false);
           toast.success("Document deleted successfully!");
+          refetch();
         })
         .catch((error) => {
           console.error("Error deleting document:", error);
@@ -235,7 +236,7 @@ function DocumentListing() {
               >
                 Created At
               </TableCell>
-              <TableCell
+              {/* <TableCell
                 align="center"
                 style={{
                   fontWeight: "normal",
@@ -244,7 +245,7 @@ function DocumentListing() {
                 }}
               >
                 Created By
-              </TableCell>
+              </TableCell> */}
               <TableCell
                 align="center"
                 style={{
@@ -309,12 +310,12 @@ function DocumentListing() {
                 >
                   {row.createdAt}
                 </TableCell>
-                <TableCell
+                {/* <TableCell
                   align="center"
                   style={{ fontSize: "16px", color: "#1D2652" }}
                 >
                   {row.createdByFullName}
-                </TableCell>
+                </TableCell> */}
                 <TableCell
                   align="center"
                   style={{ fontSize: "16px", color: "#1D2652" }}

@@ -55,7 +55,6 @@ const AssessmentFormModal = ({ open, handleClose }) => {
     formDataToSend.append("solar_or_winds", formData.solar_or_winds);
     formDataToSend.append("date_of_assessment", formData.date_of_assessment);
     formDataToSend.append("site_visit_date", formData.site_visit_date);
-
     try {
       await addSfaDataToLandBank(formDataToSend);
       toast.success("SFA data added successfully!");

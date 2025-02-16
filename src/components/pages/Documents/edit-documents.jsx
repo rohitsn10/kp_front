@@ -11,34 +11,39 @@ import {
   Select,
   InputLabel,
   FormControl,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
+// import { X as CloseIcon } from "lucide-react";
 import { toast } from "react-toastify";
 import { useGetMainProjectsQuery } from "../../../api/users/projectApi";
 import { useFetchUsersQuery } from "../../../api/users/usersApi";
-import { useUpdateDocumentMutation } from "../../../api/users/documentApi"; // Import your update mutation hook
+import { useGetDocumentsQuery, useUpdateDocumentMutation } from "../../../api/users/documentApi";
 
 export default function EditDocumentModal({ open, onClose, document }) {
   const [documentName, setDocumentName] = useState("");
   const [documentNumber, setDocumentNumber] = useState("");
-  const [revisionNumber, setRevisionNumber] = useState(""); 
-  const [projectName, setProjectName] = useState(""); 
+  const [revisionNumber, setRevisionNumber] = useState("");
+  const [projectName, setProjectName] = useState("");
   const [confidentialLevel, setConfidentialLevel] = useState("");
   const [status, setStatus] = useState("");
   const [keywords, setKeywords] = useState("");
   const [comments, setComments] = useState("");
-  const [documentAttachments, setDocumentAttachments] = useState(null);
-  const [assignedUsers, setAssignedUsers] = useState([]); 
+  const [assignedUsers, setAssignedUsers] = useState([]);
+  const [removeSelectedFiles, setRemoveSelectedFiles] = useState([]);
+  const [existingFiles, setExistingFiles] = useState([]);
+  const [newFiles, setNewFiles] = useState([]);
+
   const { data: projects, error, isLoading } = useGetMainProjectsQuery();
   const { data: userData } = useFetchUsersQuery();
+  const { refetch } = useGetDocumentsQuery();
+  const [updateDocument, { isLoading: isSubmitting }] = useUpdateDocumentMutation();
 
-  const [updateDocument, { isLoading: isSubmitting }] =
-    useUpdateDocumentMutation(); // Initialize the mutation hook
+  const CONFIDENTIAL_CHOICES = ["Public", "International", "Confidential"];
+  const STATUS_CHOICES = ["Draft", "Archived", "Approved"];
 
-  const handleClose = () => {
-    onClose();
-  };
-
-  // Set the fields if editing an existing document
   useEffect(() => {
     if (document) {
       setDocumentName(document.document_name);
@@ -50,9 +55,73 @@ export default function EditDocumentModal({ open, onClose, document }) {
       setKeywords(document.keywords || "");
       setComments(document.comments || "");
       setAssignedUsers(document.assign_users || []);
-      setDocumentAttachments(document.document_management_attachments || null);
+      setExistingFiles(document.document_management_attachments || []);
+      setNewFiles([]);
+      setRemoveSelectedFiles([]);
     }
   }, [document]);
+
+  const handleClose = () => {
+    onClose();
+  };
+
+  const handleFileRemove = (fileId) => {
+    setRemoveSelectedFiles([...removeSelectedFiles, fileId]);
+    setExistingFiles(existingFiles.filter(file => file.id !== fileId));
+  };
+
+  const handleNewFileSelect = (e) => {
+    setNewFiles(Array.from(e.target.files));
+  };
+
+  const handleRemoveNewFile = (index) => {
+    setNewFiles(newFiles.filter((_, i) => i !== index));
+  };
+
+  // const handleSubmit = async () => {
+  //   if (
+  //     !documentName ||
+  //     !documentNumber ||
+  //     !revisionNumber ||
+  //     !projectName ||
+  //     !confidentialLevel ||
+  //     !status
+  //   ) {
+  //     toast.error("Please fill all the required fields!");
+  //     return;
+  //   }
+
+  //   const formData = new FormData();
+  //   formData.append("document_name", documentName);
+  //   formData.append("document_number", documentNumber);
+  //   formData.append("revision_number", revisionNumber);
+  //   formData.append("project_id", projectName);
+  //   formData.append("confidential_level", confidentialLevel);
+  //   formData.append("status", status);
+  //   formData.append("keywords", keywords);
+  //   formData.append("comments", comments);
+
+  //   if (removeSelectedFiles.length > 0) {
+  //     formData.append("remove_selected_files", removeSelectedFiles.join(','));
+  //   }
+
+  //   assignedUsers.forEach((userId) =>
+  //     formData.append("assigned_users", userId)
+  //   );
+
+  //   newFiles.forEach((file) =>
+  //     formData.append("document_attachments", file)
+  //   );
+
+  //   try {
+  //     const response = await updateDocument({ documentId: document.id, formData }).unwrap();
+  //     toast.success("Document updated successfully!");
+  //     refetch();
+  //     handleClose();
+  //   } catch (error) {
+  //     toast.error("Error updating document: " + error.message);
+  //   }
+  // };
 
   const handleSubmit = async () => {
     if (
@@ -66,7 +135,7 @@ export default function EditDocumentModal({ open, onClose, document }) {
       toast.error("Please fill all the required fields!");
       return;
     }
-
+  
     const formData = new FormData();
     formData.append("document_name", documentName);
     formData.append("document_number", documentNumber);
@@ -76,31 +145,43 @@ export default function EditDocumentModal({ open, onClose, document }) {
     formData.append("status", status);
     formData.append("keywords", keywords);
     formData.append("comments", comments);
-
-    assignedUsers.forEach((userId) =>
-      formData.append("assigned_users", userId)
-    );
-
-    if (documentAttachments && documentAttachments.length > 0) {
-      Array.from(documentAttachments).forEach((file) =>
-        formData.append("document_management_attachments", file)
-      );
-    } else {
-      toast.error("Please upload the document attachments.");
-      return;
+  
+    // Handle assigned users
+    if (assignedUsers.length > 0) {
+      formData.append("assigned_users", assignedUsers.join(','));
     }
-
+  
+    // Handle files to be removed
+    if (removeSelectedFiles.length > 0) {
+      formData.append("remove_selected_files", removeSelectedFiles.join(','));
+    }
+  
+    // Handle new files
+    if (newFiles.length > 0) {
+      // Use the singular form as shown in the curl example
+      newFiles.forEach((file) => {
+        formData.append("document_attachments", file);
+      });
+    }
+  
+    // Log the FormData to see what's being sent
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+    }
+  
     try {
-      const response = await updateDocument({ documentId: document.id, formData }).unwrap(); 
+      const response = await updateDocument({
+        documentId: document.id,
+        formData,
+      }).unwrap();
       toast.success("Document updated successfully!");
+      refetch();
       handleClose();
     } catch (error) {
-      toast.error("Error updating document: " + error.message);
+      console.error('Update error:', error);
+      toast.error("Error updating document: " + (error.data?.message || error.message));
     }
   };
-
-  const CONFIDENTIAL_CHOICES = ["Public", "International", "Confidential"];
-  const STATUS_CHOICES = ["Draft", "Archived", "Approved"];
 
   const commonInputStyles = {
     "& .MuiOutlinedInput-root": {
@@ -113,6 +194,56 @@ export default function EditDocumentModal({ open, onClose, document }) {
       borderRadius: "4px",
     },
   };
+
+  const FileList = () => (
+    <div className="mt-4">
+      <h3 className="text-[#29346B] text-lg font-semibold mb-2">Current Files:</h3>
+      <List>
+        {existingFiles.map((file) => (
+          <ListItem
+            key={file.id}
+            className="border border-yellow-200 rounded-md mb-2"
+            secondaryAction={
+              <IconButton 
+                edge="end" 
+                onClick={() => handleFileRemove(file.id)}
+                className="text-red-500 hover:text-red-700"
+              >
+                {/* <CloseIcon size={20} /> */}
+              X
+              </IconButton>
+            }
+          >
+            <ListItemText
+              primary={file.url.split('/').pop()}
+              secondary={new Date(file.created_at).toLocaleDateString()}
+            />
+          </ListItem>
+        ))}
+        {newFiles.map((file, index) => (
+          <ListItem
+            key={index}
+            className="border border-yellow-200 rounded-md mb-2"
+            secondaryAction={
+              <IconButton 
+                edge="end" 
+                onClick={() => handleRemoveNewFile(index)}
+                className="text-red-500 hover:text-red-700"
+              >
+                {/* <CloseIcon size={20} /> */}
+              X
+              </IconButton>
+            }
+          >
+            <ListItemText
+              primary={file.name}
+              secondary="New file"
+            />
+          </ListItem>
+        ))}
+      </List>
+    </div>
+  );
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
@@ -153,7 +284,7 @@ export default function EditDocumentModal({ open, onClose, document }) {
           className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
           value={revisionNumber}
           placeholder="Enter Revision Number"
-          onChange={(e) => setRevisionNumber(e.target.value)} 
+          onChange={(e) => setRevisionNumber(e.target.value)}
         />
 
         {/* Project Name */}
@@ -179,7 +310,7 @@ export default function EditDocumentModal({ open, onClose, document }) {
                 variant="outlined"
                 placeholder="Select Project"
                 fullWidth
-                sx={commonInputStyles} 
+                sx={commonInputStyles}
               />
             )}
           />
@@ -195,7 +326,7 @@ export default function EditDocumentModal({ open, onClose, document }) {
             value={confidentialLevel}
             onChange={(e) => setConfidentialLevel(e.target.value)}
             label="Confidential Level"
-            sx={commonInputStyles} 
+            sx={commonInputStyles}
           >
             {CONFIDENTIAL_CHOICES.map((level, index) => (
               <MenuItem key={index} value={level}>
@@ -215,7 +346,7 @@ export default function EditDocumentModal({ open, onClose, document }) {
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             label="Status"
-            sx={commonInputStyles} 
+            sx={commonInputStyles}
           >
             {STATUS_CHOICES.map((statusChoice, index) => (
               <MenuItem key={index} value={statusChoice}>
@@ -249,15 +380,19 @@ export default function EditDocumentModal({ open, onClose, document }) {
         />
 
         {/* Document Attachments */}
-        <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-          Select Document <span className="text-red-600"> *</span>
-        </label>
-        <input
-          type="file"
-          className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline:none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl"
-          onChange={(e) => setDocumentAttachments(e.target.files)}
-          multiple
-        />
+        <div className="px-6">
+          <FileList />
+          
+          <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            Add New Documents
+          </label>
+          <input
+            type="file"
+            className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline:none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl"
+            onChange={handleNewFileSelect}
+            multiple
+          />
+        </div>
 
         {/* Assigned Users */}
         <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">

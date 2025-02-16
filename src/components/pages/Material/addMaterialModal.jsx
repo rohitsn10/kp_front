@@ -212,7 +212,7 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
                 Price<span className="text-red-600"> *</span>
               </label>
               <input
-                type="text"
+                type="number"
                 className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
                 value={price}
                 placeholder="Enter Price"
@@ -239,7 +239,7 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
                 PR Number<span className="text-red-600"> *</span>
               </label>
               <input
-                type="text"
+                type="number"
                 className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
                 value={prNumber}
                 placeholder="Enter PR Number"
@@ -267,7 +267,7 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
                 Quantity<span className="text-red-600"> *</span>
               </label>
               <input
-                type="text"
+                type="number"
                 className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
                 value={quantity}
                 placeholder="Enter Quantity"

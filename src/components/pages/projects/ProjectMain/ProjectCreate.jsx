@@ -69,8 +69,8 @@ function ProjectCreate({ open, handleClose,refetch }) {
     ];
 
     const electricityLineOptions = [
-        { id: '11kv', label: '11KV' },
-        { id: '33kv', label: '33KV' },
+        { id: "1", label: '11KV' },
+        { id: "2", label: '33KV' }, 
     ];
     const { data: landBankData, isLoading:LandLoading } = useGetLandBankMasterQuery();
     // const [selectedLandId, setSelectedLandId] = useState(null);
@@ -295,7 +295,7 @@ function ProjectCreate({ open, handleClose,refetch }) {
             ci_or_utility: ciUtility.id,
             cpp_or_ipp: cppIpp.id,
             project_activity_id: activity,
-            electricity_line: electricityLine.id,
+            electricity_line_id: electricityLine.id,
             spoc_user: spoc,
             project_predication_date: new Date(committedDate).toISOString(),
             project_sub_activity_ids: subActivities.map(Number),

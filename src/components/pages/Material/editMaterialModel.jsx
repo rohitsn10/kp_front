@@ -10,7 +10,8 @@ import { useGetMainProjectsQuery } from "../../../api/users/projectApi";
 import { useGetActivitiesQuery } from "../../../api/users/projectActivityApi";
 import { useGetDropdownSubActivitiesQuery } from "../../../api/users/subActivityApi";
 import { useGetSubSubActivityQuery } from "../../../api/users/multipleActivityApi";
-import { useUpdateMaterialMutation } from "../../../api/users/materialApi";
+import { useGetMaterialsQuery, useUpdateMaterialMutation } from "../../../api/users/materialApi";
+import { toast } from "react-toastify";
 
 export default function EditMaterialModal({
   open,
@@ -19,7 +20,9 @@ export default function EditMaterialModal({
   onClose,
 }) {
   // Initialize state with materialToEdit data
-  console.log("materialin edit ",materialToEdit)
+  console.log("materialin edit ",materialToEdit) 
+    const {refetch}=useGetMaterialsQuery()
+   
   const [vendorName, setVendorName] = useState("");
   const [materialName, setMaterialName] = useState("");
   const [uom, setUom] = useState("");
@@ -121,11 +124,12 @@ export default function EditMaterialModal({
     try {
       const response = await updateMaterial({
         id: materialToEdit.id, // Pass the material ID for updating
-        data: updatedMaterial,
+       ...updatedMaterial,
       });
 
       if (response?.data?.status) {
         toast.success('Material updated successfully!');
+        refetch();
         handleClose();
       } else {
         toast.error('Error updating material.');
@@ -262,7 +266,7 @@ export default function EditMaterialModal({
               />
             </div>
           </div>
-          <div className="flex justify-between mb-4">
+          {/* <div className="flex justify-between mb-4">
             <div className="w-[48%]">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
                 Status
@@ -287,7 +291,7 @@ export default function EditMaterialModal({
                 onChange={(e) => setPaymentStatus(e.target.value)}
               />
             </div>
-          </div>
+          </div> */}
 
           {/* Dropdowns for Project, Activity, Sub Activity, and Sub Sub Activity */}
           <div className="flex justify-between mb-4">
