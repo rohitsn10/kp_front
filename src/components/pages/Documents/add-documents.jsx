@@ -90,7 +90,7 @@ export default function AddDocumentModal({ open, setOpen, onClose }) {
     }
   };
 
-  const CONFIDENTIAL_CHOICES = ["Public", "International", "Confidential"];
+  const CONFIDENTIAL_CHOICES = ["Public", "Internal", "Confidential"];
   const STATUS_CHOICES = ["Draft", "Archived", "Approved"];
 
   const commonInputStyles = {
@@ -117,168 +117,182 @@ export default function AddDocumentModal({ open, setOpen, onClose }) {
       </DialogTitle>
       <DialogContent>
         {/* Document Name */}
-        <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-          Document Name <span className="text-red-600"> *</span>
-        </label>
-        <input
-          type="text"
-          className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-          value={documentName}
-          placeholder="Enter Document Name"
-          onChange={(e) => setDocumentName(e.target.value)}
-        />
-
+        <div className="grid grid-cols-2 md:grid-cols-2 w-full gap-4">
+        <div className="col-span-1">
+          <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+            Document Name <span className="text-red-600"> *</span>
+          </label>
+          <input
+            type="text"
+            className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+            value={documentName}
+            placeholder="Enter Document Name"
+            onChange={(e) => setDocumentName(e.target.value)}
+          />
+        </div>
         {/* Document Number */}
-        <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-          Document Number <span className="text-red-600"> *</span>
-        </label>
-        <input
-          type="text"
-          className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-          value={documentNumber}
-          placeholder="Enter Document Number"
-          onChange={(e) => setDocumentNumber(e.target.value)}
-        />
-
+        <div className="col-span-1">
+          <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+            Document Number <span className="text-red-600"> *</span>
+          </label>
+          <input
+            type="text"
+            className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+            value={documentNumber}
+            placeholder="Enter Document Number"
+            onChange={(e) => setDocumentNumber(e.target.value)}
+          />
+        </div>
         {/* Revision Number */}
-        <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-          Revision Number <span className="text-red-600"> *</span>
-        </label>
-        <input
-          type="text"
-          className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-          value={revisionNumber}
-          placeholder="Enter Revision Number"
-          onChange={(e) => setRevisionNumber(e.target.value)} // Handle input change for revision_number
-        />
-
+        <div className="col-span-1">
+          <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            Revision Number <span className="text-red-600"> *</span>
+          </label>
+          <input
+            type="text"
+            className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+            value={revisionNumber}
+            placeholder="Enter Revision Number"
+            onChange={(e) => setRevisionNumber(e.target.value)} // Handle input change for revision_number
+          />
+        </div>
         {/* Project Name */}
-        <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-          Project Name <span className="text-red-600"> *</span>
-        </label>
-        {isLoading ? (
-          <p>Loading projects...</p>
-        ) : error ? (
-          <p>Error fetching projects</p>
-        ) : (
+        <div className="col-span-1">
+          <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            Project Name <span className="text-red-600"> *</span>
+          </label>
+          {isLoading ? (
+            <p>Loading projects...</p>
+          ) : error ? (
+            <p>Error fetching projects</p>
+          ) : (
+            <Autocomplete
+              options={projects?.data || []}
+              getOptionLabel={(option) => option.project_name}
+              value={
+                projects?.data?.find((project) => project.id === projectName) ||
+                null
+              }
+              onChange={(event, newValue) => setProjectName(newValue?.id || "")}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  placeholder="Select Project"
+                  fullWidth
+                  sx={commonInputStyles} // Applying the same styles as the text fields
+                />
+              )}
+            />
+          )}
+        </div>
+        {/* Confidential Level */}
+        <div className="col-span-1">
+          <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            Select Confidential Level <span className="text-red-600"> *</span>
+          </label>
+          <FormControl fullWidth variant="outlined" sx={{ marginBottom: "15px" }}>
+            <InputLabel>Confidential Level</InputLabel>
+            <Select
+              value={confidentialLevel}
+              onChange={(e) => setConfidentialLevel(e.target.value)}
+              label="Confidential Level"
+              sx={commonInputStyles} // Applying the same styles as the text fields
+            >
+              {CONFIDENTIAL_CHOICES.map((level, index) => (
+                <MenuItem key={index} value={level}>
+                  {level}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </div>
+        {/* Status */}
+        <div className="col-span-1">
+          <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            Select Status <span className="text-red-600"> *</span>
+          </label>
+          <FormControl fullWidth variant="outlined" sx={{ marginBottom: "15px" }}>
+      
+            <Select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+          
+              sx={commonInputStyles} // Applying the same styles as the text fields
+            >
+              {STATUS_CHOICES.map((statusChoice, index) => (
+                <MenuItem key={index} value={statusChoice}>
+                  {statusChoice}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </div>
+        {/* Keywords */}
+        <div className="col-span-1">
+          <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            Enter Keyword <span className="text-red-600"> *</span>
+          </label>
+          <input
+            type="text"
+            className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+            value={keywords}
+            placeholder="Enter Keywords"
+            onChange={(e) => setKeywords(e.target.value)}
+          />
+        </div>
+        {/* Comments */}
+        <div className="col-span-1">
+          <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            Add Comment <span className="text-red-600"> *</span>
+          </label>
+          <textarea
+            className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+            value={comments}
+            placeholder="Enter Comments"
+            onChange={(e) => setComments(e.target.value)}
+          />
+        </div>
+        {/* Document Attachments */}
+        <div className="col-span-1">
+          <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            Select Document <span className="text-red-600"> *</span>
+          </label>
+          <input
+            type="file"
+            className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline:none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl"
+            onChange={handleFileChange}
+            multiple
+          />
+        </div>
+        {/* Assigned Users */}
+        <div className="col-span-1">
+          <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            Assign To User <span className="text-red-600"> *</span>
+          </label>
           <Autocomplete
-            options={projects?.data || []}
-            getOptionLabel={(option) => option.project_name}
+            multiple
+            options={userData || []}
+            getOptionLabel={(option) => option.full_name}
             value={
-              projects?.data?.find((project) => project.id === projectName) ||
-              null
+              userData
+                ? userData.filter((user) => assignedUsers.includes(user.id))
+                : []
             }
-            onChange={(event, newValue) => setProjectName(newValue?.id || "")}
+            onChange={(event, value) => {
+              setAssignedUsers(value.map((user) => user.id));
+            }}
             renderInput={(params) => (
               <TextField
                 {...params}
-                variant="outlined"
-                placeholder="Select Project"
-                fullWidth
-                sx={commonInputStyles} // Applying the same styles as the text fields
+                placeholder="Assigned Users"
+                sx={commonInputStyles}
               />
             )}
           />
-        )}
+        </div>
+        </div>
 
-        {/* Confidential Level */}
-        <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-          Select Confidential Level <span className="text-red-600"> *</span>
-        </label>
-        <FormControl fullWidth variant="outlined" sx={{ marginBottom: "15px" }}>
-          <InputLabel>Confidential Level</InputLabel>
-          <Select
-            value={confidentialLevel}
-            onChange={(e) => setConfidentialLevel(e.target.value)}
-            label="Confidential Level"
-            sx={commonInputStyles} // Applying the same styles as the text fields
-          >
-            {CONFIDENTIAL_CHOICES.map((level, index) => (
-              <MenuItem key={index} value={level}>
-                {level}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Status */}
-        <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-          Select Status <span className="text-red-600"> *</span>
-        </label>
-        <FormControl fullWidth variant="outlined" sx={{ marginBottom: "15px" }}>
-    
-          <Select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-         
-            sx={commonInputStyles} // Applying the same styles as the text fields
-          >
-            {STATUS_CHOICES.map((statusChoice, index) => (
-              <MenuItem key={index} value={statusChoice}>
-                {statusChoice}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Keywords */}
-        <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-          Enter Keyword <span className="text-red-600"> *</span>
-        </label>
-        <input
-          type="text"
-          className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-          value={keywords}
-          placeholder="Enter Keywords"
-          onChange={(e) => setKeywords(e.target.value)}
-        />
-
-        {/* Comments */}
-        <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-          Add Comment <span className="text-red-600"> *</span>
-        </label>
-        <textarea
-          className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-          value={comments}
-          placeholder="Enter Comments"
-          onChange={(e) => setComments(e.target.value)}
-        />
-
-        {/* Document Attachments */}
-        <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-          Select Document <span className="text-red-600"> *</span>
-        </label>
-        <input
-          type="file"
-          className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline:none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-xl"
-          onChange={handleFileChange}
-          multiple
-        />
-
-        {/* Assigned Users */}
-        <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-          Assign To User <span className="text-red-600"> *</span>
-        </label>
-        <Autocomplete
-          multiple
-          options={userData || []}
-          getOptionLabel={(option) => option.full_name}
-          value={
-            userData
-              ? userData.filter((user) => assignedUsers.includes(user.id))
-              : []
-          }
-          onChange={(event, value) => {
-            setAssignedUsers(value.map((user) => user.id));
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              placeholder="Assigned Users"
-              sx={commonInputStyles}
-            />
-          )}
-        />
       </DialogContent>
 
       <DialogActions sx={{ justifyContent: "center", padding: "20px" }}>

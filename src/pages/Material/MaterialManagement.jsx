@@ -98,7 +98,8 @@ function MaterialManagementListing() {
       <TableContainer>
         <Table>
           <TableHead>
-            <TableRow>
+            <TableRow style={{ backgroundColor: "#F2EDED" }}
+            >
               <TableCell align="center">Sr No.</TableCell>
               <TableCell align="center">Material Name</TableCell>
               <TableCell align="center">Vendor Name</TableCell>

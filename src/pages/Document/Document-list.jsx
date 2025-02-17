@@ -14,11 +14,13 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Chip,
 } from "@mui/material";
 import { RiEditFill } from "react-icons/ri";
 import { RiDeleteBin6Line } from "react-icons/ri"; // Import the delete icon
 import AddDocumentModal from "../../components/pages/Documents/add-documents";
 import EditDocumentModal from "../../components/pages/Documents/edit-documents";
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -40,18 +42,22 @@ function DocumentListing() {
   const navigate = useNavigate();
   const { data, isLoading, isError,refetch } = useGetDocumentsQuery();
   const [deleteDocument] = useDeleteDocumentMutation(); // Hook for deleting a document
+  // console.log()
   console.log("Edit Select:",selectedDocument)
   const rows = data?.data.map((item, index) => ({
     sr: index + 1,
     id: item.id,
     documentName: item.document_name,
+    revisionNumber:item.revision_number,
     documentNumber: item.document_number,
     projectName: item.project_name,
     confidentialLevel: item.confidentiallevel,
     createdAt: new Date(item.created_at).toLocaleDateString(),
     createdByFullName: item.created_by_full_name,
     keywords: item.keywords,
+    documentStatus:item.status
   }));
+  console.log("Document Rows;::",rows)
 
   const filteredRows = rows?.filter((row) =>
     row.documentName.toLowerCase().includes(documentFilter.toLowerCase())
@@ -172,7 +178,7 @@ function DocumentListing() {
         </div>
       </div>
 
-      <TableContainer style={{ borderRadius: "8px", overflow: "hidden" }}>
+      <TableContainer style={{ borderRadius: "8px", overflowX: "auto" }}>
         <Table>
           <TableHead>
             <TableRow style={{ backgroundColor: "#F2EDED" }}>
@@ -204,7 +210,17 @@ function DocumentListing() {
                   fontSize: "16px",
                 }}
               >
-                Document Number
+                Revision Number
+              </TableCell>
+              <TableCell
+                align="center"
+                style={{
+                  fontWeight: "normal",
+                  color: "#5C5E67",
+                  fontSize: "16px",
+                }}
+              >
+                Status
               </TableCell>
               <TableCell
                 align="center"
@@ -236,7 +252,7 @@ function DocumentListing() {
               >
                 Created At
               </TableCell>
-              {/* <TableCell
+              <TableCell
                 align="center"
                 style={{
                   fontWeight: "normal",
@@ -245,7 +261,7 @@ function DocumentListing() {
                 }}
               >
                 Created By
-              </TableCell> */}
+              </TableCell>
               <TableCell
                 align="center"
                 style={{
@@ -290,7 +306,23 @@ function DocumentListing() {
                   align="center"
                   style={{ fontSize: "16px", color: "#1D2652" }}
                 >
-                  {row.documentNumber}
+                  {row.revisionNumber}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  style={{ fontSize: "16px", color: "#1D2652" }}
+                >
+                  {/* {row.documentStatus =="Archived"? <Chip variant="outlined" label="Archived" color="warning" />:<></>}
+                  */}
+                  {row.documentStatus === "Archived" && (
+    <Chip variant="outlined" label="Archived" color="warning" />
+  )}
+  {row.documentStatus === "Approved" && (
+    <Chip variant="outlined" label="Approved" color="success" />
+  )}
+  {row.documentStatus === "Draft" && (
+    <Chip variant="outlined" label="Draft" color="primary" />
+  )}
                 </TableCell>
                 <TableCell
                   align="center"
@@ -310,12 +342,12 @@ function DocumentListing() {
                 >
                   {row.createdAt}
                 </TableCell>
-                {/* <TableCell
+                <TableCell
                   align="center"
                   style={{ fontSize: "16px", color: "#1D2652" }}
                 >
                   {row.createdByFullName}
-                </TableCell> */}
+                </TableCell>
                 <TableCell
                   align="center"
                   style={{ fontSize: "16px", color: "#1D2652" }}
@@ -324,21 +356,32 @@ function DocumentListing() {
                 </TableCell>
                 <TableCell align="center">
                   <div className="flex flex-row gap-2">
+                  <VisibilityIcon
+                                            style={{
+                        cursor: "pointer",
+                        color: "#0e7bf1",
+                        fontSize: "25px",
+                        textAlign: "center",
+                      }}
+                      title="Preview"
+                      onClick={() => handleViewUploadedDocuments(row.id)}
+                    />
                     <RiEditFill
                       style={{
                         cursor: "pointer",
                         color: "#61D435",
-                        fontSize: "23px",
+                        fontSize: "25px",
                         textAlign: "center",
                       }}
                       title="Edit"
                       onClick={() => handleEditClick(row.id)}
                     />
+
                     <RiDeleteBin6Line
                       style={{
                         cursor: "pointer",
                         color: "#D32F2F",
-                        fontSize: "23px",
+                        fontSize: "25px",
                         textAlign: "center",
                       }}
                       title="Delete"
