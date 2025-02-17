@@ -12,17 +12,20 @@ function UploadedDocumentListing() {
   const [openFileModal, setOpenFileModal] = useState(false); 
   const [selectedFile, setSelectedFile] = useState(null);
   
-
   // Get the data passed via location
   const location = useLocation();
   const data = location.state?.documentData; // Single document
-
+  console.log("State dataa:",data)
   if (!data) {
     return <div>Error: No data available.</div>;
   }
 
   // Extract file name from URL
   const fileName = data.document_management_attachments?.[0]?.url?.split('/').pop() || "No file";
+
+  // Using the delete mutation hook
+  const [deleteUploadedDocument] = useDeleteUploadedDocumentMutation();
+
 
   // Handle delete click
   const handleDeleteClick = (document) => {
@@ -32,6 +35,7 @@ function UploadedDocumentListing() {
 
   // Confirm delete
   const handleDeleteConfirm = () => {
+    console.log()
     setOpenDeleteDialog(false);
     // Use the delete mutation to delete the document
     deleteUploadedDocument({ documentId: documentToDelete.id });
@@ -48,8 +52,6 @@ function UploadedDocumentListing() {
     setOpenFileModal(true); // Open the modal
   };
 
-  // Using the delete mutation hook
-  const [deleteUploadedDocument] = useDeleteUploadedDocumentMutation();
 
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[70%] mx-auto my-8 rounded-md">
@@ -98,14 +100,15 @@ function UploadedDocumentListing() {
                   {attachment.url.split('/').pop()} {/* Display the file name */}
                 </TableCell>
                 <TableCell align="center">
-                  <div className="flex flex-row gap-2">
+                  <div className="flex flex-row gap-2 justify-center">
                     <Button
-                      variant="outlined"
+                      variant="contained"
+                      color='primary'
                       onClick={() => handleViewUploadedDocuments(attachment)} 
                     >
-                      View {idx + 1}
+                      View
                     </Button>
-                    <RiDeleteBin6Line
+                    {/* <RiDeleteBin6Line
                       style={{
                         cursor: "pointer",
                         color: "#D32F2F",
@@ -115,7 +118,15 @@ function UploadedDocumentListing() {
                       }}
                       title="Delete"
                       onClick={() => handleDeleteClick(attachment)} // Pass the current document to delete
-                    />
+                    /> */}
+                    <Button
+      variant="contained"
+      color="error"
+      // startIcon={<RiDeleteBin6Line />}
+      onClick={() => handleDeleteClick(attachment)}
+    >
+      Delete
+    </Button>
                   </div>
                 </TableCell>
               </TableRow>

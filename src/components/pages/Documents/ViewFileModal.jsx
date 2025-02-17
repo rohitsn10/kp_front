@@ -56,7 +56,7 @@ const ViewFileModal = ({ open, handleClose, material }) => {
         embed.src = pdfDataUrl;
         embed.type = "application/pdf"; // Ensure it's a PDF
         embed.width = "100%";
-        embed.height = "500px"; // Adjust height as necessary
+        embed.height = "800px"; // Adjust height as necessary
         pdfContainerRef.current.innerHTML = ""; // Clear previous content
         pdfContainerRef.current.appendChild(embed); // Append new embed element
       };

@@ -99,8 +99,8 @@ export default function EditMaterialModal({
   }, [materialToEdit]);
 
   const handleClose = () => {
-   
-    onClose(); // Close parent modal as well
+    setOpen(false)
+    // onClose(); // Close parent modal as well
   };
 
   const handleSubmit = async () => {
@@ -246,7 +246,7 @@ export default function EditMaterialModal({
                 PO Number<span className="text-red-600"> *</span>
               </label>
               <input
-                type="text"
+                type="number"
                 className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
                 value={poNumber}
                 placeholder="Enter PO Number"
@@ -297,7 +297,7 @@ export default function EditMaterialModal({
           <div className="flex justify-between mb-4">
             <div className="w-[48%]">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Project Name <span className="text-red-600"> *</span>
+                Project Name
               </label>
               {isLoading ? (
                 <p>Loading projects...</p>
@@ -406,7 +406,7 @@ export default function EditMaterialModal({
             </div>
             <div className="w-[48%]">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Sub Sub Activity <span className="text-red-600"> *</span>
+                Sub Sub Activity
               </label>
               <Autocomplete
                 options={subSubActivityOptions}

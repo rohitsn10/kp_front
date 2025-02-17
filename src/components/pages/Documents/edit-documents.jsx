@@ -16,12 +16,11 @@ import {
   ListItem,
   ListItemText,
 } from "@mui/material";
-// import { X as CloseIcon } from "lucide-react";
 import { toast } from "react-toastify";
 import { useGetMainProjectsQuery } from "../../../api/users/projectApi";
 import { useFetchUsersQuery } from "../../../api/users/usersApi";
 import { useGetDocumentsQuery, useUpdateDocumentMutation } from "../../../api/users/documentApi";
-
+import CloseIcon from '@mui/icons-material/Close';
 export default function EditDocumentModal({ open, onClose, document }) {
   const [documentName, setDocumentName] = useState("");
   const [documentNumber, setDocumentNumber] = useState("");
@@ -160,7 +159,7 @@ export default function EditDocumentModal({ open, onClose, document }) {
     if (newFiles.length > 0) {
       // Use the singular form as shown in the curl example
       newFiles.forEach((file) => {
-        formData.append("document_attachments", file);
+        formData.append("document_management_attachments", file);
       });
     }
   
@@ -210,7 +209,7 @@ export default function EditDocumentModal({ open, onClose, document }) {
                 className="text-red-500 hover:text-red-700"
               >
                 {/* <CloseIcon size={20} /> */}
-              X
+              <CloseIcon/>
               </IconButton>
             }
           >
@@ -231,7 +230,7 @@ export default function EditDocumentModal({ open, onClose, document }) {
                 className="text-red-500 hover:text-red-700"
               >
                 {/* <CloseIcon size={20} /> */}
-              X
+              <CloseIcon/>
               </IconButton>
             }
           >
@@ -380,7 +379,7 @@ export default function EditDocumentModal({ open, onClose, document }) {
         />
 
         {/* Document Attachments */}
-        <div className="px-6">
+        <div className="px-1">
           <FileList />
           
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">

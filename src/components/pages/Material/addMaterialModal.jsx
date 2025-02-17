@@ -68,7 +68,7 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
       value: item.sub_sub_activities[0]?.sub_sub_activity_id || 0,
     })) || [];
   const handleClose = () => {
-    onClose();
+    setOpen(false);
   };
 
   const handleSubmit = async () => {
