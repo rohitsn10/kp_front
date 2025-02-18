@@ -125,6 +125,7 @@ const navigate = useNavigate();
         {/* <TableCell align="center" width={120}>Action</TableCell> */}
         <TableCell align="center" width={220}>Expense</TableCell>
         <TableCell align="center" width={220}>View Details</TableCell>
+        <TableCell align="center" width={220}>Project Milestone</TableCell>
         <TableCell align="center" width={220}>Add Client Details</TableCell>
         <TableCell align="center" width={220}>View Client Details</TableCell>
         <TableCell align="center" width={220}>Add WO PO</TableCell>
@@ -186,7 +187,21 @@ const navigate = useNavigate();
           View Details
         </Button>
       </TableCell>
-
+      {/* Milestone */}
+      <TableCell align="center">
+        <Button
+          variant="contained"
+          color="primary"
+          style={{ backgroundColor: '#1a01fe',
+            color: 'white',minWidth: '120px' }}
+          size="small"
+          onClick={() => {
+            navigate(`/project/milestone-listing/${project?.id}`)
+            }}
+        >
+          Project Milestone
+        </Button>
+      </TableCell>
 
       {/* Client Details Button */}
       <TableCell align="center">

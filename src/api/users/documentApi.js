@@ -28,7 +28,7 @@ export const documentApi = createApi({
     }),
     updateDocument: builder.mutation({
       query: ({ documentId, formData }) => ({
-        url: `document_control/document_management/${documentId}`,
+        url: `document_control/document_management_update/${documentId}`,
         method: "PUT",
         body: formData,
       }),

@@ -14,6 +14,7 @@ import { companyApi } from "../api/company/companyApi.js";
 import { expenseApi } from "../api/expense/expenseApi.js";
 import { clientDataApi } from "../api/client/clientApi.js";
 import { projectWpoApi } from "../api/wpo/wpoApi.js";
+import { milestoneApi } from "../api/milestone/milestoneApi.js";
 
 
 const store = configureStore({
@@ -32,7 +33,8 @@ const store = configureStore({
     [companyApi.reducerPath]:companyApi.reducer,
     [expenseApi.reducerPath]:expenseApi.reducer,
     [clientDataApi.reducerPath]:clientDataApi.reducer,
-    [projectWpoApi.reducerPath]:projectWpoApi.reducer
+    [projectWpoApi.reducerPath]:projectWpoApi.reducer,
+    [milestoneApi.reducerPath]:milestoneApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -51,6 +53,7 @@ const store = configureStore({
   .concat(expenseApi.middleware)
   .concat(clientDataApi.middleware)
   .concat(projectWpoApi.middleware)
+  .concat(milestoneApi.middleware)
 });
 
 export default store;

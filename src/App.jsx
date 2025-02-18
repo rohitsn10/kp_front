@@ -31,6 +31,8 @@ import CreateClientDetails from "./pages/projects/project-client-details/index.j
 import ViewClientDetails from "./pages/projects/project-view-client-details/index.jsx";
 import ViewProjectDetails from "./pages/projects/project-view-details/index.jsx";
 import DocumentPattern from "./pages/dummy/index.jsx";
+import ProjectMilestonePage from "./pages/projects/project-milestone/index.jsx";
+import MilestonePage from "./pages/milestone/index.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
@@ -89,6 +91,27 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <ProjectExpense />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+      <Route
+          path="/project/milestone-listing/:projectId"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ProjectMilestonePage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+      <Route
+          path="/milestone-view/:milestoneId"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <MilestonePage />
               </MainLayout>
             </ProtectedRoute>
           }

@@ -119,14 +119,14 @@ function UploadedDocumentListing() {
                       title="Delete"
                       onClick={() => handleDeleteClick(attachment)} // Pass the current document to delete
                     /> */}
-                    <Button
+                    {/* <Button
       variant="contained"
       color="error"
       // startIcon={<RiDeleteBin6Line />}
       onClick={() => handleDeleteClick(attachment)}
     >
       Delete
-    </Button>
+    </Button> */}
                   </div>
                 </TableCell>
               </TableRow>
