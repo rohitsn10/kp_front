@@ -7,167 +7,194 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { Autocomplete } from "@mui/material";
 import { useGetMainProjectsQuery } from "../../../api/users/projectApi";
-import { useGetActivitiesQuery } from "../../../api/users/projectActivityApi";
-import { useGetDropdownSubActivitiesQuery } from "../../../api/users/subActivityApi";
-import { useGetSubSubActivityQuery } from "../../../api/users/multipleActivityApi";
-import { useCreateMaterialMutation, useGetMaterialsQuery } from "../../../api/users/materialApi";
+import { useCreateMaterialMutation, useGetMaterialsQuery } from "../../../api/material/materialApi";
 import { toast } from "react-toastify";
-export default function AddMaterialModal({ open, setOpen,onClose }) {
-  const {refetch}=useGetMaterialsQuery()
-  const [vendorName, setVendorName] = useState("");
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import InputLabel from '@mui/material/InputLabel';
+
+export default function AddMaterialModal({ open, setOpen, onClose }) {
+  const { refetch } = useGetMaterialsQuery();
   const [createMaterial] = useCreateMaterialMutation();
+
+  // Client/Vendor related states
+  const [clientVendorChoice, setClientVendorChoice] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [vendorName, setVendorName] = useState("");
+
+  // Other form states
   const [materialName, setMaterialName] = useState("");
+  const [materialNumber, setMaterialNumber] = useState("");
   const [uom, setUom] = useState("");
   const [price, setPrice] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [prNumber, setPrNumber] = useState("");
   const [poNumber, setPoNumber] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [status, setStatus] = useState(""); // New state for status
-  const [paymentStatus, setPaymentStatus] = useState(""); // New state for payment status
-  const [selectedSubActivity, setSelectedSubActivity] = useState(null);
-  const [selectedSubSubActivity, setSelectedSubSubActivity] = useState(null);
-  const [selectedProjectActivity, setSelectedProjectActivity] = useState(null);
   const [projectName, setProjectName] = useState("");
-  const {
-    data: activityData,
-    error: activityError,
-    isLoading: activityLoading,
-  } = useGetActivitiesQuery();
-  const {
-    data: subActivityData,
-    error: subActivityError,
-    isLoading: subActivityLoading,
-  } = useGetDropdownSubActivitiesQuery(selectedProjectActivity?.value, {
-    skip: !selectedProjectActivity, // Skip fetching until a project activity is selected
-  });
+  const [prDate, setPrDate] = useState("");
+  const [poDate, setPoDate] = useState("");
+  const [materialRequiredDate, setMaterialRequiredDate] = useState("");
 
-  const {
-    data: subSubActivityData,
-    error: subSubActivityError,
-    isLoading: subSubActivityLoading,
-  } = useGetSubSubActivityQuery(
-    selectedSubActivity?.value,
-    { skip: !selectedSubActivity } // Skip fetching until a sub activity is selected
-  );
   const { data: projects, error, isLoading } = useGetMainProjectsQuery();
-  const activityOptions =
-    activityData?.data?.map((item) => ({
-      label: item.activity_name,
-      value: item.id,
-    })) || [];
-  const subActivityOptions =
-    subActivityData?.data?.[0]?.sub_activity?.map((item) => ({
-      label: item.sub_activity_name,
-      value: item.sub_activity_id,
-    })) || [];
 
-  const subSubActivityOptions =
-    subSubActivityData?.data?.[0]?.sub_activity?.map((item) => ({
-      label: item.sub_sub_activities[0]?.sub_sub_activity_name || "N/A", // Using the sub_sub_activity_name from the API response
-      value: item.sub_sub_activities[0]?.sub_sub_activity_id || 0,
-    })) || [];
   const handleClose = () => {
     setOpen(false);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setClientVendorChoice("");
+    setClientName("");
+    setVendorName("");
+    setMaterialName("");
+    setMaterialNumber("");
+    setUom("");
+    setPrice("");
+    setPrNumber("");
+    setPoNumber("");
+    setQuantity("");
+    setProjectName("");
+    setPrDate("");
+    setPoDate("");
+    setMaterialRequiredDate("");
   };
 
   const handleSubmit = async () => {
-    const trimmedVendorName = vendorName?.trim();
-    const trimmedMaterialName = materialName?.trim();
+    // Basic validation
+    if (!clientVendorChoice) {
+      toast.error("Please select Client or Vendor");
+      return;
+    }
 
-    if (!trimmedVendorName || !trimmedMaterialName || !uom || !price || !endDate || !prNumber || !poNumber || !quantity || !selectedProjectActivity || !selectedSubSubActivity || !selectedSubActivity || !projectName) {
-      toast.error("Please fill all required fields.");
+    if (clientVendorChoice === "client" && !clientName) {
+      toast.error("Please enter Client Name");
       return;
     }
-  
-    // Ensure price and quantity are positive numbers
+
+    if (clientVendorChoice === "vendor" && !vendorName) {
+      toast.error("Please enter Vendor Name");
+      return;
+    }
+
+    // Required fields validation
+    const requiredFields = {
+      "Material Number": materialNumber,
+      "Material Name": materialName,
+      "UOM": uom,
+      "Price": price,
+      "PR Number": prNumber,
+      "PO Number": poNumber,
+      "Quantity": quantity,
+      "Project": projectName,
+      "PR Date": prDate,
+      "PO Date": poDate,
+      "Material Required Date": materialRequiredDate
+    };
+
+    for (const [field, value] of Object.entries(requiredFields)) {
+      if (!value) {
+        toast.error(`${field} is required`);
+        return;
+      }
+    }
+
+    // Numeric validations
     if (isNaN(price) || price <= 0) {
-      toast.error("Price must be a positive number.");
+      toast.error("Price must be a positive number");
       return;
     }
-  
+
     if (isNaN(quantity) || quantity <= 0) {
-      toast.error("Quantity must be a positive number.");
+      toast.error("Quantity must be a positive number");
       return;
     }
-  
-    // Validate end date (should be in the future)
-    if (new Date(endDate) <= new Date()) {
-      toast.error("End date must be a future date.");
-      return;
-    }
+
+    // Create form data
     const formData = {
-      vendor_name: vendorName,
+      client_vendor_choices: clientVendorChoice,
+      client_name: clientVendorChoice === "client" ? clientName : "",
+      vendor_name: clientVendorChoice === "vendor" ? vendorName : "",
+      material_number: materialNumber,
       material_name: materialName,
       uom: uom,
       price: price,
-      end_date: endDate,
       PR_number: prNumber,
+      pr_date: prDate,
       PO_number: poNumber,
+      po_date: poDate,
+      material_required_date: materialRequiredDate,
       quantity: quantity,
-      // status: status, // Include status
-      // payment_status: paymentStatus, // Include payment_status
-      project_id: projectName,
-      projectactivity_id: selectedProjectActivity?.value,
-      subactivity_id: selectedSubActivity?.value,
-      sub_sub_activity_id: selectedSubSubActivity?.value,
+      project_id: projectName
     };
 
     try {
-      // Trigger the mutation and wait for the response
       const response = await createMaterial(formData).unwrap();
-      // if
-      console.log("Material created successfully:", response);
-      if(response.status){
+      if (response.status) {
         toast.success("Material created successfully!");
-      }else{
-        toast.error("Something went wrong.")
+        refetch();
+        handleClose();
+      } else {
+        toast.error("Something went wrong.");
       }
-      // Show success toast
-      setVendorName("");
-      setMaterialName("");
-      setUom("")
-      setPrice("")
-      setEndDate("")
-      setPrNumber("")
-      setPoNumber("")
-      setQuantity("")
-      setSelectedSubActivity(null)
-      setSelectedSubSubActivity(null)
-      setSelectedProjectActivity(null)
-      setProjectName("")
-      refetch();
-       // Close the modal
     } catch (error) {
       console.error("Error creating material:", error);
-      // Show error toast
-      toast.error("Error creating material. Please try again.", {
-        position: toast.POSITION.TOP_RIGHT,
-      });
+      toast.error("Error creating material. Please try again.");
     }
-    handleClose();
   };
 
   return (
-    <React.Fragment>
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        fullWidth
-        maxWidth="md"
-        PaperProps={{
-          style: {
-            width: "600px",
-          },
-        }}
-      >
-        <DialogTitle className="text-[#29346B] text-2xl font-semibold mb-5">
-          Add Material
-        </DialogTitle>
-        <DialogContent>
-          {/* First Row: Vendor Name and Material Name */}
-          <div className="flex justify-between mb-4">
-            <div className="w-[48%]">
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="md"
+      PaperProps={{
+        style: {
+          width: "700px",
+        },
+      }}
+    >
+      <DialogTitle className="text-[#29346B] text-2xl font-semibold mb-5">
+        Add Material
+      </DialogTitle>
+      <DialogContent>
+        {/* Client/Vendor Selection */}
+        <div className="mb-4">
+          <FormControl fullWidth>
+            {/* <InputLabel>Select Type *</InputLabel> */}
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+                 Client or Vendor<span className="text-red-600"> *</span>
+              </label>
+            <Select
+              value={clientVendorChoice}
+              onChange={(e) => setClientVendorChoice(e.target.value)}
+              className="border-yellow-300 border-b-4"
+            >
+              <MenuItem value="client">Client</MenuItem>
+              <MenuItem value="vendor">Vendor</MenuItem>
+            </Select>
+          </FormControl>
+        </div>
+
+        {/* Conditional Client/Vendor Name Input */}
+        <div className="mb-4">
+          {clientVendorChoice === "client" && (
+            <div className="w-full">
+              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+                Client Name<span className="text-red-600"> *</span>
+              </label>
+              <input
+                type="text"
+                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+                value={clientName}
+                placeholder="Enter Client Name"
+                onChange={(e) => setClientName(e.target.value)}
+              />
+            </div>
+          )}
+          {clientVendorChoice === "vendor" && (
+            <div className="w-full">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
                 Vendor Name<span className="text-red-600"> *</span>
               </label>
@@ -179,281 +206,191 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
                 onChange={(e) => setVendorName(e.target.value)}
               />
             </div>
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Material Name<span className="text-red-600"> *</span>
-              </label>
-              <input
-                type="text"
-                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-                value={materialName}
-                placeholder="Enter Material Name"
-                onChange={(e) => setMaterialName(e.target.value)}
-              />
-            </div>
-          </div>
+          )}
+        </div>
 
-          {/* Second Row: UOM and Price */}
-          <div className="flex justify-between mb-4">
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                UOM<span className="text-red-600"> *</span>
-              </label>
-              <input
-                type="text"
-                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-                value={uom}
-                placeholder="Enter UOM"
-                onChange={(e) => setUom(e.target.value)}
-              />
-            </div>
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Price<span className="text-red-600"> *</span>
-              </label>
-              <input
-                type="number"
-                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-                value={price}
-                placeholder="Enter Price"
-                onChange={(e) => setPrice(e.target.value)}
-              />
-            </div>
+        {/* Material Details - First Row */}
+        <div className="flex gap-4 mb-4">
+          <div className="w-full">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Material Number<span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="text"
+              className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+              value={materialNumber}
+              placeholder="Enter Material Number"
+              onChange={(e) => setMaterialNumber(e.target.value)}
+            />
           </div>
+          <div className="w-full">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Material Name<span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="text"
+              className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+              value={materialName}
+              placeholder="Enter Material Name"
+              onChange={(e) => setMaterialName(e.target.value)}
+            />
+          </div>
+        </div>
 
-          {/* Third Row: End Date and PR Number */}
-          <div className="flex justify-between mb-4">
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                End Date<span className="text-red-600"> *</span>
-              </label>
-              <input
-                type="date"
-                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                PR Number<span className="text-red-600"> *</span>
-              </label>
-              <input
-                type="number"
-                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-                value={prNumber}
-                placeholder="Enter PR Number"
-                onChange={(e) => setPrNumber(e.target.value)}
-              />
-            </div>
+        {/* Material Details - Second Row */}
+        <div className="flex gap-4 mb-4">
+          <div className="w-full">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              UOM<span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="text"
+              className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+              value={uom}
+              placeholder="Enter UOM"
+              onChange={(e) => setUom(e.target.value)}
+            />
           </div>
+          <div className="w-full">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Price<span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="number"
+              className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+              value={price}
+              placeholder="Enter Price"
+              onChange={(e) => setPrice(e.target.value)}
+            />
+          </div>
+        </div>
 
-          {/* Fourth Row: PO Number and Quantity */}
-          <div className="flex justify-between mb-4">
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                PO Number<span className="text-red-600"> *</span>
-              </label>
-              <input
-                type="text"
-                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-                value={poNumber}
-                placeholder="Enter PO Number"
-                onChange={(e) => setPoNumber(e.target.value)}
-              />
-            </div>
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Quantity<span className="text-red-600"> *</span>
-              </label>
-              <input
-                type="number"
-                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-                value={quantity}
-                placeholder="Enter Quantity"
-                onChange={(e) => setQuantity(e.target.value)}
-              />
-            </div>
+        {/* PR Details */}
+        <div className="flex gap-4 mb-4">
+          <div className="w-full">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              PR Number<span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="text"
+              className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+              value={prNumber}
+              placeholder="Enter PR Number"
+              onChange={(e) => setPrNumber(e.target.value)}
+            />
           </div>
-          {/* <div className="flex justify-between mb-4">
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Status
-              </label>
-              <input
-                type="text"
-                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-                value={status}
-                placeholder="Enter Status"
-                onChange={(e) => setStatus(e.target.value)}
-              />
-            </div>
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Payment Status
-              </label>
-              <input
-                type="text"
-                className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-                value={paymentStatus}
-                placeholder="Enter Payment Status"
-                onChange={(e) => setPaymentStatus(e.target.value)}
-              />
-            </div>
-          </div> */}
-          {/* Dropdowns for Project, Activity, Sub Activity, and Sub Sub Activity */}
-          <div className="flex justify-between mb-4">
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Project Name <span className="text-red-600"> *</span>
-              </label>
-              {isLoading ? (
-                <p>Loading projects...</p>
-              ) : error ? (
-                <p>Error fetching projects</p>
-              ) : (
-                <Autocomplete
-                  options={projects?.data || []}
-                  getOptionLabel={(option) => option.project_name}
-                  value={
-                    projects?.data?.find(
-                      (project) => project.id === projectName
-                    ) || null
-                  }
-                  onChange={(event, newValue) =>
-                    setProjectName(newValue?.id || "")
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      variant="outlined"
-                      placeholder="Select Project"
-                      fullWidth
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          border: "1px solid #FACC15",
-                          borderBottom: "4px solid #FACC15",
-                          borderRadius: "6px",
-                        },
-                        "& .MuiOutlinedInput-root.Mui-focused": {
-                          border: "none",
-                          borderRadius: "4px",
-                        },
-                      }}
-                    />
-                  )}
+          <div className="w-full">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              PR Date<span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="date"
+              className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+              value={prDate}
+              onChange={(e) => setPrDate(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* PO Details */}
+        <div className="flex gap-4 mb-4">
+          <div className="w-full">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              PO Number<span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="text"
+              className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+              value={poNumber}
+              placeholder="Enter PO Number"
+              onChange={(e) => setPoNumber(e.target.value)}
+            />
+          </div>
+          <div className="w-full">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              PO Date<span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="date"
+              className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+              value={poDate}
+              onChange={(e) => setPoDate(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Quantity and Material Required Date */}
+        <div className="flex gap-4 mb-4">
+          <div className="w-full">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Quantity<span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="number"
+              className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+              value={quantity}
+              placeholder="Enter Quantity"
+              onChange={(e) => setQuantity(e.target.value)}
+            />
+          </div>
+          <div className="w-full">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Material Required Date<span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="date"
+              className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+              value={materialRequiredDate}
+              onChange={(e) => setMaterialRequiredDate(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Project Selection */}
+        <div className="mb-4">
+          <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+            Project Name <span className="text-red-600"> *</span>
+          </label>
+          {isLoading ? (
+            <p>Loading projects...</p>
+          ) : error ? (
+            <p>Error fetching projects</p>
+          ) : (
+            <Autocomplete
+              options={projects?.data || []}
+              getOptionLabel={(option) => option.project_name}
+              value={projects?.data?.find((project) => project.id === projectName) || null}
+              onChange={(event, newValue) => setProjectName(newValue?.id || "")}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  placeholder="Select Project"
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      border: "1px solid #FACC15",
+                      borderBottom: "4px solid #FACC15",
+                      borderRadius: "6px",
+                    },
+                    "& .MuiOutlinedInput-root.Mui-focused": {
+                      border: "none",
+                      borderRadius: "4px",
+                    },
+                  }}
                 />
               )}
-            </div>
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Select Project Activity<span className="text-red-600"> *</span>
-              </label>
-              <Autocomplete
-                options={activityOptions}
-                getOptionLabel={(option) => option.label}
-                value={selectedProjectActivity}
-                onChange={(event, newValue) => {
-                  setSelectedProjectActivity(newValue);
-                  setSelectedSubActivity(null); // Reset sub-activity when activity changes
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    variant="outlined"
-                    placeholder="Search and select a project activity"
-                    fullWidth
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        border: "1px solid #FACC15", // Yellow border
-                        borderBottom: "4px solid #FACC15",
-                        borderRadius: "6px", // Rounded corners
-                      },
-                      "& .MuiOutlinedInput-root.Mui-focused": {
-                        border: "none",
-                        borderRadius: "4px",
-                      },
-                    }}
-                  />
-                )}
-              />
-            </div>
-          </div>
+            />
+          )}
+        </div>
+      </DialogContent>
 
-          <div className="flex justify-between mb-4">
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Select Sub Activity<span className="text-red-600"> *</span>
-              </label>
-              <Autocomplete
-                options={subActivityOptions}
-                getOptionLabel={(option) => option.label}
-                value={selectedSubActivity}
-                onChange={(event, newValue) => setSelectedSubActivity(newValue)}
-                disabled={!selectedProjectActivity} // Disable until a project activity is selected
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    variant="outlined"
-                    placeholder="Search and select a sub activity"
-                    fullWidth
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        border: "1px solid #FACC15", // Yellow border
-                        borderBottom: "4px solid #FACC15",
-                        borderRadius: "6px", // Rounded corners
-                      },
-                      "& .MuiOutlinedInput-root.Mui-focused": {
-                        border: "none",
-                        borderRadius: "4px",
-                      },
-                    }}
-                  />
-                )}
-              />
-            </div>
-            <div className="w-[48%]">
-              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                Multi Activity<span className="text-red-600"> *</span>
-              </label>
-              <Autocomplete
-                options={subSubActivityOptions}
-                getOptionLabel={(option) => option.label}
-                value={selectedSubSubActivity}
-                onChange={(event, newValue) =>
-                  setSelectedSubSubActivity(newValue)
-                }
-                disabled={!selectedSubActivity} // Disable until a sub activity is selected
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    variant="outlined"
-                    placeholder="Select Sub Sub Activity"
-                    fullWidth
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        border: "1px solid #FACC15", // Yellow border
-                        borderBottom: "4px solid #FACC15",
-                        borderRadius: "6px", // Rounded corners
-                      },
-                      "& .MuiOutlinedInput-root.Mui-focused": {
-                        border: "none",
-                        borderRadius: "4px",
-                      },
-                    }}
-                  />
-                )}
-              />
-            </div>
-          </div>
-        </DialogContent>
-
-        <DialogActions
-          sx={{
-            justifyContent: "center",
-            padding: "20px",
-          }}
-        >
+      <DialogActions
+        sx={{
+          justifyContent: "center",
+          padding: "20px",
+        }}
+      >
           <Button
             onClick={handleSubmit}
             type="submit"
@@ -475,6 +412,6 @@ export default function AddMaterialModal({ open, setOpen,onClose }) {
           </Button>
         </DialogActions>
       </Dialog>
-    </React.Fragment>
   );
 }
+

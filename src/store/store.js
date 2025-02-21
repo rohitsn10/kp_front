@@ -9,12 +9,13 @@ import { multipleActivityApi } from "../api/users/multipleActivityApi.js";
 import { sfaApi } from "../api/sfa/sfaApi.js";
 import { projectApi } from "../api/users/projectApi.js";
 import { documentApi } from "../api/users/documentApi.js";
-import { materialApi } from "../api/users/materialApi.js";
+import { materialApi } from "../api/material/materialApi.js";
 import { companyApi } from "../api/company/companyApi.js";
 import { expenseApi } from "../api/expense/expenseApi.js";
 import { clientDataApi } from "../api/client/clientApi.js";
 import { projectWpoApi } from "../api/wpo/wpoApi.js";
 import { milestoneApi } from "../api/milestone/milestoneApi.js";
+import { inspectionApi } from "../api/inspection/inspectionApi.js";
 
 
 const store = configureStore({
@@ -34,7 +35,8 @@ const store = configureStore({
     [expenseApi.reducerPath]:expenseApi.reducer,
     [clientDataApi.reducerPath]:clientDataApi.reducer,
     [projectWpoApi.reducerPath]:projectWpoApi.reducer,
-    [milestoneApi.reducerPath]:milestoneApi.reducer
+    [milestoneApi.reducerPath]:milestoneApi.reducer,
+    [inspectionApi.reducerPath]:inspectionApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -54,6 +56,7 @@ const store = configureStore({
   .concat(clientDataApi.middleware)
   .concat(projectWpoApi.middleware)
   .concat(milestoneApi.middleware)
+  .concat(inspectionApi.middleware)
 });
 
 export default store;

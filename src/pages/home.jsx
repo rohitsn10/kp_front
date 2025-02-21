@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import Sidebar from '../components/common/sidebar/Sidebar'
 import Statcards from '../components/pages/home-dashboard/statcards'
 import RevenueGraph from '../components/pages/home-dashboard/RevenueGraph'
@@ -6,9 +6,12 @@ import TurnoverGraph from '../components/pages/home-dashboard/TurnoverGraph'
 import UpcomingEvents from '../components/pages/home-dashboard/UpcomingEvents'
 import ProjectListingTable from '../components/pages/home-dashboard/ProjectListingTable'
 import CriticalActivityTable from '../components/pages/home-dashboard/CriticalActivityTable'
+import { AuthContext } from '../context/AuthContext'
 
 function Home() {
-  console.log(import.meta.env.VITE_API_KEY);
+  // console.log(import.meta.env.VITE_API_KEY);
+  // const {user,token,permissions} = useContext(AuthContext);
+  // console.log("Users",user,"Token",token,"Permissions",permissions)
   return (
     <div className="grid gap-8 grid-cols-12 px-4 border-2">
       <div className='col-span-12'>

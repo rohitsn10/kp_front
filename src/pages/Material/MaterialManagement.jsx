@@ -14,22 +14,32 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Typography,
 } from '@mui/material';
 import { RiEditFill } from 'react-icons/ri';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddMaterialModal from '../../components/pages/Material/addMaterialModal';
-import EditMaterialModal from '../../components/pages/Material/editMaterialModel';
-import { useGetMaterialsQuery, useDeleteMaterialMutation } from '../../api/users/materialApi';
+import AddMaterialModal from '../../components/pages/Material/addMaterialModal.jsx';
+import EditMaterialModal from '../../components/pages/Material/editMaterialModel.jsx';
+import { useGetMaterialsQuery, useDeleteMaterialMutation } from '../../api/material/materialApi.js';
+import InspectionModal from '../../components/pages/Material/addInspectionModal.jsx';
 
 function MaterialManagementListing() {
   const [materialFilter, setMaterialFilter] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  // Handle Material Create & Edit Modal
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
+  // Handle Inspection Modal
+  const [openAddInspectionModal, setOpenAddInspectionModal] = useState(false);
+  const [openEditInspectionModal, setOpenEditInspectionModal] = useState(false);
+
+  // Select Material
   const [selectedMaterial, setSelectedMaterial] = useState(null);
+
   const [openConfirmModal, setOpenConfirmModal] = useState(false);
   const [materialToDelete, setMaterialToDelete] = useState(null);
+
 
   const { data: materialsData, isLoading, isError, refetch } = useGetMaterialsQuery();
   const [deleteMaterial] = useDeleteMaterialMutation();
@@ -64,6 +74,22 @@ function MaterialManagementListing() {
   const handleEditClick = (material) => {
     setSelectedMaterial(material);
     setOpenEditModal(true);
+  };
+
+  const handleInspectionAdd = (material) => {
+    setSelectedMaterial(material);
+    setOpenAddInspectionModal(true);
+  };
+
+  const handleInspectionAddClose = (material) => {
+    setSelectedMaterial(null);
+    setOpenAddInspectionModal(false);
+  };
+
+
+  const handleInspectionEdit = (material) => {
+    setSelectedMaterial(material);
+    setOpenEditInspectionModal(true);
   };
 
   const handleDeleteClick = (id) => {
@@ -110,6 +136,8 @@ function MaterialManagementListing() {
               <TableCell align="center">PO Number</TableCell>
               <TableCell align="center">Quantity</TableCell>
               <TableCell align="center">Actions</TableCell>
+              <TableCell  align="center">Inspection</TableCell>
+              <TableCell align="center">View Inspection</TableCell>                            
             </TableRow>
           </TableHead>
           <TableBody>
@@ -130,6 +158,42 @@ function MaterialManagementListing() {
                     <DeleteIcon onClick={() => handleDeleteClick(row.id)} className="cursor-pointer text-red-600 text-xl" />
                   </div>
                 </TableCell>
+                <TableCell  
+                // onClick={()=>handleInspectionAdd(row)}
+                align="center ">
+                  {/* <p className='text-center text-[12px] cursor-pointer text-orange-600'>Add Inspection Report</p> */}
+
+                          <Button
+                            variant="contained"
+                            style={{ 
+                            backgroundColor: '#FF8C00',
+                             color: 'white',
+                             minWidth: '100px',
+                             fontSize:'12px'
+                              }}
+                            size="small"
+                            onClick={() => {
+                              handleInspectionAdd(row)
+                            }}
+                          >
+                           Add Inspection
+                          </Button>
+                  {/* <Typography ></Typography> */}
+                </TableCell>
+                <TableCell align="center">
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          sx={{ minWidth: '100px',fontSize:'12px' }}
+                          size="small"
+                          onClick={() => {
+                            
+                            }}
+                        >
+                          View Inspection
+                        </Button>
+                  {/* <p className='text-center text-[12px] cursor-pointer text-blue-800'>View Inspection</p> */}
+                </TableCell>  
               </TableRow>
             ))}
           </TableBody>
@@ -147,6 +211,14 @@ function MaterialManagementListing() {
 
       <AddMaterialModal open={openAddModal} setOpen={setOpenAddModal} />
       <EditMaterialModal open={openEditModal} setOpen={setOpenEditModal} materialToEdit={selectedMaterial} />
+
+      {/* Modal for Inspection */}
+      <InspectionModal
+        open={openAddInspectionModal}
+        handleClose={handleInspectionAddClose}
+        refetch={refetch}
+        materialToEdit={selectedMaterial}
+      />
 
       <Dialog open={openConfirmModal} onClose={() => setOpenConfirmModal(false)}>
         <DialogTitle>Confirm Deletion</DialogTitle>

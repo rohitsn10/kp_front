@@ -97,8 +97,8 @@ function ProjectMilestonePage() {
               <TableCell align="center">End Date</TableCell>
               <TableCell align="center">Milestone Status</TableCell>
               <TableCell align="center">Action</TableCell>
-              <TableCell align="center">Manage Milestone</TableCell>
-              <TableCell align="center">View Milestone</TableCell>
+              {/* <TableCell align="center">Manage Milestone</TableCell>
+              <TableCell align="center">View Milestone</TableCell> */}
             </TableRow>
           </TableHead>
 
@@ -151,7 +151,7 @@ function ProjectMilestonePage() {
                       </Button>
                     )}
                   </TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     <Button
                         variant="contained"
                         color="warning"
@@ -172,7 +172,7 @@ function ProjectMilestonePage() {
                       >
                         Manage Milestone
                       </Button>
-                  </TableCell>
+                  </TableCell> */}
                 </TableRow>
               ))
             ) : (
