@@ -33,6 +33,8 @@ import ViewProjectDetails from "./pages/projects/project-view-details/index.jsx"
 import DocumentPattern from "./pages/dummy/index.jsx";
 import ProjectMilestonePage from "./pages/projects/project-milestone/index.jsx";
 import MilestonePage from "./pages/milestone/index.jsx";
+import ViewUpdateInspectionDetails from "./components/pages/Material/viewUpdateInspectionPage.jsx";
+import MasterDesignListing from "./pages/projects/project-mdl/index.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
@@ -41,7 +43,6 @@ function App() {
     <div>
       <Routes>
         <Route path="/login" element={<Login />} />
-
         {/* Protected Routes */}
         <Route
           path="/"
@@ -151,6 +152,17 @@ function App() {
           }
         />
 
+<Route
+          path="/project/manage-drawing-design/:projectId"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <MasterDesignListing />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/location"
           element={
@@ -197,6 +209,16 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <MaterialManagementListing />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+      <Route
+          path="/material-management/view-inspection/:materialId"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ViewUpdateInspectionDetails />
               </MainLayout>
             </ProtectedRoute>
           }

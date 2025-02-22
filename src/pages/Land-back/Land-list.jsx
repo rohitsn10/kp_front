@@ -266,7 +266,6 @@ function LandListing() {
 
       {/* Edit Land Modal */}
       <EditLandModal open={openEditModal} setOpen={setOpenEditModal} activeItem={selectedLand} handleClose={handleCloseModal} 
-
       />
       
       {/* SFA Modal */}

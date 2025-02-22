@@ -22,6 +22,7 @@ import AddMaterialModal from '../../components/pages/Material/addMaterialModal.j
 import EditMaterialModal from '../../components/pages/Material/editMaterialModel.jsx';
 import { useGetMaterialsQuery, useDeleteMaterialMutation } from '../../api/material/materialApi.js';
 import InspectionModal from '../../components/pages/Material/addInspectionModal.jsx';
+import { useNavigate } from 'react-router-dom';
 
 function MaterialManagementListing() {
   const [materialFilter, setMaterialFilter] = useState('');
@@ -33,7 +34,7 @@ function MaterialManagementListing() {
   // Handle Inspection Modal
   const [openAddInspectionModal, setOpenAddInspectionModal] = useState(false);
   const [openEditInspectionModal, setOpenEditInspectionModal] = useState(false);
-
+  const navigate = useNavigate();
   // Select Material
   const [selectedMaterial, setSelectedMaterial] = useState(null);
 
@@ -91,6 +92,11 @@ function MaterialManagementListing() {
     setSelectedMaterial(material);
     setOpenEditInspectionModal(true);
   };
+
+  const handleViewInspection = (row)=>{
+    navigate(`/material-management/view-inspection/${row?.id}`)
+    // console.log(row.id);
+  }
 
   const handleDeleteClick = (id) => {
     setMaterialToDelete(id);
@@ -187,7 +193,7 @@ function MaterialManagementListing() {
                           sx={{ minWidth: '100px',fontSize:'12px' }}
                           size="small"
                           onClick={() => {
-                            
+                            handleViewInspection(row)
                             }}
                         >
                           View Inspection

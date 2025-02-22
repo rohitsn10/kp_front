@@ -158,7 +158,7 @@ function CreateClientDetails() {
                     style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
                     onClick={() => setOpen(true)}
                 >
-                    Add Category
+                    Submit
                 </Button>
                 </div>
             </form>

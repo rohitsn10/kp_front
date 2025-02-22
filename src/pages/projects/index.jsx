@@ -130,6 +130,8 @@ const navigate = useNavigate();
         <TableCell align="center" width={220}>View Client Details</TableCell>
         <TableCell align="center" width={220}>Add WO PO</TableCell>
         <TableCell align="center" width={220}>View WO PO</TableCell>
+        <TableCell align="center" width={220}>Manage Drawings</TableCell>
+
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -263,6 +265,19 @@ const navigate = useNavigate();
           }}
         >
          View WOPO
+        </Button>
+      </TableCell>
+
+      <TableCell align="center">
+        <Button
+          variant="contained"
+          style={{ backgroundColor: '#FF8C00', color: 'white',minWidth: '110px' }}
+          size="small"
+          onClick={() => {
+            navigate(`/project/manage-drawing-design/${project?.id}`)
+          }}
+        >
+         MDL
         </Button>
       </TableCell>
 

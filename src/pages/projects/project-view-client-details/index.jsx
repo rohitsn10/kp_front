@@ -9,7 +9,7 @@ function ViewClientDetails() {
     // const [error, setError] = useState(null);
     const { data: clientFetchData, error, isLoading } = useGetClientDataQuery(projectId);
     const clientData = clientFetchData?.data[0];
-    console.log("Client details:",)
+
 
     if (!clientData) {
         return (
@@ -21,9 +21,6 @@ function ViewClientDetails() {
             </div>
         );
     }
-
-    // console.log(clientData)
-    // console.log("Total Details",clientFetchData)
 
     if (isLoading) return <p className="text-center">Loading...</p>;
     if (error) return <p className="text-center text-red-500">Error fetching data</p>;
