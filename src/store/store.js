@@ -16,6 +16,7 @@ import { clientDataApi } from "../api/client/clientApi.js";
 import { projectWpoApi } from "../api/wpo/wpoApi.js";
 import { milestoneApi } from "../api/milestone/milestoneApi.js";
 import { inspectionApi } from "../api/inspection/inspectionApi.js";
+import { masterDesignApi } from "../api/masterdesign/masterDesign.js";
 
 
 const store = configureStore({
@@ -36,7 +37,8 @@ const store = configureStore({
     [clientDataApi.reducerPath]:clientDataApi.reducer,
     [projectWpoApi.reducerPath]:projectWpoApi.reducer,
     [milestoneApi.reducerPath]:milestoneApi.reducer,
-    [inspectionApi.reducerPath]:inspectionApi.reducer
+    [inspectionApi.reducerPath]:inspectionApi.reducer,
+    [masterDesignApi.reducerPath]:masterDesignApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -57,6 +59,7 @@ const store = configureStore({
   .concat(projectWpoApi.middleware)
   .concat(milestoneApi.middleware)
   .concat(inspectionApi.middleware)
+  .concat(masterDesignApi.middleware)
 });
 
 export default store;

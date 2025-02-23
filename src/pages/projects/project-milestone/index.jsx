@@ -18,7 +18,7 @@ import {
 import { useGetMilestoneQuery } from '../../../api/milestone/milestoneApi';
 import MilestoneModal from '../../../components/pages/milestones/addMilestone';
 function ProjectMilestonePage() {
-  const { projectId } = useParams();
+    const { projectId } = useParams();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchQuery, setSearchQuery] = useState('');

@@ -112,7 +112,7 @@ function MaterialManagementListing() {
   };
 
   return (
-    <div className="bg-white p-4 md:w-[90%] lg:w-[80%] mx-auto my-8 rounded-md">
+    <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md">
       <div className="flex flex-row my-6 px-10 items-center justify-between">
         <TextField
           value={materialFilter}

@@ -178,7 +178,7 @@ function DocumentListing() {
   
   
   return (
-    <div className="bg-white p-4 md:w-[90%] lg:w-[70%] mx-auto my-8 rounded-md">
+    <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md">
       <div className="flex flex-row my-6 px-10 items-center justify-between">
         <div className="flex-grow flex justify-center">
           <h2 className="text-3xl text-[#29346B] font-semibold">

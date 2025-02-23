@@ -70,7 +70,7 @@ const navigate = useNavigate();
   );
 
   return (
-    <div className="bg-white p-4 md:w-[90%] lg:w-[80%] mx-auto my-8 rounded-md pt-5">
+    <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
       <div className="grid grid-cols-3 items-center p-4 mb-5">
       <TextField
   value={projectFilter}
