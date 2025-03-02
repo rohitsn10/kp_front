@@ -1,42 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogTitle, DialogActions, Button, TextField } from '@mui/material';
-import { useApprovalOrCommentOnDrawingMutation, useGetDrawingsByProjectIdQuery } from '../../../../api/masterdesign/masterDesign.js';
-import { toast } from 'react-toastify';
+import React from 'react';
+import { Dialog, DialogContent, DialogTitle, DialogActions, Button } from '@mui/material';
+import { useGetDrawingsByProjectIdQuery, useUpdateDrawingMutation } from '../../../../api/masterdesign/masterDesign.js';
 import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
-function ApproveMasterDesignModal({ open, onClose, selectedDesign }) {
+function SubmitMasterDesignModal({ open, onClose, selectedDesign }) {
   const { projectId } = useParams();
-  const [approvalOrCommentOnDrawing] = useApprovalOrCommentOnDrawingMutation();
-  const [approvalStatus, setApprovalStatus] = useState('');
-  const [remarks, setRemarks] = useState('');
-    const { refetch } = useGetDrawingsByProjectIdQuery(projectId);
+  const [updateDrawing] = useUpdateDrawingMutation();
+const { refetch } = useGetDrawingsByProjectIdQuery(projectId);
   
-  console.log("selected itemitem",selectedDesign)
-  useEffect(()=>{
-    setApprovalStatus('')
-    setRemarks('')
-  },[selectedDesign])
+
   const handleSubmit = async () => {
     try {
-      const formData = new FormData();
-      formData.append('approval_status', approvalStatus);
-      formData.append('remarks', remarks);
+      const submitData = new FormData();
+      submitData.append('project_id', projectId);
+      submitData.append('assign_to_user', selectedDesign?.assign_to_user);
+      submitData.append('approval_status', 'submitted_r0');
       
-      let response = await approvalOrCommentOnDrawing({
+      let response = await updateDrawing({
         drawingId: selectedDesign.id,
-        formData: formData
+        formData: submitData
       }).unwrap();
-      
       if(response.status){
-        toast.success("Status Updated!");
+        toast.success("Updated Success.");
         refetch();
-      } else {
-        toast.error(response.message);
+      }else{
+        toast.error("Updated Success.");
       }
       onClose();
     } catch (error) {
-      console.error('Failed to update approval status:', error);
-      toast.error('Error updating status');
+      console.error('Failed to update drawing:', error);
     }
   };
 
@@ -46,6 +39,10 @@ function ApproveMasterDesignModal({ open, onClose, selectedDesign }) {
       <div>{value || 'N/A'}</div>
     </div>
   );
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString();
+  };
 
   return (
     <Dialog
@@ -60,7 +57,7 @@ function ApproveMasterDesignModal({ open, onClose, selectedDesign }) {
       }}
     >
       <DialogTitle className="text-[#29346B] text-2xl font-semibold mb-5">
-        Approve Document/Drawing
+        Submit Document/Drawing
       </DialogTitle>
       <DialogContent>
         <div className="space-y-2">
@@ -72,6 +69,7 @@ function ApproveMasterDesignModal({ open, onClose, selectedDesign }) {
           {renderDetailRow("Auto Document/Drawing Number", selectedDesign?.auto_drawing_number)}
           {renderDetailRow("Type", selectedDesign?.type_of_approval)}
           {renderDetailRow("Assigned To", selectedDesign?.assign_to_user_full_name)}
+          {renderDetailRow("Status", "Will be submitted as R0")}
           
           <div className="mt-6">
             <div className="text-[#29346B] font-semibold mb-2">Attachments:</div>
@@ -91,36 +89,22 @@ function ApproveMasterDesignModal({ open, onClose, selectedDesign }) {
             </div>
           </div>
 
-          <div className="mt-6">
-            <label className="block mb-2 text-[#29346B] font-semibold">
-              Status<span className="text-red-600"> *</span>
-            </label>
-            <select
-              value={approvalStatus}
-              onChange={(e) => setApprovalStatus(e.target.value)}
-              className="border p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-            >
-              <option value="">Select Status</option>
-              <option value="approved">Approved</option>
-              <option value="submitted_r0">Submitted R0</option>
-              <option value="commented">Commented</option>
-            </select>
-          </div>
-
-          <div className="mt-6">
-            <label className="block mb-2 text-[#29346B] font-semibold">
-              Remarks
-            </label>
-            <TextField
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-              fullWidth
-              multiline
-              rows={3}
-              variant="outlined"
-              className="border p-3 rounded-md w-full"
-            />
-          </div>
+          {selectedDesign?.commented_actions && selectedDesign.commented_actions.length > 0 && (
+            <div className="mt-6">
+              <div className="text-[#29346B] font-semibold mb-4">Comments History:</div>
+              <div className="space-y-4">
+                {selectedDesign.commented_actions.map((comment) => (
+                  <div key={comment.id} className="bg-gray-50 p-4 rounded-lg border">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="font-medium text-gray-700">{comment.user_full_name}</div>
+                      <div className="text-sm text-gray-500">{formatDate(comment.created_at)}</div>
+                    </div>
+                    <div className="text-gray-600">{comment.remarks}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
       <DialogActions sx={{
@@ -128,7 +112,6 @@ function ApproveMasterDesignModal({ open, onClose, selectedDesign }) {
       }}>
         <Button
           onClick={handleSubmit}
-          disabled={!approvalStatus}
           type="submit"
           sx={{
             backgroundColor: "#f6812d",
@@ -141,17 +124,14 @@ function ApproveMasterDesignModal({ open, onClose, selectedDesign }) {
             fontWeight: "bold",
             "&:hover": {
               backgroundColor: "#E66A1F",
-            },
-            "&:disabled": {
-              backgroundColor: "#ccc",
             }
           }}
         >
-          Update Status
+          Submit Drawing
         </Button>
       </DialogActions>
     </Dialog>
   );
 }
 
-export default ApproveMasterDesignModal;
+export default SubmitMasterDesignModal;

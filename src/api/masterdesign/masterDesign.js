@@ -45,6 +45,13 @@ export const masterDesignApi = createApi({
         method: "GET",
       }),
     }),
+    approvalOrCommentOnDrawing: builder.mutation({
+      query: ({ drawingId, formData }) => ({
+        url: `project_module/approval_or_commented_action_on_drawing_and_design/${drawingId}`,
+        method: "PUT",
+        body: formData,
+      }),
+    }),
   }),
 });
 
@@ -54,4 +61,5 @@ export const {
   useUpdateDrawingMutation,
   useGetDrawingsByProjectIdQuery,
   useGetDrawingByIdQuery,
+  useApprovalOrCommentOnDrawingMutation
 } = masterDesignApi;

@@ -57,7 +57,7 @@ function ProjectMilestonePage() {
   }
 
   return (
-    <div className="bg-white p-4 md:w-[90%] lg:w-[70%] mx-auto my-8 rounded-md">
+    <div className="bg-white p-4 md:w-[90%] lg:w-[80%] mx-auto my-8 rounded-md">
       <div className="flex flex-row justify-around items-center py-6 mx-10">
         <TextField
           label="Search Milestone"
@@ -97,6 +97,7 @@ function ProjectMilestonePage() {
               <TableCell align="center">End Date</TableCell>
               <TableCell align="center">Milestone Status</TableCell>
               <TableCell align="center">Action</TableCell>
+              <TableCell align="center">Payment</TableCell>
               {/* <TableCell align="center">Manage Milestone</TableCell>
               <TableCell align="center">View Milestone</TableCell> */}
             </TableRow>
@@ -136,7 +137,7 @@ function ProjectMilestonePage() {
                         size="small"
                         // onClick={() => handleUpdateStatus(row.id, 'in_progress')}
                       >
-                        Start
+                        Manage
                       </Button>
                     )}
                     {row.milestone_status === 'in_progress' && (
@@ -151,28 +152,16 @@ function ProjectMilestonePage() {
                       </Button>
                     )}
                   </TableCell>
-                  {/* <TableCell>
-                    <Button
-                        variant="contained"
-                        color="warning"
-                        size="small"
-                        onClick={() => handleViewMilestone(row.id)}
-                        // onClick={() => handleUpdateStatus(row.id, 'success')}
-                        style={{ marginLeft: '10px',fontSize:'10px' }}
-                      >
-                        View Milestone
-                      </Button>
+                  <TableCell align='center'>
+                    
+                    <Chip 
+                    onClick={()=>{
+                      console.log(row)
+                      navigate(`/project/milestone-view/payment/${row.id}`)
+                    }} 
+                    variant="filled" label="Payment" color="success" />
+                    
                   </TableCell>
-                  <TableCell>
-                    <Button
-                        variant="contained"
-                        color="success"
-                        size="small"
-                        style={{ marginLeft: '10px',fontSize:'10px' }}
-                      >
-                        Manage Milestone
-                      </Button>
-                  </TableCell> */}
                 </TableRow>
               ))
             ) : (

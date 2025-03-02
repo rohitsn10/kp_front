@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Autocomplete, TextField } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import { useGetAllDrawingsQuery, useUpdateDrawingMutation } from '../../../../api/masterdesign/masterDesign.js';
+import { useGetAllDrawingsQuery, useGetDrawingsByProjectIdQuery, useUpdateDrawingMutation } from '../../../../api/masterdesign/masterDesign.js';
 import { useFetchUsersQuery } from '../../../../api/users/usersApi';
 import { toast } from 'react-toastify';
 // import { X } from 'lucide-react';
@@ -10,7 +10,7 @@ function EditMasterDesignModal({ open, onClose, selectedDesign }) {
   const { projectId } = useParams();
   const { data: userData } = useFetchUsersQuery();
   const [updateDrawing] = useUpdateDrawingMutation();
-  const { refetch } = useGetAllDrawingsQuery();
+  const { refetch } = useGetDrawingsByProjectIdQuery(projectId);
   const [formData, setFormData] = useState({
     block: '',
     drawing_number: '',

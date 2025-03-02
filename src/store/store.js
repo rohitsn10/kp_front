@@ -17,6 +17,7 @@ import { projectWpoApi } from "../api/wpo/wpoApi.js";
 import { milestoneApi } from "../api/milestone/milestoneApi.js";
 import { inspectionApi } from "../api/inspection/inspectionApi.js";
 import { masterDesignApi } from "../api/masterdesign/masterDesign.js";
+import { milestonePaymentApi } from "../api/milestonePayment/milestonePaymentApi.js";
 
 
 const store = configureStore({
@@ -38,7 +39,8 @@ const store = configureStore({
     [projectWpoApi.reducerPath]:projectWpoApi.reducer,
     [milestoneApi.reducerPath]:milestoneApi.reducer,
     [inspectionApi.reducerPath]:inspectionApi.reducer,
-    [masterDesignApi.reducerPath]:masterDesignApi.reducer
+    [masterDesignApi.reducerPath]:masterDesignApi.reducer,
+    [milestonePaymentApi.reducerPath]:milestonePaymentApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -60,6 +62,7 @@ const store = configureStore({
   .concat(milestoneApi.middleware)
   .concat(inspectionApi.middleware)
   .concat(masterDesignApi.middleware)
+  .concat(milestonePaymentApi.middleware)
 });
 
 export default store;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Autocomplete, TextField } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import { useCreateDrawingMutation, useGetAllDrawingsQuery } from '../../../../api/masterdesign/masterDesign.js';
+import { useCreateDrawingMutation, useGetAllDrawingsQuery, useGetDrawingsByProjectIdQuery } from '../../../../api/masterdesign/masterDesign.js';
 import { useFetchUsersQuery } from '../../../../api/users/usersApi';
 import { toast } from 'react-toastify';
 
@@ -9,7 +9,7 @@ function CreateMasterDesignModal({ open, onClose }) {
   const { projectId } = useParams();
   const { data: userData } = useFetchUsersQuery();
   const [createDrawing] = useCreateDrawingMutation();
-  const { refetch } = useGetAllDrawingsQuery();
+  const { refetch } = useGetDrawingsByProjectIdQuery(projectId);
   
   const [formData, setFormData] = useState({
     client_initials: '',
