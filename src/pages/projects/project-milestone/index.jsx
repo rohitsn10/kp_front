@@ -130,7 +130,7 @@ function ProjectMilestonePage() {
                   )}
                   </TableCell>
                   <TableCell align="center">
-                  {row.milestone_status === 'pending' && (
+                  {/* {row.milestone_status === 'pending' && (
                       <Button
                         variant="contained"
                         color="primary"
@@ -150,7 +150,18 @@ function ProjectMilestonePage() {
                       >
                         Completed
                       </Button>
-                    )}
+                    )} */}
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={() => 
+                        // handleUpdateStatus(row.id, 'in_progress')
+                        navigate(`/project/milestone-view/${row.id}`)
+                        }
+                      >
+                        Manage
+                      </Button>
                   </TableCell>
                   <TableCell align='center'>
                     

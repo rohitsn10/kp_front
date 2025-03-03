@@ -98,7 +98,7 @@ function ProjectMilestonePayment() {
             padding: '10px'
           }}
         >
-          Add Milestone
+          Add Payment
         </Button>
       </div>
 

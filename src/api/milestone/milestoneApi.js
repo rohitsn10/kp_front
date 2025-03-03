@@ -35,6 +35,9 @@ export const milestoneApi = createApi({
     getProductSubSubActivity: builder.query({
       query: (id) => `activity_module/main_project_wise_sub_sub_activity/${id}`,
     }),
+    getMilestoneById: builder.query({
+      query: (milestoneId) => `project_module/milestone_id_wise_get_milestone/${milestoneId}`,
+    }),
   }),
 });
 
@@ -43,5 +46,6 @@ export const {
   useGetMilestoneQuery,
   useGetProductActivityQuery, 
   useGetProductSubActivityQuery, 
-  useGetProductSubSubActivityQuery 
+  useGetProductSubSubActivityQuery ,
+  useGetMilestoneByIdQuery
 } = milestoneApi;

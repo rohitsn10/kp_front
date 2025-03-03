@@ -36,6 +36,7 @@ import MilestonePage from "./pages/milestone/index.jsx";
 import ViewUpdateInspectionDetails from "./components/pages/Material/viewUpdateInspectionPage.jsx";
 import MasterDesignListing from "./pages/projects/project-mdl/index.jsx";
 import ProjectMileStonePayment from "./pages/projects/project-milestone-payment/index.jsx";
+import ProjectViewMilestone from "./pages/projects/projects-view-milestone-details/index.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
@@ -109,11 +110,12 @@ function App() {
           }
         />
       <Route
-          path="/milestone-view/:milestoneId"
+          path="/project/milestone-view/:milestoneId"
           element={
             <ProtectedRoute>
               <MainLayout>
-                <MilestonePage />
+                {/* <MilestonePage /> */}
+                <ProjectViewMilestone/>
               </MainLayout>
             </ProtectedRoute>
           }
