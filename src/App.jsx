@@ -37,6 +37,7 @@ import ViewUpdateInspectionDetails from "./components/pages/Material/viewUpdateI
 import MasterDesignListing from "./pages/projects/project-mdl/index.jsx";
 import ProjectMileStonePayment from "./pages/projects/project-milestone-payment/index.jsx";
 import ProjectViewMilestone from "./pages/projects/projects-view-milestone-details/index.jsx";
+import UserGroupSection from "./pages/groups/groups.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
@@ -242,6 +243,16 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <UserPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+                <Route
+          path="/user-groups"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <UserGroupSection />
               </MainLayout>
             </ProtectedRoute>
           }

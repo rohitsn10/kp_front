@@ -38,6 +38,12 @@ export const milestoneApi = createApi({
     getMilestoneById: builder.query({
       query: (milestoneId) => `project_module/milestone_id_wise_get_milestone/${milestoneId}`,
     }),
+    updateMilestoneCompleted: builder.mutation({
+      query: (milestoneId) => ({
+        url: `project_module/milestone_completed/${milestoneId}`,
+        method: "PUT",
+      }),
+    }),
   }),
 });
 
@@ -47,5 +53,6 @@ export const {
   useGetProductActivityQuery, 
   useGetProductSubActivityQuery, 
   useGetProductSubSubActivityQuery ,
-  useGetMilestoneByIdQuery
+  useGetMilestoneByIdQuery,
+  useUpdateMilestoneCompletedMutation,
 } = milestoneApi;

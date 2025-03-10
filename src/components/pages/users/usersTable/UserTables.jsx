@@ -29,6 +29,7 @@ import { useCreateUserMutation, useFetchDepartmentQuery, useFetchUsersQuery, use
 import { toast } from 'react-toastify';
 import { Camera } from '@mui/icons-material';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import { useNavigate } from 'react-router-dom';
 
 function UserTable() {
   // User Data fetch
@@ -68,7 +69,7 @@ function UserTable() {
 
     const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
     const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
-
+    const navigate = useNavigate();
 
     const { data:departmentData, error:DepartmentError, isLoading:DepartmentLoading } = useFetchDepartmentQuery();
     // console.log("Department data",departmentData)
@@ -81,7 +82,7 @@ function UserTable() {
 
     const [updateUserPassword] =useUpdateUserPasswordMutation();
     const handleOpenModal = (user = null) => {
-      console.log(user)
+      // console.log(user)
       if (user) {
         setIsEditMode(true);
         setEmail(user?.email || '');
@@ -107,6 +108,10 @@ function UserTable() {
       }
       setOpen(true);
     };
+
+    const handleGroupRedirect = ()=>{
+      navigate('/user-groups')
+    }
 
     const handleOpenPasswordModal = (user) => {
       setSelectedUserForPassword(user);
@@ -241,7 +246,7 @@ function UserTable() {
             <h2 className="text-lg md:text-2xl lg:text-3xl text-[#29346B] font-semibold">User Table</h2>
           </div>
           
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
             <Button
               variant="contained"
               style={{ 
@@ -254,6 +259,19 @@ function UserTable() {
               onClick={()=>handleOpenModal()}
             >
               Add User
+            </Button>
+            <Button
+              variant="contained"
+              style={{ 
+                backgroundColor: '#FF8C00', 
+                color: 'white', 
+                fontWeight: 'bold', 
+                fontSize: '16px',
+                textTransform: 'none' 
+              }}
+              onClick={()=>handleGroupRedirect()}
+            >
+              Group List
             </Button>
           </div>
         </div>

@@ -18,6 +18,7 @@ import { milestoneApi } from "../api/milestone/milestoneApi.js";
 import { inspectionApi } from "../api/inspection/inspectionApi.js";
 import { masterDesignApi } from "../api/masterdesign/masterDesign.js";
 import { milestonePaymentApi } from "../api/milestonePayment/milestonePaymentApi.js";
+import { permissionsApi } from "../api/permission/permissionApi.js";
 
 
 const store = configureStore({
@@ -40,7 +41,8 @@ const store = configureStore({
     [milestoneApi.reducerPath]:milestoneApi.reducer,
     [inspectionApi.reducerPath]:inspectionApi.reducer,
     [masterDesignApi.reducerPath]:masterDesignApi.reducer,
-    [milestonePaymentApi.reducerPath]:milestonePaymentApi.reducer
+    [milestonePaymentApi.reducerPath]:milestonePaymentApi.reducer,
+    [permissionsApi.reducerPath]:permissionsApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -63,6 +65,7 @@ const store = configureStore({
   .concat(inspectionApi.middleware)
   .concat(masterDesignApi.middleware)
   .concat(milestonePaymentApi.middleware)
+  .concat(permissionsApi.middleware)
 });
 
 export default store;
