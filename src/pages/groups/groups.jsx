@@ -21,6 +21,7 @@ import { RiEditFill } from 'react-icons/ri';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useGetAllGroupsQuery, useDeleteGroupMutation } from '../../api/permission/permissionApi';
 import CreateGroupModal from '../../components/pages/groups/CreateGroupModal';
+import EditGroupModal from '../../components/pages/groups/editGroupModal';
 
 function UserGroupSection() {
   const { data: groupData, isLoading, error, refetch } = useGetAllGroupsQuery();
@@ -28,20 +29,21 @@ function UserGroupSection() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [createModal, setCreateModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null); 
   const [openConfirm, setOpenConfirm] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState(null);
 
   if (isLoading) return <CircularProgress />;
   if (error) return <p>Error loading groups.</p>;
 
-  // Transform API data
   const rows = groupData?.data?.map((group, index) => ({
     id: group.id,
     name: group.name,
     sr: index + 1,
+    permission_list: group.permission_list,
   })) || [];
 
-  // Pagination handlers
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -50,8 +52,6 @@ function UserGroupSection() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-
-  // Handle Delete Confirmation
   const handleOpenConfirm = (groupId) => {
     setSelectedGroupId(groupId);
     setOpenConfirm(true);
@@ -66,7 +66,7 @@ function UserGroupSection() {
     if (selectedGroupId) {
       try {
         await deleteGroup(selectedGroupId);
-        refetch(); // Refresh group list after deletion
+        refetch(); 
       } catch (error) {
         console.error('Error deleting group:', error);
       }
@@ -74,7 +74,11 @@ function UserGroupSection() {
     handleCloseConfirm();
   };
 
-  // Get current page rows
+  const handleEditClick = (group) => {
+    setSelectedGroup({ ...group, permission_list: group.permission_list });
+    setEditModal(true);
+  };
+
   const currentRows = rows.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
@@ -117,6 +121,7 @@ function UserGroupSection() {
                   <RiEditFill
                     style={{ cursor: 'pointer', color: '#61D435', fontSize: '23px' }}
                     title="Edit"
+                    onClick={() => handleEditClick(row)}
                   />
                   <DeleteIcon
                     style={{ cursor: 'pointer', color: 'red', fontSize: '23px' }}
@@ -140,7 +145,7 @@ function UserGroupSection() {
         />
       </TableContainer>
       <CreateGroupModal open={createModal} setOpen={setCreateModal} />
-      {/* Delete Confirmation Dialog */}
+      <EditGroupModal open={editModal} setOpen={setEditModal} groupData={selectedGroup} />
       <Dialog open={openConfirm} onClose={handleCloseConfirm}>
         <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>

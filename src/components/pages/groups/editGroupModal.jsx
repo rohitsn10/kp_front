@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Button,
   Dialog,
@@ -15,62 +15,52 @@ import {
   TextField,
   FormControlLabel,
   Box,
-} from "@mui/material";
-import {
-  useCreateGroupWithPermissionsMutation,
-  useGetAllPermissionsQuery,
-} from "../../../api/permission/permissionApi";
-import { toast } from "react-toastify";
+} from '@mui/material';
+import { toast } from 'react-toastify';
+import { useUpdateGroupWithPermissionsMutation, useGetAllPermissionsQuery } from '../../../api/permission/permissionApi';
 
-function CreateGroupModal({ open, setOpen }) {
-  const { data, isLoading } = useGetAllPermissionsQuery();
-  const [createGroupWithPermissions, { isLoading: isSubmitting }] =
-    useCreateGroupWithPermissionsMutation();
+function EditGroupModal({ open, setOpen, groupData }) {
+  const { data: permissionsData, isLoading } = useGetAllPermissionsQuery();
+  const [updateGroupPermissions, { isLoading: isSubmitting }] = useUpdateGroupWithPermissionsMutation();
   const [selectedPermissions, setSelectedPermissions] = useState([]);
-  const [groupName, setGroupName] = useState("");
-
+  const [groupName, setGroupName] = useState('');
+  useEffect(() => {
+    if (groupData) {
+      setGroupName(groupData.name);
+      const permissions = groupData.permission_list.flatMap((perm) =>
+        Object.values(perm).flatMap((action) => Object.values(action))
+      );
+      setSelectedPermissions(permissions);
+    }
+  }, [groupData]);
   const handleClose = () => {
     setOpen(false);
   };
-
   const handleCheckboxChange = (id) => {
     setSelectedPermissions((prev) =>
       prev.includes(id) ? prev.filter((permId) => permId !== id) : [...prev, id]
     );
   };
-
   const handleSelectAll = () => {
-    if (selectedPermissions.length === data?.data.length * 4) {
+    if (selectedPermissions.length === permissionsData?.data.length * 4) {
       setSelectedPermissions([]);
     } else {
-      const allPermissions = data?.data.flatMap((item) => [
-        item.add,
-        item.change,
-        item.delete,
-        item.view,
-      ]);
+      const allPermissions = permissionsData?.data.flatMap(item => [item.add, item.change, item.delete, item.view]);
       setSelectedPermissions(allPermissions);
     }
   };
-
   const handleSubmit = async () => {
     if (!groupName || selectedPermissions.length === 0) {
       toast.error("Please enter group name & add at least one Permission");
       return;
     }
-
     try {
-      await createGroupWithPermissions({
-        name: groupName,
-        permissions: selectedPermissions,
-      }).unwrap();
-      toast.success("Group created successfully!");
-      setGroupName("");
-      setSelectedPermissions([]);
+      await updateGroupPermissions({ id: groupData.id, name: groupName, permissions: selectedPermissions }).unwrap();
+      toast.success('Group updated successfully!');
       setOpen(false);
     } catch (error) {
-      console.error("Error creating group:", error);
-      toast.error("Failed to create group. Please try again.");
+      console.error('Error updating group:', error);
+      toast.error('Failed to update group. Please try again.');
     }
   };
 
@@ -80,12 +70,10 @@ function CreateGroupModal({ open, setOpen }) {
       onClose={handleClose}
       fullWidth
       maxWidth="md"
-      PaperProps={{ style: { width: "90%" } }}
+      PaperProps={{ style: { width: '90%' } }}
     >
       <DialogContent>
-        <h2 className="text-[#29346B] text-2xl font-semibold mb-5">
-          Add User Group
-        </h2>
+        <h2 className="text-[#29346B] text-2xl font-semibold mb-5">Edit User Group</h2>
         <Box display="flex" alignItems="center" gap={2} marginBottom="20px">
           <TextField
             label="Group Name"
@@ -97,12 +85,9 @@ function CreateGroupModal({ open, setOpen }) {
           <FormControlLabel
             control={
               <Checkbox
-                checked={selectedPermissions.length === data?.data.length * 4}
+                checked={selectedPermissions.length === permissionsData?.data.length * 4}
                 onChange={handleSelectAll}
-                indeterminate={
-                  selectedPermissions.length > 0 &&
-                  selectedPermissions.length < data?.data.length * 4
-                }
+                indeterminate={selectedPermissions.length > 0 && selectedPermissions.length < permissionsData?.data.length * 4}
               />
             }
             label="Select All"
@@ -123,7 +108,7 @@ function CreateGroupModal({ open, setOpen }) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data?.data.map((item) => (
+                {permissionsData?.data.map((item) => (
                   <TableRow key={item.name}>
                     <TableCell>{item.name}</TableCell>
                     <TableCell>
@@ -157,37 +142,36 @@ function CreateGroupModal({ open, setOpen }) {
           </TableContainer>
         )}
       </DialogContent>
-
-      <DialogActions sx={{ justifyContent: "center", padding: "20px" }}>
+      <DialogActions sx={{ justifyContent: 'center', padding: '20px' }}>
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting}
           sx={{
-            backgroundColor: "#F6812D",
-            color: "#FFFFFF",
-            fontSize: "16px",
-            padding: "6px 36px",
-            width: "200px",
-            borderRadius: "8px",
-            textTransform: "none",
-            fontWeight: "bold",
-            "&:hover": { backgroundColor: "#E66A1F" },
+            backgroundColor: '#F6812D',
+            color: '#FFFFFF',
+            fontSize: '16px',
+            padding: '6px 36px',
+            width: '200px',
+            borderRadius: '8px',
+            textTransform: 'none',
+            fontWeight: 'bold',
+            '&:hover': { backgroundColor: '#E66A1F' },
           }}
         >
-          {isSubmitting ? "Submitting..." : "Submit"}
+          {isSubmitting ? 'Submitting...' : 'Update'}
         </Button>
         <Button
           onClick={handleClose}
           sx={{
-            backgroundColor: "#F6812D",
-            color: "#FFFFFF",
-            fontSize: "16px",
-            padding: "6px 36px",
-            width: "200px",
-            borderRadius: "8px",
-            textTransform: "none",
-            fontWeight: "bold",
-            "&:hover": { backgroundColor: "#E66A1F" },
+            backgroundColor: '#F6812D',
+            color: '#FFFFFF',
+            fontSize: '16px',
+            padding: '6px 36px',
+            width: '200px',
+            borderRadius: '8px',
+            textTransform: 'none',
+            fontWeight: 'bold',
+            '&:hover': { backgroundColor: '#E66A1F' },
           }}
         >
           Close
@@ -196,5 +180,4 @@ function CreateGroupModal({ open, setOpen }) {
     </Dialog>
   );
 }
-
-export default CreateGroupModal;
+export default EditGroupModal;

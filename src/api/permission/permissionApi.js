@@ -32,6 +32,16 @@ export const permissionsApi = createApi({
         body: groupData,
       }),
     }),
+    updateGroupWithPermissions: builder.mutation({
+      query: ({ id, groupData }) => ({
+        url: `user_profile/group_update_with_permissions/${id}`,
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: groupData,
+      }),
+    }),
     deleteGroup: builder.mutation({
       query: (groupId) => ({
         url: `user_profile/group_delete/${groupId}`,
@@ -41,6 +51,7 @@ export const permissionsApi = createApi({
         },
       }),
     }),
+
   }),
 });
 
@@ -49,5 +60,6 @@ export const {
   useGetAllPermissionsQuery,
   useGetAllGroupsQuery,
   useCreateGroupWithPermissionsMutation,
+  useUpdateGroupWithPermissionsMutation,
   useDeleteGroupMutation,
 } = permissionsApi;
