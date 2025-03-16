@@ -38,6 +38,7 @@ import MasterDesignListing from "./pages/projects/project-mdl/index.jsx";
 import ProjectMileStonePayment from "./pages/projects/project-milestone-payment/index.jsx";
 import ProjectViewMilestone from "./pages/projects/projects-view-milestone-details/index.jsx";
 import UserGroupSection from "./pages/groups/groups.jsx";
+import DesignDocumentsPage from "./pages/design-documents/index.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
@@ -373,6 +374,14 @@ function App() {
           element={
             <ProtectedRoute>
               <MainLayout><SiteVisitTable /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/design-documents"
+          element={
+            <ProtectedRoute>
+              <MainLayout><DesignDocumentsPage /></MainLayout>
             </ProtectedRoute>
           }
         />

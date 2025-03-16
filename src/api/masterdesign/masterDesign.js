@@ -52,6 +52,13 @@ export const masterDesignApi = createApi({
         body: formData,
       }),
     }),
+    uploadExcelDrawingAndDesign: builder.mutation({
+      query: (formData) => ({
+        url: "project_module/upload_excel_drawing_and_design",
+        method: "POST",
+        body: formData,
+      }),
+    }),
   }),
 });
 
@@ -61,5 +68,6 @@ export const {
   useUpdateDrawingMutation,
   useGetDrawingsByProjectIdQuery,
   useGetDrawingByIdQuery,
-  useApprovalOrCommentOnDrawingMutation
+  useApprovalOrCommentOnDrawingMutation,
+  useUploadExcelDrawingAndDesignMutation
 } = masterDesignApi;

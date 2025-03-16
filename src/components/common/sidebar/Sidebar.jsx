@@ -5,6 +5,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import { LuMapPinPlusInside } from "react-icons/lu";
 import { TbMapPlus } from "react-icons/tb";
+import DesignServicesIcon from '@mui/icons-material/DesignServices';
 function Sidebar() {
   const location = useLocation();
   const currPath = location.pathname;
@@ -81,6 +82,12 @@ function Sidebar() {
       </svg>
       ,
       links:"/tracking"
+    },
+    {
+      name:'Design & Documents',
+      icons:<DesignServicesIcon/>
+      ,
+      links:"/design-documents"
     },
     {
       name:'Reports',

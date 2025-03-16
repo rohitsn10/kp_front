@@ -20,6 +20,7 @@ import { useGetMainProjectsQuery } from '../../api/users/projectApi';
 import { useNavigate } from 'react-router-dom';
 import ProjectWpo from '../../components/pages/projects/ProjectWPO/ProjectWpo';
 import ProjectWpoViewModal from '../../components/pages/projects/ProjectWPO/ProjectWpoView';
+import ProjectDrawingUploadDialog from '../design-documents/DesignUploadModal';
 
 const dummyProjects = [
   { id: 1, name: "Project Alpha", activity: "Design", deadline: "2025-03-01", estimatedCompletion: "2 months", contactPerson: "John Doe", status: "Ongoing" },
@@ -37,6 +38,8 @@ const ProjectListingTable = () => {
   const [activeProject,setActiveProject]=useState();
   const {data:projectData,isLoading:ProjectLoading,error:ProjectError,refetch} = useGetMainProjectsQuery()
   const [openWpoViewModal,setOpenWpoView]=useState(false);
+  const [openDrawingModal, setOpenDrawingModal] = useState(false);
+ 
   // console.log(projectData?.data)
 const navigate = useNavigate();
   const handleCloseCreateModal = ()=>{
@@ -54,6 +57,7 @@ const navigate = useNavigate();
     setPage(newPage);
   };
 
+
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -63,6 +67,10 @@ const navigate = useNavigate();
     setActiveProject(null)
   }
 
+  const handleCloseDrawingModal = () => {
+    setOpenDrawingModal(false);
+    setActiveProject(null);
+  };
   
   const currentRows = projectData?.data?.slice(
     page * rowsPerPage,
@@ -274,7 +282,9 @@ const navigate = useNavigate();
           style={{ backgroundColor: '#FF8C00', color: 'white',minWidth: '110px' }}
           size="small"
           onClick={() => {
-            navigate(`/project/manage-drawing-design/${project?.id}`)
+            // navigate(`/project/manage-drawing-design/${project?.id}`)
+            setOpenDrawingModal(true);
+            setActiveProject(project?.id);
           }}
         >
          MDL
@@ -310,6 +320,11 @@ const navigate = useNavigate();
       projectId={activeProject}
       handleClose={handleCloseWpoViewModal}
         refetch={refetch}
+      />
+      <ProjectDrawingUploadDialog 
+        open={openDrawingModal} 
+        handleDrawingClose={handleCloseDrawingModal} 
+        projectId={activeProject}
       />
     </div>
   );
