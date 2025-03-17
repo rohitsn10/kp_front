@@ -81,13 +81,13 @@ const navigate = useNavigate();
     <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
       <div className="grid grid-cols-3 items-center p-4 mb-5">
       <TextField
-  value={projectFilter}
-  placeholder="Search"
-  onChange={(e) => setProjectFilter(e.target.value?.toLowerCase())}  // Ensure lowercase search
-  variant="outlined"
-  size="small"
-  style={{ backgroundColor: '#f9f9f9', borderRadius: '8px', maxWidth: '200px' }}
-/>
+        value={projectFilter}
+        placeholder="Search"
+        onChange={(e) => setProjectFilter(e.target.value?.toLowerCase())}  // Ensure lowercase search
+        variant="outlined"
+        size="small"
+        style={{ backgroundColor: '#f9f9f9', borderRadius: '8px', maxWidth: '200px' }}
+      />
 
         <h2 className="text-3xl text-[#29346B] font-semibold text-center">Project Listing</h2>
         <div className="flex justify-end">

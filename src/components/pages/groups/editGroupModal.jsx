@@ -17,13 +17,16 @@ import {
   Box,
 } from '@mui/material';
 import { toast } from 'react-toastify';
-import { useUpdateGroupWithPermissionsMutation, useGetAllPermissionsQuery } from '../../../api/permission/permissionApi';
+import { useUpdateGroupWithPermissionsMutation, useGetAllPermissionsQuery, useGetAllGroupsQuery } from '../../../api/permission/permissionApi';
 
 function EditGroupModal({ open, setOpen, groupData }) {
+  const { refetch } = useGetAllGroupsQuery();
+
   const { data: permissionsData, isLoading } = useGetAllPermissionsQuery();
   const [updateGroupPermissions, { isLoading: isSubmitting }] = useUpdateGroupWithPermissionsMutation();
   const [selectedPermissions, setSelectedPermissions] = useState([]);
   const [groupName, setGroupName] = useState('');
+  // console.log(groupName)
   useEffect(() => {
     if (groupData) {
       setGroupName(groupData.name);
@@ -49,20 +52,44 @@ function EditGroupModal({ open, setOpen, groupData }) {
       setSelectedPermissions(allPermissions);
     }
   };
+  // const handleSubmit = async () => {
+  //   if (!groupName || selectedPermissions.length === 0) {
+  //     toast.error("Please enter group name & add at least one Permission");
+  //     return;
+  //   }
+  //   try {
+  //     await updateGroupPermissions({ id: groupData.id, name: groupName, permissions: selectedPermissions }).unwrap();
+  //     toast.success('Group updated successfully!');
+  //     setOpen(false);
+  //   } catch (error) {
+  //     console.error('Error updating group:', error);
+  //     toast.error('Failed to update group. Please try again.');
+  //   }
+  // };
   const handleSubmit = async () => {
     if (!groupName || selectedPermissions.length === 0) {
-      toast.error("Please enter group name & add at least one Permission");
+      toast.error("Please enter group name & add at least one permission");
       return;
     }
+  
     try {
-      await updateGroupPermissions({ id: groupData.id, name: groupName, permissions: selectedPermissions }).unwrap();
-      toast.success('Group updated successfully!');
+      await updateGroupPermissions({
+        id: groupData.id,
+        groupData: {
+          name: groupName,
+          permissions: selectedPermissions.map((perm) => (typeof perm === 'object' ? perm.id : perm)), // Ensure it's only IDs
+        },
+      }).unwrap();
+      
+      toast.success("Group updated successfully!");
+      refetch();
       setOpen(false);
     } catch (error) {
-      console.error('Error updating group:', error);
-      toast.error('Failed to update group. Please try again.');
+      console.error("Error updating group:", error);
+      toast.error("Failed to update group. Please try again.");
     }
   };
+  
 
   return (
     <Dialog

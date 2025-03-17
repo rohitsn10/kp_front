@@ -30,6 +30,7 @@ import { toast } from 'react-toastify';
 import { Camera } from '@mui/icons-material';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { useNavigate } from 'react-router-dom';
+import { useGetAllGroupsQuery } from '../../../../api/permission/permissionApi';
 
 function UserTable() {
   // User Data fetch
@@ -66,12 +67,14 @@ function UserTable() {
     const [profileImage, setProfileImage] = useState(null);
     const [previewImage, setPreviewImage] = useState(null);
     const [selectedUserId, setSelectedUserId] = useState(null);
-
+    const [group, setGroup] = useState("");
     const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
     const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
     const navigate = useNavigate();
 
     const { data:departmentData, error:DepartmentError, isLoading:DepartmentLoading } = useFetchDepartmentQuery();
+      const { data: groupData, isLoading:GroupLoading, error:GroupError } = useGetAllGroupsQuery();
+    
     // console.log("Department data",departmentData)
     const [updateUserStatus] = useUpdateUserStatusMutation();
     
@@ -176,6 +179,7 @@ function UserTable() {
         if (profileImage) {
           formData.append('profile_image', profileImage);
         }
+        formData.append('group_id',group)
         // else{
         //   toast.error('Please select a profile image.');
         //   return;
@@ -379,19 +383,6 @@ function UserTable() {
                         setSelectedUserId(row?.id)
                       }} 
                     />
-                    {/* <h2>Edit</h2> */}
-                    {/* <AiOutlineStop
-                      style={{ 
-                        cursor: 'pointer', 
-                        color: 'red', 
-                        fontSize: '23px', 
-                        textAlign: 'center' 
-                      }}
-                      title="Inactive"
-                      onClick={()=>{
-                        handleUpdateStatus(row.id)
-                      }}
-                    /> */}
                   </TableCell>
                   <TableCell align="center" style={{ fontSize: '16px', color: '#1D2652', maxWidth: '200px', overflowX: 'auto' }}>
                   <Switch
@@ -470,98 +461,6 @@ function UserTable() {
                 className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 mb-2 focus:outline-none"
               />
             </div>
-            {/* {isEditMode && (
-              <div className='bg-white'>
-                <div className='bg-yellow-300 w-[100px] h-[100px] rounded-full'>
-                  <input type="file" className='border border-red-500' onChange={(e) => setProfileImage(e.target.files[0])}>
-                  </input>
-                </div>
-              </div>
-              )
-            } */}
-            {/* {isEditMode && (
-  <div className="flex flex-col items-center space-y-2">
-    <label htmlFor="file-upload" className="cursor-pointer">
-      <div className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-        <CameraAltIcon className="w-16 h-16 text-white" />
-      </div>
-    </label>
-    <input
-      id="file-upload"
-      type="file"
-      accept="image/*"
-      className="hidden"
-      onChange={(e) => setProfileImage(e.target.files[0])}
-    />
-    <p className="text-blue-900 font-medium text-sm">Upload Photo</p>
-  </div>
-)} */}
-{/* {isEditMode && (
-  <div className="flex flex-col items-center space-y-2">
-    <label htmlFor="file-upload" className="cursor-pointer">
-      {profileImage &&  profileImage !== "http://127.0.0.1:8000/media/profile_image/default_profile.jpeg" ? (
-        <img
-          src={profileImage}
-          alt="Profile"
-          className="w-24 h-24 rounded-full object-cover shadow-lg"
-        />
-      ) : (
-        <div className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-          <CameraAltIcon className="w-16 h-16 text-white" />
-        </div>
-      )}
-    </label>
-    <input
-      id="file-upload"
-      type="file"
-      accept="image/*"
-      className="hidden"
-      // onChange={(e) => setProfileImage(URL.createObjectURL(e.target.files[0]))}
-      onChange={(e) => {
-        const file = e.target.files[0];
-        // setPreviewImage(URL.createObjectURL(file));
-        // setProfileImage(e.target.files[0])}
-        if (file) {
-            setProfileImage(file); // Store the actual file for upload
-            setPreviewImage(URL.createObjectURL(file)); // Store the preview URL for display
-          }
-      }}
-    />
-    <p className="text-blue-900 font-medium text-sm">Upload Photo</p>
-  </div>
-)} */}
-{/* {isEditMode && (
-  <div className="flex flex-col items-center space-y-2">
-    <label htmlFor="file-upload" className="cursor-pointer">
-    {}
-      {previewImage ? (
-        <img
-          src={previewImage}
-          alt="Profile"
-          className="w-24 h-24 rounded-full object-cover shadow-lg"
-        />
-      ) : (
-        <div className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-          <CameraAltIcon className="w-16 h-16 text-white" />
-        </div>
-      )}
-    </label>
-    <input
-      id="file-upload"
-      type="file"
-      accept="image/*"
-      className="hidden"
-      onChange={(e) => {
-        const file = e.target.files[0];
-        if (file) {
-          setProfileImage(file); // Store the actual file for upload
-          setPreviewImage(URL.createObjectURL(file)); // Store the preview URL for display
-        }
-      }}
-    />
-    <p className="text-blue-900 font-medium text-sm">Upload Photo</p>
-  </div>
-)} */}
 
 {isEditMode && (
   <div className="flex flex-col items-center space-y-2">
@@ -682,6 +581,42 @@ function UserTable() {
             ))}
           </Select>
         </FormControl>
+      </div>
+    )}
+    {isEditMode &&(
+      <div className='col-span-2 md:col-span-1'>
+          {/* Group Dropdown */}
+    <FormControl fullWidth className="mt-4">
+      <label htmlFor="group" className="block text-lg font-medium text-gray-700 mb-2">
+        Group
+      </label>
+      {GroupLoading && <p>Loading groups...</p>}
+      {GroupError && <p className="text-red-500">Failed to load groups</p>}
+      {!GroupLoading && !GroupError && (
+        <Select
+          id="group"
+          value={group}
+          onChange={(event) => setGroup(event.target.value)}
+          className="border rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 focus:outline-none"
+          displayEmpty
+          sx={{
+            height: '50px',
+            '& .MuiOutlinedInput-notchedOutline': {
+              border: 'none'
+            }
+          }}
+        >
+          <MenuItem value="" disabled>
+            <em>Select Group</em>
+          </MenuItem>
+          {groupData?.data?.map((grp) => (
+            <MenuItem key={grp.id} value={grp.id}>
+              {grp.name}
+            </MenuItem>
+          ))}
+        </Select>
+      )}
+    </FormControl>
       </div>
     )}
 
