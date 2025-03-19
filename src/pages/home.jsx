@@ -13,7 +13,7 @@ function Home() {
   // const {user,token,permissions} = useContext(AuthContext);
   // console.log("Users",user,"Token",token,"Permissions",permissions)
   return (
-    <div className="grid gap-8 grid-cols-12 px-4 border-2">
+    <div className="grid gap-8 grid-cols-12 px-4">
       <div className='col-span-12'>
         <Statcards/>
       </div>

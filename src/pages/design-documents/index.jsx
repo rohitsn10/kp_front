@@ -15,6 +15,7 @@ import { useGetMainProjectsQuery } from "../../api/users/projectApi";
 import { useGetDrawingsByProjectIdQuery } from "../../api/masterdesign/masterDesign";
 import FormatDateAndTime from "../../utils/dateUtils";
 import DrawingDocumentUploadDialog from "./DocumentUploadModal";
+import DrawingDocumentViewModal from "./DesignViewModal";
 
 function DesignDocumentsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState("");
@@ -24,15 +25,14 @@ function DesignDocumentsPage() {
   const [sortOption, setSortOption] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filteredDrawings, setFilteredDrawings] = useState([]);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
   
   // Fetch projects
   const { data: projects, error: projectsError, isLoading: isLoadingProjects } = useGetMainProjectsQuery();
-  
   // Fetch drawings based on selected project ID
   const { data: drawings, error: drawingsError, isLoading: isLoadingDrawings } = useGetDrawingsByProjectIdQuery(selectedProjectId, {
     skip: !selectedProjectId, // Prevents fetching until a project is selected
   });
-
   // Apply filters, search, and sort whenever relevant state changes
   useEffect(() => {
     if (!drawings?.data) {
@@ -105,8 +105,18 @@ function DesignDocumentsPage() {
     setUploadModalOpen(false);
   };
 
-  const handleView = (attachments) => {
-    console.log("View attachments:", attachments);
+  const handleOpenViewModal = () => {
+    setViewModalOpen(true);
+  };
+
+  const handleCloseViewModal = () => {
+    setViewModalOpen(false);
+  };
+
+  const handleView = (drawing) => {
+    // console.log("View attachments:", attachments);
+    setSelectedDrawing(drawing);
+    handleOpenViewModal();
     // Implement view functionality here
   };
 
@@ -276,7 +286,7 @@ function DesignDocumentsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredDrawings.map((drawing, index) => (
+                  {filteredDrawings?.map((drawing, index) => (
                     <tr key={drawing.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                       <td className="py-2 px-3 border">{index + 1}</td>
                       <td className="py-2 px-3 border">{drawing.drawing_number}</td>
@@ -303,7 +313,7 @@ function DesignDocumentsPage() {
                           <Button
                             variant="contained"
                             size="small"
-                            onClick={() => handleView(drawing.drawing_and_design_attachments)}
+                            onClick={() => handleView(drawing)}
                             sx={{ 
                               bgcolor: "#29346B", 
                               "&:hover": { bgcolor: "#1e2756" } 
@@ -357,6 +367,11 @@ function DesignDocumentsPage() {
       <DrawingDocumentUploadDialog
         open={uploadModalOpen}
         handleClose={handleUploadClose}
+        drawingDetails={selectedDrawing}
+      />
+        <DrawingDocumentViewModal
+        open={viewModalOpen}
+        handleClose={handleCloseViewModal}
         drawingDetails={selectedDrawing}
       />
     </div>

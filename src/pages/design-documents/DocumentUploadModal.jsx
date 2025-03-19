@@ -10,13 +10,19 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
-  Divider
+  Divider,
+  IconButton,
+  Tooltip,
+  Paper,
+  Modal
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DescriptionIcon from '@mui/icons-material/Description';
 import DeleteIcon from '@mui/icons-material/Delete';
-// import { useUploadDrawingDocumentsMutation } from '../../api/masterdesign/masterDesign';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import CloseIcon from '@mui/icons-material/Close';
+import { useUpdateDrawingMutation } from '../../api/masterdesign/masterDesign';
 
 // Styled component for the file input
 const VisuallyHiddenInput = styled('input')({
@@ -31,6 +37,22 @@ const VisuallyHiddenInput = styled('input')({
   width: 1,
 });
 
+// PDF Preview modal style
+const previewModalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '90%',
+  height: '85%',
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 0,
+  borderRadius: 1,
+  display: 'flex',
+  flexDirection: 'column',
+};
+
 const DrawingDocumentUploadDialog = ({ open, handleClose, drawingDetails }) => {
   const [mainDocument, setMainDocument] = useState(null);
   const [supportingDocuments, setSupportingDocuments] = useState([]);
@@ -38,9 +60,13 @@ const DrawingDocumentUploadDialog = ({ open, handleClose, drawingDetails }) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [showSuccessSnackbar, setShowSuccessSnackbar] = useState(false);
   
-  // Replace with actual mutation when backend is ready
-//   const [uploadDocuments, { isLoading }] = useUploadDrawingDocumentsMutation || [() => {}, { isLoading: false }];
-const isLoading = false;
+  // States for PDF preview
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewFileName, setPreviewFileName] = useState('');
+  
+  // Use the updateDrawing mutation hook
+  const [updateDrawing, { isLoading }] = useUpdateDrawingMutation();
 
   const validatePdfFile = (file) => {
     if (file.type !== 'application/pdf') {
@@ -100,36 +126,43 @@ const isLoading = false;
       return;
     }
 
-    // This is just a placeholder for when the backend is ready
     try {
+      // Create FormData according to the API structure
       const formData = new FormData();
-      formData.append('main_document', mainDocument);
-      formData.append('drawing_id', drawingDetails.id);
       
-      // Append all supporting documents
-      supportingDocuments.forEach((doc, index) => {
-        formData.append(`supporting_document_${index}`, doc);
+      // Add drawing ID from drawingDetails
+      formData.append('project_id', drawingDetails.project || "");
+      
+      // Append main document under the correct field name
+      if (mainDocument) {
+        formData.append('drawing_and_design_attachments', mainDocument);
+      }
+      
+      // Append all supporting documents under the correct field name
+      supportingDocuments.forEach((doc) => {
+        formData.append('other_drawing_and_design_attachments', doc);
       });
       
-      // Uncomment when backend is ready
-      /* 
-      const response = await uploadDocuments(formData).unwrap();
+      // Keep existing values for other fields
+      formData.append('remove_drawing_and_design_attachments_id', "");
+      formData.append('remove_other_drawing_and_design_attachments_id', "");
+      formData.append('assign_to_user', drawingDetails.assign_to_user || "");
+      formData.append('discipline', drawingDetails.discipline || "");
+      formData.append('block', drawingDetails.block || "");
+      formData.append('drawing_number', drawingDetails.drawing_number || "");
+      formData.append('auto_drawing_number', "");
+      formData.append('name_of_drawing', drawingDetails.name_of_drawing || "");
+      formData.append('drawing_category', drawingDetails.drawing_category || "");
+      formData.append('type_of_approval', drawingDetails.type_of_approval || "");
+      formData.append('approval_status', drawingDetails.approval_status || "submitted");
       
-      if (response.status === true) {
-        setSuccessMessage(response.message || 'Documents uploaded successfully!');
-        setShowSuccessSnackbar(true);
-        
-        // Close dialog after small delay
-        setTimeout(() => {
-          handleDialogClose();
-        }, 1500);
-      } else {
-        setError(response.message || 'Failed to upload documents. Please try again.');
-      }
-      */
-
-      // Temporary success message for demonstration
-      setSuccessMessage('Documents uploaded successfully! (Backend implementation pending)');
+      // Call the updateDrawing mutation with drawingId and formData
+      const response = await updateDrawing({ 
+        drawingId: drawingDetails.id, 
+        formData 
+      }).unwrap();
+      
+      setSuccessMessage('Documents uploaded successfully!');
       setShowSuccessSnackbar(true);
       
       // Close dialog after small delay
@@ -153,6 +186,24 @@ const isLoading = false;
 
   const handleSnackbarClose = () => {
     setShowSuccessSnackbar(false);
+  };
+
+  // Handle preview document
+  const handlePreviewDocument = (file) => {
+    const fileUrl = URL.createObjectURL(file);
+    setPreviewUrl(fileUrl);
+    setPreviewFileName(file.name);
+    setPreviewOpen(true);
+  };
+
+  // Close preview modal
+  const handlePreviewClose = () => {
+    setPreviewOpen(false);
+    // Revoke the object URL to free memory
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
   };
 
   return (
@@ -223,20 +274,31 @@ const isLoading = false;
                   alignItems: 'center',
                   justifyContent: 'space-between' 
                 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, mr: 2 }}>
                     <DescriptionIcon sx={{ mr: 1, color: '#29346B' }} />
                     <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
                       {mainDocument.name}
                     </Typography>
                   </Box>
-                  <Button 
-                    size="small" 
-                    startIcon={<DeleteIcon />} 
-                    color="error"
-                    onClick={handleRemoveMainDocument}
-                  >
-                    Remove
-                  </Button>
+                  <Box sx={{ display: 'flex', minWidth: 'fit-content' }}>
+                    <Tooltip title="Preview Document">
+                      <IconButton 
+                        color="primary" 
+                        onClick={() => handlePreviewDocument(mainDocument)}
+                        sx={{ mr: 1 }}
+                      >
+                        <VisibilityIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Remove Document">
+                      <IconButton 
+                        color="error"
+                        onClick={handleRemoveMainDocument}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </Box>
               )}
             </Box>
@@ -296,20 +358,31 @@ const isLoading = false;
                         justifyContent: 'space-between'
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, mr: 2 }}>
                         <DescriptionIcon sx={{ mr: 1, color: '#29346B' }} />
                         <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
                           {doc.name}
                         </Typography>
                       </Box>
-                      <Button 
-                        size="small" 
-                        startIcon={<DeleteIcon />} 
-                        color="error"
-                        onClick={() => handleRemoveSupportingDocument(index)}
-                      >
-                        Remove
-                      </Button>
+                      <Box sx={{ display: 'flex', minWidth: 'fit-content' }}>
+                        <Tooltip title="Preview Document">
+                          <IconButton 
+                            color="primary" 
+                            onClick={() => handlePreviewDocument(doc)}
+                            sx={{ mr: 1 }}
+                          >
+                            <VisibilityIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Remove Document">
+                          <IconButton 
+                            color="error"
+                            onClick={() => handleRemoveSupportingDocument(index)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                     </Box>
                   ))}
                 </Box>
@@ -337,6 +410,46 @@ const isLoading = false;
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* PDF Preview Modal */}
+      <Modal
+        open={previewOpen}
+        onClose={handlePreviewClose}
+        aria-labelledby="pdf-preview-modal"
+        aria-describedby="modal-to-preview-pdf-documents"
+      >
+        <Paper sx={previewModalStyle}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            p: 2,
+            bgcolor: '#29346B',
+            color: 'white',
+            borderRadius: '4px 4px 0 0'
+          }}>
+            <Typography variant="h6" component="h2">
+              {previewFileName}
+            </Typography>
+            <IconButton
+              onClick={handlePreviewClose}
+              sx={{ color: 'white' }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          
+          <Box sx={{ flexGrow: 1, height: 'calc(100% - 64px)', overflow: 'hidden' }}>
+            <iframe
+              src={`${previewUrl}#toolbar=0`}
+              title="PDF Preview"
+              width="100%"
+              height="100%"
+              style={{ border: 'none' }}
+            />
+          </Box>
+        </Paper>
+      </Modal>
       
       {/* Success Snackbar */}
       <Snackbar
