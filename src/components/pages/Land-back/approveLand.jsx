@@ -6,7 +6,7 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
   const [files, setFiles] = useState({});
   const [landBankStatus, setLandBankStatus] = useState("pending"); // Default to pending
   const [approveRejectLandBankStatus, { isLoading, error }] = useApproveRejectLandBankStatusMutation();
-
+  // console.log(selectedLand)
   useEffect(() => {
     if (selectedLand) {
       // Extract only file-related keys dynamically
@@ -18,6 +18,7 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
       });
 
       setFiles(fileData);
+      // console.log("Land Bank Files",files)
       // Set initial land bank status if available
       if (selectedLand.land_bank_status) {
         setLandBankStatus(selectedLand.land_bank_status);

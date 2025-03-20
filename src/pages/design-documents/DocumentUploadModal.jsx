@@ -147,14 +147,14 @@ const DrawingDocumentUploadDialog = ({ open, handleClose, drawingDetails }) => {
       formData.append('remove_drawing_and_design_attachments_id', "");
       formData.append('remove_other_drawing_and_design_attachments_id', "");
       formData.append('assign_to_user', drawingDetails.assign_to_user || "");
-      formData.append('discipline', drawingDetails.discipline || "");
-      formData.append('block', drawingDetails.block || "");
-      formData.append('drawing_number', drawingDetails.drawing_number || "");
-      formData.append('auto_drawing_number', "");
-      formData.append('name_of_drawing', drawingDetails.name_of_drawing || "");
-      formData.append('drawing_category', drawingDetails.drawing_category || "");
-      formData.append('type_of_approval', drawingDetails.type_of_approval || "");
-      formData.append('approval_status', drawingDetails.approval_status || "submitted");
+      // formData.append('discipline', drawingDetails.discipline || "");
+      // formData.append('block', drawingDetails.block || "");
+      // formData.append('drawing_number', drawingDetails.drawing_number || "");
+      // formData.append('auto_drawing_number', "");
+      // formData.append('name_of_drawing', drawingDetails.name_of_drawing || "");
+      // formData.append('drawing_category', drawingDetails.drawing_category || "");
+      // formData.append('type_of_approval', drawingDetails.type_of_approval || "");
+      // formData.append('approval_status', drawingDetails.approval_status || "submitted");
       
       // Call the updateDrawing mutation with drawingId and formData
       const response = await updateDrawing({ 

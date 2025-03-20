@@ -23,7 +23,7 @@ function EditLandApproveDoc() {
     const [selectedCategory, setSelectedCategory] = useState(landData?.land_category || null);
     const navigate = useNavigate();
     const { data: landBankApproveData, isLoading, isError } = useGetLandBankApproveDataQuery(id);
-    console.log(landBankApproveData)
+    // console.log("EDIDEIDT",landBankApproveData)
     // State for form data including existing files
     const [formData, setFormData] = useState({
         dilr_attachment_file: [],

@@ -148,6 +148,7 @@ function LandListing() {
               <TableCell align="center">Action</TableCell>
               <TableCell align="center">Attachments</TableCell>
               <TableCell align="center">Edit Attachments</TableCell>
+              <TableCell align="center">View Attachments</TableCell>
               {/* <TableCell align="center">SFA</TableCell> */}
             </TableRow>
           </TableHead>
@@ -234,6 +235,23 @@ function LandListing() {
                      Edit Attachments
                     </span>
                   )}
+                </TableCell>
+                <TableCell align="center">
+                  {row.land_bank_status === "Approved" ? (
+                    <span
+                      style={{
+                        cursor: "pointer",
+                        color: "#F6812D",
+                        fontWeight: "bold",
+                        textDecoration: "underline",
+                      }}
+                      onClick={() =>
+                        navigate(`/view-landbank-docs/${row.id}`, { state: { landData: row } })
+                      }
+                    >
+                     View Attachments
+                    </span>
+                  ):<></> }
                 </TableCell>
                 {/* <TableCell align="center">
                   <AiOutlineFileText

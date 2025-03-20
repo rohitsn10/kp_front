@@ -29,63 +29,7 @@ import ArticleIcon from '@mui/icons-material/Article';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import PdfViewerDialog from '../../utils/pdfViewer';
-// import moment from 'moment';
-// PdfViewerDialog
-// PDF Viewer Dialog Component
-// const PdfViewerDialog = ({ open, handleClose, pdfUrl, fileName }) => {
-//   return (
-//     <Dialog
-//       open={open}
-//       onClose={handleClose}
-//       maxWidth="lg"
-//       fullWidth
-//       PaperProps={{
-//         sx: { height: '90vh' }
-//       }}
-//     >
-//       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#29346B', color: 'white' }}>
-//         <Typography variant="h6" component="div" sx={{ display: 'flex', alignItems: 'center' }}>
-//           <PictureAsPdfIcon sx={{ mr: 1 }} />
-//           {fileName}
-//         </Typography>
-//         <IconButton
-//           aria-label="close"
-//           onClick={handleClose}
-//           sx={{ color: 'white' }}
-//         >
-//           <CloseIcon />
-//         </IconButton>
-//       </DialogTitle>
-//       <DialogContent dividers sx={{ p: 0, height: '100%' }}>
-//         <iframe
-//           src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-//           width="100%"
-//           height="100%"
-//           style={{ border: 'none' }}
-//           title={fileName}
-//         />
-//       </DialogContent>
-//       <DialogActions>
-//         <Button 
-//           startIcon={<DownloadIcon />}
-//           onClick={() => window.open(pdfUrl, '_blank')}
-//           variant="contained"
-//           sx={{ bgcolor: '#29346B', '&:hover': { bgcolor: '#1e2756' } }}
-//         >
-//           Download
-//         </Button>
-//         <Button 
-//           onClick={handleClose}
-//           variant="outlined"
-//         >
-//           Close
-//         </Button>
-//       </DialogActions>
-//     </Dialog>
-//   );
-// };
-// PdfViewerDialog
-// Styled components
+
 const InfoItem = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',

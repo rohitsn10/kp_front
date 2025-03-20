@@ -16,6 +16,7 @@ import { useGetDrawingsByProjectIdQuery } from "../../api/masterdesign/masterDes
 import FormatDateAndTime from "../../utils/dateUtils";
 import DrawingDocumentUploadDialog from "./DocumentUploadModal";
 import DrawingDocumentViewModal from "./DesignViewModal";
+import DrawingApprovalModal from "./DesignApproveModal";
 
 function DesignDocumentsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState("");
@@ -26,6 +27,7 @@ function DesignDocumentsPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filteredDrawings, setFilteredDrawings] = useState([]);
   const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
   
   // Fetch projects
   const { data: projects, error: projectsError, isLoading: isLoadingProjects } = useGetMainProjectsQuery();
@@ -123,6 +125,17 @@ function DesignDocumentsPage() {
   const handleApprove = (drawingId) => {
     console.log("Approve drawing ID:", drawingId);
     // Implement approval functionality here
+  };
+
+  const handleOpenApprovalModal = (drawing) => {
+    setSelectedDrawing(drawing);
+    setApprovalModalOpen(true);
+  };
+  
+  // New function to handle closing the approval modal
+  const handleCloseApprovalModal = () => {
+    setApprovalModalOpen(false);
+    setSelectedDrawing(null);
   };
 
   // Format date for display
@@ -313,7 +326,9 @@ function DesignDocumentsPage() {
                           <Button
                             variant="contained"
                             size="small"
-                            onClick={() => handleView(drawing)}
+                            // onClick={() => handleView(drawing)}
+                            onClick={() => handleUpload(drawing)}
+
                             sx={{ 
                               bgcolor: "#29346B", 
                               "&:hover": { bgcolor: "#1e2756" } 
@@ -341,7 +356,7 @@ function DesignDocumentsPage() {
                           variant="contained"
                           size="small"
                           disabled={drawing.is_approved}
-                          onClick={() => handleApprove(drawing.id)}
+                          onClick={() => handleOpenApprovalModal(drawing)}
                           sx={{ 
                             bgcolor: drawing.is_approved ? "#d1d5db" : "#10B981", 
                             "&:hover": { bgcolor: drawing.is_approved ? "#d1d5db" : "#0ea271" } 
@@ -372,6 +387,11 @@ function DesignDocumentsPage() {
         <DrawingDocumentViewModal
         open={viewModalOpen}
         handleClose={handleCloseViewModal}
+        drawingDetails={selectedDrawing}
+      />
+      <DrawingApprovalModal
+        open={approvalModalOpen}
+        handleClose={handleCloseApprovalModal}
         drawingDetails={selectedDrawing}
       />
     </div>

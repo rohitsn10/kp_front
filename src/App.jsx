@@ -39,6 +39,7 @@ import ProjectMileStonePayment from "./pages/projects/project-milestone-payment/
 import ProjectViewMilestone from "./pages/projects/projects-view-milestone-details/index.jsx";
 import UserGroupSection from "./pages/groups/groups.jsx";
 import DesignDocumentsPage from "./pages/design-documents/index.jsx";
+import ViewLandBankDetails from "./pages/Land-bank/landbankFilesView.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
@@ -85,6 +86,16 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <EditLandApproveDoc />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/view-landbank-docs/:landBankId"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ViewLandBankDetails />
               </MainLayout>
             </ProtectedRoute>
           }
