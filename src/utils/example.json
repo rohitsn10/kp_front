@@ -1,0 +1,245 @@
+{
+  "status": true,
+  "message": "Drawing and design data with related actions fetched successfully",
+  "data": {
+    "id": 3,
+    "project": 1,
+    "project_name": " again Test Project ",
+    "user": 2,
+    "user_full_name": "Admin Patel",
+    "drawing_and_design_attachments": [
+      {
+        "id": "47",
+        "url": "http://127.0.0.1:8000/media/drawing_and_design_attachments/CIL_MDL_for_300_MW_Solar_Project_R1_1_wcxSZAl.xlsx",
+        "created_at": "2025-03-21T06:12:19.313360+00:00",
+        "updated_at": "2025-03-21T06:12:19.313360+00:00"
+      },
+      {
+        "id": "67",
+        "url": "http://127.0.0.1:8000/media/drawing_and_design_attachments/Gemini_Generated_Image_faappjfaappjfaap_5rJLSrd.jpg",
+        "created_at": "2025-03-24T04:33:09.199241+00:00",
+        "updated_at": "2025-03-24T04:33:09.199241+00:00"
+      }
+    ],
+    "other_drawing_and_design_attachments": [
+      {
+        "id": "14",
+        "url": "http://127.0.0.1:8000/media/other_drawing_and_design_attachments/WhatsApp_Image_2025-02-14_at_15_BXnwmym.10.59_54feb95f.jpg",
+        "created_at": "2025-03-21T06:12:19.352622+00:00",
+        "updated_at": "2025-03-21T06:12:19.352622+00:00"
+      },
+      {
+        "id": "15",
+        "url": "http://127.0.0.1:8000/media/other_drawing_and_design_attachments/WhatsApp_Image_2025-02-14_at_15_Oynir4y.10.59_54feb95f.jpg",
+        "created_at": "2025-03-21T06:12:19.356143+00:00",
+        "updated_at": "2025-03-21T06:12:19.356143+00:00"
+      }
+    ],
+    "assign_to_user": 2,
+    "assign_to_user_full_name": "Admin Patel",
+    "discipline": "CIV",
+    "block": "P2",
+    "drawing_number": "CIL-300 MW-KPI-C-DWG-100",
+    "auto_drawing_number": null,
+    "name_of_drawing": "Topography survey/Contour Map",
+    "drawing_category": "Drawing",
+    "type_of_approval": "INFORMATION",
+    "approval_status": "submitted",
+    "commented_count": 0,
+    "submitted_count": 7,
+    "is_approved": false,
+    "is_commented": false,
+    "is_submitted": true,
+    "updated_at": "2025-03-24T04:33:09.262309Z",
+    "commented_actions": [
+      {
+        "id": 1,
+        "drawing_and_design": 3,
+        "drawing_and_design_name": "Topography survey/Contour Map",
+        "project": 1,
+        "project_name": " again Test Project ",
+        "user": 2,
+        "user_full_name": "Admin Patel",
+        "remarks": "this is approved from our side",
+        "created_at": "2025-03-20T06:13:02.276874Z",
+        "updated_at": "2025-03-20T06:13:02.290520Z"
+      },
+      {
+        "id": 2,
+        "drawing_and_design": 3,
+        "drawing_and_design_name": "Topography survey/Contour Map",
+        "project": 1,
+        "project_name": " again Test Project ",
+        "user": 2,
+        "user_full_name": "Admin Patel",
+        "remarks": "this is approved from our side",
+        "created_at": "2025-03-20T06:16:01.990894Z",
+        "updated_at": "2025-03-20T06:16:01.995026Z"
+      },
+      {
+        "id": 3,
+        "drawing_and_design": 3,
+        "drawing_and_design_name": "Topography survey/Contour Map",
+        "project": 1,
+        "project_name": " again Test Project ",
+        "user": 2,
+        "user_full_name": "Admin Patel",
+        "remarks": "this is approved from our side",
+        "created_at": "2025-03-20T06:18:34.345747Z",
+        "updated_at": "2025-03-20T06:18:34.349473Z"
+      },
+      {
+        "id": 4,
+        "drawing_and_design": 3,
+        "drawing_and_design_name": "Topography survey/Contour Map",
+        "project": 1,
+        "project_name": " again Test Project ",
+        "user": 2,
+        "user_full_name": "Admin Patel",
+        "remarks": "this is approved from our side",
+        "created_at": "2025-03-20T11:03:21.287720Z",
+        "updated_at": "2025-03-20T11:03:21.290905Z"
+      },
+      {
+        "id": 5,
+        "drawing_and_design": 3,
+        "drawing_and_design_name": "Topography survey/Contour Map",
+        "project": 1,
+        "project_name": " again Test Project ",
+        "user": 2,
+        "user_full_name": "Admin Patel",
+        "remarks": "this is approved from our side",
+        "created_at": "2025-03-21T06:11:56.335440Z",
+        "updated_at": "2025-03-21T06:11:56.358131Z"
+      },
+      {
+        "id": 6,
+        "drawing_and_design": 3,
+        "drawing_and_design_name": "Topography survey/Contour Map",
+        "project": 1,
+        "project_name": " again Test Project ",
+        "user": 2,
+        "user_full_name": "Admin Patel",
+        "remarks": "this is approved from our side",
+        "created_at": "2025-03-24T04:27:05.393746Z",
+        "updated_at": "2025-03-24T04:27:05.400465Z"
+      },
+      {
+        "id": 7,
+        "drawing_and_design": 3,
+        "drawing_and_design_name": "Topography survey/Contour Map",
+        "project": 1,
+        "project_name": " again Test Project ",
+        "user": 2,
+        "user_full_name": "Admin Patel",
+        "remarks": "this is approved from our side",
+        "created_at": "2025-03-24T04:33:02.345686Z",
+        "updated_at": "2025-03-24T04:33:02.351411Z"
+      }
+    ],
+    "resubmitted_actions": [
+      {
+        "version_number": 1,
+        "created_at": "2025-03-24T04:32:15.109178Z",
+        "submitted_by": {
+          "id": 2,
+          "name": "Admin Patel"
+        },
+        "documents": {
+          "drawing_and_design_attachments": [
+            {
+              "id": "62",
+              "url": "/media/drawing_and_design_attachments/Gemini_Generated_Image_3wf7be3wf7be3wf7_Lm60V78.jpg",
+              "created_at": "2025-03-24T04:32:15.115364Z",
+              "updated_at": "2025-03-24T04:32:15.115364Z"
+            },
+            {
+              "id": "63",
+              "url": "/media/drawing_and_design_attachments/Gemini_Generated_Image_4j4bec4j4bec4j4b_SziypUN.jpg",
+              "created_at": "2025-03-24T04:32:15.119228Z",
+              "updated_at": "2025-03-24T04:32:15.119228Z"
+            },
+            {
+              "id": "64",
+              "url": "/media/drawing_and_design_attachments/Gemini_Generated_Image_faappjfaappjfaap_CkxvD4c.jpg",
+              "created_at": "2025-03-24T04:32:15.123798Z",
+              "updated_at": "2025-03-24T04:32:15.123798Z"
+            }
+          ],
+          "other_drawing_and_design_attachments": [
+            {
+              "id": "25",
+              "url": "/media/other_drawing_and_design_attachments/images_w3f5jlS.png",
+              "created_at": "2025-03-24T04:32:15.142172Z",
+              "updated_at": "2025-03-24T04:32:15.142172Z"
+            }
+          ]
+        },
+        "commented_actions": {
+          "id": 7,
+          "drawing_and_design": 3,
+          "drawing_and_design_name": "Topography survey/Contour Map",
+          "project": 1,
+          "project_name": " again Test Project ",
+          "user": 2,
+          "user_full_name": "Admin Patel",
+          "remarks": null,
+          "created_at": "2025-03-24T04:32:15.109178Z",
+          "updated_at": "2025-03-24T04:32:15.157908Z"
+        }
+      },
+      {
+        "version_number": 2,
+        "created_at": "2025-03-24T04:33:09.221132Z",
+        "submitted_by": {
+          "id": 2,
+          "name": "Admin Patel"
+        },
+        "documents": {
+          "drawing_and_design_attachments": [
+            {
+              "id": "68",
+              "url": "/media/drawing_and_design_attachments/Gemini_Generated_Image_3wf7be3wf7be3wf7_OQNYMin.jpg",
+              "created_at": "2025-03-24T04:33:09.228132Z",
+              "updated_at": "2025-03-24T04:33:09.228132Z"
+            },
+            {
+              "id": "69",
+              "url": "/media/drawing_and_design_attachments/Gemini_Generated_Image_4j4bec4j4bec4j4b_ZMNsJOM.jpg",
+              "created_at": "2025-03-24T04:33:09.233765Z",
+              "updated_at": "2025-03-24T04:33:09.233765Z"
+            },
+            {
+              "id": "70",
+              "url": "/media/drawing_and_design_attachments/Gemini_Generated_Image_faappjfaappjfaap_fkp6urb.jpg",
+              "created_at": "2025-03-24T04:33:09.236437Z",
+              "updated_at": "2025-03-24T04:33:09.236437Z"
+            }
+          ],
+          "other_drawing_and_design_attachments": [
+            {
+              "id": "27",
+              "url": "/media/other_drawing_and_design_attachments/images_DQncHOG.png",
+              "created_at": "2025-03-24T04:33:09.253506Z",
+              "updated_at": "2025-03-24T04:33:09.253506Z"
+            }
+          ]
+        },
+        "commented_actions": {
+          "id": 8,
+          "drawing_and_design": 3,
+          "drawing_and_design_name": "Topography survey/Contour Map",
+          "project": 1,
+          "project_name": " again Test Project ",
+          "user": 2,
+          "user_full_name": "Admin Patel",
+          "remarks": null,
+          "created_at": "2025-03-24T04:33:09.221132Z",
+          "updated_at": "2025-03-24T04:33:09.264380Z"
+        }
+      }
+    ],
+    "approved_actions": []
+  }
+}
+ 

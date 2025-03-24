@@ -1,13 +1,20 @@
 // Navbar.jsx
-import React from 'react';
+import React, { useContext } from 'react';
 import { IoNotificationsOutline } from "react-icons/io5";
 import { BiLogOut } from "react-icons/bi";
 import { HiMenu } from "react-icons/hi";
 import { FaUserCircle } from "react-icons/fa";
+import { AuthContext } from '../../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 function Navbar({ toggleSidebar }) {
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+  useNavigate
   const handleLogout = () => {
     // Add your logout logic here
+    logout();
+    navigate('/login')
     console.log('Logging out...');
   };
 

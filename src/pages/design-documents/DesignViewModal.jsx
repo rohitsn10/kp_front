@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -13,7 +13,11 @@ import {
   IconButton,
   Divider,
   Tooltip,
-  Badge
+  Badge,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -62,7 +66,99 @@ const FileCard = styled(Paper)(({ theme }) => ({
 const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
   const [selectedPdf, setSelectedPdf] = useState({ url: '', name: '' });
-//   console.log("DRAWWWWW",drawingDetails)
+
+  const [selectedVersion, setSelectedVersion] = useState(null);
+  const [versionData, setVersionData] = useState(null);
+  const [versions, setVersions] = useState([]);
+  const baseURL = import.meta.env.VITE_API_KEY
+  // Dummy Version Tabs:
+  // Initialize selected version when modal opens or drawing details change
+  // useEffect(() => {
+  //   setSelectedVersion(versions[0].version_number);
+  //   setVersionData(versions[0]);
+  // }, [drawingDetails]);
+
+  useEffect(() => {
+    if (drawingDetails) {
+      // Prepare versions list - starting with "main"
+      const versionsList = [
+        {
+          version_number: 'main',
+          label: 'Main Document Version 1',
+          created_at: drawingDetails.updated_at,
+          submitted_by: {
+            id: drawingDetails.user,
+            name: drawingDetails.user_full_name
+          },
+          documents: {
+            drawing_and_design_attachments: drawingDetails.drawing_and_design_attachments || [],
+            other_drawing_and_design_attachments: drawingDetails.other_drawing_and_design_attachments || []
+          },
+          commented_actions: drawingDetails.commented_actions?.length > 0 
+            ? drawingDetails.commented_actions[drawingDetails.commented_actions.length - 1]
+            : null
+        }
+      ];
+      
+      // Add versions from resubmitted_actions
+      if (drawingDetails.resubmitted_actions && drawingDetails.resubmitted_actions.length > 0) {
+        drawingDetails.resubmitted_actions.forEach(version => {
+          versionsList.push({
+            ...version,
+            label: `Version ${version.version_number}`,
+            documents: {
+              drawing_and_design_attachments: version.documents?.drawing_and_design_attachments?.map(doc => ({
+                ...doc,
+                url: doc.url.startsWith('http') ? doc.url : `${baseURL}${doc.url}`
+              })) || [],
+              other_drawing_and_design_attachments: version.documents?.other_drawing_and_design_attachments?.map(doc => ({
+                ...doc,
+                url: doc.url.startsWith('http') ? doc.url : `${baseURL}${doc.url}`
+              })) || []
+            }
+          });
+        });
+      }
+      
+      setVersions(versionsList);
+      
+      // Set default to main version
+      setSelectedVersion('main');
+      setVersionData(versionsList[0]);
+    }
+  }, [drawingDetails]);
+
+  // Handle version change
+  // const handleVersionChange = (event) => {
+  //   const versionNumber = event.target.value;
+  //   setSelectedVersion(versionNumber);
+    
+  //   // Find the corresponding version data
+  //   const newVersionData = versions.find(
+  //     version => version.version_number === versionNumber
+  //   );
+    
+  //   if (newVersionData) {
+  //     setVersionData(newVersionData);
+  //   }
+  // };
+
+  
+
+  const handleVersionChange = (event) => {
+    const versionNumber = event.target.value;
+    setSelectedVersion(versionNumber);
+    
+    // Find the corresponding version data
+    const newVersionData = versions.find(
+      version => version.version_number === versionNumber
+    );
+    
+    if (newVersionData) {
+      setVersionData(newVersionData);
+    } 
+  };
+
   const handleOpenPdf = (url, name) => {
     setSelectedPdf({ url, name });
     setPdfViewerOpen(true);
@@ -83,13 +179,17 @@ const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'A':
+      case 'approved':
         return { bg: '#4caf50', text: 'white', label: 'Approved' };
       case 'C':
+      case 'commented':
         return { bg: '#ff9800', text: 'black', label: 'Commented' };
       case 'S':
+      case 'submitted':
         return { bg: '#2196f3', text: 'white', label: 'Submitted' };
       case 'N':
-        return { bg: '#f44336', text: 'white', label: 'Not Submitted' };
+      case 'New':
+        return { bg: '#f44336', text: 'white', label: 'New' };
       default:
         return { bg: '#9e9e9e', text: 'white', label: 'Unknown' };
     }
@@ -97,6 +197,37 @@ const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
 
   // Get status details
   const statusInfo = getStatusColor(drawingDetails?.approval_status);
+  
+  // Format date helper function (as a replacement for moment.js)
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+    } catch (error) {
+      return 'Invalid Date';
+    }
+  };
+
+  // Function to get document attachments from the selected version
+  const getDrawingAttachments = () => {
+    if (versionData?.documents?.drawing_and_design_attachments) {
+      return versionData.documents.drawing_and_design_attachments;
+    }
+    return [];
+  };
+
+  // Function to get supporting document attachments from the selected version
+  const getSupportingAttachments = () => {
+    if (versionData?.documents?.other_drawing_and_design_attachments) {
+      return versionData.documents.other_drawing_and_design_attachments;
+    }
+    return [];
+  };
 
   return (
     <>
@@ -114,7 +245,29 @@ const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
           </IconButton>
         </DialogTitle>
         
-        <DialogContent sx={{ pt: 3, mt: 1 }}>
+        <DialogContent sx={{ pt: 3, mt: 4 }}>
+          {/* Version Selector */}
+          {versions && versions.length > 0 && (
+            <Box sx={{ mb: 3 }}>
+              <FormControl fullWidth variant="outlined" size="small">
+                <InputLabel id="version-select-label">Version</InputLabel>
+                <Select
+                  labelId="version-select-label"
+                  id="version-select"
+                  value={selectedVersion || 'main'}
+                  onChange={handleVersionChange}
+                  label="Version"
+                >
+                  {versions.map((version) => (
+                    <MenuItem key={version.version_number} value={version.version_number}>
+                      {version.label} - Created on {formatDate(version.created_at)} by {version.submitted_by.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
+          
           {/* Drawing Details Section */}
           <Box sx={{ mb: 3 }}>
             <Typography variant="h5" sx={{ mb: 2, color: '#29346B', fontWeight: 500 }}>
@@ -202,8 +355,7 @@ const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
               <Box>
                 <Typography variant="body2" color="textSecondary" sx={{ display: 'flex', alignItems: 'center' }}>
                   <TimelineIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                  Last Updated: 
-                  {/* {moment(drawingDetails?.updated_at).format('MMM DD, YYYY')} */}
+                  Last Updated: {formatDate(versionData?.created_at)}
                 </Typography>
               </Box>
             </Box>
@@ -217,8 +369,8 @@ const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
               Main Documents
             </Typography>
             
-            {drawingDetails?.drawing_and_design_attachments && drawingDetails.drawing_and_design_attachments.length > 0 ? (
-              drawingDetails.drawing_and_design_attachments.map((attachment) => (
+            {getDrawingAttachments().length > 0 ? (
+              getDrawingAttachments().map((attachment) => (
                 <FileCard key={attachment.id} elevation={1}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <PictureAsPdfIcon sx={{ color: '#29346B', mr: 2 }} />
@@ -227,8 +379,7 @@ const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
                         {getFileName(attachment.url)}
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
-                        Added on 
-                        {/* {moment(attachment.created_at).format('MMM DD, YYYY')} */}
+                        Added on {formatDate(attachment.created_at)}
                       </Typography>
                     </Box>
                   </Box>
@@ -265,17 +416,17 @@ const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
           <Box sx={{ mb: 3 }}>
             <Typography variant="h6" sx={{ mb: 2, color: '#29346B', display: 'flex', alignItems: 'center' }}>
               Supporting Documents
-              {drawingDetails?.other_drawing_and_design_attachments && drawingDetails.other_drawing_and_design_attachments.length > 0 && (
+              {getSupportingAttachments().length > 0 && (
                 <Badge 
-                  badgeContent={drawingDetails.other_drawing_and_design_attachments.length} 
+                  badgeContent={getSupportingAttachments().length} 
                   color="primary"
                   sx={{ ml: 2 }}
                 />
               )}
             </Typography>
             
-            {drawingDetails?.other_drawing_and_design_attachments && drawingDetails.other_drawing_and_design_attachments.length > 0 ? (
-              drawingDetails.other_drawing_and_design_attachments.map((attachment) => (
+            {getSupportingAttachments().length > 0 ? (
+              getSupportingAttachments().map((attachment) => (
                 <FileCard key={attachment.id} elevation={1}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <PictureAsPdfIcon sx={{ color: '#29346B', mr: 2 }} />
@@ -284,8 +435,7 @@ const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
                         {getFileName(attachment.url)}
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
-                        Added on 
-                        {/* {moment(attachment.created_at).format('MMM DD, YYYY')} */}
+                        Added on {formatDate(attachment.created_at)}
                       </Typography>
                     </Box>
                   </Box>
@@ -315,6 +465,29 @@ const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
               </Typography>
             )}
           </Box>
+          
+          {/* Commented Actions Section (if present in selected version) */}
+          {versionData?.commented_actions && (
+            <>
+              <Divider sx={{ my: 3 }} />
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: '#29346B' }}>
+                  Review Comments
+                </Typography>
+                <Box sx={{ bgcolor: '#f5f5f5', p: 2, borderRadius: 1 }}>
+                  <Typography variant="body2" color="textSecondary">
+                    <strong>Reviewed by:</strong> {versionData.commented_actions.user_full_name}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    <strong>Date:</strong> {formatDate(versionData.commented_actions.created_at)}
+                  </Typography>
+                  <Typography variant="body1" sx={{ mt: 1 }}>
+                    {versionData.commented_actions.remarks || 'No comments provided'}
+                  </Typography>
+                </Box>
+              </Box>
+            </>
+          )}
         </DialogContent>
         
         <DialogActions sx={{ px: 3, pb: 2 }}>

@@ -45,7 +45,7 @@ const FileCard = styled(Paper)(({ theme }) => ({
   alignItems: 'center',
 }));
 
-const DrawingApprovalModal = ({ open, handleClose, drawingDetails }) => {
+const DrawingApprovalModal = ({ open, handleClose, drawingDetails,refetchDrawings }) => {
   // State for approval status and comments
   const [mainDocumentStatus, setMainDocumentStatus] = useState('');
   const [mainDocumentComment, setMainDocumentComment] = useState('');
@@ -97,7 +97,9 @@ const DrawingApprovalModal = ({ open, handleClose, drawingDetails }) => {
       toast.error(response.message)
     }
     // Close the modal
+    refetchDrawings();
     handleClose();
+
   };
 
   return (

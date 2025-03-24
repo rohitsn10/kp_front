@@ -53,7 +53,7 @@ const previewModalStyle = {
   flexDirection: 'column',
 };
 
-const DrawingDocumentUploadDialog = ({ open, handleClose, drawingDetails }) => {
+const DrawingDocumentUploadDialog = ({ open, handleClose, drawingDetails,refetchDrawings }) => {
   const [mainDocument, setMainDocument] = useState(null);
   const [supportingDocuments, setSupportingDocuments] = useState([]);
   const [error, setError] = useState('');
@@ -146,7 +146,7 @@ const DrawingDocumentUploadDialog = ({ open, handleClose, drawingDetails }) => {
       // Keep existing values for other fields
       formData.append('remove_drawing_and_design_attachments_id', "");
       formData.append('remove_other_drawing_and_design_attachments_id', "");
-      formData.append('assign_to_user', drawingDetails.assign_to_user || "");
+      // formData.append('assign_to_user', drawingDetails.assign_to_user || "");
       // formData.append('discipline', drawingDetails.discipline || "");
       // formData.append('block', drawingDetails.block || "");
       // formData.append('drawing_number', drawingDetails.drawing_number || "");
@@ -154,7 +154,7 @@ const DrawingDocumentUploadDialog = ({ open, handleClose, drawingDetails }) => {
       // formData.append('name_of_drawing', drawingDetails.name_of_drawing || "");
       // formData.append('drawing_category', drawingDetails.drawing_category || "");
       // formData.append('type_of_approval', drawingDetails.type_of_approval || "");
-      // formData.append('approval_status', drawingDetails.approval_status || "submitted");
+      formData.append('approval_status', "submitted");
       
       // Call the updateDrawing mutation with drawingId and formData
       const response = await updateDrawing({ 
@@ -164,7 +164,7 @@ const DrawingDocumentUploadDialog = ({ open, handleClose, drawingDetails }) => {
       
       setSuccessMessage('Documents uploaded successfully!');
       setShowSuccessSnackbar(true);
-      
+      refetchDrawings();
       // Close dialog after small delay
       setTimeout(() => {
         handleDialogClose();
