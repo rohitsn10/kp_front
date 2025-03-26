@@ -1,4 +1,5 @@
 import { TbMapPlus } from "react-icons/tb";
+import { FaHelmetSafety } from "react-icons/fa6";
 import DesignServicesIcon from '@mui/icons-material/DesignServices';
 import { Link, useLocation, useNavigation } from 'react-router-dom';
   const sidebarConstant=[
@@ -82,6 +83,12 @@ import { Link, useLocation, useNavigation } from 'react-router-dom';
       links:"/design-documents"
     },
     {
+      name:'HSE',
+      icons:<FaHelmetSafety style={{ color: '#f3d63b',width:"45px",height:"45px" }}/>
+      ,
+      links:"/HSE"
+    },
+    {
       name:'Reports',
       icons:<svg width="24" height="24" viewBox="0 0 26 22" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M9 21H17M9 21V15.4444M9 21H1.8C1.58783 21 1.38434 20.9298 1.23431 20.8047C1.08429 20.6797 1 20.5101 1 20.3333V16.1111C1 15.9343 1.08429 15.7647 1.23431 15.6397C1.38434 15.5147 1.58783 15.4444 1.8 15.4444H9M17 21V7.66667M17 21H24.2C24.4122 21 24.6157 20.9298 24.7657 20.8047C24.9157 20.6797 25 20.5101 25 20.3333V1.66667C25 1.48986 24.9157 1.32029 24.7657 1.19526C24.6157 1.07024 24.4122 1 24.2 1H17.8C17.5878 1 17.3843 1.07024 17.2343 1.19526C17.0843 1.32029 17 1.48986 17 1.66667V7.66667M9 15.4444V8.33333C9 8.15652 9.08429 7.98695 9.23431 7.86193C9.38434 7.7369 9.58783 7.66667 9.8 7.66667H17" stroke="#7220B0" stroke-width="1.5"/>
@@ -96,7 +103,6 @@ import { Link, useLocation, useNavigation } from 'react-router-dom';
       </svg>
       ,
       links:"/master"
-    },
-
+    }
   ]
   export default sidebarConstant

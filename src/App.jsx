@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import Login from "./pages/login.jsx";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -19,7 +19,7 @@ import ProjectCategoryPage from "./pages/projects/projects-category/index.jsx";
 import ProjectMultipleListing from "./pages/projects/projects-multiple-activity/index.jsx";
 import AddLandDoc from "./components/pages/Land-back/add-land.jsx";
 import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
-import DocumentListing from "./pages/Document/Document-list.jsx";
+import DocumentListing from "./pages/document/Document-list.jsx";
 import UploadedDocumentListing from "./components/pages/Documents/uploaded-document.jsx";
 import MaterialManagementListing from "./pages/Material/MaterialManagement.jsx";
 import ProjectListingTable from "./pages/projects/index.jsx";
@@ -40,10 +40,37 @@ import ProjectViewMilestone from "./pages/projects/projects-view-milestone-detai
 import UserGroupSection from "./pages/groups/groups.jsx";
 import DesignDocumentsPage from "./pages/design-documents/index.jsx";
 import ViewLandBankDetails from "./pages/Land-bank/landbankFilesView.jsx";
+import HseMainPage from "./pages/hse/index.jsx";
+import PermitToWork from "./pages/hse/permit-to-work/PermitToWork.jsx";
+import BoomLiftInspection from "./pages/hse/boom-lift-inspection/BoomLiftInspection.jsx";
+import CraneHydraInspection from "./pages/hse/crane-hydra-inspection/CraneHydraInspection.jsx";
+import IncidentInvestigation from "./pages/hse/incident-investigation/IncidentInvestigation.jsx";
+import SafetyViolation from "./pages/hse/safety-violation/SafetyViolation.jsx";
+import TrailerInspection from "./pages/hse/trailer-inspection/TrailerInspection.jsx";
+import MockDrillReport from "./pages/hse/mock-drill-report/MockDrillReport.jsx";
+import InternalAuditReport from "./pages/hse/internal-audit-report/InternalAuditReport.jsx";
+import InductionTraining from "./pages/hse/induction-training/InductionTraining.jsx";
+import PhysicalFitnessCertificate from "./pages/hse/physical-fitness-certificate/PhysicalFitnessCertificate.jsx";
+import ToolboxTalk from "./pages/hse/toolbox-talk/ToolboxTalk.jsx";
+import FirstAidRecord from "./pages/hse/first-aid-record/FirstAidRecord.jsx";
+import LadderChecklist from "./pages/hse/ladder-checklist/LadderChecklist.jsx";
+import ExcavationChecklist from "./pages/hse/excavation-checklist/ExcavationChecklist.jsx";
+import SuggestionScheme from "./pages/hse/suggestion-scheme/SuggestionScheme.jsx";
+import SafetyTraining from "./pages/hse/safety-training/SafetyTraining.jsx";
+import SafetyMeetingMinutes from "./pages/hse/safety-meeting-minutes/SafetyMeetingMinutes.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
+const HseLayout = () => {
+  return (
+    <div>
+      {/* Optional: You can add HSE-specific navigation here */}
+      <Outlet /> {/* This will render child routes */}
+    </div>
+  );
+};
 
 function App() {
+
   return (
     <div>
       <Routes>
@@ -80,7 +107,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-                <Route
+        <Route
           path="/edit-land-doc/:id"
           element={
             <ProtectedRoute>
@@ -90,7 +117,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-         <Route
+        <Route
           path="/view-landbank-docs/:landBankId"
           element={
             <ProtectedRoute>
@@ -112,7 +139,7 @@ function App() {
           }
         />
 
-      <Route
+        <Route
           path="/project/milestone-listing/:projectId"
           element={
             <ProtectedRoute>
@@ -122,29 +149,29 @@ function App() {
             </ProtectedRoute>
           }
         />
-      <Route
+        <Route
           path="/project/milestone-view/:milestoneId"
           element={
             <ProtectedRoute>
               <MainLayout>
                 {/* <MilestonePage /> */}
-                <ProjectViewMilestone/>
+                <ProjectViewMilestone />
               </MainLayout>
             </ProtectedRoute>
           }
         />
-      <Route
-      path="/project/milestone-view/payment/:milestoneId"
-      element={
-        <ProtectedRoute>
-          <MainLayout>
-            <ProjectMileStonePayment/>
-          </MainLayout>
-        </ProtectedRoute>
-      }
-      />
+        <Route
+          path="/project/milestone-view/payment/:milestoneId"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ProjectMileStonePayment />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
+        <Route
           path="/project/client_details/:projectId"
           element={
             <ProtectedRoute>
@@ -154,7 +181,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
 
         <Route
           path="/project/view_projects_details/:projectId"
@@ -178,7 +205,7 @@ function App() {
           }
         />
 
-<Route
+        <Route
           path="/project/manage-drawing-design/:projectId"
           element={
             <ProtectedRoute>
@@ -209,7 +236,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-                <Route
+        <Route
           path="/path"
           element={
             <ProtectedRoute>
@@ -219,7 +246,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-         <Route
+        <Route
           path="/uploaded-documents"
           element={
             <ProtectedRoute>
@@ -229,7 +256,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-         <Route
+        <Route
           path="/material-management"
           element={
             <ProtectedRoute>
@@ -239,7 +266,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-      <Route
+        <Route
           path="/material-management/view-inspection/:materialId"
           element={
             <ProtectedRoute>
@@ -259,7 +286,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-                <Route
+        <Route
           path="/user-groups"
           element={
             <ProtectedRoute>
@@ -396,6 +423,42 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/hse"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <HseLayout />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        >
+          {/* Default HSE route */}
+          <Route index element={<HseMainPage />} />
+
+          {/* Nested HSE section routes */}
+          <Route path="permit-to-work" element={<PermitToWork />} />
+          <Route path="incident-investigation" element={<IncidentInvestigation />} />
+          <Route path="safety-violation" element={<SafetyViolation />} />
+          <Route path="boom-lift-inspection" element={<BoomLiftInspection />} />
+          <Route path="crane-hydra-inspection" element={<CraneHydraInspection />} />
+          <Route path="trailer-inspection" element={<TrailerInspection />} />
+          <Route path="mock-drill-report" element={<MockDrillReport />} />
+          <Route path="safety-training" element={<SafetyTraining />} />
+          <Route path="internal-audit-report" element={<InternalAuditReport />} />
+          <Route path="induction-training" element={<InductionTraining />} />
+          <Route path="physical-fitness-certificate" element={<PhysicalFitnessCertificate />} />
+          <Route path="safety-meeting-minutes" element={<SafetyMeetingMinutes />} />
+          <Route path="toolbox-talk" element={<ToolboxTalk />} />
+          <Route path="first-aid-record" element={<FirstAidRecord />} />
+          <Route path="ladder-checklist" element={<LadderChecklist />} />
+          <Route path="excavation-checklist" element={<ExcavationChecklist />} />
+          <Route path="suggestion-scheme" element={<SuggestionScheme />} />
+          {/* <Route path="safety-observation" element={<SafetyObservation />} />
+          <Route path="risk-assessment" element={<RiskAssessment />} /> */}
+
+          {/* Add more HSE sections as needed */}
+        </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <ToastContainer />

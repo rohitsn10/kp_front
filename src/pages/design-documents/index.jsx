@@ -21,6 +21,8 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import AssignUserModal from "../../components/pages/design/AssignUserModal";
+import UserNotiModal from "../../components/pages/design/UserNotiModal";
+import ViewUserModal from "../../components/pages/design/viewUserModal";
 
 function DesignDocumentsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState("");
@@ -33,6 +35,9 @@ function DesignDocumentsPage() {
   const [filteredDrawings, setFilteredDrawings] = useState([]);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [approvalModalOpen, setApprovalModalOpen] = useState(false);
+
+  const [notiModalOpen, setNotiModalOpen] = useState(false);
+  const [viewUserModalOpen, setViewUserModalOpen] = useState(false);
 
   // Fetch projects
   const { data: projects, error: projectsError, isLoading: isLoadingProjects } = useGetMainProjectsQuery();
@@ -114,7 +119,7 @@ function DesignDocumentsPage() {
   };
 
   const handleAssignUser = (drawing) => {
-    console.log("Assign user to:", drawing);
+    // console.log("Assign user to:", drawing);
     setSelectedDrawing(drawing);
     setAssignUserModalOpen(true);
   };
@@ -126,13 +131,26 @@ function DesignDocumentsPage() {
 
   const handleViewAssignedUsers = (drawing) => {
     console.log("View assigned users for:", drawing);
+    setSelectedDrawing(drawing);
+    setViewUserModalOpen(true);
     // Implement your view logic here
   };
+  const handleCloseViewAssignedModal = ()=>{
+    setViewUserModalOpen(false);
+    setSelectedDrawing(null);
+  }
 
   const handleSendNotification = (drawing) => {
     console.log("Send notification for:", drawing);
+    setNotiModalOpen(true);
+    setSelectedDrawing(drawing);
     // Implement your notification logic here
   };
+
+  const handleCloseSendNotification = ()=>{
+    setNotiModalOpen(false);
+    setSelectedDrawing(null);
+  }
 
 
   const handleOpenViewModal = () => {
@@ -183,7 +201,7 @@ function DesignDocumentsPage() {
   };
 
   return (
-    <div className="min-h-screen p-4 bg-white m-8 rounded-md">
+    <div className="min-h-screen p-4 bg-white m-1 md:m-8 rounded-md">
       <h2 className="text-2xl font-semibold text-[#29346B] text-center mb-4">Design Documents Section</h2>
 
       {/* Project Selection */}
@@ -498,6 +516,16 @@ function DesignDocumentsPage() {
       <AssignUserModal
   open={assignUserModalOpen}
   handleClose={handleCloseAssignUserModal}
+  drawingDetails={selectedDrawing}
+/>
+<UserNotiModal
+  open={notiModalOpen}
+  handleClose={handleCloseSendNotification}
+  drawingDetails={selectedDrawing}
+/>
+<ViewUserModal
+  open={viewUserModalOpen}
+  handleClose={handleCloseViewAssignedModal}
   drawingDetails={selectedDrawing}
 />
     </div>
