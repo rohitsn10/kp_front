@@ -88,7 +88,7 @@ export default function AddMaterialModal({ open, setOpen, onClose }) {
       "Quantity": quantity,
       "Project": projectName,
       "PR Date": prDate,
-      "PO Date": poDate,
+      "PO Date": poDate, 
       "Material Required Date": materialRequiredDate
     };
 

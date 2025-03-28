@@ -11,6 +11,7 @@ import {
   TablePagination,
   TextField,
 } from '@mui/material';
+import PermitToWorkDialog from '../../../components/pages/hse/permitTowork/CreatePermitToWork';
 
 const dummyPermits = [
   { id: 1, permitNo: "PTW-001", date: "2025-03-20", department: "ONM", type: "Cold Work", issuedFor: "Electrical Maintenance", validFrom: "Day (6 AM - 6 PM)", area: "Zone A", status: "Approved" },
@@ -34,7 +35,7 @@ const PermitToWork = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [openDialog, setOpenDialog] = useState(false);
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -69,6 +70,7 @@ const PermitToWork = () => {
         <div className="flex justify-end">
           <Button
             variant="contained"
+            onClick={() => setOpenDialog(true)} 
             style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
           >
             Create Permit to Work
@@ -116,7 +118,7 @@ const PermitToWork = () => {
         rowsPerPageOptions={[5, 10, 25]}
         style={{ borderTop: '1px solid #e0e0e0' }}
       />
-            {/* <ProjectCreate open={createModal} handleClose={handleCloseCreateModal} refetch={refetch} /> */}
+            <PermitToWorkDialog open={openDialog} setOpen={setOpenDialog} />
     </div>
   );
 };
