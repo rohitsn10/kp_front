@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
+import CreateIncidentNearMiss from "../../../components/pages/hse/incidentNearMiss/CreateIncidentNearMiss";
 
 const IncidentInvestigation = () => {
   const dummyIncidents = [
@@ -156,6 +157,8 @@ const IncidentInvestigation = () => {
   const [openRootCauseDialog, setOpenRootCauseDialog] = useState(false);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
 
+  const [createDialog,setCreateDialog]=useState(false)
+
   const handleOpenRootCauseDialog = (incident) => {
     setSelectedIncident(incident);
     setOpenRootCauseDialog(true);
@@ -213,6 +216,7 @@ const IncidentInvestigation = () => {
         />
         <div className="flex justify-end">
           <Button
+          onClick={()=>setCreateDialog(true)}
             variant="contained"
             style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
           >
@@ -333,6 +337,10 @@ const IncidentInvestigation = () => {
           <Button onClick={handleCloseDialog}>Close</Button>
         </DialogActions>
       </Dialog>
+      <CreateIncidentNearMiss
+        open={createDialog}
+        setOpen={setCreateDialog}
+      />
     </div>
   );
 };

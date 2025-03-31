@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogContent,
 } from '@mui/material';
+import CreateSafetyViolation from '../../../components/pages/hse/safetyViolation/CreateSafetyViolation';
 
 const SafetyViolation = () => {
   const [page, setPage] = useState(0);
@@ -21,7 +22,7 @@ const SafetyViolation = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogContent, setDialogContent] = useState(null);
-
+  const [createDialog,setCreateDialog]=useState(false);
   let dummySafetyData = [
     {
       site: 'Construction Site A',
@@ -111,6 +112,7 @@ const SafetyViolation = () => {
         />
                 <div className="flex justify-end">
                   <Button
+                  onClick={()=>setCreateDialog(true)}
                     variant="contained"
                     style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
                   >
@@ -194,6 +196,10 @@ const SafetyViolation = () => {
         <DialogTitle>Details</DialogTitle>
         <DialogContent>{dialogContent}</DialogContent>
       </Dialog>
+      <CreateSafetyViolation
+open={createDialog}
+setOpen={setCreateDialog}
+      />
     </div>
   );
 };
