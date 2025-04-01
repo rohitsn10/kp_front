@@ -16,6 +16,7 @@ import {
   TextField
 } from '@mui/material';
 import ImageViewer from '../../../utils/signatureViewer';
+import ToolboxAttendanceDialog from '../../../components/pages/hse/toolbox-talks';
 
 function ToolboxTalk() {
   const [page, setPage] = useState(0);
@@ -24,6 +25,7 @@ function ToolboxTalk() {
   const [selectedToolboxTalk, setSelectedToolboxTalk] = useState(null);
   const [openPointsModal, setOpenPointsModal] = useState(false);
   const [openParticipantsModal, setOpenParticipantsModal] = useState(false);
+  const [openCreateDialog,setCreateDialog] =useState(false);
 
   const dummyToolboxData = [{
     "site": "Construction Site B",
@@ -104,6 +106,7 @@ function ToolboxTalk() {
           variant="outlined"
         />
         <Button
+        onClick={()=>setCreateDialog(true)}
           variant="contained"
           style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none', minHeight: 'auto' }}
         >
@@ -223,6 +226,10 @@ function ToolboxTalk() {
           ))}
         </DialogContent>
       </Dialog>
+      <ToolboxAttendanceDialog
+        open={openCreateDialog}
+        setOpen={setCreateDialog}
+      />
     </div>
   );
 }

@@ -16,6 +16,7 @@ import {
   TextField
 } from '@mui/material';
 import ImageViewer from '../../../utils/signatureViewer';
+import LadderInspectionDialog from '../../../components/pages/hse/ladder-inspection/CreateLadderInspection';
 
 function LadderChecklist() {
   const [page, setPage] = useState(0);
@@ -23,6 +24,7 @@ function LadderChecklist() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLadderChecklist, setSelectedLadderChecklist] = useState(null);
   const [openChecksModal, setOpenChecksModal] = useState(false);
+  const [openCreateDialog,setCreateDialog] =useState(false);
 
   const dummyLadder = [
     {
@@ -138,6 +140,7 @@ function LadderChecklist() {
             textTransform: 'none', 
             minHeight: 'auto' 
           }}
+          onClick={()=>setCreateDialog(true)}
         >
           Add Ladder Checklist
         </Button>
@@ -248,6 +251,9 @@ function LadderChecklist() {
           )}
         </DialogContent>
       </Dialog>
+      <LadderInspectionDialog
+open={openCreateDialog} setOpen={setCreateDialog}
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
   TablePagination,
   TextField
 } from '@mui/material';
+import IncidentReportDialog from '../../../components/pages/hse/first-aid/CreateFirstAid';
 
 function FirstAidRecord() {
   const [page, setPage] = useState(0);
@@ -22,7 +23,7 @@ function FirstAidRecord() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFirstAid, setSelectedFirstAid] = useState(null);
   const [openDescriptionModal, setOpenDescriptionModal] = useState(false);
-
+  const [openCreateDialog,setCreateDialog]=useState(false)
   const dummyFirstAid = [
     {
       "date": "2025-03-27",
@@ -109,6 +110,7 @@ function FirstAidRecord() {
             textTransform: 'none', 
             minHeight: 'auto' 
           }}
+          onClick={()=>setCreateDialog(true)}
         >
           Add First Aid Record
         </Button>
@@ -195,6 +197,10 @@ function FirstAidRecord() {
           )}
         </DialogContent>
       </Dialog>
+      <IncidentReportDialog
+        open={openCreateDialog}
+        setOpen={setCreateDialog}
+      />
     </div>
   );
 }

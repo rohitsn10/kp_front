@@ -58,6 +58,10 @@ import ExcavationChecklist from "./pages/hse/excavation-checklist/ExcavationChec
 import SuggestionScheme from "./pages/hse/suggestion-scheme/SuggestionScheme.jsx";
 import SafetyTraining from "./pages/hse/safety-training/SafetyTraining.jsx";
 import SafetyMeetingMinutes from "./pages/hse/safety-meeting-minutes/SafetyMeetingMinutes.jsx";
+import LotoRegister from "./pages/hse/loto/LotoRegister.jsx";
+import FullBodyHarnessChecklist from "./pages/hse/body-harness/FullBodyHarnessChecklist .jsx";
+import RiskAssessment from "./pages/hse/risk-assessment/RiskAssessment .jsx";
+import MonthlyFireExtinguisher from "./pages/hse/monthy-fireextinguiser/MonthlyFireExtinguisher .jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 const HseLayout = () => {
@@ -454,9 +458,10 @@ function App() {
           <Route path="ladder-checklist" element={<LadderChecklist />} />
           <Route path="excavation-checklist" element={<ExcavationChecklist />} />
           <Route path="suggestion-scheme" element={<SuggestionScheme />} />
-          {/* <Route path="safety-observation" element={<SafetyObservation />} />
-          <Route path="risk-assessment" element={<RiskAssessment />} /> */}
-
+          <Route path="monthly-fire-extinguisher-inspection" element={<MonthlyFireExtinguisher />} />
+          <Route path="loto-register" element={<LotoRegister />} />
+          <Route path="full-body-harness-checklist" element={<FullBodyHarnessChecklist />} />
+          <Route path="risk-assessment" element={<RiskAssessment />} />
           {/* Add more HSE sections as needed */}
         </Route>
         <Route path="*" element={<Navigate to="/" />} />

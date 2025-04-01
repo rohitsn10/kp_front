@@ -16,6 +16,7 @@ import {
   TextField
 } from '@mui/material';
 import ImageViewer from '../../../utils/signatureViewer';
+import TrainingInductionDialog from '../../../components/pages/hse/induction-training/CreateTrainingInduction';
 
 function InductionTraining() {
   const [page, setPage] = useState(0);
@@ -24,6 +25,8 @@ function InductionTraining() {
   const [selectedTraining, setSelectedTraining] = useState(null);
   const [openTopicsModal, setOpenTopicsModal] = useState(false);
   const [openParticipantsModal, setOpenParticipantsModal] = useState(false);
+
+  const [openCreateDialog,setCreateDialog] =useState(false);
 
   const dummyInduction = [
     {
@@ -53,21 +56,6 @@ function InductionTraining() {
         {
           "name": "Sophia Wilson",
           "designation": "HR Coordinator",
-          "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-        },
-        {
-          "name": "James Anderson",
-          "designation": "Logistics Officer",
-          "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-        },
-        {
-          "name": "Olivia Taylor",
-          "designation": "Quality Assurance Specialist",
-          "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-        },
-        {
-          "name": "William Harris",
-          "designation": "Field Technician",
           "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
         }
         // ... other participants
@@ -119,6 +107,7 @@ function InductionTraining() {
         variant="outlined"
       />
               <Button
+              onClick={()=>setCreateDialog(true)}
                 variant="contained"
                 style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none', minHeight: 'auto' }}
               >
@@ -245,6 +234,10 @@ function InductionTraining() {
           ))}
         </DialogContent>
       </Dialog>
+      <TrainingInductionDialog
+                open={openCreateDialog}
+                setOpen={setCreateDialog}
+      />
     </div>
   );
 }

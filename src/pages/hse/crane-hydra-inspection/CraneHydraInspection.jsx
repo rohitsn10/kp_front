@@ -17,6 +17,7 @@ import {
   IconButton,
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
+import CraneHydraInspectionDialog from "../../../components/pages/hse/crane-hydra-inspecton/CreateCraneHydra.jsx";
 
 function CraneHydraInspection() {
   const dummyCraneData = [
@@ -260,6 +261,9 @@ function CraneHydraInspection() {
   const [openChecklist, setOpenChecklist] = useState(false);
   const [selectedInspection, setSelectedInspection] = useState(null);
 
+    const [openCreateDialog,setOpenDialog]=useState(false);
+  // const [createDialog,setCreateDialog] = useState(false);
+
   const handleOpenDetails = (inspection) => {
     setSelectedInspection(inspection);
     setOpenDetails(true);
@@ -310,6 +314,7 @@ function CraneHydraInspection() {
       />
               <div className="flex justify-end">
                 <Button
+                onClick={()=>setOpenDialog(true)}
                   variant="contained"
                   style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
                 >
@@ -376,6 +381,10 @@ function CraneHydraInspection() {
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={[5, 10, 25]}
       />
+          <CraneHydraInspectionDialog
+        open={openCreateDialog}
+        setOpen={setOpenDialog}
+    />
 
       {/* Details Dialog */}
       <Dialog 

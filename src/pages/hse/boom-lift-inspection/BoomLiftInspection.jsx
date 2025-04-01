@@ -16,6 +16,7 @@ import {
   IconButton,
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
+import BoomLiftInspectionDialog from "../../../components/pages/hse/boom-lift/CreateBoomLift";
 
 function BoomLiftInspection() {
   const dummyBoomLift = [
@@ -272,6 +273,7 @@ function BoomLiftInspection() {
   const [openChecklist, setOpenChecklist] = useState(false);
   const [selectedInspection, setSelectedInspection] = useState(null);
 
+  const [openDialog,setOpenDialog]=useState(false)
   const handleOpenDetails = (inspection) => {
     setSelectedInspection(inspection);
     setOpenDetails(true);
@@ -321,6 +323,7 @@ function BoomLiftInspection() {
         />
         <div className="flex justify-end">
           <Button
+          onClick={()=>setOpenDialog(true)}
             variant="contained"
             style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
           >
@@ -460,6 +463,10 @@ function BoomLiftInspection() {
           )}
         </DialogContent>
       </Dialog>
+      <BoomLiftInspectionDialog
+      open={openDialog}
+      setOpen={setOpenDialog}
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
   TablePagination,
   TextField
 } from '@mui/material';
+import TrainingAttendanceDialog from '../../../components/pages/hse/safety-training/CreateSafetyTraining';
 
 // Reusable Image Viewer Component
 const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
@@ -61,6 +62,7 @@ function SafetyTraining() {
   const [selectedTraining, setSelectedTraining] = useState(null);
   const [openParticipantsModal, setOpenParticipantsModal] = useState(false);
 
+  const [openCreateDialog,setCreateDialog]=useState(false)
   const dummySafetyData = [
     {
       "site": "Training Facility A",
@@ -125,6 +127,7 @@ function SafetyTraining() {
           variant="outlined"
         />
         <Button
+        onClick={()=>setCreateDialog(true)}
           variant="contained"
           style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none', minHeight: 'auto' }}
         >
@@ -204,6 +207,10 @@ function SafetyTraining() {
           ))}
         </DialogContent>
       </Dialog>
+      <TrainingAttendanceDialog
+        open={openCreateDialog}
+        setOpen={setCreateDialog}
+      />
     </div>
   );
 }

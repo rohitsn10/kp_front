@@ -15,6 +15,7 @@ import {
   TablePagination,
   TextField
 } from '@mui/material';
+import MockDrillReportDialog from '../../../components/pages/hse/mock-drill-report/CreateMockDrill';
 
 function MockDrillReport() {
   const [page, setPage] = useState(0);
@@ -26,6 +27,7 @@ function MockDrillReport() {
   const [openDetailsModal, setOpenDetailsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [createMockDrill,setCreateMockDrill]=useState(false);
   const dummyDrill = [
     {
       "site_plant": "Main Refinery Unit",
@@ -226,6 +228,7 @@ function MockDrillReport() {
                       />
                  
                     <Button
+                    onClick={()=>setCreateMockDrill(true)}
                       variant="contained"
                       style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none', minHeight: 'auto' }}
                     >
@@ -425,6 +428,10 @@ function MockDrillReport() {
           )}
         </DialogContent>
       </Dialog>
+      <MockDrillReportDialog
+open={createMockDrill}
+setOpen={setCreateMockDrill}
+      />
     </div>
   );
 }

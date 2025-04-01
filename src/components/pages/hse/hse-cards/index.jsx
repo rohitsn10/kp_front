@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { FaRegAddressCard } from "react-icons/fa";
 import { FaExclamationTriangle } from "react-icons/fa";
 import { HiShieldExclamation } from "react-icons/hi2";
-import { FaClipboardCheck, FaTools, FaTruck, FaFireExtinguisher, FaUserShield, FaClipboardList,FaChalkboardTeacher, FaHeartbeat, FaFileAlt, FaToolbox, FaMedkit, FaSortNumericUp, FaHardHat, FaLightbulb } from "react-icons/fa";
+import { FaClipboardCheck, FaTools, FaTruck, FaFireExtinguisher, FaUserShield, FaClipboardList,FaChalkboardTeacher, FaHeartbeat, FaFileAlt, FaToolbox, FaMedkit, FaSortNumericUp, FaHardHat, FaLightbulb,
+  FaCalendarAlt, 
+  FaLock, FaExclamationCircle
+   } from "react-icons/fa";
 
 const HSECards = ({ selectedSite }) => {
   const navigate = useNavigate()
@@ -161,7 +164,43 @@ const HSECards = ({ selectedSite }) => {
         bgColor: 'bg-orange-50',
         borderColor: 'border-orange-300',
         textColor: 'text-orange-800'
-      }
+      },
+      {
+        id: 'monthly-fire-extinguisher-inspection',
+        title: 'MONTHLY FIRE EXTINGUISHER INSPECTION CHECKLIST',
+        description: 'Track monthly fire extinguisher inspections',
+        icon: <FaCalendarAlt className="w-12 h-12 text-purple-500" />,
+        bgColor: 'bg-purple-50',
+        borderColor: 'border-purple-300',
+        textColor: 'text-purple-800',
+      },
+      {
+        id: 'loto-register',
+        title: 'LOG OUT / TAG OUT REGISTER (LOTO)',
+        description: 'Manage and record LOTO procedures',
+        icon: <FaLock className="w-12 h-12 text-indigo-500" />,
+        bgColor: 'bg-indigo-50',
+        borderColor: 'border-indigo-300',
+        textColor: 'text-indigo-800',
+      },
+      {
+        id: 'full-body-harness-checklist',
+        title: 'FULL BODY HARNESS CHECKLIST',
+        description: 'Ensure safety of full body harnesses',
+        icon: <FaUserShield className="w-12 h-12 text-teal-500" />,
+        bgColor: 'bg-teal-50',
+        borderColor: 'border-teal-300',
+        textColor: 'text-teal-800',
+      },
+      {
+        id: 'risk-assessment',
+        title: 'RISK ASSESSMENT',
+        description: 'Identify and evaluate potential hazards',
+        icon: <FaExclamationCircle className="w-12 h-12 text-red-500" />,
+        bgColor: 'bg-red-50',
+        borderColor: 'border-red-300',
+        textColor: 'text-red-800',
+      },
   ]
 
   const handleCardClick = (card) => {

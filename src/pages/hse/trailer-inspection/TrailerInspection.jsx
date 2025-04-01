@@ -17,6 +17,7 @@
    IconButton,
  } from "@mui/material";
  import CloseIcon from '@mui/icons-material/Close';
+import TrailerInspectionDialog from "../../../components/pages/hse/trailer-inspection/CreateTrailerInspection";
  
  function TrailerInspection() {
    const dummyCraneData = [
@@ -260,6 +261,7 @@
    const [openChecklist, setOpenChecklist] = useState(false);
    const [selectedInspection, setSelectedInspection] = useState(null);
  
+  const [openCreateDialog,setOpenDialog]=useState(false);
    const handleOpenDetails = (inspection) => {
      setSelectedInspection(inspection);
      setOpenDetails(true);
@@ -310,6 +312,7 @@
        />
                <div className="flex justify-end">
                  <Button
+                   onClick={()=>setOpenDialog(true)}
                    variant="contained"
                    style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
                  >
@@ -448,6 +451,10 @@
          )}
        </DialogContent>
      </Dialog>
+     <TrailerInspectionDialog
+      open={openCreateDialog}
+      setOpen={setOpenDialog}
+     />
      </div>
    );
  }
