@@ -31,6 +31,15 @@ const HSECards = ({ selectedSite }) => {
       textColor: 'text-yellow-800'
     },
     {
+      id: 'incident-report',
+      title: 'INCIDENT / NEARMISS REPORT',
+      description: 'Report and investigate safety incidents',
+      icon: <FaExclamationCircle className="w-12 h-12 text-red-500" />,
+      bgColor: 'bg-red-50',
+      borderColor: 'border-red-300',
+      textColor: 'text-red-800',
+    },
+    {
       id: 'safety-violation',
       title: 'SAFETY VIOLATION REPORT',
       description: 'Report unsafe acts and behaviors',

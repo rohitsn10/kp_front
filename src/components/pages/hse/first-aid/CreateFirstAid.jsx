@@ -68,7 +68,7 @@ export default function IncidentReportDialog({ open, setOpen }) {
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
       <DialogTitle className="text-[#29346B] text-2xl font-semibold">
-        Incident Report
+        First Aid
       </DialogTitle>
       <DialogContent>
         <Grid container spacing={3}>

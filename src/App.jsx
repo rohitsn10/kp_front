@@ -62,6 +62,7 @@ import LotoRegister from "./pages/hse/loto/LotoRegister.jsx";
 import FullBodyHarnessChecklist from "./pages/hse/body-harness/FullBodyHarnessChecklist .jsx";
 import RiskAssessment from "./pages/hse/risk-assessment/RiskAssessment .jsx";
 import MonthlyFireExtinguisher from "./pages/hse/monthy-fireextinguiser/MonthlyFireExtinguisher .jsx";
+import IncidentReport from "./pages/hse/incident-report/IncidentReport.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 const HseLayout = () => {
@@ -443,6 +444,7 @@ function App() {
           {/* Nested HSE section routes */}
           <Route path="permit-to-work" element={<PermitToWork />} />
           <Route path="incident-investigation" element={<IncidentInvestigation />} />
+          <Route path="incident-report" element={<IncidentReport />} />
           <Route path="safety-violation" element={<SafetyViolation />} />
           <Route path="boom-lift-inspection" element={<BoomLiftInspection />} />
           <Route path="crane-hydra-inspection" element={<CraneHydraInspection />} />
