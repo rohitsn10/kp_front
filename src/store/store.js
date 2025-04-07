@@ -19,7 +19,12 @@ import { inspectionApi } from "../api/inspection/inspectionApi.js";
 import { masterDesignApi } from "../api/masterdesign/masterDesign.js";
 import { milestonePaymentApi } from "../api/milestonePayment/milestonePaymentApi.js";
 import { permissionsApi } from "../api/permission/permissionApi.js";
-
+import { permitToWorkApi } from "../api/hse/permitTowork/permitToworkApi.js";
+import { incidentNearMissApi } from "../api/hse/incidentNearmissInvestigation/incidentNearmissInvestigationApi.js";
+import { safetyViolationApi } from "../api/hse/safetyViolation/safetyViolatioApi.js";
+import { boomLiftInspectionApi } from "../api/hse/boomlift/boomliftApi.js";
+import { trailerInspectionApi } from "../api/hse/trailerInspection/trailerInspectionApi.js";
+import { mockDrillApi } from "../api/hse/mockdrill/mockDrillApi.js";
 
 const store = configureStore({
   reducer: {
@@ -28,44 +33,56 @@ const store = configureStore({
     [landCategoryApi.reducerPath]: landCategoryApi.reducer,
     [landLocationApi.reducerPath]: landLocationApi.reducer,
     [activityApi.reducerPath]: activityApi.reducer,
-    [subActivityApi.reducerPath]:subActivityApi.reducer,
-    [multipleActivityApi.reducerPath]:multipleActivityApi.reducer,
-    [sfaApi.reducerPath]:sfaApi.reducer,
+    [subActivityApi.reducerPath]: subActivityApi.reducer,
+    [multipleActivityApi.reducerPath]: multipleActivityApi.reducer,
+    [sfaApi.reducerPath]: sfaApi.reducer,
     [projectApi.reducerPath]: projectApi.reducer,
     [documentApi.reducerPath]: documentApi.reducer,
     [materialApi.reducerPath]: materialApi.reducer,
-    [companyApi.reducerPath]:companyApi.reducer,
-    [expenseApi.reducerPath]:expenseApi.reducer,
-    [clientDataApi.reducerPath]:clientDataApi.reducer,
-    [projectWpoApi.reducerPath]:projectWpoApi.reducer,
-    [milestoneApi.reducerPath]:milestoneApi.reducer,
-    [inspectionApi.reducerPath]:inspectionApi.reducer,
-    [masterDesignApi.reducerPath]:masterDesignApi.reducer,
-    [milestonePaymentApi.reducerPath]:milestonePaymentApi.reducer,
-    [permissionsApi.reducerPath]:permissionsApi.reducer
+    [companyApi.reducerPath]: companyApi.reducer,
+    [expenseApi.reducerPath]: expenseApi.reducer,
+    [clientDataApi.reducerPath]: clientDataApi.reducer,
+    [projectWpoApi.reducerPath]: projectWpoApi.reducer,
+    [milestoneApi.reducerPath]: milestoneApi.reducer,
+    [inspectionApi.reducerPath]: inspectionApi.reducer,
+    [masterDesignApi.reducerPath]: masterDesignApi.reducer,
+    [milestonePaymentApi.reducerPath]: milestonePaymentApi.reducer,
+    [permissionsApi.reducerPath]: permissionsApi.reducer,
+    [permitToWorkApi.reducerPath]: permitToWorkApi.reducer,
+    [incidentNearMissApi.reducerPath]: incidentNearMissApi.reducer,
+    [safetyViolationApi.reducerPath]: safetyViolationApi.reducer,
+    [boomLiftInspectionApi.reducerPath]: boomLiftInspectionApi.reducer,
+    [trailerInspectionApi.reducerPath]: trailerInspectionApi.reducer,
+    [mockDrillApi.reducerPath]: mockDrillApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
-  .concat(userApi.middleware)
-  .concat(landBankApi.middleware)
-  .concat(landCategoryApi.middleware)
-  .concat(landLocationApi.middleware)
-  .concat(activityApi.middleware)
-  .concat(subActivityApi.middleware)
-  .concat(multipleActivityApi.middleware)
-  .concat(sfaApi.middleware)
-  .concat(projectApi.middleware)
-  .concat(documentApi.middleware)
-  .concat(materialApi.middleware)
-  .concat(companyApi.middleware)
-  .concat(expenseApi.middleware)
-  .concat(clientDataApi.middleware)
-  .concat(projectWpoApi.middleware)
-  .concat(milestoneApi.middleware)
-  .concat(inspectionApi.middleware)
-  .concat(masterDesignApi.middleware)
-  .concat(milestonePaymentApi.middleware)
-  .concat(permissionsApi.middleware)
+      .concat(userApi.middleware)
+      .concat(landBankApi.middleware)
+      .concat(landCategoryApi.middleware)
+      .concat(landLocationApi.middleware)
+      .concat(activityApi.middleware)
+      .concat(subActivityApi.middleware)
+      .concat(multipleActivityApi.middleware)
+      .concat(sfaApi.middleware)
+      .concat(projectApi.middleware)
+      .concat(documentApi.middleware)
+      .concat(materialApi.middleware)
+      .concat(companyApi.middleware)
+      .concat(expenseApi.middleware)
+      .concat(clientDataApi.middleware)
+      .concat(projectWpoApi.middleware)
+      .concat(milestoneApi.middleware)
+      .concat(inspectionApi.middleware)
+      .concat(masterDesignApi.middleware)
+      .concat(milestonePaymentApi.middleware)
+      .concat(permissionsApi.middleware)
+      .concat(permitToWorkApi.middleware)
+      .concat(incidentNearMissApi.middleware)
+      .concat(safetyViolationApi.middleware)
+      .concat(boomLiftInspectionApi.middleware)
+      .concat(trailerInspectionApi.middleware)
+      .concat(mockDrillApi.middleware)
 });
 
 export default store;
