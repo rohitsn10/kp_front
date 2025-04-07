@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import ImageViewer from '../../../utils/signatureViewer';
 import TrainingInductionDialog from '../../../components/pages/hse/induction-training/CreateTrainingInduction';
+import AttendanceFormDialog from '../../../components/pages/hse/induction-training/CreateAttendance';
 
 function InductionTraining() {
   const [page, setPage] = useState(0);
@@ -25,8 +26,8 @@ function InductionTraining() {
   const [selectedTraining, setSelectedTraining] = useState(null);
   const [openTopicsModal, setOpenTopicsModal] = useState(false);
   const [openParticipantsModal, setOpenParticipantsModal] = useState(false);
-
-  const [openCreateDialog,setCreateDialog] =useState(false);
+  const [openCreateDialog, setCreateDialog] = useState(false);
+  const [openAttendanceDialog, setOpenAttendanceDialog] = useState(false);
 
   const dummyInduction = [
     {
@@ -94,6 +95,18 @@ function InductionTraining() {
     setSelectedTraining(training);
     setOpenParticipantsModal(true);
   };
+  
+  const openAttendanceHandler = (training) => {
+    setSelectedTraining(training);
+    setOpenAttendanceDialog(true);
+  };
+
+  // Placeholder for the attendance submission handler
+  const handleAttendanceSubmit = (data) => {
+    console.log("Attendance data submitted for training:", selectedTraining);
+    console.log("Attendance data:", data);
+    // Submission logic will be implemented later as requested
+  };
 
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
@@ -155,6 +168,19 @@ function InductionTraining() {
                       onClick={() => openParticipantsModalHandler(training)}
                     >
                       View Participants
+                    </Button>
+                    <Button 
+                      variant="contained" 
+                      style={{ 
+                        backgroundColor: '#f6812d',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: '#E66A1F',
+                        }
+                      }}
+                      onClick={() => openAttendanceHandler(training)}
+                    >
+                      Record Attendance
                     </Button>
                   </div>
                 </TableCell>
@@ -234,10 +260,26 @@ function InductionTraining() {
           ))}
         </DialogContent>
       </Dialog>
+      
+      {/* Create Training Dialog */}
       <TrainingInductionDialog
-                open={openCreateDialog}
-                setOpen={setCreateDialog}
+        open={openCreateDialog}
+        setOpen={setCreateDialog}
       />
+      
+      {/* Attendance Form Dialog */}
+      {selectedTraining && (
+        <AttendanceFormDialog
+          open={openAttendanceDialog}
+          setOpen={setOpenAttendanceDialog}
+          onSubmit={handleAttendanceSubmit}
+          initialData={{
+            site: selectedTraining.site,
+            date: new Date().toISOString().split('T')[0], // Today's date
+            time: new Date().toTimeString().slice(0, 5) // Current time
+          }}
+        />
+      )}
     </div>
   );
 }

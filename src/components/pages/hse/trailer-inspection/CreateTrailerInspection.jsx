@@ -11,6 +11,8 @@ import {
   MenuItem,
   Select,
   Grid,
+  Box,
+  Avatar,
 } from "@mui/material";
 import { toast } from "react-toastify";
 
@@ -22,6 +24,11 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
   const [inspectionDate, setInspectionDate] = useState("");
   const [siteName, setSiteName] = useState("");
   const [location, setLocation] = useState("");
+  
+  // New fields
+  const [remarks, setRemarks] = useState("");
+  const [inspectedByName, setInspectedByName] = useState("");
+  const [inspectedBySignature, setInspectedBySignature] = useState(null);
 
   // Inspection fields - each field has observations, action_by, and remarks
   const [inspectionFields, setInspectionFields] = useState({
@@ -120,6 +127,8 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
     if (!inspectionDate.trim()) return toast.error("Inspection Date is required!");
     if (!siteName.trim()) return toast.error("Site Name is required!");
     if (!location.trim()) return toast.error("Location is required!");
+    if (!inspectedByName.trim()) return toast.error("Inspected By Name is required!");
+    if (!inspectedBySignature) return toast.error("Inspected By Signature is required!");
     
     // Check if all inspection fields have observations filled
     for (const [key, value] of Object.entries(inspectionFields)) {
@@ -165,6 +174,18 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
       borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
     },
   };
+  
+  // Signature upload handler
+  const handleSignatureUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setInspectedBySignature(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = () => {
     if (!validateForm()) return;
@@ -191,6 +212,9 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
       inspection_date: formattedDate,
       site_name: siteName,
       location: location,
+      remarks: remarks,
+      inspected_by_name: inspectedByName,
+      inspected_by_signature: inspectedBySignature,
     };
 
     // Add all inspection fields to request data
@@ -212,18 +236,6 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
           <p className="font-semibold text-[#29346B]">{label}</p>
         </Grid>
         <Grid item xs={12} md={4}>
-          {/* <FormControl fullWidth variant="outlined" sx={commonInputStyles}>
-            <InputLabel>Observations</InputLabel>
-            <Select
-              value={inspectionFields[fieldKey].observations}
-              onChange={(e) => handleInspectionFieldChange(fieldKey, 'observations', e.target.value)}
-              label="Observations"
-            >
-              {observationOptions.map(option => (
-                <MenuItem key={option} value={option}>{option}</MenuItem>
-              ))}
-            </Select>
-          </FormControl> */}
           <TextField
             fullWidth
             label="Observation"
@@ -361,6 +373,73 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
           {renderInspectionField('speedometere', 'Speedometer')}
           {renderInspectionField('guard_parts', 'Guard Parts')}
           {renderInspectionField('ppe', 'PPE')}
+        </div>
+        
+        {/* Added new fields section */}
+        <div className="my-4 border-t border-gray-300 pt-4">
+          {/* <h3 className="text-xl font-bold text-[#29346B] mb-4">Summary & Sign-off</h3> */}
+          
+          <Grid container spacing={3}>
+            {/* Remarks field */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Remarks"
+                variant="outlined"
+                multiline
+                rows={3}
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                sx={commonInputStyles}
+                className="mb-4"
+              />
+            </Grid>
+            
+            {/* Inspected By Name field */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Inspected By Name"
+                variant="outlined"
+                value={inspectedByName}
+                onChange={(e) => setInspectedByName(e.target.value)}
+                required
+                sx={commonInputStyles}
+                className="mb-4"
+              />
+            </Grid>
+            
+            {/* Inspected By Signature field */}
+            <Grid item xs={12} md={6}>
+              <label className="block mb-1 text-[#29346B] font-semibold">
+                Inspected By Signature<span className="text-red-600"> *</span>
+              </label>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  color="primary"
+                  sx={{ height: "56px" }}
+                >
+                  Upload Signature
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleSignatureUpload}
+                  />
+                </Button>
+                {inspectedBySignature && (
+                  <Avatar
+                    src={inspectedBySignature}
+                    alt="Inspector Signature"
+                    variant="rounded"
+                    sx={{ width: 100, height: 56 }}
+                  />
+                )}
+              </Box>
+            </Grid>
+          </Grid>
         </div>
       </DialogContent>
 

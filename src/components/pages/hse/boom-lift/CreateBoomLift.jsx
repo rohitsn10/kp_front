@@ -12,10 +12,12 @@ import {
   Select,
   Grid,
   CircularProgress,
+  Box,
+  Avatar,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreateBoomLiftInspectionMutation } from "../../../../api/hse/boomLift/boomliftApi";
-// import { useCreateBoomLiftInspectionMutation } from "../services/api"; // Update path as needed
+
 export default function BoomLiftInspectionDialog({ open, setOpen }) {
   // RTK query hook
   const [createBoomLiftInspection, { isLoading }] = useCreateBoomLiftInspectionMutation();
@@ -27,6 +29,11 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
   const [inspectionDate, setInspectionDate] = useState("");
   const [siteName, setSiteName] = useState("");
   const [location, setLocation] = useState("");
+  
+  // New fields
+  const [remarks, setRemarks] = useState("");
+  const [inspectedByName, setInspectedByName] = useState("");
+  const [inspectedBySignature, setInspectedBySignature] = useState(null);
 
   // Inspection fields - each field has observations, action_by, and remarks
   const [inspectionFields, setInspectionFields] = useState({
@@ -136,11 +143,17 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
       { value: inspectionDate, label: "Inspection Date" },
       { value: siteName, label: "Site Name" },
       { value: location, label: "Location" },
+      { value: inspectedByName, label: "Inspected By Name" },
     ];
   
     const emptyField = requiredFields.find(field => !field.value || field.value.trim?.() === "");
     if (emptyField) {
       toast.error(`${emptyField.label} is required!`);
+      return false;
+    }
+    
+    if (!inspectedBySignature) {
+      toast.error("Inspected By Signature is required!");
       return false;
     }
   
@@ -190,6 +203,18 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
       borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
     },
   };
+  
+  // Signature upload handler
+  const handleSignatureUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setInspectedBySignature(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const resetForm = () => {
     setEquipmentName("");
@@ -198,6 +223,9 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
     setInspectionDate("");
     setSiteName("");
     setLocation("");
+    setRemarks("");
+    setInspectedByName("");
+    setInspectedBySignature(null);
     
     // Reset all inspection fields
     const resetFields = {};
@@ -206,51 +234,6 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
     });
     setInspectionFields(resetFields);
   };
-
-  // const handleSubmit = async () => {
-  //   if (!validateForm()) return;
-
-  //   // Format the date as ISO string if it's a valid date
-  //   let formattedDate = inspectionDate;
-  //   if (inspectionDate) {
-  //     try {
-  //       const dateObj = new Date(inspectionDate);
-  //       if (!isNaN(dateObj.getTime())) {
-  //         formattedDate = dateObj.toISOString();
-  //       }
-  //     } catch (error) {
-  //       console.error("Date formatting error:", error);
-  //     }
-  //   }
-
-  //   // Transform the state data to match the API request format
-  //   const requestData = {
-  //     equipment_name: equipmentName,
-  //     make_model: makeModel,
-  //     identification_number: identificationNumber,
-  //     inspection_date: formattedDate,
-  //     site_name: siteName,
-  //     location: location,
-  //   };
-
-  //   // Add all inspection fields to request data
-  //   for (const [key, value] of Object.entries(inspectionFields)) {
-  //     requestData[`${key}_observations`] = value.observations;
-  //     requestData[`${key}_action_by`] = value.action_by;
-  //     requestData[`${key}_remarks`] = value.remarks || "No remarks"; // Set default value if empty
-  //   }
-
-  //   try {
-  //     // Call the RTK query mutation
-  //     const result = await createBoomLiftInspection(requestData).unwrap();
-  //     toast.success("Boom Lift inspection submitted successfully!");
-  //     resetForm();
-  //     setOpen(false);
-  //   } catch (error) {
-  //     console.error("Submission error:", error);
-  //     toast.error(error.data?.message || "Failed to submit inspection. Please try again.");
-  //   }
-  // };
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
@@ -274,6 +257,9 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
       inspection_date: formattedDate,
       site_name: siteName,
       location: location,
+      remarks: remarks,
+      inspected_by_name: inspectedByName,
+      inspected_by_signature: inspectedBySignature,
     };
   
     for (const [key, value] of Object.entries(inspectionFields)) {
@@ -306,24 +292,14 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
         </Grid>
         <Grid item xs={12} md={4}>
           <FormControl fullWidth variant="outlined" sx={commonInputStyles}>
-            {/* <InputLabel>Observations</InputLabel>
-            <Select
+            <TextField
+              fullWidth
+              label="Observations"
+              variant="outlined"
               value={inspectionFields[fieldKey].observations}
               onChange={(e) => handleInspectionFieldChange(fieldKey, 'observations', e.target.value)}
-              label="Observations"
-            >
-              {observationOptions.map(option => (
-                <MenuItem key={option} value={option}>{option}</MenuItem>
-              ))}
-            </Select> */}
-                        <TextField
-                        fullWidth
-                        label="Observations"
-                        variant="outlined"
-                        value={inspectionFields[fieldKey].observations}
-                        onChange={(e) => handleInspectionFieldChange(fieldKey, 'observations', e.target.value)}
-                        sx={commonInputStyles}
-                      />
+              sx={commonInputStyles}
+            />
           </FormControl>
         </Grid>
         <Grid item xs={12} md={4}>
@@ -456,6 +432,73 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
           {renderInspectionField('battery_condition', 'Battery Condition')}
           {renderInspectionField('operator_list', 'Operator List')}
           {renderInspectionField('ppe', 'PPE')}
+        </div>
+        
+        {/* Added new fields section */}
+        <div className="my-4 border-t border-gray-300 pt-4">
+          {/* <h3 className="text-xl font-bold text-[#29346B] mb-4">Summary & Sign-off</h3> */}
+          
+          <Grid container spacing={3}>
+            {/* Remarks field */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Remarks"
+                variant="outlined"
+                multiline
+                rows={3}
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                sx={commonInputStyles}
+                className="mb-4"
+              />
+            </Grid>
+            
+            {/* Inspected By Name field */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Inspected By Name"
+                variant="outlined"
+                value={inspectedByName}
+                onChange={(e) => setInspectedByName(e.target.value)}
+                required
+                sx={commonInputStyles}
+                className="mb-4"
+              />
+            </Grid>
+            
+            {/* Inspected By Signature field */}
+            <Grid item xs={12} md={6}>
+              <label className="block mb-1 text-[#29346B] font-semibold">
+                Inspected By Signature<span className="text-red-600"> *</span>
+              </label>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  color="primary"
+                  sx={{ height: "56px" }}
+                >
+                  Upload Signature
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleSignatureUpload}
+                  />
+                </Button>
+                {inspectedBySignature && (
+                  <Avatar
+                    src={inspectedBySignature}
+                    alt="Inspector Signature"
+                    variant="rounded"
+                    sx={{ width: 100, height: 56 }}
+                  />
+                )}
+              </Box>
+            </Grid>
+          </Grid>
         </div>
       </DialogContent>
 

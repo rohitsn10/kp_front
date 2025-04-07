@@ -13,6 +13,10 @@ import {
   Avatar,
   FormControlLabel,
   Checkbox,
+  RadioGroup,
+  Radio,
+  FormControl,
+  FormLabel,
 } from "@mui/material";
 import { toast } from "react-toastify";
 
@@ -37,15 +41,15 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
   });
   const [purposeOfExcavation, setPurposeOfExcavation] = useState("");
   const [clearancesForExcavation, setClearancesForExcavation] = useState({
-    electrical_cables: { status: "", name: "", signature: null, date: "" },
-    water_gas_pipes: { status: "", name: "", signature: null, date: "" },
-    telephone_it_cables: { status: "", name: "", signature: null, date: "" },
+    electrical_cables: { description: "", name: "", signature: null, date: "" },
+    water_gas_pipes: { description: "", name: "", signature: null, date: "" },
+    telephone_it_cables: { description: "", name: "", signature: null, date: "" },
   });
   const [precautionsTakenByAcceptor, setPrecautionsTakenByAcceptor] = useState({
-    road_barricading_done: false,
-    warning_signs_provided: false,
-    barricading_excavated_area: false,
-    shoring_carried_out: "",
+    road_barricading_done: "No",
+    warning_signs_provided: "No",
+    barricading_excavated_area: "No",
+    shoring_carried_out: "No",
     other_precautions: "",
     name: "",
     signature: null,
@@ -458,16 +462,16 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    label="Status"
+                    label="Description"
                     variant="outlined"
-                    value={clearance.status}
+                    value={clearance.description}
                     sx={commonInputStyles}
                     onChange={(e) =>
                       setClearancesForExcavation({
                         ...clearancesForExcavation,
                         [key]: {
                           ...clearancesForExcavation[key],
-                          status: e.target.value,
+                          description: e.target.value,
                         },
                       })
                     }
@@ -495,7 +499,7 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
                   <TextField
                     fullWidth
                     type="date"
-                    label="Date"
+                    // label="Date"
                     variant="outlined"
                     value={clearance.date}
                     sx={commonInputStyles}
@@ -558,78 +562,101 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
           </Grid>
           <Grid item xs={12}>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={precautionsTakenByAcceptor.road_barricading_done}
-                      onChange={(e) =>
-                        setPrecautionsTakenByAcceptor({
-                          ...precautionsTakenByAcceptor,
-                          road_barricading_done: e.target.checked,
-                        })
-                      }
-                      color="primary"
-                    />
-                  }
-                  label="Road Barricading Done"
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={precautionsTakenByAcceptor.warning_signs_provided}
-                      onChange={(e) =>
-                        setPrecautionsTakenByAcceptor({
-                          ...precautionsTakenByAcceptor,
-                          warning_signs_provided: e.target.checked,
-                        })
-                      }
-                      color="primary"
-                    />
-                  }
-                  label="Warning Signs Provided"
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={
-                        precautionsTakenByAcceptor.barricading_excavated_area
-                      }
-                      onChange={(e) =>
-                        setPrecautionsTakenByAcceptor({
-                          ...precautionsTakenByAcceptor,
-                          barricading_excavated_area: e.target.checked,
-                        })
-                      }
-                      color="primary"
-                    />
-                  }
-                  label="Barricading Excavated Area"
-                />
-              </Grid>
+              {/* Road Barricading Done */}
               <Grid item xs={12} md={6}>
+                <FormControl component="fieldset">
+                  <FormLabel component="legend" className="text-[#29346B] font-medium">
+                    Road Barricading done:
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    value={precautionsTakenByAcceptor.road_barricading_done}
+                    onChange={(e) =>
+                      setPrecautionsTakenByAcceptor({
+                        ...precautionsTakenByAcceptor,
+                        road_barricading_done: e.target.value,
+                      })
+                    }
+                  >
+                    <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                    <FormControlLabel value="No" control={<Radio />} label="Not Req" />
+                  </RadioGroup>
+                </FormControl>
+              </Grid>
+
+              {/* Warning Signs incl. Light Signal Provided */}
+              <Grid item xs={12} md={6}>
+                <FormControl component="fieldset">
+                  <FormLabel component="legend" className="text-[#29346B] font-medium">
+                    Warning Signs incl. Light Signal Provided:
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    value={precautionsTakenByAcceptor.warning_signs_provided}
+                    onChange={(e) =>
+                      setPrecautionsTakenByAcceptor({
+                        ...precautionsTakenByAcceptor,
+                        warning_signs_provided: e.target.value,
+                      })
+                    }
+                  >
+                    <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                    <FormControlLabel value="No" control={<Radio />} label="Not Req" />
+                  </RadioGroup>
+                </FormControl>
+              </Grid>
+
+              {/* Barricading of excavated area carried out */}
+              <Grid item xs={12} md={6}>
+                <FormControl component="fieldset">
+                  <FormLabel component="legend" className="text-[#29346B] font-medium">
+                    Barricading of excavated area carried out:
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    value={precautionsTakenByAcceptor.barricading_excavated_area}
+                    onChange={(e) =>
+                      setPrecautionsTakenByAcceptor({
+                        ...precautionsTakenByAcceptor,
+                        barricading_excavated_area: e.target.value,
+                      })
+                    }
+                  >
+                    <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                    <FormControlLabel value="No" control={<Radio />} label="Not Req" />
+                  </RadioGroup>
+                </FormControl>
+              </Grid>
+
+              {/* Shoring carried out */}
+              <Grid item xs={12} md={6}>
+                <FormControl component="fieldset">
+                  <FormLabel component="legend" className="text-[#29346B] font-medium">
+                    Shoring carried out:
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    value={precautionsTakenByAcceptor.shoring_carried_out}
+                    onChange={(e) =>
+                      setPrecautionsTakenByAcceptor({
+                        ...precautionsTakenByAcceptor,
+                        shoring_carried_out: e.target.value,
+                      })
+                    }
+                  >
+                    <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
+                    <FormControlLabel value="No" control={<Radio />} label="Not Req" />
+                  </RadioGroup>
+                </FormControl>
+              </Grid>
+
+              {/* Any other precautions taken */}
+              <Grid item xs={12}>
+                <FormLabel component="legend" className="text-[#29346B] font-medium">
+                  Any other precautions taken (specify):
+                </FormLabel>
                 <TextField
                   fullWidth
-                  label="Shoring Carried Out"
-                  variant="outlined"
-                  value={precautionsTakenByAcceptor.shoring_carried_out}
-                  sx={commonInputStyles}
-                  onChange={(e) =>
-                    setPrecautionsTakenByAcceptor({
-                      ...precautionsTakenByAcceptor,
-                      shoring_carried_out: e.target.value,
-                    })
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Other Precautions"
                   variant="outlined"
                   value={precautionsTakenByAcceptor.other_precautions}
                   sx={commonInputStyles}
@@ -641,10 +668,14 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
                   }
                 />
               </Grid>
+
+              {/* Name of Acceptor */}
               <Grid item xs={12} md={6}>
+                <FormLabel component="legend" className="text-[#29346B] font-medium">
+                  Name of Acceptor:
+                </FormLabel>
                 <TextField
                   fullWidth
-                  label="Name"
                   variant="outlined"
                   value={precautionsTakenByAcceptor.name}
                   sx={commonInputStyles}
@@ -656,12 +687,18 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
                   }
                 />
               </Grid>
+
+              {/* Signature of Acceptor */}
               <Grid item xs={12} md={6}>
+                <FormLabel component="legend" className="text-[#29346B] font-medium">
+                  Signature of Acceptor:
+                </FormLabel>
                 <Box
                   sx={{
                     display: "flex",
                     alignItems: "center",
                     gap: 2,
+                    marginTop: "8px"
                   }}
                 >
                   <Button

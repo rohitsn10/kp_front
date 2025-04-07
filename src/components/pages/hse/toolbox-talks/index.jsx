@@ -23,9 +23,13 @@ import { toast } from "react-toastify";
 export default function ToolboxAttendanceDialog({ open, setOpen }) {
   const [site, setSite] = useState("");
   const [date, setDate] = useState("");
-  const [facultyName, setFacultyName] = useState("");
-  const [topic, setTopic] = useState("");
-  const [facultySignature, setFacultySignature] = useState(null);
+  const [time, setTime] = useState("");
+  const [permitNo, setPermitNo] = useState("");
+  const [permitDate, setPermitDate] = useState("");
+  const [conductorName, setConductorName] = useState("");
+  const [conductorSignature, setConductorSignature] = useState(null);
+  const [contractorName, setContractorName] = useState("");
+  const [jobActivity, setJobActivity] = useState("");
   const [topicsDiscussed, setTopicsDiscussed] = useState([""]);
   const [participants, setParticipants] = useState([
     { name: "", designation: "", signature: null },
@@ -35,9 +39,13 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
   const validateForm = () => {
     if (!site.trim()) return toast.error("Site is required!");
     if (!date.trim()) return toast.error("Date is required!");
-    if (!facultyName.trim()) return toast.error("Faculty Name is required!");
-    if (!topic.trim()) return toast.error("Training Topic is required!");
-    if (!facultySignature) return toast.error("Faculty Signature is required!");
+    if (!time.trim()) return toast.error("Time is required!");
+    if (!permitNo.trim()) return toast.error("TBT Against Permit No. is required!");
+    if (!permitDate.trim()) return toast.error("Permit Date is required!");
+    if (!conductorName.trim()) return toast.error("TBT Conductor Name is required!");
+    if (!conductorSignature) return toast.error("TBT Conductor Signature is required!");
+    if (!contractorName.trim()) return toast.error("Name of contractor is required!");
+    if (!jobActivity.trim()) return toast.error("Job activity details are required!");
 
     if (participants.length === 0)
       return toast.error("At least one participant is required!");
@@ -94,12 +102,12 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
     setParticipants(newParticipants);
   };
 
-  const handleFacultySignatureUpload = (e) => {
+  const handleConductorSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        setFacultySignature(reader.result);
+        setConductorSignature(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -138,9 +146,13 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
     const formData = {
       site: site,
       date: date,
-      faculty_name: facultyName,
-      signature: facultySignature,
-      topic: topic,
+      time: time,
+      permit_no: permitNo,
+      permit_date: permitDate,
+      conductor_name: conductorName,
+      conductor_signature: conductorSignature,
+      contractor_name: contractorName,
+      job_activity: jobActivity,
       topics_discussed: topicsDiscussed.filter((topic) => topic.trim() !== ""),
       participants: participants.map((p) => ({
         name: p.name,
@@ -151,7 +163,7 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
     };
 
     console.log(formData);
-    toast.success("Training attendance data submitted successfully!");
+    toast.success("Toolbox talk attendance data submitted successfully!");
     setOpen(false);
   };
 
@@ -165,13 +177,13 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
           {/* Training Details Section */}
           <Grid item xs={12}>
             <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
-              Training Details
+              TBT Details
             </Typography>
             <Divider />
           </Grid>
 
-          {/* Site & Date */}
-          <Grid item xs={12} md={6}>
+          {/* Site, Date & Time */}
+          <Grid item xs={12} md={4}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Site<span className="text-red-600"> *</span>
             </label>
@@ -184,7 +196,7 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
               onChange={(e) => setSite(e.target.value)}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={4}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Date<span className="text-red-600"> *</span>
             </label>
@@ -197,40 +209,73 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
               onChange={(e) => setDate(e.target.value)}
             />
           </Grid>
+          <Grid item xs={12} md={4}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Time<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              type="time"
+              value={time}
+              sx={commonInputStyles}
+              onChange={(e) => setTime(e.target.value)}
+            />
+          </Grid>
 
-          {/* Topic */}
+          {/* Permit Number & Date */}
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              TBT Against Permit No.<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Permit Number"
+              value={permitNo}
+              sx={commonInputStyles}
+              onChange={(e) => setPermitNo(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Permit Date<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              type="date"
+              value={permitDate}
+              sx={commonInputStyles}
+              onChange={(e) => setPermitDate(e.target.value)}
+            />
+          </Grid>
+
+          {/* TBT Conductor Information */}
           <Grid item xs={12}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Training Topic<span className="text-red-600"> *</span>
-            </label>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Enter Training Topic"
-              value={topic}
-              sx={commonInputStyles}
-              onChange={(e) => setTopic(e.target.value)}
-            />
+            <Typography variant="h6" className="text-[#29346B] font-semibold mb-2 mt-2">
+              TBT Conducted by
+            </Typography>
+            <Divider />
           </Grid>
-
-          {/* Faculty Information */}
+          
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Faculty Name<span className="text-red-600"> *</span>
+              Name<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Enter Faculty Name"
-              value={facultyName}
+              placeholder="Enter Conductor's Name"
+              value={conductorName}
               sx={commonInputStyles}
-              onChange={(e) => setFacultyName(e.target.value)}
+              onChange={(e) => setConductorName(e.target.value)}
             />
           </Grid>
 
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Faculty Signature<span className="text-red-600"> *</span>
+              Signature<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -250,18 +295,49 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={handleFacultySignatureUpload}
+                  onChange={handleConductorSignatureUpload}
                 />
               </Button>
-              {facultySignature && (
+              {conductorSignature && (
                 <Avatar
-                  src={facultySignature}
-                  alt="Faculty Signature"
+                  src={conductorSignature}
+                  alt="Conductor Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
                 />
               )}
             </Box>
+          </Grid>
+
+          {/* Contractor & Job Activity */}
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Name of contractor<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Contractor Name"
+              value={contractorName}
+              sx={commonInputStyles}
+              onChange={(e) => setContractorName(e.target.value)}
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Job activity in details<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Job Activity Details"
+              value={jobActivity}
+              sx={commonInputStyles}
+              onChange={(e) => setJobActivity(e.target.value)}
+              multiline
+              rows={2}
+            />
           </Grid>
 
           {/* Topics Discussed Section */}

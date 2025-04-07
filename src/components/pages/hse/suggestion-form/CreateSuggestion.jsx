@@ -15,45 +15,37 @@ import {
 import { toast } from "react-toastify";
 
 export default function SuggestionFormDialog({ open, setOpen }) {
-  const [id, setId] = useState("");
   const [site, setSite] = useState("");
   const [date, setDate] = useState("");
   const [name, setName] = useState("");
   const [designation, setDesignation] = useState("");
-  const [department, setDepartment] = useState("");
   const [descriptionOfSuggestion, setDescriptionOfSuggestion] = useState("");
   const [benefitsUponImplementation, setBenefitsUponImplementation] = useState(
     ""
   );
   const [evaluation, setEvaluation] = useState({
-    status: "",
     evaluated_by: "",
     name: "",
     designation: "",
-    date: "",
-    comments: "",
+    remarks: "",
     signature: null,
   });
 
   const validateForm = () => {
-    if (!id.trim()) return toast.error("Suggestion ID is required!");
     if (!site.trim()) return toast.error("Site is required!");
     if (!date.trim()) return toast.error("Date is required!");
     if (!name.trim()) return toast.error("Name is required!");
     if (!designation.trim()) return toast.error("Designation is required!");
-    if (!department.trim()) return toast.error("Department is required!");
     if (!descriptionOfSuggestion.trim())
       return toast.error("Description of Suggestion is required!");
     if (!benefitsUponImplementation.trim())
       return toast.error("Benefits Upon Implementation is required!");
-    if (!evaluation.status.trim()) return toast.error("Evaluation Status is required!");
     if (!evaluation.evaluated_by.trim())
       return toast.error("Evaluated By is required!");
     if (!evaluation.name.trim()) return toast.error("Evaluator Name is required!");
     if (!evaluation.designation.trim())
       return toast.error("Evaluator Designation is required!");
-    if (!evaluation.date.trim()) return toast.error("Evaluation Date is required!");
-    if (!evaluation.comments.trim()) return toast.error("Evaluation Comments are required!");
+    if (!evaluation.remarks.trim()) return toast.error("Evaluation Remarks are required!");
     if (!evaluation.signature) return toast.error("Evaluator Signature is required!");
 
     return true;
@@ -96,12 +88,10 @@ export default function SuggestionFormDialog({ open, setOpen }) {
     if (!validateForm()) return;
 
     const formData = {
-      id: id,
       site: site,
       date: date,
       name: name,
       designation: designation,
-      department: department,
       description_of_suggestion: descriptionOfSuggestion,
       benefits_upon_implementation: benefitsUponImplementation,
       evaluation: evaluation,
@@ -128,20 +118,6 @@ export default function SuggestionFormDialog({ open, setOpen }) {
               Suggestion Details
             </Typography>
             <Divider />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Suggestion ID<span className="text-red-600"> *</span>
-            </label>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Enter Suggestion ID"
-              value={id}
-              sx={commonInputStyles}
-              onChange={(e) => setId(e.target.value)}
-            />
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -200,20 +176,6 @@ export default function SuggestionFormDialog({ open, setOpen }) {
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Department<span className="text-red-600"> *</span>
-            </label>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Enter Department"
-              value={department}
-              sx={commonInputStyles}
-              onChange={(e) => setDepartment(e.target.value)}
-            />
-          </Grid>
-
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Description of Suggestion<span className="text-red-600"> *</span>
@@ -255,22 +217,6 @@ export default function SuggestionFormDialog({ open, setOpen }) {
               Evaluation Details
             </Typography>
             <Divider />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Evaluation Status<span className="text-red-600"> *</span>
-            </label>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Enter Evaluation Status"
-              value={evaluation.status}
-              sx={commonInputStyles}
-              onChange={(e) =>
-                setEvaluation({ ...evaluation, status: e.target.value })
-              }
-            />
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -321,36 +267,20 @@ export default function SuggestionFormDialog({ open, setOpen }) {
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Evaluation Date<span className="text-red-600"> *</span>
-            </label>
-            <TextField
-              fullWidth
-              variant="outlined"
-              type="date"
-              value={evaluation.date}
-              sx={commonInputStyles}
-              onChange={(e) =>
-                setEvaluation({ ...evaluation, date: e.target.value })
-              }
-            />
-          </Grid>
-
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Evaluation Comments<span className="text-red-600"> *</span>
+              Evaluation Remarks<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               multiline
               rows={4}
               variant="outlined"
-              placeholder="Enter Evaluation Comments"
-              value={evaluation.comments}
+              placeholder="Enter Evaluation Remarks"
+              value={evaluation.remarks}
               sx={commonInputStyles}
               onChange={(e) =>
-                setEvaluation({ ...evaluation, comments: e.target.value })
+                setEvaluation({ ...evaluation, remarks: e.target.value })
               }
             />
           </Grid>

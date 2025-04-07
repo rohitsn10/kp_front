@@ -6,11 +6,9 @@ import {
   DialogContent,
   DialogTitle,
   TextField,
-  FormControl,
-  FormLabel,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
+  Grid,
+  Box,
+  Avatar,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreateSafetyViolationReportMutation } from "../../../../api/hse/safetyViolation/safetyViolatioApi";
@@ -20,38 +18,75 @@ export default function CreateSafetyViolation({ open, setOpen }) {
   const [createSafetyViolationReport, { isLoading }] = useCreateSafetyViolationReportMutation();
 
   const [siteName, setSiteName] = useState("");
-  const [issuedTo, setIssuedTo] = useState("onm"); // Default value matching the curl example
+  const [siteDate, setSiteDate] = useState("");
   const [issuedToViolatorName, setIssuedToViolatorName] = useState("");
   const [issuedToDesignation, setIssuedToDesignation] = useState("");
   const [issuedToDepartment, setIssuedToDepartment] = useState("");
-  const [issuedBy, setIssuedBy] = useState("day"); // Default value matching the curl example
+  const [issuedToSignature, setIssuedToSignature] = useState(null);
   const [issuedByName, setIssuedByName] = useState("");
   const [issuedByDesignation, setIssuedByDesignation] = useState("");
   const [issuedByDepartment, setIssuedByDepartment] = useState("");
+  const [issuedBySignature, setIssuedBySignature] = useState(null);
   const [contractorsName, setContractorsName] = useState("");
   const [descriptionSafetyViolation, setDescriptionSafetyViolation] = useState("");
   const [actionTaken, setActionTaken] = useState("");
+  
+  // New fields for the additional sections
+  const [siteHseoName, setSiteHseoName] = useState("");
+  const [siteHseoSignature, setSiteHseoSignature] = useState(null);
+  const [siteInChargeName, setSiteInChargeName] = useState("");
+  const [siteInChargeSignature, setSiteInChargeSignature] = useState(null);
+  const [projectManagerName, setProjectManagerName] = useState("");
+  const [projectManagerSignature, setProjectManagerSignature] = useState(null);
 
   const validateForm = () => {
     const requiredFields = [
       { value: siteName, label: "Site Name" },
-      { value: issuedTo, label: "Issued To" },
+      { value: siteDate, label: "Date" },
       { value: issuedToViolatorName, label: "Violator Name" },
       { value: issuedToDesignation, label: "Violator Designation" },
       { value: issuedToDepartment, label: "Violator Department" },
-      { value: issuedBy, label: "Issued By" },
       { value: issuedByName, label: "Issuer Name" },
       { value: issuedByDesignation, label: "Issuer Designation" },
       { value: issuedByDepartment, label: "Issuer Department" },
       { value: contractorsName, label: "Contractor's Name" },
       { value: descriptionSafetyViolation, label: "Description of Safety Violation" },
       { value: actionTaken, label: "Action Taken" },
+      { value: siteHseoName, label: "Site HSEO Name" },
+      { value: siteInChargeName, label: "Site In Charge Name" },
+      { value: projectManagerName, label: "Project Manager Name" },
     ];
   
+    // Check text fields
     const emptyField = requiredFields.find(field => !field.value.trim());
-  
     if (emptyField) {
       toast.error(`${emptyField.label} is required!`);
+      return false;
+    }
+    
+    // Check signatures
+    if (!issuedToSignature) {
+      toast.error("Violator Signature is required!");
+      return false;
+    }
+    
+    if (!issuedBySignature) {
+      toast.error("Issuer Signature is required!");
+      return false;
+    }
+    
+    if (!siteHseoSignature) {
+      toast.error("Site HSEO Signature is required!");
+      return false;
+    }
+    
+    if (!siteInChargeSignature) {
+      toast.error("Site In Charge Signature is required!");
+      return false;
+    }
+    
+    if (!projectManagerSignature) {
+      toast.error("Project Manager Signature is required!");
       return false;
     }
   
@@ -65,17 +100,24 @@ export default function CreateSafetyViolation({ open, setOpen }) {
 
     const formData = {
       site_name: siteName,
-      issued_to: issuedTo,
+      site_date: siteDate,
       issued_to_violator_name: issuedToViolatorName,
       issued_to_designation: issuedToDesignation,
       issued_to_department: issuedToDepartment,
-      issued_by: issuedBy,
+      issued_to_signature: issuedToSignature, // Now it's the signature data URL
       issued_by_name: issuedByName,
       issued_by_designation: issuedByDesignation,
       issued_by_department: issuedByDepartment,
+      issued_by_signature: issuedBySignature, // Now it's the signature data URL
       contractors_name: contractorsName,
       description_safety_violation: descriptionSafetyViolation,
-      action_taken: actionTaken
+      action_taken: actionTaken,
+      site_hseo_name: siteHseoName,
+      site_hseo_signature: siteHseoSignature, // Now it's the signature data URL
+      site_in_charge_name: siteInChargeName,
+      site_in_charge_signature: siteInChargeSignature, // Now it's the signature data URL
+      project_manager_name: projectManagerName,
+      project_manager_signature: projectManagerSignature // Now it's the signature data URL
     };
 
     try {
@@ -97,18 +139,26 @@ export default function CreateSafetyViolation({ open, setOpen }) {
   // Function to reset all form fields
   const resetForm = () => {
     setSiteName("");
-    setIssuedTo("onm");
+    setSiteDate("");
     setIssuedToViolatorName("");
     setIssuedToDesignation("");
     setIssuedToDepartment("");
-    setIssuedBy("day");
+    setIssuedToSignature(null);
     setIssuedByName("");
     setIssuedByDesignation("");
     setIssuedByDepartment("");
+    setIssuedBySignature(null);
     setContractorsName("");
     setDescriptionSafetyViolation("");
     setActionTaken("");
+    setSiteHseoName("");
+    setSiteHseoSignature(null);
+    setSiteInChargeName("");
+    setSiteInChargeSignature(null);
+    setProjectManagerName("");
+    setProjectManagerSignature(null);
   };
+  
   const commonInputStyles = {
     "& .MuiOutlinedInput-root": {
       borderRadius: "6px",
@@ -127,6 +177,18 @@ export default function CreateSafetyViolation({ open, setOpen }) {
       border: "1px solid #FACC15",
       borderBottom: "4px solid #FACC15",
     },
+  };
+  
+  // Signature upload handlers
+  const handleSignatureUpload = (setter) => (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setter(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -150,27 +212,24 @@ export default function CreateSafetyViolation({ open, setOpen }) {
           />
         </div>
 
+        {/* Date Field - Added below Site Name */}
+        <div className="mb-4">
+          <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+            Date<span className="text-red-600"> *</span>
+          </label>
+          <TextField
+            fullWidth
+            variant="outlined"
+            type="date"
+            value={siteDate}
+            sx={commonInputStyles}
+            onChange={(e) => setSiteDate(e.target.value)}
+          />
+        </div>
+
         {/* Issued To Section */}
         <div className="mb-4 p-4 border border-gray-200 rounded-lg">
           <h3 className="text-[#29346B] text-xl font-semibold mb-3">Issued To (Violator Details)</h3>
-          
-          <div className="mb-3">
-            <FormControl component="fieldset" className="mb-2">
-              <FormLabel component="legend" className="text-[#29346B] font-semibold">
-                Issued To<span className="text-red-600"> *</span>
-              </FormLabel>
-              <RadioGroup
-                row
-                value={issuedTo}
-                onChange={(e) => setIssuedTo(e.target.value)}
-              >
-                <FormControlLabel value="onm" control={<Radio />} label="ONM" />
-                <FormControlLabel value="project" control={<Radio />} label="Project" />
-                <FormControlLabel value="contractor" control={<Radio />} label="Contractor" />
-                <FormControlLabel value="visitor" control={<Radio />} label="Visitor" />
-              </RadioGroup>
-            </FormControl>
-          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -213,27 +272,42 @@ export default function CreateSafetyViolation({ open, setOpen }) {
               />
             </div>
           </div>
+          
+          {/* Signature field for Issued To with upload functionality */}
+          <div className="mt-4">
+            <label className="block mb-1 text-[#29346B] font-semibold">
+              Signature<span className="text-red-600"> *</span>
+            </label>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ height: "56px" }}
+              >
+                Upload Signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleSignatureUpload(setIssuedToSignature)}
+                />
+              </Button>
+              {issuedToSignature && (
+                <Avatar
+                  src={issuedToSignature}
+                  alt="Violator Signature"
+                  variant="rounded"
+                  sx={{ width: 100, height: 56 }}
+                />
+              )}
+            </Box>
+          </div>
         </div>
 
         {/* Issued By Section */}
         <div className="mb-4 p-4 border border-gray-200 rounded-lg">
           <h3 className="text-[#29346B] text-xl font-semibold mb-3">Issued By (Reporter Details)</h3>
-          
-          <div className="mb-3">
-            <FormControl component="fieldset" className="mb-2">
-              <FormLabel component="legend" className="text-[#29346B] font-semibold">
-                Issued By<span className="text-red-600"> *</span>
-              </FormLabel>
-              <RadioGroup
-                row
-                value={issuedBy}
-                onChange={(e) => setIssuedBy(e.target.value)}
-              >
-                <FormControlLabel value="day" control={<Radio />} label="Day" />
-                <FormControlLabel value="night" control={<Radio />} label="Night" />
-              </RadioGroup>
-            </FormControl>
-          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -275,6 +349,37 @@ export default function CreateSafetyViolation({ open, setOpen }) {
                 onChange={(e) => setIssuedByDepartment(e.target.value)}
               />
             </div>
+          </div>
+          
+          {/* Signature field for Issued By with upload functionality */}
+          <div className="mt-4">
+            <label className="block mb-1 text-[#29346B] font-semibold">
+              Signature<span className="text-red-600"> *</span>
+            </label>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ height: "56px" }}
+              >
+                Upload Signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleSignatureUpload(setIssuedBySignature)}
+                />
+              </Button>
+              {issuedBySignature && (
+                <Avatar
+                  src={issuedBySignature}
+                  alt="Issuer Signature"
+                  variant="rounded"
+                  sx={{ width: 100, height: 56 }}
+                />
+              )}
+            </Box>
           </div>
         </div>
 
@@ -325,6 +430,161 @@ export default function CreateSafetyViolation({ open, setOpen }) {
             sx={commonInputStyles}
             onChange={(e) => setActionTaken(e.target.value)}
           />
+        </div>
+        
+        {/* Additional Sections */}
+        
+        {/* Site HSEO Section */}
+        <div className="mb-4 p-4 border border-gray-200 rounded-lg">
+          <h3 className="text-[#29346B] text-xl font-semibold mb-3">Site HSEO</h3>
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <label className="block mb-1 text-[#29346B] font-semibold">
+                Name<span className="text-red-600"> *</span>
+              </label>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Enter Name"
+                value={siteHseoName}
+                sx={commonInputStyles}
+                onChange={(e) => setSiteHseoName(e.target.value)}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <label className="block mb-1 text-[#29346B] font-semibold">
+                Signature<span className="text-red-600"> *</span>
+              </label>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  color="primary"
+                  sx={{ height: "56px" }}
+                >
+                  Upload Signature
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleSignatureUpload(setSiteHseoSignature)}
+                  />
+                </Button>
+                {siteHseoSignature && (
+                  <Avatar
+                    src={siteHseoSignature}
+                    alt="Site HSEO Signature"
+                    variant="rounded"
+                    sx={{ width: 100, height: 56 }}
+                  />
+                )}
+              </Box>
+            </Grid>
+          </Grid>
+        </div>
+        
+        {/* Site In Charge Section */}
+        <div className="mb-4 p-4 border border-gray-200 rounded-lg">
+          <h3 className="text-[#29346B] text-xl font-semibold mb-3">Site In Charge</h3>
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <label className="block mb-1 text-[#29346B] font-semibold">
+                Name<span className="text-red-600"> *</span>
+              </label>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Enter Name"
+                value={siteInChargeName}
+                sx={commonInputStyles}
+                onChange={(e) => setSiteInChargeName(e.target.value)}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <label className="block mb-1 text-[#29346B] font-semibold">
+                Signature<span className="text-red-600"> *</span>
+              </label>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  color="primary"
+                  sx={{ height: "56px" }}
+                >
+                  Upload Signature
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleSignatureUpload(setSiteInChargeSignature)}
+                  />
+                </Button>
+                {siteInChargeSignature && (
+                  <Avatar
+                    src={siteInChargeSignature}
+                    alt="Site In Charge Signature"
+                    variant="rounded"
+                    sx={{ width: 100, height: 56 }}
+                  />
+                )}
+              </Box>
+            </Grid>
+          </Grid>
+        </div>
+        
+        {/* Project Manager Section */}
+        <div className="mb-4 p-4 border border-gray-200 rounded-lg">
+          <h3 className="text-[#29346B] text-xl font-semibold mb-3">Project Manager</h3>
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <label className="block mb-1 text-[#29346B] font-semibold">
+                Name<span className="text-red-600"> *</span>
+              </label>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Enter Name"
+                value={projectManagerName}
+                sx={commonInputStyles}
+                onChange={(e) => setProjectManagerName(e.target.value)}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <label className="block mb-1 text-[#29346B] font-semibold">
+                Signature<span className="text-red-600"> *</span>
+              </label>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  color="primary"
+                  sx={{ height: "56px" }}
+                >
+                  Upload Signature
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleSignatureUpload(setProjectManagerSignature)}
+                  />
+                </Button>
+                {projectManagerSignature && (
+                  <Avatar
+                    src={projectManagerSignature}
+                    alt="Project Manager Signature"
+                    variant="rounded"
+                    sx={{ width: 100, height: 56 }}
+                  />
+                )}
+              </Box>
+            </Grid>
+          </Grid>
         </div>
       </DialogContent>
 

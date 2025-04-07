@@ -9,6 +9,11 @@ import {
   Grid,
   Typography,
   Divider,
+  FormControl,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Box,
 } from "@mui/material";
 import { toast } from "react-toastify";
 
@@ -17,8 +22,14 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
   const [makeModel, setMakeModel] = useState("");
   const [manufacturingDate, setManufacturingDate] = useState("");
   const [dateOfInspection, setDateOfInspection] = useState("");
+  const [report, setReport] = useState("");
+  const [inspectorName, setInspectorName] = useState("");
+  const [inspectorSignature, setInspectorSignature] = useState("");
   const [visualPhysicalChecks, setVisualPhysicalChecks] = useState([
-    { check: "Visual / Physical Checks", status: "", remarks: "" },
+    // Removed "Visual / Physical Checks" from the list
+    { check: "Harness no fissure, wear or twisted strap", status: "", remarks: "" },
+    { check: "Waist bucket", status: "", remarks: "" },
+    { check: "Both leg Strap buckle", status: "", remarks: "" },
     { check: "Waist buckle", status: "", remarks: "" },
     { check: "Metal D ring at back for lanyard", status: "", remarks: "" },
     { check: "Buckle working (inserting and pulling)", status: "", remarks: "" },
@@ -42,6 +53,10 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
       if (!visualPhysicalChecks[i].remarks.trim())
         return toast.error(`Remarks for ${visualPhysicalChecks[i].check} is required!`);
     }
+    
+    if (!report.trim()) return toast.error("Report is required!");
+    if (!inspectorName.trim()) return toast.error("Inspector Name is required!");
+    if (!inspectorSignature.trim()) return toast.error("Inspector Signature is required!");
 
     return true;
   };
@@ -68,7 +83,6 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
     },
   };
 
-
   const handleCheckChange = (index, field, value) => {
     const newChecks = [...visualPhysicalChecks];
     newChecks[index][field] = value;
@@ -84,6 +98,9 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
       manufacturing_date: manufacturingDate,
       date_of_inspection: dateOfInspection,
       visual_physical_checks: visualPhysicalChecks,
+      report: report,
+      inspector_name: inspectorName,
+      inspector_signature: inspectorSignature,
     };
 
     console.log(formData);
@@ -183,16 +200,30 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Status"
-                    variant="outlined"
-                    value={checkItem.status}
-                    sx={commonInputStyles}
-                    onChange={(e) =>
-                      handleCheckChange(index, "status", e.target.value)
-                    }
-                  />
+                  {/* Changed from TextField to RadioGroup for Status */}
+                  <FormControl component="fieldset">
+                    <Typography variant="body2" color="textSecondary">
+                      Status<span className="text-red-600"> *</span>
+                    </Typography>
+                    <RadioGroup
+                      row
+                      value={checkItem.status}
+                      onChange={(e) =>
+                        handleCheckChange(index, "status", e.target.value)
+                      }
+                    >
+                      <FormControlLabel
+                        value="OK"
+                        control={<Radio color="primary" />}
+                        label="OK"
+                      />
+                      <FormControlLabel
+                        value="Not OK"
+                        control={<Radio color="primary" />}
+                        label="Not OK"
+                      />
+                    </RadioGroup>
+                  </FormControl>
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
@@ -209,6 +240,66 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
               </Grid>
             </Grid>
           ))}
+
+          {/* Report Section */}
+          <Grid item xs={12}>
+            <Typography
+              variant="h6"
+              className="text-[#29346B] font-semibold mb-2 mt-4"
+            >
+              Report
+            </Typography>
+            <Divider />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Report"
+              variant="outlined"
+              multiline
+              rows={4}
+              placeholder="Add multiple points here..."
+              value={report}
+              sx={commonInputStyles}
+              onChange={(e) => setReport(e.target.value)}
+            />
+          </Grid>
+
+          {/* Inspector Information */}
+          <Grid item xs={12}>
+            <Typography
+              variant="h6"
+              className="text-[#29346B] font-semibold mb-2 mt-4"
+            >
+              Inspector Information
+            </Typography>
+            <Divider />
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Inspector Name"
+              variant="outlined"
+              placeholder="Enter inspector's name"
+              value={inspectorName}
+              sx={commonInputStyles}
+              onChange={(e) => setInspectorName(e.target.value)}
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Inspector Signature"
+              variant="outlined"
+              placeholder="Enter inspector's signature"
+              value={inspectorSignature}
+              sx={commonInputStyles}
+              onChange={(e) => setInspectorSignature(e.target.value)}
+            />
+          </Grid>
         </Grid>
       </DialogContent>
 

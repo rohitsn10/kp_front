@@ -6,170 +6,344 @@ import {
   DialogContent,
   DialogTitle,
   TextField,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  Radio,
-  FormControlLabel,
-  Divider,
   Grid,
-  Box,
   Typography,
-  Rating,
-  Checkbox,
-  Chip,
+  Divider,
+  IconButton,
+  Paper,
+  Box,
+  Avatar,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  FormLabel,
 } from "@mui/material";
+import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
 
-export default function MockDrillReportDialog({ open, setOpen }) {
-  const [sitePlantName, setSitePlantName] = useState("");
+export default function MockDrillDialog({ open, setOpen }) {
+  // Basic Information
+  const [site, setSite] = useState("");
   const [location, setLocation] = useState("");
   const [emergencyScenario, setEmergencyScenario] = useState("");
-  const [typeOfMockDrill, setTypeOfMockDrill] = useState("");
-  const [mockDrillDate, setMockDrillDate] = useState("");
-  const [mockDrillTime, setMockDrillTime] = useState("");
+  const [mockDrillType, setMockDrillType] = useState("");
+  
+  // Mock Drill Conducted
+  const [drillDate, setDrillDate] = useState("");
+  const [startTime, setStartTime] = useState("");
   const [completedTime, setCompletedTime] = useState("");
-  const [overallTime, setOverallTime] = useState("");
-  const [teamLeaderController, setTeamLeaderController] = useState("");
-  const [performance, setPerformance] = useState("");
-  const [trafficEvacuation, setTrafficEvacuation] = useState("");
-  const [ambulanceFirstAid, setAmbulanceFirstAid] = useState("");
-  const [teamMember1, setTeamMember1] = useState("");
-  const [teamMember2, setTeamMember2] = useState("");
-  const [tableTopActivity, setTableTopActivity] = useState("");
-  const [tableTopRemarks, setTableTopRemarks] = useState("");
-  const [controlDescription, setControlDescription] = useState("");
-  const [expectedHeadCount, setExpectedHeadCount] = useState("");
-  const [actualHeadCount, setActualHeadCount] = useState("");
-  const [missingHeadCount, setMissingHeadCount] = useState("");
-  const [teamLeaderRating, setTeamLeaderRating] = useState(0);
-  const [teamMembersRating, setTeamMembersRating] = useState([]);
-  const [overallRating, setOverallRating] = useState("");
-  const [observation, setObservation] = useState("");
-  const [improvements, setImprovements] = useState("");
-  const [additionalTrainingNeeded, setAdditionalTrainingNeeded] = useState(false);
-
-  const validateForm = () => {
-    if (!sitePlantName.trim()) return toast.error("Site/Plant Name is required!");
-    if (!location.trim()) return toast.error("Location is required!");
-    if (!emergencyScenario.trim()) return toast.error("Emergency Scenario is required!");
-    if (!typeOfMockDrill.trim()) return toast.error("Type of Mock Drill is required!");
-    if (!mockDrillDate.trim()) return toast.error("Mock Drill Date is required!");
-    if (!mockDrillTime.trim()) return toast.error("Mock Drill Time is required!");
-    if (!completedTime.trim()) return toast.error("Completed Time is required!");
-    if (!teamLeaderController.trim()) return toast.error("Team Leader/Incident Controller is required!");
-
-    return true;
-  };
-
-  const mockDrillTypes = [
-    "Physical practice drill",
-    "Tabletop exercise",
-    "Full-scale simulation",
-    "Functional drill"
-  ];
-
-  const performanceOptions = [
-    "Excellent",
-    "Good",
-    "Satisfactory",
-    "Needs improvement"
-  ];
-
-  const ratingOptions = [
-    "Excellent",
-    "Good",
-    "Satisfactory",
-    "Needs improvement",
-    "Poor"
-  ];
-
-  const handleClose = () => setOpen(false);
+  const [responseTime, setResponseTime] = useState("");
+  
+  // Drill Team Observer
+  const [teamLeader, setTeamLeader] = useState({ name: "", signature: null });
+  const [performanceOMControl, setPerformanceOMControl] = useState({ name: "", signature: null });
+  const [trafficEvacuation, setTrafficEvacuation] = useState({ name: "", signature: null });
+  const [rescueFirstAid, setRescueFirstAid] = useState({ name: "", signature: null });
+  const [teamMembers, setTeamMembers] = useState([
+    { name: "", signature: null }
+  ]);
+  
+  // Table Top Records
+  const [tableTopScenarioRemarks, setTableTopScenarioRemarks] = useState("");
+  const [requiredParticipationRemarks, setRequiredParticipationRemarks] = useState("");
+  const [observersParticipationRemarks, setObserversParticipationRemarks] = useState("");
+  
+  // Description of Control Mitigation Measures
+  const [controlMitigationMeasures, setControlMitigationMeasures] = useState("");
+  
+  // Head Count at Assembly Point
+  const [peoplePresent, setPeoplePresent] = useState({
+    kpiEmployee: 0,
+    contractorEmployee: 0,
+    visitorsExternalAgencies: 0,
+    remarks: ""
+  });
+  
+  const [actualParticipants, setActualParticipants] = useState({
+    kpiEmployee: 0,
+    contractorEmployee: 0,
+    visitorsExternalAgencies: 0,
+    remarks: ""
+  });
+  
+  const [notParticipated, setNotParticipated] = useState({
+    kpiEmployee: 0,
+    contractorEmployee: 0,
+    visitorsExternalAgencies: 0,
+    remarks: ""
+  });
+  
+  // Ratings
+  const [ratings, setRatings] = useState({
+    operationProcessControl: "Good",
+    performanceOMControl: "Good",
+    firstAidAmbulanceTeam: "Good",
+    trafficEvacuationAssembly: "Good",
+    communicationDuringDrill: "Good",
+    fireTeamResponse: "Good",
+    rescueTeamResponse: "Good",
+    other: "Good",
+    otherDescription: ""
+  });
+  
+  const [overallRating, setOverallRating] = useState("Good");
+  const [observations, setObservations] = useState("");
+  
+  // Recommendations
+  const [recommendations, setRecommendations] = useState([
+    { recommendation: "", responsibility: "", targetDate: "", status: "", actionRemarks: "" }
+  ]);
 
   const commonInputStyles = {
     "& .MuiOutlinedInput-root": {
       borderRadius: "6px",
       transition: "border 0.2s ease-in-out",
       "&:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on hover
+        borderColor: "#FACC15",
         borderBottom: "4px solid #FACC15",
       },
       "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on focus
+        borderColor: "#FACC15",
         borderWidth: "2px",
         borderBottom: "4px solid #FACC15",
       },
     },
     "& .MuiOutlinedInput-notchedOutline": {
-      border: "1px solid #FACC15", // Default border
-      borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
+      border: "1px solid #FACC15",
+      borderBottom: "4px solid #FACC15",
     },
+  };
+
+  const handleClose = () => setOpen(false);
+  const ratingOptions = ["Good", "Very Good", "Excellent"];
+
+  // Validation function
+  const validateForm = () => {
+    if (!site.trim()) return toast.error("Site is required!");
+    if (!location.trim()) return toast.error("Location is required!");
+    if (!emergencyScenario.trim()) return toast.error("Emergency scenario is required!");
+    if (!mockDrillType) return toast.error("Mock drill type is required!");
+    if (!drillDate) return toast.error("Drill date is required!");
+    if (!startTime) return toast.error("Start time is required!");
+    if (!completedTime) return toast.error("Completed time is required!");
+    if (!responseTime) return toast.error("Response time is required!");
+    
+    // Validate team leader
+    if (!teamLeader.name.trim()) return toast.error("Team Leader name is required!");
+    if (!teamLeader.signature) return toast.error("Team Leader signature is required!");
+    
+    // Validate other roles
+    if (!performanceOMControl.name.trim()) return toast.error("Performance O&M Control name is required!");
+    if (!performanceOMControl.signature) return toast.error("Performance O&M Control signature is required!");
+    
+    if (!trafficEvacuation.name.trim()) return toast.error("Traffic/Evacuation name is required!");
+    if (!trafficEvacuation.signature) return toast.error("Traffic/Evacuation signature is required!");
+    
+    if (!rescueFirstAid.name.trim()) return toast.error("Rescue/First Aid name is required!");
+    if (!rescueFirstAid.signature) return toast.error("Rescue/First Aid signature is required!");
+    
+    // Validate team members
+    for (let i = 0; i < teamMembers.length; i++) {
+      if (!teamMembers[i].name.trim())
+        return toast.error(`Team Member ${i + 1} name is required!`);
+      if (!teamMembers[i].signature)
+        return toast.error(`Team Member ${i + 1} signature is required!`);
+    }
+    
+    // Validate recommendations
+    for (let i = 0; i < recommendations.length; i++) {
+      if (!recommendations[i].recommendation.trim())
+        return toast.error(`Recommendation ${i + 1} is required!`);
+      if (!recommendations[i].responsibility.trim())
+        return toast.error(`Responsibility for recommendation ${i + 1} is required!`);
+      if (!recommendations[i].targetDate.trim())
+        return toast.error(`Target date for recommendation ${i + 1} is required!`);
+      if (!recommendations[i].status.trim())
+        return toast.error(`Status for recommendation ${i + 1} is required!`);
+    }
+    
+    return true;
+  };
+
+  // Signature upload handlers
+  const handleSignatureUpload = (setter, currentValue, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setter({ ...currentValue, signature: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleTeamMemberSignatureUpload = (index, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const newTeamMembers = [...teamMembers];
+        newTeamMembers[index].signature = reader.result;
+        setTeamMembers(newTeamMembers);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Team members handlers
+  const handleAddTeamMember = () => {
+    setTeamMembers([...teamMembers, { name: "", signature: null }]);
+  };
+  
+  const handleRemoveTeamMember = (index) => {
+    const newTeamMembers = [...teamMembers];
+    newTeamMembers.splice(index, 1);
+    setTeamMembers(newTeamMembers);
+  };
+  
+  const handleTeamMemberChange = (index, field, value) => {
+    const newTeamMembers = [...teamMembers];
+    newTeamMembers[index][field] = value;
+    setTeamMembers(newTeamMembers);
+  };
+  
+  // Recommendations handlers
+  const handleAddRecommendation = () => {
+    setRecommendations([
+      ...recommendations,
+      { recommendation: "", responsibility: "", targetDate: "", status: "", actionRemarks: "" }
+    ]);
+  };
+  
+  const handleRemoveRecommendation = (index) => {
+    const newRecommendations = [...recommendations];
+    newRecommendations.splice(index, 1);
+    setRecommendations(newRecommendations);
+  };
+  
+  const handleRecommendationChange = (index, field, value) => {
+    const newRecommendations = [...recommendations];
+    newRecommendations[index][field] = value;
+    setRecommendations(newRecommendations);
+  };
+  
+  // Head count handlers
+  const handlePeoplePresentChange = (field, value) => {
+    setPeoplePresent({ ...peoplePresent, [field]: value });
+  };
+  
+  const handleActualParticipantsChange = (field, value) => {
+    setActualParticipants({ ...actualParticipants, [field]: value });
+  };
+  
+  const handleNotParticipatedChange = (field, value) => {
+    setNotParticipated({ ...notParticipated, [field]: value });
+  };
+  
+  // Rating handlers
+  const handleRatingChange = (field, value) => {
+    setRatings({ ...ratings, [field]: value });
   };
 
   const handleSubmit = () => {
     if (!validateForm()) return;
 
     const formData = {
-      site_plant_name: sitePlantName,
-      location: location,
-      emergncy_scenario_mock_drill: emergencyScenario,
-      type_of_mock_drill: typeOfMockDrill,
-      mock_drill_date: mockDrillDate,
-      mock_drill_time: mockDrillTime,
-      completed_time: completedTime,
-      overall_time: overallTime,
-      team_leader_incident_controller: teamLeaderController,
-      performance: performance,
-      traffic_or_evacuation: trafficEvacuation,
-      ambulance_first_aid_ppe_rescue: ambulanceFirstAid,
-      team_member1: teamMember1,
-      team_member2: teamMember2,
-      table_top_records: {
-        activity: tableTopActivity.split(",").map(item => item.trim()),
-        remarks: tableTopRemarks
+      site,
+      location,
+      emergencyScenario,
+      mockDrillType,
+      mockDrillConducted: {
+        date: drillDate,
+        startTime,
+        completedTime
       },
-      description_of_control: controlDescription,
-      head_count_at_assembly_point: {
-        expected: parseInt(expectedHeadCount) || 0,
-        actual: parseInt(actualHeadCount) || 0,
-        missing: parseInt(missingHeadCount) || 0
+      overallResponseTime: responseTime,
+      drillTeamObserver: {
+        teamLeader: {
+          name: teamLeader.name,
+          signature: teamLeader.signature
+        },
+        performanceOMControl: {
+          name: performanceOMControl.name,
+          signature: performanceOMControl.signature
+        },
+        trafficEvacuation: {
+          name: trafficEvacuation.name,
+          signature: trafficEvacuation.signature
+        },
+        rescueFirstAid: {
+          name: rescueFirstAid.name,
+          signature: rescueFirstAid.signature
+        },
+        teamMembers: teamMembers.map(member => ({
+          name: member.name,
+          signature: member.signature
+        }))
       },
-      rating_of_emergency_team_members: {
-        team_leader: teamLeaderRating,
-        team_members: teamMembersRating
+      tableTopRecords: {
+        scenarioConductedRemarks: tableTopScenarioRemarks,
+        requiredParticipationRemarks: requiredParticipationRemarks,
+        observersParticipationRemarks: observersParticipationRemarks
       },
-      overall_rating: overallRating,
-      observation: observation,
-      recommendations: {
-        improvements: improvements.split(",").map(item => item.trim()),
-        additional_training_needed: additionalTrainingNeeded
-      }
+      controlMitigationMeasures,
+      headCountAtAssemblyPoint: {
+        peoplePresent,
+        actualParticipants,
+        notParticipated
+      },
+      emergencyTeamRating: {
+        operationProcessControl: ratings.operationProcessControl,
+        performanceOMControl: ratings.performanceOMControl,
+        firstAidAmbulanceTeam: ratings.firstAidAmbulanceTeam,
+        trafficEvacuationAssembly: ratings.trafficEvacuationAssembly,
+        communicationDuringDrill: ratings.communicationDuringDrill,
+        fireTeamResponse: ratings.fireTeamResponse,
+        rescueTeamResponse: ratings.rescueTeamResponse,
+        other: ratings.other,
+        otherDescription: ratings.otherDescription
+      },
+      overallRating,
+      observations,
+      recommendations
     };
 
     console.log(formData);
-    toast.success("Mock Drill Report submitted successfully!");
+    toast.success("Mock drill data submitted successfully!");
     setOpen(false);
   };
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
       <DialogTitle className="text-[#29346B] text-2xl font-semibold">
-        Mock Drill Report
+        Mock Drill Form
       </DialogTitle>
       <DialogContent>
         <Grid container spacing={3}>
-          {/* Site/Plant Name & Location */}
+          {/* Basic Information Section */}
+          <Grid item xs={12}>
+            <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
+              Basic Information
+            </Typography>
+            <Divider />
+          </Grid>
+
+          {/* Site & Location */}
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Site/Plant Name<span className="text-red-600"> *</span>
+              Site<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Enter Site/Plant Name"
-              value={sitePlantName}
+              placeholder="Enter Site Name"
+              value={site}
               sx={commonInputStyles}
-              onChange={(e) => setSitePlantName(e.target.value)}
+              onChange={(e) => setSite(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -189,56 +363,54 @@ export default function MockDrillReportDialog({ open, setOpen }) {
           {/* Emergency Scenario */}
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Emergency Scenario / Mock Drill<span className="text-red-600"> *</span>
+              Emergency Scenario<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Describe emergency scenario"
+              placeholder="Enter Emergency Scenario"
               value={emergencyScenario}
               sx={commonInputStyles}
               onChange={(e) => setEmergencyScenario(e.target.value)}
             />
           </Grid>
 
-          {/* Type of Mock Drill (Radio Button) */}
+          {/* Drill Type */}
           <Grid item xs={12}>
-            <FormControl component="fieldset">
-              <FormLabel
-                component="legend"
-                className="text-[#29346B] text-lg font-semibold"
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Mock Drill Type<span className="text-red-600"> *</span>
+            </label>
+            <FormControl fullWidth sx={commonInputStyles}>
+              <Select
+                value={mockDrillType}
+                onChange={(e) => setMockDrillType(e.target.value)}
               >
-                Type of Mock Drill<span className="text-red-600"> *</span>
-              </FormLabel>
-              <RadioGroup
-                row
-                value={typeOfMockDrill}
-                onChange={(e) => setTypeOfMockDrill(e.target.value)}
-              >
-                {mockDrillTypes.map((type) => (
-                  <FormControlLabel 
-                    key={type} 
-                    value={type.toLowerCase()} 
-                    control={<Radio />} 
-                    label={type} 
-                  />
-                ))}
-              </RadioGroup>
+                <MenuItem value="Table top Drill">Table top Drill</MenuItem>
+                <MenuItem value="Physical Practice Drill">Physical Practice Drill</MenuItem>
+              </Select>
             </FormControl>
           </Grid>
 
-          {/* Date and Time Section */}
+          {/* Mock Drill Conducted Section */}
+          <Grid item xs={12} mt={2}>
+            <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
+              Mock Drill Conducted
+            </Typography>
+            <Divider />
+          </Grid>
+
+          {/* Date & Times */}
           <Grid item xs={12} md={4}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Drill Date<span className="text-red-600"> *</span>
+              Date<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
-              variant="outlined"
               type="date"
-              value={mockDrillDate}
+              variant="outlined"
+              value={drillDate}
               sx={commonInputStyles}
-              onChange={(e) => setMockDrillDate(e.target.value)}
+              onChange={(e) => setDrillDate(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={4}>
@@ -247,11 +419,11 @@ export default function MockDrillReportDialog({ open, setOpen }) {
             </label>
             <TextField
               fullWidth
-              variant="outlined"
               type="time"
-              value={mockDrillTime}
+              variant="outlined"
+              value={startTime}
               sx={commonInputStyles}
-              onChange={(e) => setMockDrillTime(e.target.value)}
+              onChange={(e) => setStartTime(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={4}>
@@ -260,282 +432,733 @@ export default function MockDrillReportDialog({ open, setOpen }) {
             </label>
             <TextField
               fullWidth
-              variant="outlined"
               type="time"
+              variant="outlined"
               value={completedTime}
               sx={commonInputStyles}
               onChange={(e) => setCompletedTime(e.target.value)}
             />
           </Grid>
 
+          {/* Response Time */}
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Overall Time
+              Overall Response Time<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               variant="outlined"
               placeholder="HH:MM:SS"
-              value={overallTime}
+              value={responseTime}
               sx={commonInputStyles}
-              onChange={(e) => setOverallTime(e.target.value)}
+              onChange={(e) => setResponseTime(e.target.value)}
             />
+          </Grid>
+
+          {/* Drill Team Observer Section */}
+          <Grid item xs={12} mt={2}>
+            <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
+              Drill Team Observer
+            </Typography>
+            <Divider />
+          </Grid>
+
+          {/* Team Leader */}
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Team Leader/Incident Controller - Name<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Team Leader Name"
+              value={teamLeader.name}
+              sx={commonInputStyles}
+              onChange={(e) => setTeamLeader({ ...teamLeader, name: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Team Leader/Incident Controller - Signature<span className="text-red-600"> *</span>
+            </label>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ height: "56px" }}
+              >
+                Upload Signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => handleSignatureUpload(setTeamLeader, teamLeader, e)}
+                />
+              </Button>
+              {teamLeader.signature && (
+                <Avatar
+                  src={teamLeader.signature}
+                  alt="Team Leader Signature"
+                  variant="rounded"
+                  sx={{ width: 100, height: 56 }}
+                />
+              )}
+            </Box>
+          </Grid>
+
+          {/* Performance O&M */}
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Performance - O&M and Control - Name<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Name"
+              value={performanceOMControl.name}
+              sx={commonInputStyles}
+              onChange={(e) => setPerformanceOMControl({ ...performanceOMControl, name: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Performance - O&M and Control - Signature<span className="text-red-600"> *</span>
+            </label>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ height: "56px" }}
+              >
+                Upload Signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => handleSignatureUpload(setPerformanceOMControl, performanceOMControl, e)}
+                />
+              </Button>
+              {performanceOMControl.signature && (
+                <Avatar
+                  src={performanceOMControl.signature}
+                  alt="Performance O&M Signature"
+                  variant="rounded"
+                  sx={{ width: 100, height: 56 }}
+                />
+              )}
+            </Box>
+          </Grid>
+
+          {/* Traffic/Evacuation */}
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Traffic/Evacuation/Assembly Point & Head Count - Name<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Name"
+              value={trafficEvacuation.name}
+              sx={commonInputStyles}
+              onChange={(e) => setTrafficEvacuation({ ...trafficEvacuation, name: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Traffic/Evacuation/Assembly Point & Head Count - Signature<span className="text-red-600"> *</span>
+            </label>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ height: "56px" }}
+              >
+                Upload Signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => handleSignatureUpload(setTrafficEvacuation, trafficEvacuation, e)}
+                />
+              </Button>
+              {trafficEvacuation.signature && (
+                <Avatar
+                  src={trafficEvacuation.signature}
+                  alt="Traffic/Evacuation Signature"
+                  variant="rounded"
+                  sx={{ width: 100, height: 56 }}
+                />
+              )}
+            </Box>
+          </Grid>
+
+          {/* Rescue/First Aid */}
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Rescue/First Aid/Ambulance/PPE - Name<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Name"
+              value={rescueFirstAid.name}
+              sx={commonInputStyles}
+              onChange={(e) => setRescueFirstAid({ ...rescueFirstAid, name: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Rescue/First Aid/Ambulance/PPE - Signature<span className="text-red-600"> *</span>
+            </label>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ height: "56px" }}
+              >
+                Upload Signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => handleSignatureUpload(setRescueFirstAid, rescueFirstAid, e)}
+                />
+              </Button>
+              {rescueFirstAid.signature && (
+                <Avatar
+                  src={rescueFirstAid.signature}
+                  alt="Rescue/First Aid Signature"
+                  variant="rounded"
+                  sx={{ width: 100, height: 56 }}
+                />
+              )}
+            </Box>
           </Grid>
 
           {/* Team Members */}
-          <Grid item xs={12}>
-            <Divider textAlign="left">
+          <Grid item xs={12} mt={2}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6" className="text-[#29346B] font-semibold">
-                Team Information
+                Team Members
               </Typography>
-            </Divider>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleAddTeamMember}
+                sx={{
+                  backgroundColor: "#29346B",
+                  "&:hover": {
+                    backgroundColor: "#202a5a",
+                  },
+                }}
+              >
+                Add Team Member
+              </Button>
+            </Box>
+            <Divider sx={{ my: 1 }} />
+          </Grid>
+
+          {/* Team Member List */}
+          <Grid item xs={12}>
+            {teamMembers.map((member, index) => (
+              <Paper
+                key={index}
+                elevation={1}
+                sx={{
+                  p: 2,
+                  mb: 2,
+                  border: "1px solid #e0e0e0",
+                  position: "relative",
+                }}
+              >
+                <IconButton
+                  color="error"
+                  sx={{ position: "absolute", top: 8, right: 8 }}
+                  onClick={() => handleRemoveTeamMember(index)}
+                  disabled={teamMembers.length === 1}
+                >
+                  <DeleteIcon />
+                </IconButton>
+
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
+                  Team Member {index + 1}
+                </Typography>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Name"
+                      variant="outlined"
+                      value={member.name}
+                      required
+                      onChange={(e) =>
+                        handleTeamMemberChange(index, "name", e.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                      }}
+                    >
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        color="primary"
+                      >
+                        Upload Signature
+                        <input
+                          type="file"
+                          accept="image/*"
+                          hidden
+                          onChange={(e) => handleTeamMemberSignatureUpload(index, e)}
+                        />
+                      </Button>
+                      {member.signature && (
+                        <Avatar
+                          src={member.signature}
+                          alt="Team Member Signature"
+                          variant="rounded"
+                          sx={{ width: 100, height: 56 }}
+                        />
+                      )}
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Paper>
+            ))}
+          </Grid>
+
+          {/* Table Top Records Section */}
+          <Grid item xs={12} mt={2}>
+            <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
+              Table Top Records
+            </Typography>
+            <Divider />
           </Grid>
 
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Team Leader/Incident Controller<span className="text-red-600"> *</span>
-            </label>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Enter name of team leader"
-              value={teamLeaderController}
-              sx={commonInputStyles}
-              onChange={(e) => setTeamLeaderController(e.target.value)}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Team Member 1
-            </label>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Enter name"
-              value={teamMember1}
-              sx={commonInputStyles}
-              onChange={(e) => setTeamMember1(e.target.value)}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Team Member 2
-            </label>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Enter name"
-              value={teamMember2}
-              sx={commonInputStyles}
-              onChange={(e) => setTeamMember2(e.target.value)}
-            />
-          </Grid>
-
-          {/* Performance Metrics */}
-          <Grid item xs={12}>
-            <Divider textAlign="left">
-              <Typography variant="h6" className="text-[#29346B] font-semibold">
-                Performance & Details
-              </Typography>
-            </Divider>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Performance
-            </label>
-            <TextField
-              select
-              fullWidth
-              variant="outlined"
-              value={performance}
-              sx={commonInputStyles}
-              onChange={(e) => setPerformance(e.target.value)}
-              SelectProps={{
-                native: true,
-              }}
-            >
-              <option value="">Select Performance</option>
-              {performanceOptions.map((option) => (
-                <option key={option} value={option.toLowerCase()}>{option}</option>
-              ))}
-            </TextField>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Traffic/Evacuation
-            </label>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Traffic or evacuation details"
-              value={trafficEvacuation}
-              sx={commonInputStyles}
-              onChange={(e) => setTrafficEvacuation(e.target.value)}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Ambulance/First Aid/PPE/Rescue
-            </label>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="First aid details"
-              value={ambulanceFirstAid}
-              sx={commonInputStyles}
-              onChange={(e) => setAmbulanceFirstAid(e.target.value)}
-            />
-          </Grid>
-
-          {/* Table Top Records */}
-          <Grid item xs={12} md={6}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Table Top Activities
-            </label>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Enter activities (comma separated)"
-              value={tableTopActivity}
-              sx={commonInputStyles}
-              onChange={(e) => setTableTopActivity(e.target.value)}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Table Top Remarks
-            </label>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Enter remarks"
-              value={tableTopRemarks}
-              sx={commonInputStyles}
-              onChange={(e) => setTableTopRemarks(e.target.value)}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Description of Control
+              Table top for the Scenario conducted - Remarks
             </label>
             <TextField
               fullWidth
               multiline
               rows={2}
               variant="outlined"
-              placeholder="Describe control measures taken"
-              value={controlDescription}
+              placeholder="Enter remarks"
+              value={tableTopScenarioRemarks}
               sx={commonInputStyles}
-              onChange={(e) => setControlDescription(e.target.value)}
+              onChange={(e) => setTableTopScenarioRemarks(e.target.value)}
             />
           </Grid>
 
-          {/* Head Count Section */}
           <Grid item xs={12}>
-            <Divider textAlign="left">
-              <Typography variant="h6" className="text-[#29346B] font-semibold">
-                Head Count at Assembly Point
-              </Typography>
-            </Divider>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Expected
+              Required Participation in the table top ensured - Remarks
             </label>
             <TextField
               fullWidth
-              type="number"
+              multiline
+              rows={2}
               variant="outlined"
-              placeholder="Number of expected people"
-              value={expectedHeadCount}
+              placeholder="Enter remarks"
+              value={requiredParticipationRemarks}
               sx={commonInputStyles}
-              onChange={(e) => setExpectedHeadCount(e.target.value)}
+              onChange={(e) => setRequiredParticipationRemarks(e.target.value)}
             />
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Actual
-            </label>
-            <TextField
-              fullWidth
-              type="number"
-              variant="outlined"
-              placeholder="Number of actual people"
-              value={actualHeadCount}
-              sx={commonInputStyles}
-              onChange={(e) => setActualHeadCount(e.target.value)}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Missing
-            </label>
-            <TextField
-              fullWidth
-              type="number"
-              variant="outlined"
-              placeholder="Number of missing people"
-              value={missingHeadCount}
-              sx={commonInputStyles}
-              onChange={(e) => setMissingHeadCount(e.target.value)}
-            />
-          </Grid>
-
-          {/* Rating Section */}
           <Grid item xs={12}>
-            <Divider textAlign="left">
-              <Typography variant="h6" className="text-[#29346B] font-semibold">
-                Rating & Evaluation
-              </Typography>
-            </Divider>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Team Leader Rating
+              Observers Participation in the table top - Remarks
             </label>
-            <Box display="flex" alignItems="center">
-              <Rating
-                value={teamLeaderRating}
-                onChange={(e, newValue) => setTeamLeaderRating(newValue)}
-                max={5}
-              />
-              <Box ml={2}>{teamLeaderRating} of 5</Box>
-            </Box>
+            <TextField
+              fullWidth
+              multiline
+              rows={2}
+              variant="outlined"
+              placeholder="Enter remarks"
+              value={observersParticipationRemarks}
+              sx={commonInputStyles}
+              onChange={(e) => setObserversParticipationRemarks(e.target.value)}
+            />
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          {/* Control Mitigation Measures */}
+{/* Control Mitigation Measures */}
+<Grid item xs={12} mt={2}>
+            <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
+              Description of Control Mitigation Measures
+            </Typography>
+            <Divider />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              variant="outlined"
+              placeholder="Enter control mitigation measures"
+              value={controlMitigationMeasures}
+              sx={commonInputStyles}
+              onChange={(e) => setControlMitigationMeasures(e.target.value)}
+            />
+          </Grid>
+
+          {/* Head Count at Assembly Point */}
+          <Grid item xs={12} mt={2}>
+            <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
+              Head Count at Assembly Point
+            </Typography>
+            <Divider />
+          </Grid>
+
+          {/* People Present */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Typography variant="subtitle1" fontWeight="bold" mb={2}>
+                People Present as per Record
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Nos. of KPI Employee"
+                    type="number"
+                    variant="outlined"
+                    value={peoplePresent.kpiEmployee}
+                    onChange={(e) => handlePeoplePresentChange("kpiEmployee", parseInt(e.target.value) || 0)}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Nos. of Contractor Employee"
+                    type="number"
+                    variant="outlined"
+                    value={peoplePresent.contractorEmployee}
+                    onChange={(e) => handlePeoplePresentChange("contractorEmployee", parseInt(e.target.value) || 0)}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Nos. of Visitors/External Agencies"
+                    type="number"
+                    variant="outlined"
+                    value={peoplePresent.visitorsExternalAgencies}
+                    onChange={(e) => handlePeoplePresentChange("visitorsExternalAgencies", parseInt(e.target.value) || 0)}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Remarks"
+                    variant="outlined"
+                    value={peoplePresent.remarks}
+                    onChange={(e) => handlePeoplePresentChange("remarks", e.target.value)}
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+
+          {/* Actual Participants */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Typography variant="subtitle1" fontWeight="bold" mb={2}>
+                Actual Participants Participate in Drill
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Nos. of KPI Employee"
+                    type="number"
+                    variant="outlined"
+                    value={actualParticipants.kpiEmployee}
+                    onChange={(e) => handleActualParticipantsChange("kpiEmployee", parseInt(e.target.value) || 0)}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Nos. of Contractor Employee"
+                    type="number"
+                    variant="outlined"
+                    value={actualParticipants.contractorEmployee}
+                    onChange={(e) => handleActualParticipantsChange("contractorEmployee", parseInt(e.target.value) || 0)}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Nos. of Visitors/External Agencies"
+                    type="number"
+                    variant="outlined"
+                    value={actualParticipants.visitorsExternalAgencies}
+                    onChange={(e) => handleActualParticipantsChange("visitorsExternalAgencies", parseInt(e.target.value) || 0)}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Remarks"
+                    variant="outlined"
+                    value={actualParticipants.remarks}
+                    onChange={(e) => handleActualParticipantsChange("remarks", e.target.value)}
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+
+          {/* Not Participated */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Typography variant="subtitle1" fontWeight="bold" mb={2}>
+                Nos. of people not participated in drill
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Nos. of KPI Employee"
+                    type="number"
+                    variant="outlined"
+                    value={notParticipated.kpiEmployee}
+                    onChange={(e) => handleNotParticipatedChange("kpiEmployee", parseInt(e.target.value) || 0)}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Nos. of Contractor Employee"
+                    type="number"
+                    variant="outlined"
+                    value={notParticipated.contractorEmployee}
+                    onChange={(e) => handleNotParticipatedChange("contractorEmployee", parseInt(e.target.value) || 0)}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label="Nos. of Visitors/External Agencies"
+                    type="number"
+                    variant="outlined"
+                    value={notParticipated.visitorsExternalAgencies}
+                    onChange={(e) => handleNotParticipatedChange("visitorsExternalAgencies", parseInt(e.target.value) || 0)}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Remarks"
+                    variant="outlined"
+                    value={notParticipated.remarks}
+                    onChange={(e) => handleNotParticipatedChange("remarks", e.target.value)}
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+
+          {/* Rating of Emergency Team Members */}
+          <Grid item xs={12} mt={2}>
+            <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
+              Rating of Emergency Team Members
+            </Typography>
+            <Divider />
+          </Grid>
+
+          <Grid item xs={12}>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <FormLabel>Operation & Process Control</FormLabel>
+                    <RadioGroup
+                      row
+                      value={ratings.operationProcessControl}
+                      onChange={(e) => handleRatingChange("operationProcessControl", e.target.value)}
+                    >
+                      {ratingOptions.map((option) => (
+                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <FormLabel>Performance - O&M and Control</FormLabel>
+                    <RadioGroup
+                      row
+                      value={ratings.performanceOMControl}
+                      onChange={(e) => handleRatingChange("performanceOMControl", e.target.value)}
+                    >
+                      {ratingOptions.map((option) => (
+                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <FormLabel>First Aid/Ambulance Team Response</FormLabel>
+                    <RadioGroup
+                      row
+                      value={ratings.firstAidAmbulanceTeam}
+                      onChange={(e) => handleRatingChange("firstAidAmbulanceTeam", e.target.value)}
+                    >
+                      {ratingOptions.map((option) => (
+                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <FormLabel>Traffic/Evacuation/Assembly Point & Head Count</FormLabel>
+                    <RadioGroup
+                      row
+                      value={ratings.trafficEvacuationAssembly}
+                      onChange={(e) => handleRatingChange("trafficEvacuationAssembly", e.target.value)}
+                    >
+                      {ratingOptions.map((option) => (
+                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <FormLabel>Communication During Drill</FormLabel>
+                    <RadioGroup
+                      row
+                      value={ratings.communicationDuringDrill}
+                      onChange={(e) => handleRatingChange("communicationDuringDrill", e.target.value)}
+                    >
+                      {ratingOptions.map((option) => (
+                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <FormLabel>Fire Fighting Team Response</FormLabel>
+                    <RadioGroup
+                      row
+                      value={ratings.fireTeamResponse}
+                      onChange={(e) => handleRatingChange("fireTeamResponse", e.target.value)}
+                    >
+                      {ratingOptions.map((option) => (
+                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <FormLabel>Rescue Team Response</FormLabel>
+                    <RadioGroup
+                      row
+                      value={ratings.rescueTeamResponse}
+                      onChange={(e) => handleRatingChange("rescueTeamResponse", e.target.value)}
+                    >
+                      {ratingOptions.map((option) => (
+                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <FormLabel>Other</FormLabel>
+                    <RadioGroup
+                      row
+                      value={ratings.other}
+                      onChange={(e) => handleRatingChange("other", e.target.value)}
+                    >
+                      {ratingOptions.map((option) => (
+                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Other (specify)"
+                    variant="outlined"
+                    value={ratings.otherDescription}
+                    onChange={(e) => handleRatingChange("otherDescription", e.target.value)}
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+
+          {/* Overall Rating */}
+          <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Overall Rating
             </label>
-            <TextField
-              select
-              fullWidth
-              variant="outlined"
-              value={overallRating}
-              sx={commonInputStyles}
-              onChange={(e) => setOverallRating(e.target.value)}
-              SelectProps={{
-                native: true,
-              }}
-            >
-              <option value="">Select Rating</option>
-              {ratingOptions.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </TextField>
+            <FormControl fullWidth sx={commonInputStyles}>
+              <Select
+                value={overallRating}
+                onChange={(e) => setOverallRating(e.target.value)}
+              >
+                {ratingOptions.map((option) => (
+                  <MenuItem key={option} value={option}>{option}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
 
+          {/* Observations */}
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Observations
@@ -543,42 +1166,133 @@ export default function MockDrillReportDialog({ open, setOpen }) {
             <TextField
               fullWidth
               multiline
-              rows={2}
+              rows={4}
               variant="outlined"
               placeholder="Enter observations"
-              value={observation}
+              value={observations}
               sx={commonInputStyles}
-              onChange={(e) => setObservation(e.target.value)}
+              onChange={(e) => setObservations(e.target.value)}
             />
           </Grid>
 
-          {/* Recommendations */}
-          <Grid item xs={12}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Recommended Improvements
-            </label>
-            <TextField
-              fullWidth
-              multiline
-              rows={2}
-              variant="outlined"
-              placeholder="Enter recommendations (comma separated)"
-              value={improvements}
-              sx={commonInputStyles}
-              onChange={(e) => setImprovements(e.target.value)}
-            />
+          {/* Recommendations Section */}
+          <Grid item xs={12} mt={2}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="h6" className="text-[#29346B] font-semibold">
+                Recommendations
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleAddRecommendation}
+                sx={{
+                  backgroundColor: "#29346B",
+                  "&:hover": {
+                    backgroundColor: "#202a5a",
+                  },
+                }}
+              >
+                Add Recommendation
+              </Button>
+            </Box>
+            <Divider sx={{ my: 1 }} />
           </Grid>
 
+          {/* Recommendations List */}
           <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Checkbox 
-                  checked={additionalTrainingNeeded}
-                  onChange={(e) => setAdditionalTrainingNeeded(e.target.checked)}
-                />
-              }
-              label="Additional Training Needed"
-            />
+            {recommendations.map((rec, index) => (
+              <Paper
+                key={index}
+                elevation={1}
+                sx={{
+                  p: 2,
+                  mb: 2,
+                  border: "1px solid #e0e0e0",
+                  position: "relative",
+                }}
+              >
+                <IconButton
+                  color="error"
+                  sx={{ position: "absolute", top: 8, right: 8 }}
+                  onClick={() => handleRemoveRecommendation(index)}
+                  disabled={recommendations.length === 1}
+                >
+                  <DeleteIcon />
+                </IconButton>
+
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
+                  Recommendation {index + 1}
+                </Typography>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Recommendation"
+                      variant="outlined"
+                      value={rec.recommendation}
+                      required
+                      onChange={(e) =>
+                        handleRecommendationChange(index, "recommendation", e.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Responsibility"
+                      variant="outlined"
+                      value={rec.responsibility}
+                      required
+                      onChange={(e) =>
+                        handleRecommendationChange(index, "responsibility", e.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Target Date"
+                      type="date"
+                      variant="outlined"
+                      value={rec.targetDate}
+                      required
+                      onChange={(e) =>
+                        handleRecommendationChange(index, "targetDate", e.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth>
+                      <InputLabel>Status</InputLabel>
+                      <Select
+                        value={rec.status}
+                        label="Status"
+                        onChange={(e) =>
+                          handleRecommendationChange(index, "status", e.target.value)
+                        }
+                      >
+                        <MenuItem value="Open">Open</MenuItem>
+                        <MenuItem value="In Progress">In Progress</MenuItem>
+                        <MenuItem value="Completed">Completed</MenuItem>
+                        <MenuItem value="Closed">Closed</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Action Remarks"
+                      variant="outlined"
+                      value={rec.actionRemarks}
+                      onChange={(e) =>
+                        handleRecommendationChange(index, "actionRemarks", e.target.value)
+                      }
+                    />
+                  </Grid>
+                </Grid>
+              </Paper>
+            ))}
           </Grid>
         </Grid>
       </DialogContent>
@@ -587,8 +1301,8 @@ export default function MockDrillReportDialog({ open, setOpen }) {
         <Button onClick={handleClose} color="secondary" variant="outlined">
           Cancel
         </Button>
-        <Button 
-          onClick={handleSubmit} 
+        <Button
+          onClick={handleSubmit}
           color="primary"
           sx={{
             backgroundColor: "#f6812d",
