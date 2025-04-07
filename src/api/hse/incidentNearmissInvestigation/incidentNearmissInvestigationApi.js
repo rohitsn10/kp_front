@@ -24,8 +24,7 @@ export const incidentNearMissApi = createApi({
     getIncidentNearMissInvestigation: builder.query({
       query: () => ({
         url: "annexures_module/get_incident_nearmiss_investigation",
-        method: "GET", 
-       
+        method: "GET",
       }),
     }),
   }),

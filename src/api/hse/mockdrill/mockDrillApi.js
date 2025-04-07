@@ -24,8 +24,7 @@ export const mockDrillApi = createApi({
     getMockDrillReport: builder.query({
       query: () => ({
         url: "annexures_module/get_mock_drill_report",
-        method: "POST",
-        body: {}, // assuming no params are needed like in your curl
+        method: "GET",
       }),
     }),
   }),

@@ -24,8 +24,7 @@ export const trailerInspectionApi = createApi({
     getTrailerInspection: builder.query({
       query: () => ({
         url: "annexures_module/get_trailer_inspection",
-        method: "POST",
-        body: {}, // as per your curl, this uses POST with empty body
+        method: "GET",
       }),
     }),
   }),
