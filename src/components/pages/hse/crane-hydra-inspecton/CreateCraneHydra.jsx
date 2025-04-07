@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 
 export default function CraneHydraInspectionDialog({ open, setOpen }) {
   // Basic information
-  console.log("okoko")
+  // console.log("okoko")
   const [equipmentName, setEquipmentName] = useState("");
   const [makeModel, setMakeModel] = useState("");
   const [identificationNumber, setIdentificationNumber] = useState("");

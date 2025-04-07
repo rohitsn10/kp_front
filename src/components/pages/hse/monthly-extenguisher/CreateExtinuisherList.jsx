@@ -427,6 +427,7 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
                     variant="outlined"
                     value={extinguisher.refilling_date}
                     sx={commonInputStyles}
+                    InputLabelProps={{ shrink: true }} 
                     onChange={(e) =>
                       handleExtinguisherChange(
                         index,
@@ -444,6 +445,7 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
                     variant="outlined"
                     value={extinguisher.due_date_refilling}
                     sx={commonInputStyles}
+                    InputLabelProps={{ shrink: true }} 
                     onChange={(e) =>
                       handleExtinguisherChange(
                         index,
@@ -460,6 +462,7 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
                     label="Due Date Hydro Test"
                     variant="outlined"
                     value={extinguisher.due_date_hydro_test}
+                    InputLabelProps={{ shrink: true }} 
                     sx={commonInputStyles}
                     onChange={(e) =>
                       handleExtinguisherChange(

@@ -270,7 +270,20 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
                       sx={commonInputStyles}
                     />
                   )}
-                /> */}
+                /> */ }
+                <TextField
+    type="date"
+    fullWidth
+    variant="outlined"
+    InputLabelProps={{
+      shrink: true,
+    }}
+    
+    sx={commonInputStyles}
+    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), reviewLastMeeting, setReviewLastMeeting)}
+  />
+               
+                
               </div>
               <div>
                 <label className="block mb-1 text-[#29346B] font-semibold">
@@ -432,6 +445,17 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
                                 />
                               )}
                             /> */}
+                            <TextField
+    type="date"
+    fullWidth
+    variant="outlined"
+    InputLabelProps={{
+      shrink: true,
+    }}
+    value={item.target_date ? new Date(item.target_date).toISOString().split('T')[0] : ''}
+    sx={commonInputStyles}
+    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), reviewLastMeeting, setReviewLastMeeting)}
+  />
                           </TableCell>
                           <TableCell>
                             <IconButton 
@@ -604,6 +628,17 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
                                 />
                               )}
                             /> */}
+                            <TextField
+    type="date"
+    fullWidth
+    variant="outlined"
+    InputLabelProps={{
+      shrink: true,
+    }}
+    value={item.target_date ? new Date(item.target_date).toISOString().split('T')[0] : ''}
+    sx={commonInputStyles}
+    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), reviewLastMeeting, setReviewLastMeeting)}
+  />
                           </TableCell>
                           <TableCell>
                             <IconButton 
@@ -692,6 +727,17 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
                                 />
                               )}
                             /> */}
+                            <TextField
+    type="date"
+    fullWidth
+    variant="outlined"
+    InputLabelProps={{
+      shrink: true,
+    }}
+    value={item.target_date ? new Date(item.target_date).toISOString().split('T')[0] : ''}
+    sx={commonInputStyles}
+    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), reviewLastMeeting, setReviewLastMeeting)}
+  />
                           </TableCell>
                           <TableCell>
                             <IconButton 
@@ -805,6 +851,329 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
                 </Button>
               </AccordionDetails>
               </Accordion>
+              {/* Review Last meeting */}
+              
+{/* Review Last Meeting */}
+<Accordion>
+  <AccordionSummary
+    expandIcon={<ExpandMoreIcon />}
+    aria-controls="review-last-meeting-content"
+    id="review-last-meeting-header"
+  >
+    <Typography className="text-[#29346B] text-lg font-semibold">Review Last Meeting</Typography>
+  </AccordionSummary>
+  <AccordionDetails>
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell className="font-bold text-[#29346B]">Topic</TableCell>
+            <TableCell className="font-bold text-[#29346B]">Action By</TableCell>
+            <TableCell className="font-bold text-[#29346B]">Target Date</TableCell>
+            <TableCell className="font-bold text-[#29346B]">Review Status</TableCell>
+            <TableCell className="font-bold text-[#29346B]">Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {reviewLastMeeting.map((item, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Enter Topic"
+                  value={item.topic}
+                  sx={commonInputStyles}
+                  onChange={(e) => handleItemChange(index, "topic", e.target.value, reviewLastMeeting, setReviewLastMeeting)}
+                />
+              </TableCell>
+              <TableCell>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Enter Action By"
+                  value={item.action_by}
+                  sx={commonInputStyles}
+                  onChange={(e) => handleItemChange(index, "action_by", e.target.value, reviewLastMeeting, setReviewLastMeeting)}
+                />
+              </TableCell>
+              <TableCell>
+                {/* <DatePicker
+                  value={item.target_date}
+                  onChange={(date) => handleItemChange(index, "target_date", date, reviewLastMeeting, setReviewLastMeeting)}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      variant="outlined"
+                      placeholder="Select Date"
+                      sx={commonInputStyles}
+                    />
+                  )}
+                /> */}
+                <TextField
+    type="date"
+    fullWidth
+    variant="outlined"
+    InputLabelProps={{
+      shrink: true,
+    }}
+    value={item.target_date ? new Date(item.target_date).toISOString().split('T')[0] : ''}
+    sx={commonInputStyles}
+    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), reviewLastMeeting, setReviewLastMeeting)}
+  />
+              </TableCell>
+              <TableCell>
+                <FormControl fullWidth variant="outlined" sx={commonInputStyles}>
+                  <Select
+                    value={item.review_status || ""}
+                    onChange={(e) => handleItemChange(index, "review_status", e.target.value, reviewLastMeeting, setReviewLastMeeting)}
+                    displayEmpty
+                  >
+                    <MenuItem value="">Select Status</MenuItem>
+                    <MenuItem value="Completed">Completed</MenuItem>
+                    <MenuItem value="In Progress">In Progress</MenuItem>
+                    <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="Delayed">Delayed</MenuItem>
+                  </Select>
+                </FormControl>
+              </TableCell>
+              <TableCell>
+                <IconButton 
+                  color="error" 
+                  onClick={() => handleRemoveItem(index, reviewLastMeeting, setReviewLastMeeting)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+    <Button
+      startIcon={<AddIcon />}
+      onClick={() => handleAddItem(reviewLastMeeting, setReviewLastMeeting)}
+      sx={{
+        marginTop: 2,
+        backgroundColor: "#29346B",
+        color: "white",
+        "&:hover": {
+          backgroundColor: "#1a2246",
+        },
+      }}
+    >
+      Add Item
+    </Button>
+  </AccordionDetails>
+</Accordion>
+
+{/* New Points Discussed */}
+<Accordion>
+  <AccordionSummary
+    expandIcon={<ExpandMoreIcon />}
+    aria-controls="new-points-content"
+    id="new-points-header"
+  >
+    <Typography className="text-[#29346B] text-lg font-semibold">New Points Discussed</Typography>
+  </AccordionSummary>
+  <AccordionDetails>
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell className="font-bold text-[#29346B]">Topic</TableCell>
+            <TableCell className="font-bold text-[#29346B]">Action By</TableCell>
+            <TableCell className="font-bold text-[#29346B]">Target Date</TableCell>
+            <TableCell className="font-bold text-[#29346B]">Remarks</TableCell>
+            <TableCell className="font-bold text-[#29346B]">Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {newPointsDiscussed.map((item, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Enter Topic"
+                  value={item.topic}
+                  sx={commonInputStyles}
+                  onChange={(e) => handleItemChange(index, "topic", e.target.value, newPointsDiscussed, setNewPointsDiscussed)}
+                />
+              </TableCell>
+              <TableCell>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Enter Action By"
+                  value={item.action_by}
+                  sx={commonInputStyles}
+                  onChange={(e) => handleItemChange(index, "action_by", e.target.value, newPointsDiscussed, setNewPointsDiscussed)}
+                />
+              </TableCell>
+              <TableCell>
+                {/* <DatePicker
+                  value={item.target_date}
+                  onChange={(date) => handleItemChange(index, "target_date", date, newPointsDiscussed, setNewPointsDiscussed)}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      variant="outlined"
+                      placeholder="Select Date"
+                      sx={commonInputStyles}
+                    />
+                  )}
+                /> */}
+                <TextField
+    type="date"
+    fullWidth
+    variant="outlined"
+    InputLabelProps={{
+      shrink: true,
+    }}
+    value={item.target_date ? new Date(item.target_date).toISOString().split('T')[0] : ''}
+    sx={commonInputStyles}
+    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), reviewLastMeeting, setReviewLastMeeting)}
+  />
+              </TableCell>
+              <TableCell>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Enter Remarks"
+                  value={item.remarks}
+                  sx={commonInputStyles}
+                  onChange={(e) => handleItemChange(index, "remarks", e.target.value, newPointsDiscussed, setNewPointsDiscussed)}
+                />
+              </TableCell>
+              <TableCell>
+                <IconButton 
+                  color="error" 
+                  onClick={() => handleRemoveItem(index, newPointsDiscussed, setNewPointsDiscussed)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+    <Button
+      startIcon={<AddIcon />}
+      onClick={() => handleAddItem(newPointsDiscussed, setNewPointsDiscussed)}
+      sx={{
+        marginTop: 2,
+        backgroundColor: "#29346B",
+        color: "white",
+        "&:hover": {
+          backgroundColor: "#1a2246",
+        },
+      }}
+    >
+      Add Item
+    </Button>
+  </AccordionDetails>
+</Accordion>
+
+{/* Signatures Section */}
+<div className="p-4 border border-gray-200 rounded-lg mt-4">
+  <h3 className="text-[#29346B] text-xl font-semibold mb-3">Signatures</h3>
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+      <label className="block mb-1 text-[#29346B] font-semibold">
+        Minutes Prepared By
+      </label>
+      <TextField
+        fullWidth
+        variant="outlined"
+        placeholder="Enter Name"
+        value={minutesPreparedBy}
+        sx={commonInputStyles}
+        onChange={(e) => setMinutesPreparedBy(e.target.value)}
+      />
+    </div>
+    <div>
+      <label className="block mb-1 text-[#29346B] font-semibold">
+        Signature (Prepared By)
+      </label>
+      <TextField
+        fullWidth
+        variant="outlined"
+        placeholder="Signature URL or Base64"
+        value={signaturePreparedBy}
+        sx={commonInputStyles}
+        onChange={(e) => setSignaturePreparedBy(e.target.value)}
+      />
+      {signaturePreparedBy && (
+        <div className="mt-2">
+          <img 
+            src={signaturePreparedBy} 
+            alt="Prepared By Signature" 
+            className="max-h-16" 
+          />
+        </div>
+      )}
+    </div>
+    <div>
+      <label className="block mb-1 text-[#29346B] font-semibold">
+        Signature (Chairman)
+      </label>
+      <TextField
+        fullWidth
+        variant="outlined"
+        placeholder="Signature URL or Base64"
+        value={signatureChairman}
+        sx={commonInputStyles}
+        onChange={(e) => setSignatureChairman(e.target.value)}
+      />
+      {signatureChairman && (
+        <div className="mt-2">
+          <img 
+            src={signatureChairman} 
+            alt="Chairman Signature" 
+            className="max-h-16" 
+          />
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+
+{/* Dialog Actions */}
+<DialogActions sx={{ padding: '16px' }}>
+  <Button 
+    onClick={handleClose}
+    sx={{
+      color: "#29346B",
+      borderColor: "#29346B",
+      "&:hover": {
+        borderColor: "#1a2246",
+        backgroundColor: "rgba(41, 52, 107, 0.04)"
+      }
+    }}
+    variant="outlined"
+  >
+    Cancel
+  </Button>
+  <Button
+    onClick={handleSubmit}
+    sx={{
+      backgroundColor: "#FACC15",
+      color: "#29346B",
+      fontWeight: "bold",
+      "&:hover": {
+        backgroundColor: "#FBBF24",
+      }
+    }}
+    variant="contained"
+  >
+    Submit
+  </Button>
+</DialogActions>
+
             </div>
             </DialogContent>
             </Dialog>)}
