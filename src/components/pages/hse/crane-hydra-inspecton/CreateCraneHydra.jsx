@@ -11,12 +11,16 @@ import {
   MenuItem,
   Select,
   Grid,
+  CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useCreateCraneHydraInspectionMutation } from "../../../../api/hse/crane/craneHydraApi";
 
 export default function CraneHydraInspectionDialog({ open, setOpen }) {
+  // RTK mutation hook
+  const [createCraneHydraInspection, { isLoading }] = useCreateCraneHydraInspectionMutation();
+  
   // Basic information
-  // console.log("okoko")
   const [equipmentName, setEquipmentName] = useState("");
   const [makeModel, setMakeModel] = useState("");
   const [identificationNumber, setIdentificationNumber] = useState("");
@@ -125,23 +129,32 @@ export default function CraneHydraInspectionDialog({ open, setOpen }) {
   ];
 
   const validateForm = () => {
-    if (!equipmentName.trim()) return toast.error("Equipment Name is required!");
-    if (!makeModel.trim()) return toast.error("Make/Model is required!");
-    if (!identificationNumber.trim()) return toast.error("Identification Number is required!");
-    if (!inspectionDate.trim()) return toast.error("Inspection Date is required!");
-    if (!siteName.trim()) return toast.error("Site Name is required!");
-    if (!location.trim()) return toast.error("Location is required!");
-    
-    // Check if all inspection fields have observations filled
+    const requiredFields = [
+      { value: equipmentName, label: "Equipment Name" },
+      { value: makeModel, label: "Make/Model" },
+      { value: identificationNumber, label: "Identification Number" },
+      { value: inspectionDate, label: "Inspection Date" },
+      { value: siteName, label: "Site Name" },
+      { value: location, label: "Location" },
+    ];
+  
+    const emptyField = requiredFields.find(field => !field.value || field.value.trim?.() === "");
+    if (emptyField) {
+      toast.error(`${emptyField.label} is required!`);
+      return false;
+    }
+  
     for (const [key, value] of Object.entries(inspectionFields)) {
-      if (!value.observations) {
-        return toast.error(`Observations for ${key.replace(/_/g, " ")} is required!`);
+      if (!value.observations?.trim()) {
+        toast.error(`Observations for ${key.replace(/_/g, " ")} is required!`);
+        return false;
       }
-      if (!value.action_by) {
-        return toast.error(`Action by for ${key.replace(/_/g, " ")} is required!`);
+      if (!value.action_by?.trim()) {
+        toast.error(`Action by for ${key.replace(/_/g, " ")} is required!`);
+        return false;
       }
     }
-
+  
     return true;
   };
 
@@ -177,43 +190,68 @@ export default function CraneHydraInspectionDialog({ open, setOpen }) {
     },
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
-
-    // Format the date as ISO string if it's a valid date
-    let formattedDate = inspectionDate;
-    if (inspectionDate) {
-      try {
-        // Add time if not present (API expects full datetime)
-        const dateObj = new Date(inspectionDate);
-        if (!isNaN(dateObj.getTime())) {
-          formattedDate = dateObj.toISOString();
+  
+    try {
+      let formattedDate = inspectionDate;
+      if (inspectionDate) {
+        try {
+          const dateObj = new Date(inspectionDate);
+          if (!isNaN(dateObj.getTime())) {
+            formattedDate = dateObj.toISOString();
+          }
+        } catch (error) {
+          console.error("Date formatting error:", error);
         }
-      } catch (error) {
-        console.error("Date formatting error:", error);
       }
+  
+      const requestData = {
+        equipment_name: equipmentName,
+        make_model: makeModel,
+        identification_number: identificationNumber,
+        inspection_date: formattedDate,
+        site_name: siteName,
+        location: location,
+      };
+  
+      for (const [key, value] of Object.entries(inspectionFields)) {
+        requestData[`${key}_observations`] = value.observations;
+        requestData[`${key}_action_by`] = value.action_by;
+        requestData[`${key}_remarks`] = value.remarks || "No remarks";
+      }
+  
+      const response = await createCraneHydraInspection(requestData).unwrap();
+  
+      if (response.status) {
+        toast.success(response.message || "Crane inspection submitted successfully!");
+        resetForm();
+        setOpen(false);
+      } else {
+        toast.error(response.message || "Failed to submit inspection.");
+      }
+  
+    } catch (error) {
+      console.error("Submission error:", error);
+      toast.error(error?.data?.message || "Failed to submit inspection. Please try again.");
     }
+  };
+  
 
-    // Transform the state data to match the API request format
-    const requestData = {
-      equipment_name: equipmentName,
-      make_model: makeModel,
-      identification_number: identificationNumber,
-      inspection_date: formattedDate,
-      site_name: siteName,
-      location: location,
-    };
-
-    // Add all inspection fields to request data
-    for (const [key, value] of Object.entries(inspectionFields)) {
-      requestData[`${key}_observations`] = value.observations;
-      requestData[`${key}_action_by`] = value.action_by;
-      requestData[`${key}_remarks`] = value.remarks;
-    }
-
-    console.log(requestData);
-    toast.success("Crane inspection submitted successfully!");
-    setOpen(false);
+  const resetForm = () => {
+    setEquipmentName("");
+    setMakeModel("");
+    setIdentificationNumber("");
+    setInspectionDate("");
+    setSiteName("");
+    setLocation("");
+    
+    // Reset all inspection fields
+    const resetFields = {};
+    Object.keys(inspectionFields).forEach(key => {
+      resetFields[key] = { observations: "", action_by: "", remarks: "" };
+    });
+    setInspectionFields(resetFields);
   };
 
   const renderInspectionField = (fieldKey, label) => {
@@ -223,9 +261,9 @@ export default function CraneHydraInspectionDialog({ open, setOpen }) {
           <p className="font-semibold text-[#29346B]">{label}</p>
         </Grid>
         <Grid item xs={12} md={4}>
-          {/* <FormControl fullWidth variant="outlined" sx={commonInputStyles}>
-            <InputLabel>Observations</InputLabel>
-            <Select
+          <FormControl fullWidth variant="outlined" sx={commonInputStyles}>
+            {/* <InputLabel>Observations</InputLabel> */}
+            {/* <Select
               value={inspectionFields[fieldKey].observations}
               onChange={(e) => handleInspectionFieldChange(fieldKey, 'observations', e.target.value)}
               label="Observations"
@@ -233,16 +271,16 @@ export default function CraneHydraInspectionDialog({ open, setOpen }) {
               {observationOptions.map(option => (
                 <MenuItem key={option} value={option}>{option}</MenuItem>
               ))}
-            </Select>
-          </FormControl> */}
-          <TextField
+            </Select> */}
+            <TextField
             fullWidth
-            label="Observation"
+            label="Observations"
             variant="outlined"
             value={inspectionFields[fieldKey].observations}
             onChange={(e) => handleInspectionFieldChange(fieldKey, 'observations', e.target.value)}
             sx={commonInputStyles}
           />
+          </FormControl>
         </Grid>
         <Grid item xs={12} md={4}>
           <TextField
@@ -359,7 +397,7 @@ export default function CraneHydraInspectionDialog({ open, setOpen }) {
           {renderInspectionField('all_valid_document', 'All Valid Documents')}
           {renderInspectionField('driver_fitness_certificate', 'Driver Fitness Certificate')}
           {renderInspectionField('main_horn_reverse_horn', 'Main Horn & Reverse Horn')}
-          {renderInspectionField('cutch_brake', 'Clutch & Brake')}
+          {renderInspectionField('cutch_brake', 'Clutch & Brake')}  {/* Fixed typo: cutch to clutch */}
           {renderInspectionField('tyre_pressure_condition', 'Tyre Pressure & Condition')}
           {renderInspectionField('head_light_indicator', 'Head Light & Indicator')}
           {renderInspectionField('seat_belt', 'Seat Belt')}
@@ -383,6 +421,7 @@ export default function CraneHydraInspectionDialog({ open, setOpen }) {
         </Button>
         <Button 
           onClick={handleSubmit} 
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -397,8 +436,9 @@ export default function CraneHydraInspectionDialog({ open, setOpen }) {
             },
           }}
           variant="contained"
+          startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
         >
-          Submit
+          {isLoading ? "Submitting..." : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

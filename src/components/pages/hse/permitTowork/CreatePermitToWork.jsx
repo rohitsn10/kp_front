@@ -16,111 +16,150 @@ import {
   Autocomplete,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useCreatePermitToWorkMutation } from "../../../../api/hse/permitTowork/permitToworkApi";
+// import { useCreatePermitToWorkMutation } from "your-rtk-query-file"; // Import path may need adjustment
 
 export default function PermitToWorkDialog({ open, setOpen }) {
-  const [siteName, setSiteName] = useState("");
+  const [createPermitToWork, { isLoading }] = useCreatePermitToWorkMutation();
+  
+  // States updated to match API payload field names
+  const [site_name, setSiteName] = useState("");
   const [department, setDepartment] = useState("");
-  const [permitNo, setPermitNo] = useState("");
-  const [externalAgency, setExternalAgency] = useState("");
-  const [permitType, setPermitType] = useState([]);
-  const [permitIssuedFor, setPermitIssuedFor] = useState([]);
-  const [jobDetails, setJobDetails] = useState("");
-  const [location, setLocation] = useState("");
-  const [tools, setTools] = useState("");
-  const [hazards, setHazards] = useState([]);
-  const [jobPreparation, setJobPreparation] = useState([]);
-  const [fireProtection, setFireProtection] = useState([]);
+  const [permit_number, setPermitNumber] = useState("");
+  const [external_agency_name, setExternalAgencyName] = useState("");
+  const [type_of_permit, setTypeOfPermit] = useState("");
+  const [permit_issued_for, setPermitIssuedFor] = useState([]);
+  const [day, setDay] = useState("");
+  const [job_activity, setJobActivity] = useState("");
+  const [location_area, setLocationArea] = useState("");
+  const [tools_equipment, setToolsEquipment] = useState("");
+  const [hazard_consideration, setHazardConsideration] = useState([]);
+  const [job_preparation, setJobPreparation] = useState([]);
+  const [risk_assessment_number, setRiskAssessmentNumber] = useState("");
+  const [fire_protection, setFireProtection] = useState([]);
 
   const validateForm = () => {
-    if (!siteName.trim()) return toast.error("Site Name is required!");
-    if (!department) return toast.error("Please select a Department!");
-    if (!permitNo.trim()) return toast.error("Permit Number is required!");
-    if (permitType.length === 0) return toast.error("Select at least one Permit Type!");
-    if (permitIssuedFor.length === 0) return toast.error("Permit Issued For is required!");
-    if (!jobDetails.trim()) return toast.error("Job Details are required!");
-    if (!location.trim()) return toast.error("Location is required!");
-    if (!tools.trim()) return toast.error("Tools & Equipment are required!");
-    if (hazards.length === 0) return toast.error("Select at least one Hazard Consideration!");
-    if (jobPreparation.length === 0) return toast.error("Select at least one Job Preparation step!");
-    if (fireProtection.length === 0) return toast.error("Select at least one Fire Protection & PPE!");
-
+    const requiredFields = [
+      { value: site_name, label: "Site Name" },
+      { value: department, label: "Department" },
+      { value: permit_number, label: "Permit Number" },
+      { value: type_of_permit, label: "Type of Permit" },
+      { value: permit_issued_for.length > 0 ? "ok" : "", label: "Permit Issued For" },
+      { value: job_activity, label: "Job Activity" },
+      { value: location_area, label: "Location" },
+      { value: tools_equipment, label: "Tools & Equipment" },
+      { value: hazard_consideration.length > 0 ? "ok" : "", label: "Hazard Consideration" },
+      { value: job_preparation.length > 0 ? "ok" : "", label: "Job Preparation" },
+      { value: fire_protection.length > 0 ? "ok" : "", label: "Fire Protection" },
+    ];
+  
+    // Check general required fields
+    const emptyField = requiredFields.find(field => !field.value || field.value.trim?.() === "");
+    if (emptyField) {
+      toast.error(`${emptyField.label} is required!`);
+      return false;
+    }
+  
+    // Special case: Risk assessment number required if "risk assessment" is selected
+    if (job_preparation.includes("risk assessment") && !risk_assessment_number.trim()) {
+      toast.error("Risk Assessment Number is required!");
+      return false;
+    }
+  
     return true;
   };
-  const permitOptions = [
-    "Cold Work",
-    "Hot Work",
-    "Work at Height",
-    "Electrical Work",
-    "Excavation",
-    "Equipment Testing",
-    "Crane / Hydra / JCB work",
+
+  // Permit type options (changed to strings to match API)
+  const permitTypeOptions = [
+    "cold work",
+    "hot work",
+    "work at height",
+    "electrical work",
+    "excavation",
+    "equipment testing",
+    "crane / hydra / jcb work",
   ];
 
+  // Permit issued for options
+  const permitIssuedForOptions = ["day", "night"];
+
   const hazardOptions = [
-    "Fire",
-    "Electrical",
-    "Fall",
-    "Slip & Trip",
-    "Toppling",
+    "fire",
+    "electrical",
+    "fall",
+    "slip & trip",
+    "toppling",
   ];
 
   const jobPreparationOptions = [
-    "Work Permit",
-    "Method Statement",
-    "Risk Assessment",
-    "Safety Training",
+    "work permit",
+    "method statement",
+    "risk assessment",
+    "safety training",
   ];
 
   const fireProtectionOptions = [
-    "Fire Extinguisher",
-    "Fire Blanket",
-    "Fire Watch",
-    "PPE Suit",
+    "fire extinguisher",
+    "fire blanket",
+    "fire watch",
+    "ppe suit",
   ];
 
   const handleClose = () => setOpen(false);
 
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+  
+    const payload = {
+      site_name,
+      department,
+      permit_number,
+      external_agency_name,
+      type_of_permit,
+      permit_issued_for,
+      day,
+      job_activity,
+      location_area,
+      tools_equipment,
+      hazard_consideration,
+      job_preparation,
+      risk_assessment_number,
+      fire_protection
+    };
+  
+    try {
+      const response = await createPermitToWork(payload).unwrap();
+  
+      if (response.status) {
+        toast.success(response.message || "Permit submitted successfully!");
+        setOpen(false);
+      } else {
+        toast.error(response.message || "Failed to submit permit.");
+      }
+    } catch (error) {
+      toast.error(`Submission failed: ${error?.data?.message || "Unknown error"}`);
+    }
+  };
   const commonInputStyles = {
     "& .MuiOutlinedInput-root": {
       borderRadius: "6px",
       transition: "border 0.2s ease-in-out",
       "&:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on hover
+        borderColor: "#FACC15",
         borderBottom: "4px solid #FACC15",
       },
       "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on focus
+        borderColor: "#FACC15",
         borderWidth: "2px",
         borderBottom: "4px solid #FACC15",
       },
     },
     "& .MuiOutlinedInput-notchedOutline": {
-      border: "1px solid #FACC15", // Default border
-      borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
+      border: "1px solid #FACC15",
+      borderBottom: "4px solid #FACC15",
     },
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) return;
-
-    console.log({
-      siteName,
-      department,
-      permitNo,
-      externalAgency,
-      permitType,
-      permitIssuedFor,
-      jobDetails,
-      location,
-      tools,
-      hazards,
-      jobPreparation,
-      fireProtection,
-    });
-
-    toast.success("Permit submitted successfully!");
-    setOpen(false);
-  };
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
       <DialogTitle className="text-[#29346B] text-2xl font-semibold">
@@ -136,8 +175,9 @@ export default function PermitToWorkDialog({ open, setOpen }) {
             fullWidth
             variant="outlined"
             placeholder="Enter Site Name"
-            value={siteName}
+            value={site_name}
             onChange={(e) => setSiteName(e.target.value)}
+            sx={commonInputStyles}
           />
         </div>
 
@@ -155,14 +195,14 @@ export default function PermitToWorkDialog({ open, setOpen }) {
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
             >
-              <FormControlLabel value="ONM" control={<Radio />} label="ONM" />
+              <FormControlLabel value="onm" control={<Radio />} label="ONM" />
               <FormControlLabel
-                value="Project"
+                value="project"
                 control={<Radio />}
                 label="Project"
               />
               <FormControlLabel
-                value="Other"
+                value="other"
                 control={<Radio />}
                 label="Other"
               />
@@ -170,135 +210,181 @@ export default function PermitToWorkDialog({ open, setOpen }) {
           </FormControl>
         </div>
 
-        {/* Permit No & External Agency */}
+        {/* Permit Number & External Agency */}
         <div className="flex gap-4 mb-4">
           <div className="w-full">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Permit No<span className="text-red-600"> *</span>
+              Permit Number<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               variant="outlined"
               placeholder="Enter Permit Number"
-              value={permitNo}
+              value={permit_number}
               sx={commonInputStyles}
-              onChange={(e) => setPermitNo(e.target.value)}
+              onChange={(e) => setPermitNumber(e.target.value)}
             />
           </div>
           <div className="w-full">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              External Agency (if any)
+              External Agency Name (if any)
             </label>
             <TextField
               fullWidth
               variant="outlined"
               placeholder="Enter Agency Name"
-              value={externalAgency}
+              value={external_agency_name}
               sx={commonInputStyles}
-              onChange={(e) => setExternalAgency(e.target.value)}
+              onChange={(e) => setExternalAgencyName(e.target.value)}
             />
           </div>
         </div>
 
-        {/* Permit Type (Checkbox) */}
+        {/* Type of Permit (Radio buttons instead of checkboxes) */}
         <div className="mb-4">
-          <p className="text-lg font-semibold">Type of Permit:</p>
+          <FormControl component="fieldset">
+            <FormLabel
+              component="legend"
+              className="text-[#29346B] text-lg font-semibold"
+            >
+              Type of Permit<span className="text-red-600"> *</span>
+            </FormLabel>
+            <RadioGroup
+              row
+              value={type_of_permit}
+              onChange={(e) => setTypeOfPermit(e.target.value)}
+            >
+              {permitTypeOptions.map((option) => (
+                <FormControlLabel 
+                  key={option} 
+                  value={option} 
+                  control={<Radio />} 
+                  label={option.charAt(0).toUpperCase() + option.slice(1)} 
+                />
+              ))}
+            </RadioGroup>
+          </FormControl>
+        </div>
+
+        {/* Permit Issued For (Checkboxes) */}
+        <div className="mb-4">
+          <FormLabel
+            component="legend"
+            className="text-[#29346B] text-lg font-semibold"
+          >
+            Permit Issued For<span className="text-red-600"> *</span>
+          </FormLabel>
           <FormGroup row>
-            {permitOptions.map((option) => (
+            {permitIssuedForOptions.map((option) => (
               <FormControlLabel
                 key={option}
                 control={
                   <Checkbox
-                    checked={permitType.includes(option)}
-                    onChange={(e) =>
-                      setPermitType(
-                        e.target.checked
-                          ? [...permitType, option]
-                          : permitType.filter((p) => p !== option)
-                      )
-                    }
+                    checked={permit_issued_for.includes(option)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setPermitIssuedFor([...permit_issued_for, option]);
+                      } else {
+                        setPermitIssuedFor(permit_issued_for.filter(item => item !== option));
+                      }
+                    }}
                   />
                 }
-                label={option}
+                label={option.charAt(0).toUpperCase() + option.slice(1)}
               />
             ))}
           </FormGroup>
         </div>
 
-        {/* Permit Issued For (Multi-Select) */}
-        <Autocomplete
-          multiple
-          options={permitOptions}
-          getOptionLabel={(option) => option}
-          value={permitIssuedFor}
-          sx={commonInputStyles}
-          onChange={(event, newValue) => setPermitIssuedFor(newValue)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="outlined"
-              label="Permit Issued For"
-              fullWidth
-            />
-          )}
-          className="mb-4"
-        />
+        {/* Day */}
+        <div className="mb-4">
+          <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+            Day<span className="text-red-600"> *</span>
+          </label>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Enter Day"
+            value={day}
+            sx={commonInputStyles}
+            onChange={(e) => setDay(e.target.value)}
+          />
+        </div>
 
-        {/* Job Details */}
-        <TextField
-          label="Job / Activity in Details"
-          fullWidth
-          multiline
-          rows={3}
-          variant="outlined"
-          className="mb-4"
-          value={jobDetails}
-          sx={commonInputStyles}
-          onChange={(e) => setJobDetails(e.target.value)}
-        />
+        {/* Job Activity */}
+        <div className="mb-4">
+          <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+            Job / Activity in Details<span className="text-red-600"> *</span>
+          </label>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            variant="outlined"
+            placeholder="Enter job activities"
+            value={job_activity}
+            sx={commonInputStyles}
+            onChange={(e) => setJobActivity(e.target.value)}
+          />
+        </div>
 
         {/* Location & Tools */}
         <div className="flex gap-4 mb-4 mt-4">
-          <TextField
-            label="Location / Area"
-            fullWidth
-            variant="outlined"
-            value={location}
-            sx={commonInputStyles}
-            onChange={(e) => setLocation(e.target.value)}
-          />
-          <TextField
-            label="Tools & Equipment to be used"
-            fullWidth
-            multiline
-            rows={2}
-            variant="outlined"
-            value={tools}
-            sx={commonInputStyles}
-            onChange={(e) => setTools(e.target.value)}
-          />
+          <div className="w-full">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Location / Area<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter location"
+              value={location_area}
+              sx={commonInputStyles}
+              onChange={(e) => setLocationArea(e.target.value)}
+            />
+          </div>
+          <div className="w-full">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Tools & Equipment<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              multiline
+              rows={2}
+              variant="outlined"
+              placeholder="Enter tools and equipment"
+              value={tools_equipment}
+              sx={commonInputStyles}
+              onChange={(e) => setToolsEquipment(e.target.value)}
+            />
+          </div>
         </div>
 
         {/* Hazard Consideration */}
         <div className="mb-4">
-          <p className="text-lg font-semibold">Hazard Consideration:</p>
+          <FormLabel
+            component="legend"
+            className="text-[#29346B] text-lg font-semibold"
+          >
+            Hazard Consideration<span className="text-red-600"> *</span>
+          </FormLabel>
           <FormGroup row>
             {hazardOptions.map((hazard) => (
               <FormControlLabel
                 key={hazard}
                 control={
                   <Checkbox
-                    checked={hazards.includes(hazard)}
-                    onChange={(e) =>
-                      setHazards(
-                        e.target.checked
-                          ? [...hazards, hazard]
-                          : hazards.filter((h) => h !== hazard)
-                      )
-                    }
+                    checked={hazard_consideration.includes(hazard)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setHazardConsideration([...hazard_consideration, hazard]);
+                      } else {
+                        setHazardConsideration(hazard_consideration.filter(item => item !== hazard));
+                      }
+                    }}
                   />
                 }
-                label={hazard}
+                label={hazard.charAt(0).toUpperCase() + hazard.slice(1)}
               />
             ))}
           </FormGroup>
@@ -306,39 +392,76 @@ export default function PermitToWorkDialog({ open, setOpen }) {
 
         {/* Job Preparation */}
         <div className="mb-4">
-          <p className="text-lg font-semibold">Job Preparation:</p>
+          <FormLabel
+            component="legend"
+            className="text-[#29346B] text-lg font-semibold"
+          >
+            Job Preparation<span className="text-red-600"> *</span>
+          </FormLabel>
           <FormGroup row>
             {jobPreparationOptions.map((item) => (
               <FormControlLabel
                 key={item}
                 control={
                   <Checkbox
-                    onChange={() =>
-                      setJobPreparation([...jobPreparation, item])
-                    }
+                    checked={job_preparation.includes(item)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setJobPreparation([...job_preparation, item]);
+                      } else {
+                        setJobPreparation(job_preparation.filter(prep => prep !== item));
+                      }
+                    }}
                   />
                 }
-                label={item}
+                label={item.charAt(0).toUpperCase() + item.slice(1)}
               />
             ))}
           </FormGroup>
         </div>
 
-        {/* Fire Protection & PPEs */}
+        {/* Risk Assessment Number - Only show if Risk Assessment is selected */}
+        {job_preparation.includes("risk assessment") && (
+          <div className="mb-4">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Risk Assessment Number<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Risk Assessment Number"
+              value={risk_assessment_number}
+              sx={commonInputStyles}
+              onChange={(e) => setRiskAssessmentNumber(e.target.value)}
+            />
+          </div>
+        )}
+
+        {/* Fire Protection */}
         <div className="mb-4">
-          <p className="text-lg font-semibold">Fire Protection & PPEs:</p>
+          <FormLabel
+            component="legend"
+            className="text-[#29346B] text-lg font-semibold"
+          >
+            Fire Protection<span className="text-red-600"> *</span>
+          </FormLabel>
           <FormGroup row>
             {fireProtectionOptions.map((item) => (
               <FormControlLabel
                 key={item}
                 control={
                   <Checkbox
-                    onChange={() =>
-                      setFireProtection([...fireProtection, item])
-                    }
+                    checked={fire_protection.includes(item)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFireProtection([...fire_protection, item]);
+                      } else {
+                        setFireProtection(fire_protection.filter(prot => prot !== item));
+                      }
+                    }}
                   />
                 }
-                label={item}
+                label={item.charAt(0).toUpperCase() + item.slice(1)}
               />
             ))}
           </FormGroup>
@@ -346,11 +469,11 @@ export default function PermitToWorkDialog({ open, setOpen }) {
       </DialogContent>
 
       <DialogActions>
-        {/* <Button onClick={handleClose} color="secondary" variant="outlined">
-          Cancel
-        </Button> */}
-        <Button onClick={handleSubmit} color="primary"
-         sx={{
+        <Button 
+          onClick={handleSubmit} 
+          color="primary"
+          disabled={isLoading}
+          sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
             fontSize: "16px",
@@ -363,8 +486,9 @@ export default function PermitToWorkDialog({ open, setOpen }) {
               backgroundColor: "#E66A1F",
             },
           }}
-        variant="contained">
-          Submit
+          variant="contained"
+        >
+          {isLoading ? "Submitting..." : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

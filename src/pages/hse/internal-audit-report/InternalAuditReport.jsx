@@ -15,6 +15,7 @@ import {
   TablePagination,
   TextField
 } from '@mui/material';
+import CreateAuditForm from '../../../components/pages/hse/internal-audit/CreateAuditForm';
 
 // Reusable Image Viewer Component
 const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
@@ -61,7 +62,7 @@ function InternalAuditReport() {
   const [selectedAudit, setSelectedAudit] = useState(null);
   const [openDetailsModal, setOpenDetailsModal] = useState(false);
   const [modalView, setModalView] = useState('observations'); // 'observations', 'correction', 'verification'
-
+  const [createAudit,setCreateAudit]=useState(false);
   const dummyAudit = [
     {
       "site": "Manufacturing Plant A",
@@ -254,6 +255,7 @@ function InternalAuditReport() {
           variant="outlined"
         />
         <Button
+        onClick={()=>setCreateAudit(true)}
           variant="contained"
           style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none', minHeight: 'auto' }}
         >
@@ -333,6 +335,10 @@ function InternalAuditReport() {
       >
         {renderModalContent()}
       </Dialog>
+      <CreateAuditForm
+      open={createAudit}
+      setOpen={setCreateAudit}
+      />
     </div>
   );
 }

@@ -11,10 +11,15 @@ import {
   MenuItem,
   Select,
   Grid,
+  CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
-
+import { useCreateBoomLiftInspectionMutation } from "../../../../api/hse/boomLift/boomliftApi";
+// import { useCreateBoomLiftInspectionMutation } from "../services/api"; // Update path as needed
 export default function BoomLiftInspectionDialog({ open, setOpen }) {
+  // RTK query hook
+  const [createBoomLiftInspection, { isLoading }] = useCreateBoomLiftInspectionMutation();
+
   // Basic information
   const [equipmentName, setEquipmentName] = useState("");
   const [makeModel, setMakeModel] = useState("");
@@ -124,23 +129,33 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
   ];
 
   const validateForm = () => {
-    if (!equipmentName.trim()) return toast.error("Equipment Name is required!");
-    if (!makeModel.trim()) return toast.error("Make/Model is required!");
-    if (!identificationNumber.trim()) return toast.error("Identification Number is required!");
-    if (!inspectionDate.trim()) return toast.error("Inspection Date is required!");
-    if (!siteName.trim()) return toast.error("Site Name is required!");
-    if (!location.trim()) return toast.error("Location is required!");
-    
-    // Check if all inspection fields have observations filled
+    const requiredFields = [
+      { value: equipmentName, label: "Equipment Name" },
+      { value: makeModel, label: "Make/Model" },
+      { value: identificationNumber, label: "Identification Number" },
+      { value: inspectionDate, label: "Inspection Date" },
+      { value: siteName, label: "Site Name" },
+      { value: location, label: "Location" },
+    ];
+  
+    const emptyField = requiredFields.find(field => !field.value || field.value.trim?.() === "");
+    if (emptyField) {
+      toast.error(`${emptyField.label} is required!`);
+      return false;
+    }
+  
+    // Check if all inspection fields have observations and action_by filled
     for (const [key, value] of Object.entries(inspectionFields)) {
-      if (!value.observations) {
-        return toast.error(`Observations for ${key.replace(/_/g, " ")} is required!`);
+      if (!value.observations?.trim()) {
+        toast.error(`Observations for ${key.replace(/_/g, " ")} is required!`);
+        return false;
       }
-      if (!value.action_by) {
-        return toast.error(`Action by for ${key.replace(/_/g, " ")} is required!`);
+      if (!value.action_by?.trim()) {
+        toast.error(`Action by for ${key.replace(/_/g, " ")} is required!`);
+        return false;
       }
     }
-
+  
     return true;
   };
 
@@ -176,14 +191,73 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
     },
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) return;
+  const resetForm = () => {
+    setEquipmentName("");
+    setMakeModel("");
+    setIdentificationNumber("");
+    setInspectionDate("");
+    setSiteName("");
+    setLocation("");
+    
+    // Reset all inspection fields
+    const resetFields = {};
+    Object.keys(inspectionFields).forEach(key => {
+      resetFields[key] = { observations: "", action_by: "", remarks: "" };
+    });
+    setInspectionFields(resetFields);
+  };
 
-    // Format the date as ISO string if it's a valid date
+  // const handleSubmit = async () => {
+  //   if (!validateForm()) return;
+
+  //   // Format the date as ISO string if it's a valid date
+  //   let formattedDate = inspectionDate;
+  //   if (inspectionDate) {
+  //     try {
+  //       const dateObj = new Date(inspectionDate);
+  //       if (!isNaN(dateObj.getTime())) {
+  //         formattedDate = dateObj.toISOString();
+  //       }
+  //     } catch (error) {
+  //       console.error("Date formatting error:", error);
+  //     }
+  //   }
+
+  //   // Transform the state data to match the API request format
+  //   const requestData = {
+  //     equipment_name: equipmentName,
+  //     make_model: makeModel,
+  //     identification_number: identificationNumber,
+  //     inspection_date: formattedDate,
+  //     site_name: siteName,
+  //     location: location,
+  //   };
+
+  //   // Add all inspection fields to request data
+  //   for (const [key, value] of Object.entries(inspectionFields)) {
+  //     requestData[`${key}_observations`] = value.observations;
+  //     requestData[`${key}_action_by`] = value.action_by;
+  //     requestData[`${key}_remarks`] = value.remarks || "No remarks"; // Set default value if empty
+  //   }
+
+  //   try {
+  //     // Call the RTK query mutation
+  //     const result = await createBoomLiftInspection(requestData).unwrap();
+  //     toast.success("Boom Lift inspection submitted successfully!");
+  //     resetForm();
+  //     setOpen(false);
+  //   } catch (error) {
+  //     console.error("Submission error:", error);
+  //     toast.error(error.data?.message || "Failed to submit inspection. Please try again.");
+  //   }
+  // };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+  
     let formattedDate = inspectionDate;
     if (inspectionDate) {
       try {
-        // Add time if not present (API expects full datetime)
         const dateObj = new Date(inspectionDate);
         if (!isNaN(dateObj.getTime())) {
           formattedDate = dateObj.toISOString();
@@ -192,8 +266,7 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
         console.error("Date formatting error:", error);
       }
     }
-
-    // Transform the state data to match the API request format
+  
     const requestData = {
       equipment_name: equipmentName,
       make_model: makeModel,
@@ -202,17 +275,27 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
       site_name: siteName,
       location: location,
     };
-
-    // Add all inspection fields to request data
+  
     for (const [key, value] of Object.entries(inspectionFields)) {
       requestData[`${key}_observations`] = value.observations;
       requestData[`${key}_action_by`] = value.action_by;
-      requestData[`${key}_remarks`] = value.remarks;
+      requestData[`${key}_remarks`] = value.remarks || "No remarks";
     }
-
-    console.log(requestData);
-    toast.success("Boom Lift inspection submitted successfully!");
-    setOpen(false);
+  
+    try {
+      const result = await createBoomLiftInspection(requestData).unwrap();
+  
+      if (result.status) {
+        toast.success(result.message || "Boom Lift inspection submitted successfully!");
+        resetForm();
+        setOpen(false);
+      } else {
+        toast.error(result.message || "Failed to submit inspection.");
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      toast.error(error?.data?.message || "Failed to submit inspection. Please try again.");
+    }
   };
 
   const renderInspectionField = (fieldKey, label) => {
@@ -223,7 +306,7 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
         </Grid>
         <Grid item xs={12} md={4}>
           <FormControl fullWidth variant="outlined" sx={commonInputStyles}>
-            <InputLabel>Observations</InputLabel>
+            {/* <InputLabel>Observations</InputLabel>
             <Select
               value={inspectionFields[fieldKey].observations}
               onChange={(e) => handleInspectionFieldChange(fieldKey, 'observations', e.target.value)}
@@ -232,7 +315,15 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
               {observationOptions.map(option => (
                 <MenuItem key={option} value={option}>{option}</MenuItem>
               ))}
-            </Select>
+            </Select> */}
+                        <TextField
+                        fullWidth
+                        label="Observations"
+                        variant="outlined"
+                        value={inspectionFields[fieldKey].observations}
+                        onChange={(e) => handleInspectionFieldChange(fieldKey, 'observations', e.target.value)}
+                        sx={commonInputStyles}
+                      />
           </FormControl>
         </Grid>
         <Grid item xs={12} md={4}>
@@ -369,11 +460,12 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleClose} color="secondary" variant="outlined">
+        <Button onClick={handleClose} color="secondary" variant="outlined" disabled={isLoading}>
           Cancel
         </Button>
         <Button 
           onClick={handleSubmit} 
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -389,7 +481,7 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
           }}
           variant="contained"
         >
-          Submit
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

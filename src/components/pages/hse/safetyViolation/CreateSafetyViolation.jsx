@@ -13,15 +13,18 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useCreateSafetyViolationReportMutation } from "../../../../api/hse/safetyViolation/safetyViolatioApi";
 
 export default function CreateSafetyViolation({ open, setOpen }) {
-  // State for all fields based on the curl request
+  // RTK mutation hook
+  const [createSafetyViolationReport, { isLoading }] = useCreateSafetyViolationReportMutation();
+
   const [siteName, setSiteName] = useState("");
-  const [issuedTo, setIssuedTo] = useState("");
+  const [issuedTo, setIssuedTo] = useState("onm"); // Default value matching the curl example
   const [issuedToViolatorName, setIssuedToViolatorName] = useState("");
   const [issuedToDesignation, setIssuedToDesignation] = useState("");
   const [issuedToDepartment, setIssuedToDepartment] = useState("");
-  const [issuedBy, setIssuedBy] = useState("");
+  const [issuedBy, setIssuedBy] = useState("day"); // Default value matching the curl example
   const [issuedByName, setIssuedByName] = useState("");
   const [issuedByDesignation, setIssuedByDesignation] = useState("");
   const [issuedByDepartment, setIssuedByDepartment] = useState("");
@@ -30,45 +33,34 @@ export default function CreateSafetyViolation({ open, setOpen }) {
   const [actionTaken, setActionTaken] = useState("");
 
   const validateForm = () => {
-    if (!siteName.trim()) return toast.error("Site Name is required!");
-    if (!issuedTo.trim()) return toast.error("Issued To is required!");
-    if (!issuedToViolatorName.trim()) return toast.error("Violator Name is required!");
-    if (!issuedToDesignation.trim()) return toast.error("Violator Designation is required!");
-    if (!issuedToDepartment.trim()) return toast.error("Violator Department is required!");
-    if (!issuedBy.trim()) return toast.error("Issued By is required!");
-    if (!issuedByName.trim()) return toast.error("Issuer Name is required!");
-    if (!issuedByDesignation.trim()) return toast.error("Issuer Designation is required!");
-    if (!issuedByDepartment.trim()) return toast.error("Issuer Department is required!");
-    if (!contractorsName.trim()) return toast.error("Contractor's Name is required!");
-    if (!descriptionSafetyViolation.trim()) return toast.error("Description of Safety Violation is required!");
-    if (!actionTaken.trim()) return toast.error("Action Taken is required!");
-
+    const requiredFields = [
+      { value: siteName, label: "Site Name" },
+      { value: issuedTo, label: "Issued To" },
+      { value: issuedToViolatorName, label: "Violator Name" },
+      { value: issuedToDesignation, label: "Violator Designation" },
+      { value: issuedToDepartment, label: "Violator Department" },
+      { value: issuedBy, label: "Issued By" },
+      { value: issuedByName, label: "Issuer Name" },
+      { value: issuedByDesignation, label: "Issuer Designation" },
+      { value: issuedByDepartment, label: "Issuer Department" },
+      { value: contractorsName, label: "Contractor's Name" },
+      { value: descriptionSafetyViolation, label: "Description of Safety Violation" },
+      { value: actionTaken, label: "Action Taken" },
+    ];
+  
+    const emptyField = requiredFields.find(field => !field.value.trim());
+  
+    if (emptyField) {
+      toast.error(`${emptyField.label} is required!`);
+      return false;
+    }
+  
     return true;
   };
 
   const handleClose = () => setOpen(false);
 
-  const commonInputStyles = {
-    "& .MuiOutlinedInput-root": {
-      borderRadius: "6px",
-      transition: "border 0.2s ease-in-out",
-      "&:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on hover
-        borderBottom: "4px solid #FACC15",
-      },
-      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on focus
-        borderWidth: "2px",
-        borderBottom: "4px solid #FACC15",
-      },
-    },
-    "& .MuiOutlinedInput-notchedOutline": {
-      border: "1px solid #FACC15", // Default border
-      borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
-    },
-  };
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
     const formData = {
@@ -86,26 +78,55 @@ export default function CreateSafetyViolation({ open, setOpen }) {
       action_taken: actionTaken
     };
 
-    console.log(formData);
-    
-    // Here you would make the API call to post the data
-    // Example:
-    // axios.post('http://127.0.0.1:8000/annexures_module/create_safety_violation_report', formData, {
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': `Bearer ${token}`
-    //   }
-    // })
-    // .then(response => {
-    //   toast.success("Safety Violation Report submitted successfully!");
-    //   setOpen(false);
-    // })
-    // .catch(error => {
-    //   toast.error("Error submitting report: " + error.message);
-    // });
+    try {
+      const response = await createSafetyViolationReport(formData).unwrap();
+  
+      if (response.status) {
+        toast.success(response.message || "Report submitted successfully!");
+        setOpen(false);
+        resetForm(); // Optional: Reset form fields
+      } else {
+        toast.error(response.message || "Failed to submit the report.");
+      }
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      toast.error(error?.data?.message || "An unexpected error occurred.");
+    }
+  };
 
-    toast.success("Safety Violation Report submitted successfully!");
-    setOpen(false);
+  // Function to reset all form fields
+  const resetForm = () => {
+    setSiteName("");
+    setIssuedTo("onm");
+    setIssuedToViolatorName("");
+    setIssuedToDesignation("");
+    setIssuedToDepartment("");
+    setIssuedBy("day");
+    setIssuedByName("");
+    setIssuedByDesignation("");
+    setIssuedByDepartment("");
+    setContractorsName("");
+    setDescriptionSafetyViolation("");
+    setActionTaken("");
+  };
+  const commonInputStyles = {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: "6px",
+      transition: "border 0.2s ease-in-out",
+      "&:hover .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#FACC15",
+        borderBottom: "4px solid #FACC15",
+      },
+      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#FACC15",
+        borderWidth: "2px",
+        borderBottom: "4px solid #FACC15",
+      },
+    },
+    "& .MuiOutlinedInput-notchedOutline": {
+      border: "1px solid #FACC15",
+      borderBottom: "4px solid #FACC15",
+    },
   };
 
   return (
@@ -322,6 +343,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
             fontWeight: "bold",
             marginRight: "10px",
           }}
+          disabled={isLoading}
         >
           Cancel
         </Button>
@@ -329,6 +351,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
           onClick={handleSubmit} 
           color="primary"
           variant="contained"
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -343,7 +366,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
             },
           }}
         >
-          Submit
+          {isLoading ? "Submitting..." : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

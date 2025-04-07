@@ -22,9 +22,10 @@ import { permissionsApi } from "../api/permission/permissionApi.js";
 import { permitToWorkApi } from "../api/hse/permitTowork/permitToworkApi.js";
 import { incidentNearMissApi } from "../api/hse/incidentNearmissInvestigation/incidentNearmissInvestigationApi.js";
 import { safetyViolationApi } from "../api/hse/safetyViolation/safetyViolatioApi.js";
-import { boomLiftInspectionApi } from "../api/hse/boomlift/boomliftApi.js";
+import { boomLiftInspectionApi } from "../api/hse/boomLift/boomliftApi.js";
 import { trailerInspectionApi } from "../api/hse/trailerInspection/trailerInspectionApi.js";
 import { mockDrillApi } from "../api/hse/mockdrill/mockDrillApi.js";
+import { craneHydraApi } from "../api/hse/crane/craneHydraApi.js";
 
 const store = configureStore({
   reducer: {
@@ -51,6 +52,7 @@ const store = configureStore({
     [permitToWorkApi.reducerPath]: permitToWorkApi.reducer,
     [incidentNearMissApi.reducerPath]: incidentNearMissApi.reducer,
     [safetyViolationApi.reducerPath]: safetyViolationApi.reducer,
+    [craneHydraApi.reducerPath]:craneHydraApi.reducer,
     [boomLiftInspectionApi.reducerPath]: boomLiftInspectionApi.reducer,
     [trailerInspectionApi.reducerPath]: trailerInspectionApi.reducer,
     [mockDrillApi.reducerPath]: mockDrillApi.reducer,

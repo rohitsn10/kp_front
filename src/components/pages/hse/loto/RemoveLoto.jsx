@@ -1,0 +1,272 @@
+import React, { useState } from "react";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  Grid,
+  Typography,
+  Divider,
+  Box,
+  Avatar,
+} from "@mui/material";
+import { toast } from "react-toastify";
+
+export default function RemoveLogoutForm({ open, setOpen }) {
+  const [removedDateTime, setRemovedDateTime] = useState("");
+  const [removedLockTagNumber, setRemovedLockTagNumber] = useState("");
+  const [removedPermitNumber, setRemovedPermitNumber] = useState("");
+  const [removedByName, setRemovedByName] = useState("");
+  const [removedBySignature, setRemovedBySignature] = useState(null);
+  const [removedSiteInChargeName, setRemovedSiteInChargeName] = useState("");
+  const [removedApprovedBySiteInChargeSignature, setRemovedApprovedBySiteInChargeSignature] = useState(null);
+
+  const validateForm = () => {
+    if (!removedDateTime.trim()) return toast.error("Removed Date/Time is required!");
+    if (!removedLockTagNumber.trim())
+      return toast.error("Removed Lock/Tag Number is required!");
+    if (!removedPermitNumber.trim())
+      return toast.error("Removed Permit Number is required!");
+    if (!removedByName.trim()) return toast.error("Removed By Name is required!");
+    if (!removedBySignature) return toast.error("Removed By Signature is required!");
+    if (!removedSiteInChargeName.trim())
+      return toast.error("Removed Site In-Charge Name is required!");
+    if (!removedApprovedBySiteInChargeSignature)
+      return toast.error("Removed Approved By Site In-Charge Signature is required!");
+
+    return true;
+  };
+
+  const handleClose = () => setOpen(false);
+
+  const commonInputStyles = {
+    "& .MuiOutlinedInput-root": {
+      border: "1px solid #FACC15",
+      borderBottom: "4px solid #FACC15",
+      borderRadius: "6px",
+    },
+    "& .MuiOutlinedInput-root.Mui-focused": {
+      border: "none",
+      borderRadius: "4px",
+    },
+  };
+
+  const handleSignatureUpload = (setter, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setter(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!validateForm()) return;
+
+    const formData = {
+      "removed-date-time": removedDateTime,
+      "removed-lock-tag-number": removedLockTagNumber,
+      "removed-permit-number": removedPermitNumber,
+      "removed-by-name": removedByName,
+      "removed-by-signature": removedBySignature,
+      "removed-siteInCharge-name": removedSiteInChargeName,
+      "removed-approvedBySiteInCharge-signature": removedApprovedBySiteInChargeSignature,
+    };
+
+    // console.log(formData);
+    toast.success("Lockout/Tagout removal form submitted successfully!");
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
+      <DialogTitle className="text-[#29346B] text-2xl font-semibold">
+        Lockout/Tagout Removal
+      </DialogTitle>
+      <DialogContent>
+        <Grid container spacing={3}>
+          {/* Removed Date/Time */}
+          <Grid item xs={12}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Removed Date/Time<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              type="datetime-local"
+              value={removedDateTime}
+              sx={commonInputStyles}
+              onChange={(e) => setRemovedDateTime(e.target.value)}
+            />
+          </Grid>
+
+          {/* Removed Lock/Tag Number */}
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Removed Lock/Tag Number<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Lock/Tag Number"
+              value={removedLockTagNumber}
+              sx={commonInputStyles}
+              onChange={(e) => setRemovedLockTagNumber(e.target.value)}
+            />
+          </Grid>
+
+          {/* Removed Permit Number */}
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Removed Permit Number<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Permit Number"
+              value={removedPermitNumber}
+              sx={commonInputStyles}
+              onChange={(e) => setRemovedPermitNumber(e.target.value)}
+            />
+          </Grid>
+
+          {/* Removed By Name */}
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Removed By Name<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Name"
+              value={removedByName}
+              sx={commonInputStyles}
+              onChange={(e) => setRemovedByName(e.target.value)}
+            />
+          </Grid>
+
+          {/* Removed By Signature */}
+          <Grid item xs={12}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Removed By Signature<span className="text-red-600"> *</span>
+            </label>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ height: "56px" }}
+              >
+                Upload Signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => handleSignatureUpload(setRemovedBySignature, e)}
+                />
+              </Button>
+              {removedBySignature && (
+                <Avatar
+                  src={removedBySignature}
+                  alt="Removed By Signature"
+                  variant="rounded"
+                  sx={{ width: 100, height: 56 }}
+                />
+              )}
+            </Box>
+          </Grid>
+
+          {/* Removed Site In-Charge Name */}
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Removed Site In-Charge Name<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Name"
+              value={removedSiteInChargeName}
+              sx={commonInputStyles}
+              onChange={(e) => setRemovedSiteInChargeName(e.target.value)}
+            />
+          </Grid>
+
+          {/* Removed Approved By Site In-Charge Signature */}
+          <Grid item xs={12}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Removed Approved By Site In-Charge Signature<span className="text-red-600"> *</span>
+            </label>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ height: "56px" }}
+              >
+                Upload Signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) =>
+                    handleSignatureUpload(setRemovedApprovedBySiteInChargeSignature, e)
+                  }
+                />
+              </Button>
+              {removedApprovedBySiteInChargeSignature && (
+                <Avatar
+                  src={removedApprovedBySiteInChargeSignature}
+                  alt="Approved By Site In-Charge Signature"
+                  variant="rounded"
+                  sx={{ width: 100, height: 56 }}
+                />
+              )}
+            </Box>
+          </Grid>
+        </Grid>
+      </DialogContent>
+
+      <DialogActions>
+        <Button onClick={handleClose} color="secondary" variant="outlined">
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          color="primary"
+          sx={{
+            backgroundColor: "#f6812d",
+            color: "#FFFFFF",
+            fontSize: "16px",
+            padding: "6px 36px",
+            width: "200px",
+            borderRadius: "8px",
+            textTransform: "none",
+            fontWeight: "bold",
+            "&:hover": {
+              backgroundColor: "#E66A1F",
+            },
+          }}
+          variant="contained"
+        >
+          Submit
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}

@@ -26,4 +26,4 @@ export const craneHydraApi = createApi({
 
 export const {
   useCreateCraneHydraInspectionMutation,
-} = inspectionApi;
+} = craneHydraApi;
