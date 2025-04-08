@@ -13,8 +13,11 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  CircularProgress,
+  Typography,
 } from '@mui/material';
 import CreateSafetyViolation from '../../../components/pages/hse/safetyViolation/CreateSafetyViolation';
+import { useGetSafetyViolationReportQuery } from '../../../api/hse/safetyViolation/safetyViolatioApi';
 
 const SafetyViolation = () => {
   const [page, setPage] = useState(0);
@@ -22,80 +25,48 @@ const SafetyViolation = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogContent, setDialogContent] = useState(null);
-  const [createDialog,setCreateDialog]=useState(false);
-  let dummySafetyData = [
-    {
-      site: 'Construction Site A',
-      date: '2025-03-27',
-      issued_to: { violator_name: 'John Doe', designation: 'Site Engineer', department: 'Civil Engineering' },
-      issued_by: { violator_name: 'Jane Smith', designation: 'HSE Officer', department: 'Health & Safety' },
-      contractors_involved: [{ name: 'ABC Contractors Ltd.' }, { name: 'XYZ Builders Inc.' }],
-      safety_violation_description: 'Failure to wear proper PPE while working at height.',
-      action_taken: 'Issued warning and conducted a safety briefing.',
-    },
-    {
-      site: 'Warehouse Project B',
-      date: '2025-03-26',
-      issued_to: { violator_name: 'Alice Williams', designation: 'Electrician', department: 'Electrical Works' },
-      issued_by: { violator_name: 'David Miller', designation: 'Safety Supervisor', department: 'Health & Safety' },
-      contractors_involved: [{ name: 'LMN Electrical Services' }],
-      safety_violation_description: 'Unsafe electrical wiring exposed in a work area.',
-      action_taken: 'Immediate rectification ordered and fine imposed.',
-    },
-    {
-      site: 'Construction Site A',
-      date: '2025-03-27',
-      issued_to: { violator_name: 'John Doe', designation: 'Site Engineer', department: 'Civil Engineering' },
-      issued_by: { violator_name: 'Jane Smith', designation: 'HSE Officer', department: 'Health & Safety' },
-      contractors_involved: [{ name: 'ABC Contractors Ltd.' }, { name: 'XYZ Builders Inc.' }],
-      safety_violation_description: 'Failure to wear proper PPE while working at height.',
-      action_taken: 'Issued warning and conducted a safety briefing.',
-    },
-    {
-      site: 'Warehouse Project B',
-      date: '2025-03-26',
-      issued_to: { violator_name: 'Alice Williams', designation: 'Electrician', department: 'Electrical Works' },
-      issued_by: { violator_name: 'David Miller', designation: 'Safety Supervisor', department: 'Health & Safety' },
-      contractors_involved: [{ name: 'LMN Electrical Services' }],
-      safety_violation_description: 'Unsafe electrical wiring exposed in a work area.',
-      action_taken: 'Immediate rectification ordered and fine imposed.',
-    },
-    {
-      site: 'Construction Site A',
-      date: '2025-03-27',
-      issued_to: { violator_name: 'John Doe', designation: 'Site Engineer', department: 'Civil Engineering' },
-      issued_by: { violator_name: 'Jane Smith', designation: 'HSE Officer', department: 'Health & Safety' },
-      contractors_involved: [{ name: 'ABC Contractors Ltd.' }, { name: 'XYZ Builders Inc.' }],
-      safety_violation_description: 'Failure to wear proper PPE while working at height.',
-      action_taken: 'Issued warning and conducted a safety briefing.',
-    },
-    {
-      site: 'Warehouse Project B',
-      date: '2025-03-26',
-      issued_to: { violator_name: 'Alice Williams', designation: 'Electrician', department: 'Electrical Works' },
-      issued_by: { violator_name: 'David Miller', designation: 'Safety Supervisor', department: 'Health & Safety' },
-      contractors_involved: [{ name: 'LMN Electrical Services' }],
-      safety_violation_description: 'Unsafe electrical wiring exposed in a work area.',
-      action_taken: 'Immediate rectification ordered and fine imposed.',
-    },
-  ];
+  const [createDialog, setCreateDialog] = useState(false);
+
+  const { data, isLoading, error } = useGetSafetyViolationReportQuery();
+
+  const safetyViolations = data?.data || [];
 
   const handleChangePage = (event, newPage) => setPage(newPage);
+
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-  const filteredData = dummySafetyData.filter((violation) =>
-    violation.site.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredData = safetyViolations.filter((violation) =>
+    violation.site_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const currentRows = filteredData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const currentRows = filteredData.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
 
   const handleOpenDialog = (content) => {
     setDialogContent(content);
     setOpenDialog(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="text-center my-10">
+        <CircularProgress />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Typography color="error" align="center" className="my-10">
+        Failed to load safety violation reports.
+      </Typography>
+    );
+  }
 
   return (
     <div className="bg-white p-4 md:w-[90%] mx-auto my-8 rounded-md pt-5">
@@ -110,15 +81,21 @@ const SafetyViolation = () => {
           size="small"
           style={{ backgroundColor: '#f9f9f9', borderRadius: '8px', maxWidth: '300px' }}
         />
-                <div className="flex justify-end">
-                  <Button
-                  onClick={()=>setCreateDialog(true)}
-                    variant="contained"
-                    style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
-                  >
-                    Add Safety Violation
-                  </Button>
-                </div>
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setCreateDialog(true)}
+            variant="contained"
+            style={{
+              backgroundColor: '#FF8C00',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              textTransform: 'none',
+            }}
+          >
+            Add Safety Violation
+          </Button>
+        </div>
       </div>
 
       <TableContainer component={Paper} style={{ borderRadius: '8px' }}>
@@ -135,26 +112,28 @@ const SafetyViolation = () => {
           </TableHead>
           <TableBody>
             {currentRows.map((violation, index) => (
-              <TableRow key={index}>
+              <TableRow key={violation.id}>
                 <TableCell align="center">{page * rowsPerPage + index + 1}</TableCell>
-                <TableCell align="center">{violation.site}</TableCell>
-                <TableCell align="center">{violation.date}</TableCell>
-                <TableCell align="center">{violation.issued_to.violator_name}</TableCell>
+                <TableCell align="center">{violation.site_name}</TableCell>
+                <TableCell align="center">
+                  {new Date(violation.created_at).toLocaleDateString()}
+                </TableCell>
+                <TableCell align="center">{violation.issued_to_violator_name || 'N/A'}</TableCell>
                 <TableCell align="center">
                   <Button
                     variant="contained"
                     color="primary"
                     size="small"
-                    onClick={() => handleOpenDialog(
-                      <div>
-                        <h3>Contractors Involved:</h3>
-                        <ul>
-                          {violation.contractors_involved.map((contractor, i) => (
-                            <li key={i}>{contractor.name}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    onClick={() =>
+                      handleOpenDialog(
+                        <div>
+                          <h3>Contractors Involved:</h3>
+                          <ul>
+                            <li>{violation.contractors_name || 'No contractors listed'}</li>
+                          </ul>
+                        </div>
+                      )
+                    }
                   >
                     View Contractors
                   </Button>
@@ -164,13 +143,20 @@ const SafetyViolation = () => {
                     variant="contained"
                     color="secondary"
                     size="small"
-                    onClick={() => handleOpenDialog(
-                      <div>
-                        <h3>Violation Details</h3>
-                        <p><strong>Description:</strong> {violation.safety_violation_description}</p>
-                        <p><strong>Action Taken:</strong> {violation.action_taken}</p>
-                      </div>
-                    )}
+                    onClick={() =>
+                      handleOpenDialog(
+                        <div>
+                          <h3>Violation Details</h3>
+                          <p>
+                            <strong>Description:</strong>{' '}
+                            {violation.description_safety_violation}
+                          </p>
+                          <p>
+                            <strong>Action Taken:</strong> {violation.action_taken}
+                          </p>
+                        </div>
+                      )
+                    }
                   >
                     View Details
                   </Button>
@@ -196,10 +182,8 @@ const SafetyViolation = () => {
         <DialogTitle>Details</DialogTitle>
         <DialogContent>{dialogContent}</DialogContent>
       </Dialog>
-      <CreateSafetyViolation
-open={createDialog}
-setOpen={setCreateDialog}
-      />
+
+      <CreateSafetyViolation open={createDialog} setOpen={setCreateDialog} />
     </div>
   );
 };

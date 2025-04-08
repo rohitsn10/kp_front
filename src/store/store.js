@@ -82,6 +82,7 @@ const store = configureStore({
       .concat(permitToWorkApi.middleware)
       .concat(incidentNearMissApi.middleware)
       .concat(safetyViolationApi.middleware)
+      .concat(craneHydraApi.middleware)
       .concat(boomLiftInspectionApi.middleware)
       .concat(trailerInspectionApi.middleware)
       .concat(mockDrillApi.middleware)
