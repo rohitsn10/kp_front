@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import BoomLiftInspectionDialog from "../../../components/pages/hse/boom-lift/CreateBoomLift";
-
+import { useGetBoomLiftInspectionQuery } from "../../../api/hse/boomLift/boomliftApi";
 function BoomLiftInspection() {
   const dummyBoomLift = [
     {
@@ -265,6 +265,136 @@ function BoomLiftInspection() {
       }
     }
   ]
+const { data, isLoading, error } = useGetBoomLiftInspectionQuery();
+// Use either 'data?.data' if data is nested or fallback to dummy data
+const transformedData = (data?.data || dummyBoomLift).map((item) => {
+  if (item.BoomLiftInspection) return item; // from dummyBoomLift
+
+  const inspection = {
+    EquipmentName: item.equipment_name,
+    IdentificationNumber: item.identification_number,
+    MakeModel: item.make_model,
+    InspectionDate: item.inspection_date.split("T")[0],
+    Site: item.site_name,
+    Location: item.location,
+    Remarks: "", // Not in API, leave blank or update as needed
+    InspectedBy: "", // Not in API, leave blank or update as needed
+    Checkpoints: [
+      {
+        Checkpoint: "All valid documents are available - Registration, Insurance, form no 10, License & operator authority letter.",
+        Observations: item.all_valid_document_observations,
+        ActionBy: item.all_valid_document_action_by,
+        Remarks: item.all_valid_document_remarks
+      },
+      {
+        Checkpoint: "Operator fitness certificate including eye test.",
+        Observations: item.operator_fitness_certificate_observations,
+        ActionBy: item.operator_fitness_certificate_action_by,
+        Remarks: item.operator_fitness_certificate_remarks
+      },
+      {
+        Checkpoint: "Main horn / Reverse horn",
+        Observations: item.main_horn_reverse_horn_observations,
+        ActionBy: item.main_horn_reverse_horn_action_by,
+        Remarks: item.main_horn_reverse_horn_remarks
+      },
+      {
+        Checkpoint: "Emergency lowering function properly.",
+        Observations: item.emergency_lowering_observations,
+        ActionBy: item.emergency_lowering_action_by,
+        Remarks: item.emergency_lowering_remarks
+      },
+      {
+        Checkpoint: "Tyre pressure & condition",
+        Observations: item.tyre_pressure_condition_observations,
+        ActionBy: item.tyre_pressure_condition_action_by,
+        Remarks: item.tyre_pressure_condition_remarks
+      },
+      {
+        Checkpoint: "Hydraulic cylinder & any leakage.",
+        Observations: item.any_leakage_observations,
+        ActionBy: item.any_leakage_action_by,
+        Remarks: item.any_leakage_remarks
+      },
+      {
+        Checkpoint: "Smooth function of hydraulic boom",
+        Observations: item.smooth_function_observations,
+        ActionBy: item.smooth_function_action_by,
+        Remarks: item.smooth_function_remarks
+      },
+      {
+        Checkpoint: "Brake for stop & hold.",
+        Observations: item.brake_stop_hold_observations,
+        ActionBy: item.brake_stop_hold_action_by,
+        Remarks: item.brake_stop_hold_remarks
+      },
+      {
+        Checkpoint: "Condition of all lever button",
+        Observations: item.condition_of_all_observations,
+        ActionBy: item.condition_of_all_action_by,
+        Remarks: item.condition_of_all_remarks
+      },
+      {
+        Checkpoint: "Guard rails are in good condition without any damage on platform",
+        Observations: item.guard_rails_without_damage_observations,
+        ActionBy: item.guard_rails_without_damage_action_by,
+        Remarks: item.guard_rails_without_damage_remarks
+      },
+      {
+        Checkpoint: "Toe Guard",
+        Observations: item.toe_guard_observations,
+        ActionBy: item.toe_guard_action_by,
+        Remarks: item.toe_guard_remarks
+      },
+      {
+        Checkpoint: "Condition of Platform",
+        Observations: item.platform_condition_observations,
+        ActionBy: item.platform_condition_action_by,
+        Remarks: item.platform_condition_remarks
+      },
+      {
+        Checkpoint: "Door Lock Arrangement for Platform",
+        Observations: item.door_lock_platform_observations,
+        ActionBy: item.door_lock_platform_action_by,
+        Remarks: item.door_lock_platform_remarks
+      },
+      {
+        Checkpoint: "SWL mentioned on boom lift",
+        Observations: item.swl_observations,
+        ActionBy: item.swl_action_by,
+        Remarks: item.swl_remarks
+      },
+      {
+        Checkpoint: "Over load indicator & cut off devices working properly.",
+        Observations: item.over_load_indicator_cut_off_devices_observations,
+        ActionBy: item.over_load_indicator_cut_off_devices_action_by,
+        Remarks: item.over_load_indicator_cut_off_devices_remarks
+      },
+      {
+        Checkpoint: "Battery condition",
+        Observations: item.battery_condition_observations,
+        ActionBy: item.battery_condition_action_by,
+        Remarks: item.battery_condition_remarks
+      },
+      {
+        Checkpoint: "Display Authorized operator list",
+        Observations: item.operator_list_observations,
+        ActionBy: item.operator_list_action_by,
+        Remarks: item.operator_list_remarks
+      },
+      {
+        Checkpoint: "PPE (Safety shoes & helmet)",
+        Observations: item.ppe_observations,
+        ActionBy: item.ppe_action_by,
+        Remarks: item.ppe_remarks
+      }
+    ]
+  };
+
+  return { BoomLiftInspection: inspection };
+});
+
+
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -272,7 +402,6 @@ function BoomLiftInspection() {
   const [openDetails, setOpenDetails] = useState(false);
   const [openChecklist, setOpenChecklist] = useState(false);
   const [selectedInspection, setSelectedInspection] = useState(null);
-
   const [openDialog,setOpenDialog]=useState(false)
   const handleOpenDetails = (inspection) => {
     setSelectedInspection(inspection);
@@ -298,16 +427,16 @@ function BoomLiftInspection() {
     setPage(0);
   };
 
-  const filteredData = dummyBoomLift.filter((item) =>
-    item.BoomLiftInspection.EquipmentName.toLowerCase().includes(
-      searchTerm.toLowerCase()
-    )
-  );
+  // Use transformed data in filtering
+const filteredData = transformedData.filter((item) =>
+  item.BoomLiftInspection.EquipmentName.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
-  const currentRows = filteredData.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+// Paginate as before
+const currentRows = filteredData.slice(
+  page * rowsPerPage,
+  page * rowsPerPage + rowsPerPage
+);
 
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">

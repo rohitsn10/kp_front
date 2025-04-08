@@ -21,9 +21,16 @@ export const craneHydraApi = createApi({
         body,
       }),
     }),
+    getCraneHydraInspection: builder.query({
+      query: () => ({
+        url: "annexures_module/get_crane_hydra_inspection",
+        method: "GET",
+      }),
+    }),
   }),
 });
 
 export const {
   useCreateCraneHydraInspectionMutation,
+  useGetCraneHydraInspectionQuery,
 } = craneHydraApi;
