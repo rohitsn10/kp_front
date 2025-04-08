@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Dialog,
@@ -24,6 +24,7 @@ import {
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
+import { useCreateMockDrillReportMutation } from "../../../../api/hse/mockdrill/mockDrillApi";
 
 export default function MockDrillDialog({ open, setOpen }) {
   // Basic Information
@@ -31,6 +32,8 @@ export default function MockDrillDialog({ open, setOpen }) {
   const [location, setLocation] = useState("");
   const [emergencyScenario, setEmergencyScenario] = useState("");
   const [mockDrillType, setMockDrillType] = useState("");
+
+  const [createMockDrillReport, { isLoading }] = useCreateMockDrillReportMutation();
   
   // Mock Drill Conducted
   const [drillDate, setDrillDate] = useState("");
@@ -46,6 +49,15 @@ export default function MockDrillDialog({ open, setOpen }) {
   const [teamMembers, setTeamMembers] = useState([
     { name: "", signature: null }
   ]);
+  
+  // State for actual file objects (for FormData)
+  const [signatureFiles, setSignatureFiles] = useState({
+    teamLeader: null,
+    performanceOMControl: null,
+    trafficEvacuation: null,
+    rescueFirstAid: null,
+    teamMembers: [null]
+  });
   
   // Table Top Records
   const [tableTopScenarioRemarks, setTableTopScenarioRemarks] = useState("");
@@ -97,6 +109,31 @@ export default function MockDrillDialog({ open, setOpen }) {
   const [recommendations, setRecommendations] = useState([
     { recommendation: "", responsibility: "", targetDate: "", status: "", actionRemarks: "" }
   ]);
+
+  // Cleanup effect for object URLs
+  useEffect(() => {
+    return () => {
+      // Cleanup object URLs when component unmounts
+      if (teamLeader.signature && teamLeader.signature.startsWith("blob:")) {
+        URL.revokeObjectURL(teamLeader.signature);
+      }
+      if (performanceOMControl.signature && performanceOMControl.signature.startsWith("blob:")) {
+        URL.revokeObjectURL(performanceOMControl.signature);
+      }
+      if (trafficEvacuation.signature && trafficEvacuation.signature.startsWith("blob:")) {
+        URL.revokeObjectURL(trafficEvacuation.signature);
+      }
+      if (rescueFirstAid.signature && rescueFirstAid.signature.startsWith("blob:")) {
+        URL.revokeObjectURL(rescueFirstAid.signature);
+      }
+      
+      teamMembers.forEach(member => {
+        if (member.signature && member.signature.startsWith("blob:")) {
+          URL.revokeObjectURL(member.signature);
+        }
+      });
+    };
+  }, [teamLeader, performanceOMControl, trafficEvacuation, rescueFirstAid, teamMembers]);
 
   const commonInputStyles = {
     "& .MuiOutlinedInput-root": {
@@ -169,40 +206,71 @@ export default function MockDrillDialog({ open, setOpen }) {
     return true;
   };
 
-  // Signature upload handlers
-  const handleSignatureUpload = (setter, currentValue, e) => {
+  // Signature upload handlers using FormData approach
+  const handleSignatureUpload = (setter, currentValue, role, e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setter({ ...currentValue, signature: reader.result });
-      };
-      reader.readAsDataURL(file);
+      // Create a preview URL for display
+      const objectUrl = URL.createObjectURL(file);
+      
+      // Update the signature preview
+      setter({ ...currentValue, signature: objectUrl });
+      
+      // Store the actual file for FormData
+      setSignatureFiles(prev => ({
+        ...prev,
+        [role]: file
+      }));
     }
   };
   
   const handleTeamMemberSignatureUpload = (index, e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const newTeamMembers = [...teamMembers];
-        newTeamMembers[index].signature = reader.result;
-        setTeamMembers(newTeamMembers);
-      };
-      reader.readAsDataURL(file);
+      // Create a preview URL for display
+      const objectUrl = URL.createObjectURL(file);
+      
+      // Update the signature preview
+      const newTeamMembers = [...teamMembers];
+      newTeamMembers[index].signature = objectUrl;
+      setTeamMembers(newTeamMembers);
+      
+      // Store the actual file for FormData
+      setSignatureFiles(prev => {
+        const newTeamMemberFiles = [...prev.teamMembers];
+        newTeamMemberFiles[index] = file;
+        return {
+          ...prev,
+          teamMembers: newTeamMemberFiles
+        };
+      });
     }
   };
   
   // Team members handlers
   const handleAddTeamMember = () => {
     setTeamMembers([...teamMembers, { name: "", signature: null }]);
+    // Also update the signature files array
+    setSignatureFiles(prev => ({
+      ...prev,
+      teamMembers: [...prev.teamMembers, null]
+    }));
   };
   
   const handleRemoveTeamMember = (index) => {
     const newTeamMembers = [...teamMembers];
     newTeamMembers.splice(index, 1);
     setTeamMembers(newTeamMembers);
+    
+    // Also update the signature files array
+    setSignatureFiles(prev => {
+      const newTeamMemberFiles = [...prev.teamMembers];
+      newTeamMemberFiles.splice(index, 1);
+      return {
+        ...prev,
+        teamMembers: newTeamMemberFiles
+      };
+    });
   };
   
   const handleTeamMemberChange = (index, field, value) => {
@@ -249,74 +317,351 @@ export default function MockDrillDialog({ open, setOpen }) {
     setRatings({ ...ratings, [field]: value });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
-
-    const formData = {
-      site,
-      location,
-      emergencyScenario,
-      mockDrillType,
-      mockDrillConducted: {
-        date: drillDate,
-        startTime,
-        completedTime
-      },
-      overallResponseTime: responseTime,
-      drillTeamObserver: {
-        teamLeader: {
-          name: teamLeader.name,
-          signature: teamLeader.signature
+  
+    // Create FormData object
+    const formData = new FormData();
+    
+    // Append basic text fields
+    formData.append("site_plant_name", site);
+    formData.append("location", location);
+    formData.append("emergncy_scenario_mock_drill", emergencyScenario);
+    formData.append("type_of_mock_drill", mockDrillType.toLowerCase());
+    formData.append("mock_drill_date", drillDate);
+    formData.append("mock_drill_time", startTime);
+    formData.append("completed_time", completedTime);
+    formData.append("overall_time", responseTime);
+    
+    // Append team leader information
+    formData.append("teamLeaderName", teamLeader.name);
+    formData.append("performanceOMControlName", performanceOMControl.name);
+    formData.append("trafficEvacuationName", trafficEvacuation.name);
+    formData.append("rescueFirstAidName", rescueFirstAid.name);
+    
+    // Append table top records
+    formData.append("scenarioConductedRemarks", tableTopScenarioRemarks);
+    formData.append("requiredParticipationRemarks", requiredParticipationRemarks);
+    formData.append("observersParticipationRemarks", observersParticipationRemarks);
+    
+    // Append control mitigation measures as a string
+    formData.append("controlMitigationMeasures", controlMitigationMeasures);
+    
+    // Append head count information as JSON
+    formData.append("peoplePresent", JSON.stringify(peoplePresent));
+    formData.append("actualParticipants", JSON.stringify(actualParticipants));
+    formData.append("notParticipated", JSON.stringify(notParticipated));
+    
+    // Append ratings as JSON
+    formData.append("ratings", JSON.stringify(ratings));
+    formData.append("overallRating", overallRating);
+    
+    // Append observations
+    formData.append("observations", observations);
+    
+    // Append recommendations as JSON
+    formData.append("recommendations", JSON.stringify(recommendations));
+    
+    // Append signature files with role-specific names
+    if (signatureFiles.teamLeader) {
+      formData.append("teamLeaderSignature", signatureFiles.teamLeader);
+    }
+    if (signatureFiles.performanceOMControl) {
+      formData.append("performanceOMControlSignature", signatureFiles.performanceOMControl);
+    }
+    if (signatureFiles.trafficEvacuation) {
+      formData.append("trafficEvacuationSignature", signatureFiles.trafficEvacuation);
+    }
+    if (signatureFiles.rescueFirstAid) {
+      formData.append("rescueFirstAidSignature", signatureFiles.rescueFirstAid);
+    }
+    
+    // Create a team members data structure
+    // Note: We can't include the actual File objects in JSON, so we'll reference them by index
+    const teamMembersData = teamMembers.map((member, index) => ({
+      name: member.name,
+      signatureIndex: index // This associates the name with the signature file index
+    }));
+    
+    // Add team members data as JSON
+    formData.append("teamMembers", JSON.stringify(teamMembersData));
+    
+    // Add the signature files separately
+    signatureFiles.teamMembers.forEach((file, index) => {
+      if (file) {
+        formData.append(`teamMemberSignature_${index}`, file);
+      }
+    });
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_KEY}/annexures_module/create_mock_drill_report`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
+          // No Content-Type header for FormData
         },
-        performanceOMControl: {
-          name: performanceOMControl.name,
-          signature: performanceOMControl.signature
-        },
-        trafficEvacuation: {
-          name: trafficEvacuation.name,
-          signature: trafficEvacuation.signature
-        },
-        rescueFirstAid: {
-          name: rescueFirstAid.name,
-          signature: rescueFirstAid.signature
-        },
-        teamMembers: teamMembers.map(member => ({
-          name: member.name,
-          signature: member.signature
-        }))
-      },
-      tableTopRecords: {
-        scenarioConductedRemarks: tableTopScenarioRemarks,
-        requiredParticipationRemarks: requiredParticipationRemarks,
-        observersParticipationRemarks: observersParticipationRemarks
-      },
-      controlMitigationMeasures,
-      headCountAtAssemblyPoint: {
-        peoplePresent,
-        actualParticipants,
-        notParticipated
-      },
-      emergencyTeamRating: {
-        operationProcessControl: ratings.operationProcessControl,
-        performanceOMControl: ratings.performanceOMControl,
-        firstAidAmbulanceTeam: ratings.firstAidAmbulanceTeam,
-        trafficEvacuationAssembly: ratings.trafficEvacuationAssembly,
-        communicationDuringDrill: ratings.communicationDuringDrill,
-        fireTeamResponse: ratings.fireTeamResponse,
-        rescueTeamResponse: ratings.rescueTeamResponse,
-        other: ratings.other,
-        otherDescription: ratings.otherDescription
-      },
-      overallRating,
-      observations,
-      recommendations
-    };
-
-    console.log(formData);
-    toast.success("Mock drill data submitted successfully!");
-    setOpen(false);
+        body: formData // Your FormData object
+      });
+      
+      console.log("Form Data Entries:");
+      for (let [key, value] of formData.entries()) {
+        // Check if the value is a File object
+        if (value instanceof File) {
+          console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
+        } else {
+          console.log(`${key}: ${value}`);
+        }
+      }
+      
+      toast.success("Mock drill data submitted successfully!");
+      setOpen(false);
+    } catch (error) {
+      toast.error(`Error: ${error.message}`);
+    }
   };
+  
+  // const handleSubmit = async () => {
+  //   if (!validateForm()) return;
+  
+  //   // Create FormData object
+  //   const formData = new FormData();
+    
+  //   // Append basic text fields
+  //   formData.append("site_plant_name", site);
+  //   formData.append("location", location);
+  //   formData.append("emergncy_scenario_mock_drill", emergencyScenario);
+  //   formData.append("type_of_mock_drill", mockDrillType.toLowerCase());
+  //   formData.append("mock_drill_date", drillDate);
+  //   formData.append("mock_drill_time", startTime);
+  //   formData.append("completed_time", completedTime);
+  //   formData.append("overall_time", responseTime);
+    
+  //   // Append team leader information
+  //   formData.append("teamLeaderName", teamLeader.name);
+  //   formData.append("performanceOMControlName", performanceOMControl.name);
+  //   formData.append("trafficEvacuationName", trafficEvacuation.name);
+  //   formData.append("rescueFirstAidName", rescueFirstAid.name);
+    
+  //   // Append team members information
+  //   teamMembers.forEach((member, index) => {
+  //     formData.append(`teamMemberName_${index}`, member.name);
+  //   });
+    
+  //   // Append table top records
+  //   formData.append("scenarioConductedRemarks", tableTopScenarioRemarks);
+  //   formData.append("requiredParticipationRemarks", requiredParticipationRemarks);
+  //   formData.append("observersParticipationRemarks", observersParticipationRemarks);
+    
+  //   // Append control mitigation measures as a string
+  //   formData.append("controlMitigationMeasures", controlMitigationMeasures);
+    
+  //   // Append head count information - flattened objects
+  //   formData.append("peoplePresent_kpiEmployee", peoplePresent.kpiEmployee);
+  //   formData.append("peoplePresent_contractorEmployee", peoplePresent.contractorEmployee);
+  //   formData.append("peoplePresent_visitorsExternalAgencies", peoplePresent.visitorsExternalAgencies);
+  //   formData.append("peoplePresent_remarks", peoplePresent.remarks);
+    
+  //   formData.append("actualParticipants_kpiEmployee", actualParticipants.kpiEmployee);
+  //   formData.append("actualParticipants_contractorEmployee", actualParticipants.contractorEmployee);
+  //   formData.append("actualParticipants_visitorsExternalAgencies", actualParticipants.visitorsExternalAgencies);
+  //   formData.append("actualParticipants_remarks", actualParticipants.remarks);
+    
+  //   formData.append("notParticipated_kpiEmployee", notParticipated.kpiEmployee);
+  //   formData.append("notParticipated_contractorEmployee", notParticipated.contractorEmployee);
+  //   formData.append("notParticipated_visitorsExternalAgencies", notParticipated.visitorsExternalAgencies);
+  //   formData.append("notParticipated_remarks", notParticipated.remarks);
+    
+  //   // Append ratings
+  //   Object.entries(ratings).forEach(([key, value]) => {
+  //     formData.append(`rating_${key}`, value);
+  //   });
+  //   formData.append("overallRating", overallRating);
+    
+  //   // Append observations
+  //   formData.append("observations", observations);
+    
+  //   // Append recommendations - flattened array of objects
+  //   recommendations.forEach((rec, index) => {
+  //     formData.append(`recommendation_${index}`, rec.recommendation);
+  //     formData.append(`recommendation_responsibility_${index}`, rec.responsibility);
+  //     formData.append(`recommendation_targetDate_${index}`, rec.targetDate);
+  //     formData.append(`recommendation_status_${index}`, rec.status);
+  //     formData.append(`recommendation_actionRemarks_${index}`, rec.actionRemarks);
+  //   });
+    
+  //   // Append signature files with role-specific names
+  //   if (signatureFiles.teamLeader) {
+  //     formData.append("teamLeaderSignature", signatureFiles.teamLeader);
+  //   }
+  //   if (signatureFiles.performanceOMControl) {
+  //     formData.append("performanceOMControlSignature", signatureFiles.performanceOMControl);
+  //   }
+  //   if (signatureFiles.trafficEvacuation) {
+  //     formData.append("trafficEvacuationSignature", signatureFiles.trafficEvacuation);
+  //   }
+  //   if (signatureFiles.rescueFirstAid) {
+  //     formData.append("rescueFirstAidSignature", signatureFiles.rescueFirstAid);
+  //   }
+    
+  //   // Append team member signatures
+  //   signatureFiles.teamMembers.forEach((file, index) => {
+  //     if (file) {
+  //       formData.append(`teamMemberSignature_${index}`, file);
+  //     }
+  //   });
+    
+  //   try {
+  //     // Example of how you would submit the form data
+  //     // const response = await fetch('https://your-api-endpoint.com/mock-drill', {
+  //     //   method: 'POST',
+  //     //   body: formData,
+  //     //   // No need to set Content-Type header, browser sets it automatically with boundary
+  //     // });
+      
+  //     // if (response.ok) {
+  //     //   toast.success("Mock drill data submitted successfully!");
+  //     //   setOpen(false);
+  //     // } else {
+  //     //   toast.error("Failed to submit mock drill data");
+  //     // }
+      
+  //     // For now, just log the formData and close the dialog
+  //     // const response = await createMockDrillReport(formData).unwrap();
+  //     const response = await fetch(`${import.meta.env.VITE_API_KEY}/annexures_module/create_mock_drill_report`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
+  //         // No Content-Type header for FormData
+  //       },
+  //       body: formData // Your FormData object
+  //     });
+  //     // console.log(response)
+  //     console.log("Form Data Entries:");
+  //     for (let [key, value] of formData.entries()) {
+  //       // Check if the value is a File object
+  //       if (value instanceof File) {
+  //         console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
+  //       } else {
+  //         console.log(`${key}: ${value}`);
+  //       }
+  //     }
+      
+  //     toast.success("Mock drill data submitted successfully!");
+  //     setOpen(false);
+  //   } catch (error) {
+  //     toast.error(`Error: ${error.message}`);
+  //   }
+  // };
+  // const handleSubmit = async () => {
+  //   if (!validateForm()) return;
 
+  //   // Create FormData object
+  //   const formData = new FormData();
+    
+  //   // Append basic text fields
+  //   // formData.append("site", site);
+  //   // formData.append("location", location);
+  //   // formData.append("emergencyScenario", emergencyScenario);
+  //   // formData.append("mockDrillType", mockDrillType);
+  //   // formData.append("drillDate", drillDate);
+  //   // formData.append("startTime", startTime);
+  //   // formData.append("completedTime", completedTime);
+  //   // formData.append("responseTime", responseTime);
+  //   formData.append("site_plant_name", site);
+  //   formData.append("location", location);
+  //   formData.append("emergncy_scenario_mock_drill", emergencyScenario);
+  //   formData.append("type_of_mock_drill", mockDrillType.toLowerCase());
+  //   formData.append("mock_drill_date", drillDate);
+  //   formData.append("mock_drill_time", startTime);
+  //   formData.append("completed_time", completedTime);
+  //   formData.append("overall_time", responseTime);
+    
+  //   // Append signature files with role-specific names
+  //   if (signatureFiles.teamLeader) {
+  //     formData.append("teamLeaderSignature", signatureFiles.teamLeader);
+  //   }
+  //   if (signatureFiles.performanceOMControl) {
+  //     formData.append("performanceOMControlSignature", signatureFiles.performanceOMControl);
+  //   }
+  //   if (signatureFiles.trafficEvacuation) {
+  //     formData.append("trafficEvacuationSignature", signatureFiles.trafficEvacuation);
+  //   }
+  //   if (signatureFiles.rescueFirstAid) {
+  //     formData.append("rescueFirstAidSignature", signatureFiles.rescueFirstAid);
+  //   }
+    
+  //   // Append team member signatures
+  //   signatureFiles.teamMembers.forEach((file, index) => {
+  //     if (file) {
+  //       formData.append(`teamMemberSignature_${index}`, file);
+  //     }
+  //   });
+    
+  //   // Create JSON data for all the other form fields
+  //   const jsonData = {
+  //     teamLeaderName: teamLeader.name,
+  //     performanceOMControlName: performanceOMControl.name,
+  //     trafficEvacuationName: trafficEvacuation.name,
+  //     rescueFirstAidName: rescueFirstAid.name,
+      
+  //     teamMembers: teamMembers.map(member => ({ name: member.name })),
+      
+  //     tableTopRecords: {
+  //       scenarioConductedRemarks: tableTopScenarioRemarks,
+  //       requiredParticipationRemarks: requiredParticipationRemarks,
+  //       observersParticipationRemarks: observersParticipationRemarks
+  //     },
+      
+  //     controlMitigationMeasures,
+      
+  //     headCountAtAssemblyPoint: {
+  //       peoplePresent,
+  //       actualParticipants,
+  //       notParticipated
+  //     },
+      
+  //     emergencyTeamRating: ratings,
+  //     overallRating,
+  //     observations,
+  //     recommendations
+  //   };
+    
+  //   // Append JSON data
+  //   formData.append("formData", JSON.stringify(jsonData));
+    
+  //   try {
+  //     // Example of how you would submit the form data
+  //     // const response = await fetch('https://your-api-endpoint.com/mock-drill', {
+  //     //   method: 'POST',
+  //     //   body: formData,
+  //     //   // No need to set Content-Type header, browser sets it automatically with boundary
+  //     // });
+      
+  //     // if (response.ok) {
+  //     //   toast.success("Mock drill data submitted successfully!");
+  //     //   setOpen(false);
+  //     // } else {
+  //     //   toast.error("Failed to submit mock drill data");
+  //     // }
+      
+  //     // For now, just log the formData and close the dialog
+  //     // console.log("FormData created with files");
+  //     console.log("Form Data Entries:");
+  //     for (let [key, value] of formData.entries()) {
+  //       // Check if the value is a File object
+  //       if (value instanceof File) {
+  //         console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
+  //       } else {
+  //         console.log(`${key}: ${value}`);
+  //       }
+  //     }
+      
+  //     toast.success("Mock drill data submitted successfully!");
+  //     setOpen(false);
+  //   } catch (error) {
+  //     toast.error(`Error: ${error.message}`);
+  //   }
+  // };
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
       <DialogTitle className="text-[#29346B] text-2xl font-semibold">
@@ -499,7 +844,7 @@ export default function MockDrillDialog({ open, setOpen }) {
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) => handleSignatureUpload(setTeamLeader, teamLeader, e)}
+                  onChange={(e) => handleSignatureUpload(setTeamLeader, teamLeader, "teamLeader", e)}
                 />
               </Button>
               {teamLeader.signature && (
@@ -549,7 +894,7 @@ export default function MockDrillDialog({ open, setOpen }) {
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) => handleSignatureUpload(setPerformanceOMControl, performanceOMControl, e)}
+                  onChange={(e) => handleSignatureUpload(setPerformanceOMControl, performanceOMControl, "performanceOMControl", e)}
                 />
               </Button>
               {performanceOMControl.signature && (
@@ -599,7 +944,7 @@ export default function MockDrillDialog({ open, setOpen }) {
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) => handleSignatureUpload(setTrafficEvacuation, trafficEvacuation, e)}
+                  onChange={(e) => handleSignatureUpload(setTrafficEvacuation, trafficEvacuation, "trafficEvacuation", e)}
                 />
               </Button>
               {trafficEvacuation.signature && (
@@ -649,7 +994,7 @@ export default function MockDrillDialog({ open, setOpen }) {
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) => handleSignatureUpload(setRescueFirstAid, rescueFirstAid, e)}
+                  onChange={(e) => handleSignatureUpload(setRescueFirstAid, rescueFirstAid, "rescueFirstAid", e)}
                 />
               </Button>
               {rescueFirstAid.signature && (
@@ -706,7 +1051,7 @@ export default function MockDrillDialog({ open, setOpen }) {
                   disabled={teamMembers.length === 1}
                 >
                   <DeleteIcon />
-                </IconButton>
+                  </IconButton>
 
                 <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
                   Team Member {index + 1}
@@ -818,8 +1163,7 @@ export default function MockDrillDialog({ open, setOpen }) {
           </Grid>
 
           {/* Control Mitigation Measures */}
-{/* Control Mitigation Measures */}
-<Grid item xs={12} mt={2}>
+          <Grid item xs={12} mt={2}>
             <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
               Description of Control Mitigation Measures
             </Typography>
@@ -996,7 +1340,6 @@ export default function MockDrillDialog({ open, setOpen }) {
               </Grid>
             </Paper>
           </Grid>
-
           {/* Rating of Emergency Team Members */}
           <Grid item xs={12} mt={2}>
             <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">

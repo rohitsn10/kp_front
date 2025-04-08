@@ -266,7 +266,7 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
                 Extinguisher {index + 1}
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={12} md={4}>
+                {/* <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
                     label="Extinguisher Number"
@@ -281,7 +281,7 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
                       )
                     }
                   />
-                </Grid>
+                </Grid> */}
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth

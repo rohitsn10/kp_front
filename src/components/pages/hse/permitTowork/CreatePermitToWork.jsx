@@ -28,22 +28,26 @@ export default function PermitToWorkDialog({ open, setOpen }) {
   const [permit_number, setPermitNumber] = useState("");
   const [external_agency_name, setExternalAgencyName] = useState("");
   const [type_of_permit, setTypeOfPermit] = useState("");
+  const [other_permit_type, setOtherPermitType] = useState(""); // Added for "Other" permit type
   const [permit_issued_for, setPermitIssuedFor] = useState([]);
   const [day, setDay] = useState("");
   const [job_activity, setJobActivity] = useState("");
   const [location_area, setLocationArea] = useState("");
   const [tools_equipment, setToolsEquipment] = useState("");
   const [hazard_consideration, setHazardConsideration] = useState([]);
+  const [other_hazard, setOtherHazard] = useState(""); // Added for "Other" hazard
   const [job_preparation, setJobPreparation] = useState([]);
+  const [other_job_preparation, setOtherJobPreparation] = useState(""); // Added for "Other" job preparation
   const [risk_assessment_number, setRiskAssessmentNumber] = useState("");
   const [fire_protection, setFireProtection] = useState([]);
+  const [other_fire_protection, setOtherFireProtection] = useState(""); // Added for "Other" fire protection
 
   const validateForm = () => {
     const requiredFields = [
       { value: site_name, label: "Site Name" },
       { value: department, label: "Department" },
       { value: permit_number, label: "Permit Number" },
-      { value: type_of_permit, label: "Type of Permit" },
+      { value: type_of_permit === "other" ? other_permit_type : type_of_permit, label: "Type of Permit" },
       { value: permit_issued_for.length > 0 ? "ok" : "", label: "Permit Issued For" },
       { value: job_activity, label: "Job Activity" },
       { value: location_area, label: "Location" },
@@ -57,6 +61,27 @@ export default function PermitToWorkDialog({ open, setOpen }) {
     const emptyField = requiredFields.find(field => !field.value || field.value.trim?.() === "");
     if (emptyField) {
       toast.error(`${emptyField.label} is required!`);
+      return false;
+    }
+  
+    // Check if "other" is selected but no text is provided
+    if (type_of_permit === "other" && !other_permit_type.trim()) {
+      toast.error("Please specify Other Permit Type!");
+      return false;
+    }
+    
+    if (hazard_consideration.includes("other") && !other_hazard.trim()) {
+      toast.error("Please specify Other Hazard!");
+      return false;
+    }
+    
+    if (job_preparation.includes("other") && !other_job_preparation.trim()) {
+      toast.error("Please specify Other Job Preparation!");
+      return false;
+    }
+    
+    if (fire_protection.includes("other") && !other_fire_protection.trim()) {
+      toast.error("Please specify Other Fire Protection!");
       return false;
     }
   
@@ -78,6 +103,7 @@ export default function PermitToWorkDialog({ open, setOpen }) {
     "excavation",
     "equipment testing",
     "crane / hydra / jcb work",
+    "other", // Added "other" option
   ];
 
   // Permit issued for options
@@ -89,6 +115,7 @@ export default function PermitToWorkDialog({ open, setOpen }) {
     "fall",
     "slip & trip",
     "toppling",
+    "other", // Added "other" option
   ];
 
   const jobPreparationOptions = [
@@ -96,6 +123,7 @@ export default function PermitToWorkDialog({ open, setOpen }) {
     "method statement",
     "risk assessment",
     "safety training",
+    "other", // Added "other" option
   ];
 
   const fireProtectionOptions = [
@@ -103,6 +131,7 @@ export default function PermitToWorkDialog({ open, setOpen }) {
     "fire blanket",
     "fire watch",
     "ppe suit",
+    "other", // Added "other" option
   ];
 
   const handleClose = () => setOpen(false);
@@ -110,21 +139,48 @@ export default function PermitToWorkDialog({ open, setOpen }) {
   const handleSubmit = async () => {
     if (!validateForm()) return;
   
+    // Prepare hazard_consideration with "other" value if selected
+    let finalHazardConsideration = [...hazard_consideration];
+    if (hazard_consideration.includes("other") && other_hazard.trim()) {
+      // Replace "other" with the custom text
+      finalHazardConsideration = hazard_consideration.filter(h => h !== "other");
+      finalHazardConsideration.push(other_hazard.trim());
+    }
+    
+    // Prepare job_preparation with "other" value if selected
+    let finalJobPreparation = [...job_preparation];
+    if (job_preparation.includes("other") && other_job_preparation.trim()) {
+      // Replace "other" with the custom text
+      finalJobPreparation = job_preparation.filter(j => j !== "other");
+      finalJobPreparation.push(other_job_preparation.trim());
+    }
+    
+    // Prepare fire_protection with "other" value if selected
+    let finalFireProtection = [...fire_protection];
+    if (fire_protection.includes("other") && other_fire_protection.trim()) {
+      // Replace "other" with the custom text
+      finalFireProtection = fire_protection.filter(f => f !== "other");
+      finalFireProtection.push(other_fire_protection.trim());
+    }
+    
+    // Prepare the final type_of_permit
+    const finalTypeOfPermit = type_of_permit === "other" ? other_permit_type.trim() : type_of_permit;
+  
     const payload = {
       site_name,
       department,
       permit_number,
       external_agency_name,
-      type_of_permit,
+      type_of_permit: finalTypeOfPermit,
       permit_issued_for,
       day,
       job_activity,
       location_area,
       tools_equipment,
-      hazard_consideration,
-      job_preparation,
+      hazard_consideration: finalHazardConsideration,
+      job_preparation: finalJobPreparation,
       risk_assessment_number,
-      fire_protection
+      fire_protection: finalFireProtection
     };
   
     try {
@@ -263,6 +319,18 @@ export default function PermitToWorkDialog({ open, setOpen }) {
                 />
               ))}
             </RadioGroup>
+            
+            {/* Add text field for "Other" permit type */}
+            {type_of_permit === "other" && (
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Please specify other permit type"
+                value={other_permit_type}
+                sx={{...commonInputStyles, marginTop: "8px"}}
+                onChange={(e) => setOtherPermitType(e.target.value)}
+              />
+            )}
           </FormControl>
         </div>
 
@@ -388,6 +456,18 @@ export default function PermitToWorkDialog({ open, setOpen }) {
               />
             ))}
           </FormGroup>
+          
+          {/* Add text field for "Other" hazard */}
+          {hazard_consideration.includes("other") && (
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Please specify other hazard"
+              value={other_hazard}
+              sx={{...commonInputStyles, marginTop: "8px"}}
+              onChange={(e) => setOtherHazard(e.target.value)}
+            />
+          )}
         </div>
 
         {/* Job Preparation */}
@@ -418,6 +498,18 @@ export default function PermitToWorkDialog({ open, setOpen }) {
               />
             ))}
           </FormGroup>
+          
+          {/* Add text field for "Other" job preparation */}
+          {job_preparation.includes("other") && (
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Please specify other job preparation"
+              value={other_job_preparation}
+              sx={{...commonInputStyles, marginTop: "8px"}}
+              onChange={(e) => setOtherJobPreparation(e.target.value)}
+            />
+          )}
         </div>
 
         {/* Risk Assessment Number - Only show if Risk Assessment is selected */}
@@ -465,6 +557,18 @@ export default function PermitToWorkDialog({ open, setOpen }) {
               />
             ))}
           </FormGroup>
+          
+          {/* Add text field for "Other" fire protection */}
+          {fire_protection.includes("other") && (
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Please specify other fire protection"
+              value={other_fire_protection}
+              sx={{...commonInputStyles, marginTop: "8px"}}
+              onChange={(e) => setOtherFireProtection(e.target.value)}
+            />
+          )}
         </div>
       </DialogContent>
 

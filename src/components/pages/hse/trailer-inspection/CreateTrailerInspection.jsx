@@ -13,10 +13,16 @@ import {
   Grid,
   Box,
   Avatar,
+  CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useCreateTrailerInspectionMutation } from "../../../../api/hse/trailerInspection/trailerInspectionApi";
+// import { useCreateTrailerInspectionMutation } from "../services/api"; // Adjust the import path as necessary
 
 export default function TrailerInspectionDialog({ open, setOpen }) {
+  // API mutation hook
+  const [createTrailerInspection, { isLoading }] = useCreateTrailerInspectionMutation();
+
   // Basic information
   const [equipmentName, setEquipmentName] = useState("");
   const [makeModel, setMakeModel] = useState("");
@@ -78,6 +84,11 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
       remarks: ""
     },
     wind_screen: {
+      observations: "",
+      action_by: "",
+      remarks: ""
+    },
+    door_lock: {
       observations: "",
       action_by: "",
       remarks: ""
@@ -187,7 +198,30 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
     }
   };
 
-  const handleSubmit = () => {
+  const resetForm = () => {
+    setEquipmentName("");
+    setMakeModel("");
+    setIdentificationNumber("");
+    setInspectionDate("");
+    setSiteName("");
+    setLocation("");
+    setRemarks("");
+    setInspectedByName("");
+    setInspectedBySignature(null);
+    
+    // Reset all inspection fields
+    const resetFields = {};
+    for (const key in inspectionFields) {
+      resetFields[key] = {
+        observations: "",
+        action_by: "",
+        remarks: ""
+      };
+    }
+    setInspectionFields(resetFields);
+  };
+
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
     // Format the date as ISO string if it's a valid date
@@ -224,9 +258,18 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
       requestData[`${key}_remarks`] = value.remarks;
     }
 
-    console.log(requestData);
-    toast.success("Trailer inspection submitted successfully!");
-    setOpen(false);
+    try {
+      // Call the mutation hook with the request data
+      const response = await createTrailerInspection(requestData).unwrap();
+      console.log("API Response:", response);
+      toast.success("Trailer inspection submitted successfully!");
+      resetForm();
+      setOpen(false);
+    } catch (error) {
+      console.error("API Error:", error);
+      const errorMessage = error.data?.message || "Failed to submit trailer inspection";
+      toast.error(errorMessage);
+    }
   };
 
   const renderInspectionField = (fieldKey, label) => {
@@ -236,14 +279,28 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
           <p className="font-semibold text-[#29346B]">{label}</p>
         </Grid>
         <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            label="Observation"
-            variant="outlined"
-            value={inspectionFields[fieldKey].observations}
-            onChange={(e) => handleInspectionFieldChange(fieldKey, 'observations', e.target.value)}
-            sx={commonInputStyles}
-          />
+          <FormControl fullWidth variant="outlined" sx={commonInputStyles}>
+            {/* <InputLabel>Observation</InputLabel> */}
+            {/* <Select
+              value={inspectionFields[fieldKey].observations}
+              onChange={(e) => handleInspectionFieldChange(fieldKey, 'observations', e.target.value)}
+              label="Observation"
+            >
+              {observationOptions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </Select> */}
+                        <TextField
+                          fullWidth
+                          label="Observations"
+                          variant="outlined"
+                          value={inspectionFields[fieldKey].observations}
+                          onChange={(e) => handleInspectionFieldChange(fieldKey, 'observations', e.target.value)}
+                          sx={commonInputStyles}
+                        />
+          </FormControl>
         </Grid>
         <Grid item xs={12} md={4}>
           <TextField
@@ -367,6 +424,7 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
           {renderInspectionField('wiper_blade', 'Wiper Blade')}
           {renderInspectionField('side_mirror', 'Side Mirror')}
           {renderInspectionField('wind_screen', 'Wind Screen')}
+          {renderInspectionField('door_lock', 'Door Lock')}
           {renderInspectionField('battery_condition', 'Battery Condition')}
           {renderInspectionField('hand_brake', 'Hand Brake')}
           {renderInspectionField('any_leakage', 'Any Leakage')}
@@ -449,6 +507,7 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
         </Button>
         <Button 
           onClick={handleSubmit} 
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -464,7 +523,7 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
           }}
           variant="contained"
         >
-          Submit
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

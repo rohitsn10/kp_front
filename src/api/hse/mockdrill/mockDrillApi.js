@@ -4,12 +4,16 @@ export const mockDrillApi = createApi({
   reducerPath: "mockDrillApi",
   baseQuery: fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_KEY,
-    prepareHeaders: (headers) => {
+    prepareHeaders: (headers,{endpoint,body}) => {
       const token = sessionStorage.getItem("token");
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
-      headers.set("Content-Type", "application/json");
+      // headers.set("Content-Type", "application/json");
+
+      if (!(body instanceof FormData)) {
+        headers.set("Content-Type", "application/json");
+      }
       return headers;
     },
   }),
@@ -19,6 +23,7 @@ export const mockDrillApi = createApi({
         url: "annexures_module/create_mock_drill_report",
         method: "POST",
         body,
+        formData: true,
       }),
     }),
     getMockDrillReport: builder.query({
