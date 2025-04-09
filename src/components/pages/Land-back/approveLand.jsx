@@ -9,23 +9,23 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
   // console.log(selectedLand)
   useEffect(() => {
     if (selectedLand) {
-      // Extract only file-related keys dynamically
       const fileKeys = Object.keys(selectedLand).filter((key) => key.includes("file"));
       const fileData = {};
-
+  
       fileKeys.forEach((key) => {
-        fileData[key] = selectedLand[key] || [];
+        const value = selectedLand[key];
+        // Normalize: if it's not an array, wrap it in one (or use empty array if null/undefined)
+        fileData[key] = Array.isArray(value) ? value : value ? [value] : [];
       });
-
+  
       setFiles(fileData);
-      // console.log("Land Bank Files",files)
-      // Set initial land bank status if available
+  
       if (selectedLand.land_bank_status) {
         setLandBankStatus(selectedLand.land_bank_status);
       }
     }
   }, [selectedLand]);
-
+  
   const handleClose = () => {
     setOpen(false);
   };
@@ -61,8 +61,8 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
                 {category.replace(/_/g, " ")} :
             </label>
             <div className="flex flex-row gap-2">
-              {fileList.length > 0 ? (
-                fileList.map((file, index) => (
+              {fileList?.length > 0 ? (
+                fileList?.map((file, index) => (
                   <div key={index} className="mb-2">
                     <Button variant="contained" color="primary" onClick={() => handleFilePreview(file)}>
                       View File
