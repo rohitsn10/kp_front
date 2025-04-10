@@ -26,6 +26,7 @@ import { boomLiftInspectionApi } from "../api/hse/boomLift/boomliftApi.js";
 import { trailerInspectionApi } from "../api/hse/trailerInspection/trailerInspectionApi.js";
 import { mockDrillApi } from "../api/hse/mockdrill/mockDrillApi.js";
 import { craneHydraApi } from "../api/hse/crane/craneHydraApi.js";
+import { safetyTrainingApi } from "../api/hse/safetyTraining/safetyTrainingApi.js";
 
 const store = configureStore({
   reducer: {
@@ -56,6 +57,7 @@ const store = configureStore({
     [boomLiftInspectionApi.reducerPath]: boomLiftInspectionApi.reducer,
     [trailerInspectionApi.reducerPath]: trailerInspectionApi.reducer,
     [mockDrillApi.reducerPath]: mockDrillApi.reducer,
+    [safetyTrainingApi.reducerPath]: safetyTrainingApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -85,7 +87,8 @@ const store = configureStore({
       .concat(craneHydraApi.middleware)
       .concat(boomLiftInspectionApi.middleware)
       .concat(trailerInspectionApi.middleware)
-      .concat(mockDrillApi.middleware)
+      .concat(mockDrillApi.middleware)  
+      .concat(safetyTrainingApi.middleware)
 });
 
 export default store;
