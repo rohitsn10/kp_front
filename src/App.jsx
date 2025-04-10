@@ -63,6 +63,7 @@ import FullBodyHarnessChecklist from "./pages/hse/body-harness/FullBodyHarnessCh
 import RiskAssessment from "./pages/hse/risk-assessment/RiskAssessment .jsx";
 import MonthlyFireExtinguisher from "./pages/hse/monthy-fireextinguiser/MonthlyFireExtinguisher .jsx";
 import IncidentReport from "./pages/hse/incident-report/IncidentReport.jsx";
+import QualityInspectionPage from "./pages/qa/QualityInspectionPage.jsx";
 
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 const HseLayout = () => {
@@ -425,6 +426,14 @@ function App() {
           element={
             <ProtectedRoute>
               <MainLayout><DesignDocumentsPage /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+                <Route
+          path="/quality-assurance"
+          element={
+            <ProtectedRoute>
+              <MainLayout><QualityInspectionPage /></MainLayout>
             </ProtectedRoute>
           }
         />
