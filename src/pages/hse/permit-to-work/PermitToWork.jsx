@@ -19,7 +19,7 @@ const PermitToWork = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
-  const { data, isLoading, error } = useGetPermitToWorkQuery();
+  const { data, isLoading, refetch } = useGetPermitToWorkQuery();
 
   const filteredPermits = (data?.data || []).filter((permit) =>
     permit.permit_number.toLowerCase().includes(searchTerm.toLowerCase())
@@ -137,7 +137,7 @@ const PermitToWork = () => {
         style={{ borderTop: "1px solid #e0e0e0" }}
       />
 
-      <PermitToWorkDialog open={openDialog} setOpen={setOpenDialog} />
+      <PermitToWorkDialog open={openDialog} setOpen={setOpenDialog} refetch={refetch} />
     </div>
   );
 };

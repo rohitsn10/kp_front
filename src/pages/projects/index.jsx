@@ -22,11 +22,7 @@ import ProjectWpo from '../../components/pages/projects/ProjectWPO/ProjectWpo';
 import ProjectWpoViewModal from '../../components/pages/projects/ProjectWPO/ProjectWpoView';
 import ProjectDrawingUploadDialog from '../design-documents/DesignUploadModal';
 
-const dummyProjects = [
-  { id: 1, name: "Project Alpha", activity: "Design", deadline: "2025-03-01", estimatedCompletion: "2 months", contactPerson: "John Doe", status: "Ongoing" },
-  { id: 2, name: "Project Beta", activity: "Development", deadline: "2025-06-15", estimatedCompletion: "4 months", contactPerson: "Jane Smith", status: "Pending" },
-  { id: 3, name: "Project Gamma", activity: "Testing", deadline: "2025-09-30", estimatedCompletion: "1 month", contactPerson: "Alice Brown", status: "Completed" },
-];
+
 
 const ProjectListingTable = () => {
   const [page, setPage] = useState(0);

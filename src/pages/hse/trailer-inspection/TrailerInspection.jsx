@@ -1,463 +1,482 @@
- 
- import React, { useState } from "react";
- import {
-   Table,
-   TableBody,
-   TableCell,
-   TableContainer,
-   TableHead,
-   TableRow,
-   Paper,
-   Button,
-   TablePagination,
-   Dialog,
-   DialogTitle,
-   DialogContent,
-   TextField,
-   IconButton,
- } from "@mui/material";
- import CloseIcon from '@mui/icons-material/Close';
+import React, { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  TablePagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  IconButton,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import TrailerInspectionDialog from "../../../components/pages/hse/trailer-inspection/CreateTrailerInspection";
- 
- function TrailerInspection() {
-   const dummyCraneData = [
+import { useGetTrailerInspectionQuery } from "../../../api/hse/trailerInspection/trailerInspectionApi";
+
+function TrailerInspection() {
+  const dummyCraneData = [
     {
-      "code": "TRAILER INSPECTION CHECKLIST",
-      "equipment_name": "Flatbed Trailer Z500",
-      "identification_number": "TRL-2025-002",
-      "make_model": "ABC Trailers / Z500",
-      "inspection_date": "2025-03-27",
-      "site": "Logistics Yard B",
-      "location": "Warehouse Zone C",
-      "remarks": "Trailer in good condition with minor issues.",
-      "inspected_by": "Jane Smith",
-      "checkpoints": [
+      code: "TRAILER INSPECTION CHECKLIST",
+      equipment_name: "Flatbed Trailer Z500",
+      identification_number: "TRL-2025-002",
+      make_model: "ABC Trailers / Z500",
+      inspection_date: "2025-03-27",
+      site: "Logistics Yard B",
+      location: "Warehouse Zone C",
+      remarks: "Trailer in good condition with minor issues.",
+      inspected_by: "Jane Smith",
+      checkpoints: [
         {
-          "checkpoint": "All valid documents are available - Registration, Insurance, form no 10, License & operator authority letter",
-          "observations": "Documents up to date.",
-          "action_by": "Fleet Manager",
-          "remarks": "No issues noted."
+          checkpoint:
+            "All valid documents are available - Registration, Insurance, form no 10, License & operator authority letter",
+          observations: "Documents up to date.",
+          action_by: "Fleet Manager",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Driver fitness certificate including eye test",
-          "observations": "Certificate valid until next renewal cycle.",
-          "action_by": "HSE Officer",
-          "remarks": "No issues noted."
+          checkpoint: "Driver fitness certificate including eye test",
+          observations: "Certificate valid until next renewal cycle.",
+          action_by: "HSE Officer",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Main horn / Reverse horn",
-          "observations": "Reverse horn functional but weak sound.",
-          "action_by": "Maintenance Team",
-          "remarks": "Scheduled for replacement."
+          checkpoint: "Main horn / Reverse horn",
+          observations: "Reverse horn functional but weak sound.",
+          action_by: "Maintenance Team",
+          remarks: "Scheduled for replacement.",
         },
         {
-          "checkpoint": "Clutch & Brake",
-          "observations": "Brakes functioning properly.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Clutch & Brake",
+          observations: "Brakes functioning properly.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Tyre pressure & condition",
-          "observations": "Rear right tyre tread worn out.",
-          "action_by": "Tyre Maintenance Team",
-          "remarks": "Replacement required."
+          checkpoint: "Tyre pressure & condition",
+          observations: "Rear right tyre tread worn out.",
+          action_by: "Tyre Maintenance Team",
+          remarks: "Replacement required.",
         },
         {
-          "checkpoint": "Head Light & Indicators",
-          "observations": "Left indicator flickering intermittently.",
-          "action_by": "Electrician",
-          "remarks": "Scheduled for repair."
+          checkpoint: "Head Light & Indicators",
+          observations: "Left indicator flickering intermittently.",
+          action_by: "Electrician",
+          remarks: "Scheduled for repair.",
         },
         {
-          "checkpoint": "Seat belt",
-          "observations": "Seat belt functional.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Seat belt",
+          observations: "Seat belt functional.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Wiper blade",
-          "observations": "Blades slightly worn.",
-          "action_by": "Maintenance Team",
-          "remarks": "Replacement scheduled."
+          checkpoint: "Wiper blade",
+          observations: "Blades slightly worn.",
+          action_by: "Maintenance Team",
+          remarks: "Replacement scheduled.",
         },
         {
-          "checkpoint": "Door / Door lock",
-          "observations": "Locks secure.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Door / Door lock",
+          observations: "Locks secure.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Battery condition",
-          "observations": "Battery holding charge well.",
-          "action_by": "Electrician",
-          "remarks": "No issues noted."
+          checkpoint: "Battery condition",
+          observations: "Battery holding charge well.",
+          action_by: "Electrician",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Hand brake",
-          "observations": "Operational.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Hand brake",
+          observations: "Operational.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Side view mirror",
-          "observations": "Mirror slightly loose.",
-          "action_by": "Maintenance Team",
-          "remarks": "Tightened."
+          checkpoint: "Side view mirror",
+          observations: "Mirror slightly loose.",
+          action_by: "Maintenance Team",
+          remarks: "Tightened.",
         },
         {
-          "checkpoint": "Condition of hydraulic cylinder & any leakage",
-          "observations": "No leaks detected.",
-          "action_by": "Hydraulic Technician",
-          "remarks": "No issues noted."
+          checkpoint: "Condition of hydraulic cylinder & any leakage",
+          observations: "No leaks detected.",
+          action_by: "Hydraulic Technician",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Speedometer & Gauges",
-          "observations": "All functional.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Speedometer & Gauges",
+          observations: "All functional.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Guard for moving parts",
-          "observations": "All guards intact.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Guard for moving parts",
+          observations: "All guards intact.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Wind screen",
-          "observations": "Clean and undamaged.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Wind screen",
+          observations: "Clean and undamaged.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "PPE (Safety shoes & helmet)",
-          "observations": "Operator wearing full PPE.",
-          "action_by": "Safety Officer",
-          "remarks": "No issues noted."
-        }
-      ]
+          checkpoint: "PPE (Safety shoes & helmet)",
+          observations: "Operator wearing full PPE.",
+          action_by: "Safety Officer",
+          remarks: "No issues noted.",
+        },
+      ],
     },
     {
-      "code": "TRAILER INSPECTION CHECKLIST",
-      "equipment_name": "Flatbed Trailer Z500",
-      "identification_number": "TRL-2025-002",
-      "make_model": "ABC Trailers / Z500",
-      "inspection_date": "2025-03-27",
-      "site": "Logistics Yard B",
-      "location": "Warehouse Zone C",
-      "remarks": "Trailer in good condition with minor issues.",
-      "inspected_by": "Jane Smith",
-      "checkpoints": [
+      code: "TRAILER INSPECTION CHECKLIST",
+      equipment_name: "Flatbed Trailer Z500",
+      identification_number: "TRL-2025-002",
+      make_model: "ABC Trailers / Z500",
+      inspection_date: "2025-03-27",
+      site: "Logistics Yard B",
+      location: "Warehouse Zone C",
+      remarks: "Trailer in good condition with minor issues.",
+      inspected_by: "Jane Smith",
+      checkpoints: [
         {
-          "checkpoint": "All valid documents are available - Registration, Insurance, form no 10, License & operator authority letter",
-          "observations": "Documents up to date.",
-          "action_by": "Fleet Manager",
-          "remarks": "No issues noted."
+          checkpoint:
+            "All valid documents are available - Registration, Insurance, form no 10, License & operator authority letter",
+          observations: "Documents up to date.",
+          action_by: "Fleet Manager",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Driver fitness certificate including eye test",
-          "observations": "Certificate valid until next renewal cycle.",
-          "action_by": "HSE Officer",
-          "remarks": "No issues noted."
+          checkpoint: "Driver fitness certificate including eye test",
+          observations: "Certificate valid until next renewal cycle.",
+          action_by: "HSE Officer",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Main horn / Reverse horn",
-          "observations": "Reverse horn functional but weak sound.",
-          "action_by": "Maintenance Team",
-          "remarks": "Scheduled for replacement."
+          checkpoint: "Main horn / Reverse horn",
+          observations: "Reverse horn functional but weak sound.",
+          action_by: "Maintenance Team",
+          remarks: "Scheduled for replacement.",
         },
         {
-          "checkpoint": "Clutch & Brake",
-          "observations": "Brakes functioning properly.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Clutch & Brake",
+          observations: "Brakes functioning properly.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Tyre pressure & condition",
-          "observations": "Rear right tyre tread worn out.",
-          "action_by": "Tyre Maintenance Team",
-          "remarks": "Replacement required."
+          checkpoint: "Tyre pressure & condition",
+          observations: "Rear right tyre tread worn out.",
+          action_by: "Tyre Maintenance Team",
+          remarks: "Replacement required.",
         },
         {
-          "checkpoint": "Head Light & Indicators",
-          "observations": "Left indicator flickering intermittently.",
-          "action_by": "Electrician",
-          "remarks": "Scheduled for repair."
+          checkpoint: "Head Light & Indicators",
+          observations: "Left indicator flickering intermittently.",
+          action_by: "Electrician",
+          remarks: "Scheduled for repair.",
         },
         {
-          "checkpoint": "Seat belt",
-          "observations": "Seat belt functional.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Seat belt",
+          observations: "Seat belt functional.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Wiper blade",
-          "observations": "Blades slightly worn.",
-          "action_by": "Maintenance Team",
-          "remarks": "Replacement scheduled."
+          checkpoint: "Wiper blade",
+          observations: "Blades slightly worn.",
+          action_by: "Maintenance Team",
+          remarks: "Replacement scheduled.",
         },
         {
-          "checkpoint": "Door / Door lock",
-          "observations": "Locks secure.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Door / Door lock",
+          observations: "Locks secure.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Battery condition",
-          "observations": "Battery holding charge well.",
-          "action_by": "Electrician",
-          "remarks": "No issues noted."
+          checkpoint: "Battery condition",
+          observations: "Battery holding charge well.",
+          action_by: "Electrician",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Hand brake",
-          "observations": "Operational.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Hand brake",
+          observations: "Operational.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Side view mirror",
-          "observations": "Mirror slightly loose.",
-          "action_by": "Maintenance Team",
-          "remarks": "Tightened."
+          checkpoint: "Side view mirror",
+          observations: "Mirror slightly loose.",
+          action_by: "Maintenance Team",
+          remarks: "Tightened.",
         },
         {
-          "checkpoint": "Condition of hydraulic cylinder & any leakage",
-          "observations": "No leaks detected.",
-          "action_by": "Hydraulic Technician",
-          "remarks": "No issues noted."
+          checkpoint: "Condition of hydraulic cylinder & any leakage",
+          observations: "No leaks detected.",
+          action_by: "Hydraulic Technician",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Speedometer & Gauges",
-          "observations": "All functional.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Speedometer & Gauges",
+          observations: "All functional.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Guard for moving parts",
-          "observations": "All guards intact.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Guard for moving parts",
+          observations: "All guards intact.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "Wind screen",
-          "observations": "Clean and undamaged.",
-          "action_by": "Inspector",
-          "remarks": "No issues noted."
+          checkpoint: "Wind screen",
+          observations: "Clean and undamaged.",
+          action_by: "Inspector",
+          remarks: "No issues noted.",
         },
         {
-          "checkpoint": "PPE (Safety shoes & helmet)",
-          "observations": "Operator wearing full PPE.",
-          "action_by": "Safety Officer",
-          "remarks": "No issues noted."
-        }
-      ]
-    }
-             
-   ]
- 
-   const [page, setPage] = useState(0);
-   const [rowsPerPage, setRowsPerPage] = useState(5);
-   const [searchTerm, setSearchTerm] = useState("");
-   const [openDetails, setOpenDetails] = useState(false);
-   const [openChecklist, setOpenChecklist] = useState(false);
-   const [selectedInspection, setSelectedInspection] = useState(null);
- 
-  const [openCreateDialog,setOpenDialog]=useState(false);
-   const handleOpenDetails = (inspection) => {
-     setSelectedInspection(inspection);
-     setOpenDetails(true);
-   };
- 
-   const handleOpenChecklist = (inspection) => {
-     setSelectedInspection(inspection);
-     setOpenChecklist(true);
-   };
- 
-   const handleClose = () => {
-     setOpenDetails(false);
-     setOpenChecklist(false);
-   };
- 
-   const handleChangePage = (event, newPage) => {
-     setPage(newPage);
-   };
- 
-   const handleChangeRowsPerPage = (event) => {
-     setRowsPerPage(parseInt(event.target.value, 10));
-     setPage(0);
-   };
- 
-   const filteredData = dummyCraneData.filter((item) =>
-     item.equipment_name.toLowerCase().includes(
-       searchTerm.toLowerCase()
-     )
-   );
- 
-   const currentRows = filteredData.slice(
-     page * rowsPerPage,
-     page * rowsPerPage + rowsPerPage
-   );
- 
-   return (
-     <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
-       <h2 className="text-3xl text-[#29346B] font-semibold text-center mb-4">Trailer Inspection</h2>
-       <div className="flex flex-row flex-wrap gap-4 justify-between p-6 md:p-4 mb-5">
- 
-       <TextField
-         value={searchTerm}
-         placeholder="Search by Equipment Name"
-         onChange={(e) => setSearchTerm(e.target.value)}
-         variant="outlined"
-         size="small"
-         className="mb-4"
-       />
-               <div className="flex justify-end">
-                 <Button
-                   onClick={()=>setOpenDialog(true)}
-                   variant="contained"
-                   style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
-                 >
-                   Add Inspection
-                 </Button>
-               </div>
-             </div>
- 
-       <TableContainer component={Paper} className="my-4">
-         <Table>
-           <TableHead>
-             <TableRow>
-               <TableCell align="center">Equipment Name</TableCell>
-               <TableCell align="center">Identification Number</TableCell>
-               <TableCell align="center">Make / Model</TableCell>
-               <TableCell align="center">Inspection Date</TableCell>
-               <TableCell align="center">Site</TableCell>
-               <TableCell align="center">Location</TableCell>
-               <TableCell align="center">Details</TableCell>
-               <TableCell align="center">Checklist</TableCell>
-             </TableRow>
-           </TableHead>
-           <TableBody>
-             {currentRows.map((item, index) => (
-               <TableRow key={index}>
-                 <TableCell align="center">{item.equipment_name}</TableCell>
-                 <TableCell align="center">{item.identification_number}</TableCell>
-                 <TableCell align="center">{item.make_model}</TableCell>
-                 <TableCell align="center">{item.inspection_date}</TableCell>
-                 <TableCell align="center">{item.site}</TableCell>
-                 <TableCell align="center">{item.location}</TableCell>
-                 <TableCell align="center">
-                   <Button
-                     variant="contained"
-                     color="primary"
-                     size="small"
-                     onClick={() => handleOpenDetails(item)}
-                   >
-                     View Details
-                   </Button>
-                 </TableCell>
-                 <TableCell align="center">
-                   <Button
-                     variant="contained"
-                     color="secondary"
-                     size="small"
-                     onClick={() => handleOpenChecklist(item)}
-                   >
-                     View Checklist
-                   </Button>
-                 </TableCell>
-               </TableRow>
-             ))}
-           </TableBody>
-         </Table>
-       </TableContainer>
- 
-       <TablePagination
-         component="div"
-         count={filteredData.length}
-         page={page}
-         onPageChange={handleChangePage}
-         rowsPerPage={rowsPerPage}
-         onRowsPerPageChange={handleChangeRowsPerPage}
-         rowsPerPageOptions={[5, 10, 25]}
-       />
- 
-       {/* Details Dialog */}
-       <Dialog 
-       open={openDetails} 
-       onClose={handleClose} 
-       fullWidth 
-       maxWidth="sm"
-       className="p-4"
-     >
-       <div className="flex items-center justify-between px-4 py-3 border-b">
-         <DialogTitle className="text-lg font-semibold">Inspection Details</DialogTitle>
-         <IconButton onClick={handleClose}>
-         <CloseIcon/>
-         </IconButton>
-         
-         {/* <h2 className="text-lg font-semibold">Inspection Details</h2> */}
-       </div>
- 
-       <DialogContent className="p-6 space-y-4 bg-gray-50">
-         {selectedInspection ? (
-           <div className="p-4 border rounded-lg shadow-sm">
-             <p className="text-sm text-gray-700">
-               <span className="font-bold">Remarks:</span> {selectedInspection.Remarks}
-             </p>
-             <p className="text-sm text-gray-600">
-               <span className="font-bold">Inspected By:</span> {selectedInspection.InspectedBy}
-             </p>
-           </div>
-         ) : (
-           <p className="text-center text-gray-500">No inspection details available</p>
-         )}
-       </DialogContent>
-     </Dialog>
- 
-       {/* Checklist Dialog */}
-       <Dialog 
-       open={openChecklist} 
-       onClose={handleClose} 
-       fullWidth 
-       maxWidth="sm" 
-       className="p-1 sm:p-4"
-     >
-       <div className="flex items-center justify-between px-4 py-3 border-b">
-         <DialogTitle className="text-lg font-semibold">Checklist</DialogTitle>
-         <IconButton onClick={handleClose}>
-           {/* <X className="w-5 h-5" /> */}
-           <CloseIcon/>
- 
-         </IconButton>
-       </div>
-       <DialogContent className="p-4 space-y-6">
-         {selectedInspection && selectedInspection?.checkpoints.map((cp, index) => (
-           <div key={index} className="p-4 border rounded-lg shadow-sm bg-gray-50">
-             <p className="text-sm font-medium text-gray-700">
-               <span className="font-bold">Checkpoint:</span> {cp.checkpoint}
-             </p>
-             <p className="text-sm text-gray-600">
-               <span className="font-bold">Observations:</span> {cp.observations}
-             </p>
-             <p className="text-sm text-gray-600">
-               <span className="font-bold">Action By:</span> {cp.action_by}
-             </p>
-             <p className="text-sm text-gray-600">
-               <span className="font-bold">Remarks:</span> {cp.remarks}
-             </p>
-           </div>
-         ))}
-         {!selectedInspection && (
-           <p className="text-center text-gray-500">No checkpoints available</p>
-         )}
-       </DialogContent>
-     </Dialog>
-     <TrailerInspectionDialog
-      open={openCreateDialog}
-      setOpen={setOpenDialog}
-     />
-     </div>
-   );
- }
- 
- export default TrailerInspection;
- 
+          checkpoint: "PPE (Safety shoes & helmet)",
+          observations: "Operator wearing full PPE.",
+          action_by: "Safety Officer",
+          remarks: "No issues noted.",
+        },
+      ],
+    },
+  ];
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [openDetails, setOpenDetails] = useState(false);
+  const [openChecklist, setOpenChecklist] = useState(false);
+  const [selectedInspection, setSelectedInspection] = useState(null);
+  const { data } = useGetTrailerInspectionQuery();
+  const [openCreateDialog, setOpenDialog] = useState(false);
+  const handleOpenDetails = (inspection) => {
+    setSelectedInspection(inspection);
+    setOpenDetails(true);
+  };
+
+  const handleOpenChecklist = (inspection) => {
+    setSelectedInspection(inspection);
+    setOpenChecklist(true);
+  };
+
+  const handleClose = () => {
+    setOpenDetails(false);
+    setOpenChecklist(false);
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const filteredData = dummyCraneData.filter((item) =>
+    item.equipment_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const currentRows = filteredData.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
+  return (
+    <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
+      <h2 className="text-3xl text-[#29346B] font-semibold text-center mb-4">
+        Trailer Inspection
+      </h2>
+      <div className="flex flex-row flex-wrap gap-4 justify-between p-6 md:p-4 mb-5">
+        <TextField
+          value={searchTerm}
+          placeholder="Search by Equipment Name"
+          onChange={(e) => setSearchTerm(e.target.value)}
+          variant="outlined"
+          size="small"
+          className="mb-4"
+        />
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setOpenDialog(true)}
+            variant="contained"
+            style={{
+              backgroundColor: "#FF8C00",
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "16px",
+              textTransform: "none",
+            }}
+          >
+            Add Inspection
+          </Button>
+        </div>
+      </div>
+
+      <TableContainer component={Paper} className="my-4">
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell align="center">Equipment Name</TableCell>
+              <TableCell align="center">Identification Number</TableCell>
+              <TableCell align="center">Make / Model</TableCell>
+              <TableCell align="center">Inspection Date</TableCell>
+              <TableCell align="center">Site</TableCell>
+              <TableCell align="center">Location</TableCell>
+              <TableCell align="center">Details</TableCell>
+              <TableCell align="center">Checklist</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {currentRows.map((item, index) => (
+              <TableRow key={index}>
+                <TableCell align="center">{item.equipment_name}</TableCell>
+                <TableCell align="center">
+                  {item.identification_number}
+                </TableCell>
+                <TableCell align="center">{item.make_model}</TableCell>
+                <TableCell align="center">{item.inspection_date}</TableCell>
+                <TableCell align="center">{item.site}</TableCell>
+                <TableCell align="center">{item.location}</TableCell>
+                <TableCell align="center">
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    onClick={() => handleOpenDetails(item)}
+                  >
+                    View Details
+                  </Button>
+                </TableCell>
+                <TableCell align="center">
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    size="small"
+                    onClick={() => handleOpenChecklist(item)}
+                  >
+                    View Checklist
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <TablePagination
+        component="div"
+        count={filteredData.length}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPageOptions={[5, 10, 25]}
+      />
+
+      {/* Details Dialog */}
+      <Dialog
+        open={openDetails}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="sm"
+        className="p-4"
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <DialogTitle className="text-lg font-semibold">
+            Inspection Details
+          </DialogTitle>
+          <IconButton onClick={handleClose}>
+            <CloseIcon />
+          </IconButton>
+
+          {/* <h2 className="text-lg font-semibold">Inspection Details</h2> */}
+        </div>
+
+        <DialogContent className="p-6 space-y-4 bg-gray-50">
+          {selectedInspection ? (
+            <div className="p-4 border rounded-lg shadow-sm">
+              <p className="text-sm text-gray-700">
+                <span className="font-bold">Remarks:</span>{" "}
+                {selectedInspection.Remarks}
+              </p>
+              <p className="text-sm text-gray-600">
+                <span className="font-bold">Inspected By:</span>{" "}
+                {selectedInspection.InspectedBy}
+              </p>
+            </div>
+          ) : (
+            <p className="text-center text-gray-500">
+              No inspection details available
+            </p>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Checklist Dialog */}
+      <Dialog
+        open={openChecklist}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="sm"
+        className="p-1 sm:p-4"
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <DialogTitle className="text-lg font-semibold">Checklist</DialogTitle>
+          <IconButton onClick={handleClose}>
+            {/* <X className="w-5 h-5" /> */}
+            <CloseIcon />
+          </IconButton>
+        </div>
+        <DialogContent className="p-4 space-y-6">
+          {selectedInspection &&
+            selectedInspection?.checkpoints.map((cp, index) => (
+              <div
+                key={index}
+                className="p-4 border rounded-lg shadow-sm bg-gray-50"
+              >
+                <p className="text-sm font-medium text-gray-700">
+                  <span className="font-bold">Checkpoint:</span> {cp.checkpoint}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-bold">Observations:</span>{" "}
+                  {cp.observations}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-bold">Action By:</span> {cp.action_by}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-bold">Remarks:</span> {cp.remarks}
+                </p>
+              </div>
+            ))}
+          {!selectedInspection && (
+            <p className="text-center text-gray-500">
+              No checkpoints available
+            </p>
+          )}
+        </DialogContent>
+      </Dialog>
+      <TrailerInspectionDialog
+        open={openCreateDialog}
+        setOpen={setOpenDialog}
+      />
+    </div>
+  );
+}
+
+export default TrailerInspection;

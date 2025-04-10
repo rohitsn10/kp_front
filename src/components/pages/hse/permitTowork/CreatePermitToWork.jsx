@@ -19,7 +19,7 @@ import { toast } from "react-toastify";
 import { useCreatePermitToWorkMutation } from "../../../../api/hse/permitTowork/permitToworkApi";
 // import { useCreatePermitToWorkMutation } from "your-rtk-query-file"; // Import path may need adjustment
 
-export default function PermitToWorkDialog({ open, setOpen }) {
+export default function PermitToWorkDialog({ open, setOpen, refetch }) {
   const [createPermitToWork, { isLoading }] = useCreatePermitToWorkMutation();
   
   // States updated to match API payload field names

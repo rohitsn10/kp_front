@@ -53,7 +53,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
   const [totalArea, setTotalArea] = useState("");
   const [capacity, setCapacity] = useState("");
   const [numDays, setNumDays] = useState("");
-
+  const [locations, setLocations] = useState([]);
   // State for selection fields
   const [projectCategory, setProjectCategory] = useState(null);
   const [subCategory, setSubCategory] = useState(null);
@@ -314,6 +314,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
       electricity_line_id: electricityLine.id,
       spoc_user: spoc,
       project_predication_date: new Date(committedDate).toISOString(),
+      location_name:locations,
       project_sub_activity_ids: subActivities.map(Number),
       project_sub_sub_activity_ids: selectedMultipleActivities.map(
         (item) => item.id
@@ -712,7 +713,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
                   {...params}
                   fullWidth
                   placeholder="Select Multiple Activities"
-                  // sx={inputStyles} // Make sure inputStyles is defined
+                  sx={inputStyles} // Make sure inputStyles is defined
                 />
               )}
             />
@@ -725,7 +726,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
             <Autocomplete
               options={spocOptions}
               getOptionLabel={(option) => option.full_name} // Display full name
-              value={spocOptions.find((user) => user.id === spoc) || null} // Match selected user
+              value={spocOptions.find((user) => user.id === spoc) || null}
               onChange={(_, selectedUser) => setSpoc(selectedUser?.id || null)} // Store only a single user ID
               renderInput={(params) => (
                 <TextField
@@ -750,6 +751,27 @@ function ProjectCreate({ open, handleClose, refetch }) {
               sx={inputStyles}
             />
           </div>
+          <div className="flex flex-col gap-2">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Add Locations
+            </label>
+            <Autocomplete
+              multiple
+              freeSolo
+              options={[]} // You can populate this if you have location suggestions
+              value={locations}
+              onChange={(_, newValue) => setLocations(newValue)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  fullWidth
+                  placeholder="Type and press Enter to add location"
+                  sx={inputStyles}
+                />
+              )}
+            />
+          </div>
+
           {/* <Autocomplete options={criticalActivities} value={criticalActivity} onChange={(_, value) => setCriticalActivity(value)} renderInput={(params) => <TextField {...params} fullWidth placeholder='Select Critical Activity' sx={inputStyles} />} /> */}
         </div>
         <div className="flex flex-row justify-center my-4">
