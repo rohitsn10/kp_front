@@ -196,29 +196,6 @@ function ProjectCreate({ open, handleClose, refetch }) {
     },
   };
 
-  // const handleSubmit = () => {
-  //     console.log("Company Name:", companyName);
-  //     console.log("Project Name:", projectName);
-  //     console.log("Project Location:", projectLocation);
-  //     console.log("Start Date:", startDate);
-  //     console.log("End Date:", endDate);
-  //     console.log("COD Date:", codDate);
-  //     console.log("Committed Date:", committedDate);
-  //     console.log("Total Area:", totalArea);
-  //     console.log("Capacity:", capacity);
-  //     console.log("Number of Days:", numDays);
-  //     console.log("Project Category:", projectCategory);
-  //     console.log("Sub Category:", subCategory);
-  //     console.log("Activity:", activity);
-  //     console.log("Sub Activities:", subActivities);
-  //     console.log("Multiple Activities:", selectedMultipleActivities);
-  //     console.log("SPOC:", spoc);
-  //     console.log("Critical Activity:", criticalActivity);
-  //     console.log("CI Utility:", ciUtility);
-  //     console.log("CPP/IPP:", cppIpp);
-  //     console.log("Electricity Line:", electricityLine);
-  // };
-
   const handleSubmit = async () => {
     let isValid = true;
 
@@ -314,7 +291,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
       electricity_line_id: electricityLine.id,
       spoc_user: spoc,
       project_predication_date: new Date(committedDate).toISOString(),
-      location_name:locations,
+      location_name:Array.isArray(locations)?locations.join(', '):locations,
       project_sub_activity_ids: subActivities.map(Number),
       project_sub_sub_activity_ids: selectedMultipleActivities.map(
         (item) => item.id

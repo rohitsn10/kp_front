@@ -13,9 +13,12 @@ import {
   DialogContent, 
   Typography,
   TablePagination,
-  TextField
+  TextField,
+  CircularProgress
 } from '@mui/material';
 import IncidentReportDialog from '../../../components/pages/hse/first-aid/CreateFirstAid';
+import { useGetAllFirstAidRecordsQuery } from '../../../api/hse/firstAidRecord/firstAidRecordApi';
+// import { useGetAllFirstAidRecordsQuery } from '../../api'; // Adjust the import path as needed
 
 function FirstAidRecord() {
   const [page, setPage] = useState(0);
@@ -23,44 +26,13 @@ function FirstAidRecord() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFirstAid, setSelectedFirstAid] = useState(null);
   const [openDescriptionModal, setOpenDescriptionModal] = useState(false);
-  const [openCreateDialog,setCreateDialog]=useState(false)
-  const dummyFirstAid = [
-    {
-      "date": "2025-03-27",
-      "name": "John Doe",
-      "designation": "Safety Officer",
-      "employee_of": "KP",
-      "description": "Minor cut on left hand treated with antiseptic and bandage."
-    },
-    {
-      "date": "2025-03-27",
-      "name": "Alice Johnson",
-      "designation": "Project Manager",
-      "employee_of": "KP",
-      "description": "Mild dehydration, provided with electrolyte solution."
-    },
-    {
-      "date": "2025-03-27",
-      "name": "Robert Smith",
-      "designation": "Engineer",
-      "employee_of": "Contractor",
-      "description": "Bruise on right arm due to minor fall, ice pack applied."
-    },
-    {
-      "date": "2025-03-27",
-      "name": "Emily Brown",
-      "designation": "Technician",
-      "employee_of": "Contractor",
-      "description": "Dust irritation in eyes, flushed with clean water."
-    },
-    {
-      "date": "2025-03-27",
-      "name": "Michael Lee",
-      "designation": "Supervisor",
-      "employee_of": "KP",
-      "description": "Twisted ankle, provided with first aid and recommended rest."
-    }
-  ];
+  const [openCreateDialog, setCreateDialog] = useState(false);
+  
+  // Using the RTK Query hook to fetch data
+  const { data: response, isLoading, isError, refetch } = useGetAllFirstAidRecordsQuery();
+  
+  // Extract the first aid records from the API response
+  const firstAidRecords = response?.data || [];
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -72,10 +44,11 @@ function FirstAidRecord() {
   };
 
   // Filtering logic
-  const filteredFirstAidRecords = dummyFirstAid.filter((record) =>
-    record.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.designation.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.employee_of.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredFirstAidRecords = firstAidRecords.filter((record) =>
+    (record.first_aid_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (record.designation?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (record.employee_of?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (record.site_name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   const currentRows = filteredFirstAidRecords.slice(
@@ -88,6 +61,28 @@ function FirstAidRecord() {
     setOpenDescriptionModal(true);
   };
 
+  // Handle creation of new record
+  const handleCreateSuccess = () => {
+    refetch(); // Refresh the data after creating a new record
+    setCreateDialog(false);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <CircularProgress />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center text-red-500 p-4">
+        Error loading first aid records. Please try again later.
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
       <h2 className="text-3xl text-[#29346B] font-semibold text-center mb-6">First Aid Records</h2>
@@ -98,7 +93,6 @@ function FirstAidRecord() {
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search by Name, Designation, or Employee Of"
           variant="outlined"
-          
         />
         <Button
           variant="contained"
@@ -110,7 +104,7 @@ function FirstAidRecord() {
             textTransform: 'none', 
             minHeight: 'auto' 
           }}
-          onClick={()=>setCreateDialog(true)}
+          onClick={() => setCreateDialog(true)}
         >
           Add First Aid Record
         </Button>
@@ -121,6 +115,7 @@ function FirstAidRecord() {
           <TableHead>
             <TableRow style={{ backgroundColor: '#F2EDED' }}>
               <TableCell align="center">Date</TableCell>
+              <TableCell align="center">Site Name</TableCell>
               <TableCell align="center">Name</TableCell>
               <TableCell align="center">Designation</TableCell>
               <TableCell align="center">Employee Of</TableCell>
@@ -128,23 +123,32 @@ function FirstAidRecord() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {currentRows.map((record, index) => (
-              <TableRow key={index}>
-                <TableCell align="center">{record.date}</TableCell>
-                <TableCell align="center">{record.name}</TableCell>
-                <TableCell align="center">{record.designation}</TableCell>
-                <TableCell align="center">{record.employee_of}</TableCell>
-                <TableCell align="center">
-                  <Button 
-                    variant="contained" 
-                    color="primary"
-                    onClick={() => openDescriptionModalHandler(record)}
-                  >
-                    View Description
-                  </Button>
+            {currentRows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  No records found
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              currentRows.map((record) => (
+                <TableRow key={record.id}>
+                  <TableCell align="center">{record.date}</TableCell>
+                  <TableCell align="center">{record.site_name}</TableCell>
+                  <TableCell align="center">{record.first_aid_name}</TableCell>
+                  <TableCell align="center">{record.designation}</TableCell>
+                  <TableCell align="center">{record.employee_of}</TableCell>
+                  <TableCell align="center">
+                    <Button 
+                      variant="contained" 
+                      color="primary"
+                      onClick={() => openDescriptionModalHandler(record)}
+                    >
+                      View Description
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -175,7 +179,7 @@ function FirstAidRecord() {
                 Patient Information
               </Typography>
               <Typography variant="body1">
-                <strong>Name:</strong> {selectedFirstAid.name}
+                <strong>Name:</strong> {selectedFirstAid.first_aid_name}
               </Typography>
               <Typography variant="body1">
                 <strong>Designation:</strong> {selectedFirstAid.designation}
@@ -185,6 +189,12 @@ function FirstAidRecord() {
               </Typography>
               <Typography variant="body1">
                 <strong>Date:</strong> {selectedFirstAid.date}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Site:</strong> {selectedFirstAid.site_name}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Location:</strong> {selectedFirstAid.location_name}
               </Typography>
               
               <Typography variant="h6" gutterBottom className="mt-4">
@@ -200,6 +210,7 @@ function FirstAidRecord() {
       <IncidentReportDialog
         open={openCreateDialog}
         setOpen={setCreateDialog}
+        onSuccess={handleCreateSuccess}
       />
     </div>
   );

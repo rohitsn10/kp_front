@@ -16,9 +16,33 @@ import {
   List,
   ListItem,
   ListItemText,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
-import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
+import { Delete as DeleteIcon, Add as AddIcon, CloudUpload as CloudUploadIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
+
+// No longer needed since we have individual state variables for each topic
+// const PREDEFINED_TOPICS = [
+//   "Site/Plant familiarization",
+//   "Company Policy and Objectives",
+//   "Standard operating procedures /Checklists",
+//   "Use of fire-fighting equipment",
+//   "Displayed Emergency Contact Details",
+//   "Assemble Point",
+//   "Mandatory PPEs",
+//   "Restricted Area",
+//   "Location of Drinking Water & Wash Room",
+//   "No Alcohol Consumption inside Plant/Site",
+//   "Smoking Zone",
+//   "Speed Limit",
+//   "Display ID Card",
+//   "Other"
+// ];
 
 export default function TrainingInductionDialog({ open, setOpen }) {
   const [site, setSite] = useState("");
@@ -26,10 +50,24 @@ export default function TrainingInductionDialog({ open, setOpen }) {
   const [facultyName, setFacultyName] = useState("");
   const [topic, setTopic] = useState("");
   const [facultySignature, setFacultySignature] = useState(null);
-  const [topicsDiscussed, setTopicsDiscussed] = useState([""]);
-  const [participants, setParticipants] = useState([
-    { name: "", designation: "", signature: null },
-  ]);
+  
+  // Individual state for each topic
+  const [topic1, setTopic1] = useState("");
+  const [topic2, setTopic2] = useState("");
+  const [topic3, setTopic3] = useState("");
+  const [topic4, setTopic4] = useState("");
+  const [topic5, setTopic5] = useState("");
+  const [topic6, setTopic6] = useState("");
+  const [topic7, setTopic7] = useState("");
+  const [topic8, setTopic8] = useState("");
+  const [topic9, setTopic9] = useState("");
+  const [topic10, setTopic10] = useState("");
+  const [topic11, setTopic11] = useState("");
+  const [topic12, setTopic12] = useState("");
+  const [topic13, setTopic13] = useState("");
+  const [topic14, setTopic14] = useState("");
+  
+  const [participantsFile, setParticipantsFile] = useState(null);
   const [remarks, setRemarks] = useState("");
 
   const validateForm = () => {
@@ -38,18 +76,27 @@ export default function TrainingInductionDialog({ open, setOpen }) {
     if (!facultyName.trim()) return toast.error("Faculty Name is required!");
     if (!topic.trim()) return toast.error("Training Topic is required!");
     if (!facultySignature) return toast.error("Faculty Signature is required!");
-
-    if (participants.length === 0)
-      return toast.error("At least one participant is required!");
-
-    for (let i = 0; i < participants.length; i++) {
-      if (!participants[i].name.trim())
-        return toast.error(`Participant ${i + 1} name is required!`);
-      if (!participants[i].designation.trim())
-        return toast.error(`Participant ${i + 1} designation is required!`);
-      if (!participants[i].signature)
-        return toast.error(`Participant ${i + 1} signature is required!`);
-    }
+    
+    // Check if at least one topic has a value
+    const hasAtLeastOneTopic = 
+      topic1.trim() !== "" || 
+      topic2.trim() !== "" || 
+      topic3.trim() !== "" || 
+      topic4.trim() !== "" || 
+      topic5.trim() !== "" || 
+      topic6.trim() !== "" || 
+      topic7.trim() !== "" || 
+      topic8.trim() !== "" || 
+      topic9.trim() !== "" || 
+      topic10.trim() !== "" || 
+      topic11.trim() !== "" || 
+      topic12.trim() !== "" || 
+      topic13.trim() !== "" || 
+      topic14.trim() !== "";
+      
+    if (!hasAtLeastOneTopic) return toast.error("At least one topic must be filled!");
+    
+    if (!participantsFile) return toast.error("Participants Excel sheet is required!");
 
     return true;
   };
@@ -76,25 +123,6 @@ export default function TrainingInductionDialog({ open, setOpen }) {
     },
   };
 
-  const handleAddParticipant = () => {
-    setParticipants([
-      ...participants,
-      { name: "", designation: "", signature: null },
-    ]);
-  };
-
-  const handleRemoveParticipant = (index) => {
-    const newParticipants = [...participants];
-    newParticipants.splice(index, 1);
-    setParticipants(newParticipants);
-  };
-
-  const handleParticipantChange = (index, field, value) => {
-    const newParticipants = [...participants];
-    newParticipants[index][field] = value;
-    setParticipants(newParticipants);
-  };
-
   const handleFacultySignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -106,54 +134,94 @@ export default function TrainingInductionDialog({ open, setOpen }) {
     }
   };
 
-  const handleParticipantSignatureUpload = (index, e) => {
+  const handleParticipantsFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        handleParticipantChange(index, "signature", reader.result);
-      };
-      reader.readAsDataURL(file);
+      // Check if file is Excel
+      const validExtensions = ['.xlsx', '.xls', '.csv'];
+      const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+      
+      if (!validExtensions.includes(fileExtension)) {
+        toast.error("Please upload a valid Excel or CSV file!");
+        return;
+      }
+      
+      setParticipantsFile(file);
     }
   };
 
-  const handleAddTopic = () => {
-    setTopicsDiscussed([...topicsDiscussed, ""]);
-  };
-
-  const handleRemoveTopic = (index) => {
-    const newTopics = [...topicsDiscussed];
-    newTopics.splice(index, 1);
-    setTopicsDiscussed(newTopics);
-  };
-
-  const handleTopicChange = (index, value) => {
-    const newTopics = [...topicsDiscussed];
-    newTopics[index] = value;
-    setTopicsDiscussed(newTopics);
-  };
+  // We no longer need this since we have individual handlers
+  // const handleTopicChange = (topicName, value) => {
+  //   setTopicValues(prev => ({
+  //     ...prev,
+  //     [topicName]: value
+  //   }));
+  // };
 
   const handleSubmit = () => {
     if (!validateForm()) return;
 
-    const formData = {
-      site: site,
-      date: date,
-      faculty_name: facultyName,
-      signature: facultySignature,
-      topic: topic,
-      topics_discussed: topicsDiscussed.filter((topic) => topic.trim() !== ""),
-      participants: participants.map((p) => ({
-        name: p.name,
-        designation: p.designation,
-        signature: p.signature,
-      })),
-      remarks: remarks,
-    };
+    // Create FormData object
+    const formData = new FormData();
+    
+    // Append basic fields
+    formData.append("site", site);
+    formData.append("date", date);
+    formData.append("faculty_name", facultyName);
+    formData.append("topic", topic);
+    formData.append("remarks", remarks);
+    
+    // Append faculty signature
+    if (facultySignature) {
+      // Convert base64 to blob and append
+      const facultySignatureBlob = dataURItoBlob(facultySignature);
+      formData.append("faculty_signature", facultySignatureBlob);
+    }
+    
+    // Append each topic individually
+    if (topic1.trim() !== "") formData.append("topic_1", topic1);
+    if (topic2.trim() !== "") formData.append("topic_2", topic2);
+    if (topic3.trim() !== "") formData.append("topic_3", topic3);
+    if (topic4.trim() !== "") formData.append("topic_4", topic4);
+    if (topic5.trim() !== "") formData.append("topic_5", topic5);
+    if (topic6.trim() !== "") formData.append("topic_6", topic6);
+    if (topic7.trim() !== "") formData.append("topic_7", topic7);
+    if (topic8.trim() !== "") formData.append("topic_8", topic8);
+    if (topic9.trim() !== "") formData.append("topic_9", topic9);
+    if (topic10.trim() !== "") formData.append("topic_10", topic10);
+    if (topic11.trim() !== "") formData.append("topic_11", topic11);
+    if (topic12.trim() !== "") formData.append("topic_12", topic12);
+    if (topic13.trim() !== "") formData.append("topic_13", topic13);
+    if (topic14.trim() !== "") formData.append("topic_14", topic14);
+    
+    // Append participants Excel file
+    if (participantsFile) {
+      formData.append("participants_file", participantsFile);
+    }
 
-    console.log(formData);
+    // Log FormData contents for debugging (will only show keys, not values)
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+    }
+
+    // This would be where you send the formData to your API
+    console.log("FormData ready to be submitted");
     toast.success("Training attendance data submitted successfully!");
     setOpen(false);
+  };
+
+  // Helper function to convert base64 to Blob
+  const dataURItoBlob = (dataURI) => {
+    const byteString = atob(dataURI.split(',')[1]);
+    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    
+    return new Blob([ab], { type: mimeString });
   };
 
   return (
@@ -269,59 +337,204 @@ export default function TrainingInductionDialog({ open, setOpen }) {
           <Grid item xs={12} mt={2}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6" className="text-[#29346B] font-semibold">
-                Topics Discussed
+                Topics Discussed<span className="text-red-600"> *</span>
               </Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleAddTopic}
-                sx={{
-                  backgroundColor: "#29346B",
-                  "&:hover": {
-                    backgroundColor: "#202a5a",
-                  },
-                }}
-              >
-                Add Topic
-              </Button>
             </Box>
             <Divider sx={{ my: 1 }} />
           </Grid>
 
           <Grid item xs={12}>
-            <List>
-              {topicsDiscussed.map((topic, index) => (
-                <ListItem key={index}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    label={`Topic ${index + 1}`}
-                    value={topic}
-                    onChange={(e) => handleTopicChange(index, e.target.value)}
-                  />
-                  {topicsDiscussed.length > 1 && (
-                    <IconButton
-                      color="error"
-                      onClick={() => handleRemoveTopic(index)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  )}
-                </ListItem>
-              ))}
-            </List>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="1. Site/Plant familiarization"
+                  value={topic1}
+                  onChange={(e) => setTopic1(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="2. Company Policy and Objectives"
+                  value={topic2}
+                  onChange={(e) => setTopic2(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="3. Standard operating procedures /Checklists"
+                  value={topic3}
+                  onChange={(e) => setTopic3(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="4. Use of fire-fighting equipment"
+                  value={topic4}
+                  onChange={(e) => setTopic4(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="5. Displayed Emergency Contact Details"
+                  value={topic5}
+                  onChange={(e) => setTopic5(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="6. Assemble Point"
+                  value={topic6}
+                  onChange={(e) => setTopic6(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="7. Mandatory PPEs"
+                  value={topic7}
+                  onChange={(e) => setTopic7(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="8. Restricted Area"
+                  value={topic8}
+                  onChange={(e) => setTopic8(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="9. Location of Drinking Water & Wash Room"
+                  value={topic9}
+                  onChange={(e) => setTopic9(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="10. No Alcohol Consumption inside Plant/Site"
+                  value={topic10}
+                  onChange={(e) => setTopic10(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="11. Smoking Zone"
+                  value={topic11}
+                  onChange={(e) => setTopic11(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="12. Speed Limit"
+                  value={topic12}
+                  onChange={(e) => setTopic12(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="13. Display ID Card"
+                  value={topic13}
+                  onChange={(e) => setTopic13(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="14. Other"
+                  value={topic14}
+                  onChange={(e) => setTopic14(e.target.value)}
+                  sx={commonInputStyles}
+                  margin="normal"
+                />
+              </Grid>
+            </Grid>
           </Grid>
 
           {/* Participants Section */}
           <Grid item xs={12} mt={2}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6" className="text-[#29346B] font-semibold">
-                Participants
+                Participants<span className="text-red-600"> *</span>
+              </Typography>
+            </Box>
+            <Divider sx={{ my: 1 }} />
+          </Grid>
+
+          {/* Excel Upload for Participants */}
+          <Grid item xs={12}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                p: 3,
+                border: "1px dashed #29346B",
+                borderRadius: "8px",
+                backgroundColor: "#f5f5f5",
+              }}
+            >
+              <CloudUploadIcon sx={{ fontSize: 48, color: "#29346B", mb: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Upload Participants Excel Sheet
+              </Typography>
+              <Typography variant="body2" color="textSecondary" align="center" sx={{ mb: 2 }}>
+                Upload an Excel file (.xlsx, .xls) or CSV file with participants information
               </Typography>
               <Button
                 variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleAddParticipant}
+                component="label"
                 sx={{
                   backgroundColor: "#29346B",
                   "&:hover": {
@@ -329,98 +542,32 @@ export default function TrainingInductionDialog({ open, setOpen }) {
                   },
                 }}
               >
-                Add Participant
+                Select File
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  hidden
+                  onChange={handleParticipantsFileUpload}
+                />
               </Button>
+              {participantsFile && (
+                <Box sx={{ mt: 2, display: "flex", alignItems: "center" }}>
+                  <Typography variant="body2">
+                    {participantsFile.name} ({Math.round(participantsFile.size / 1024)} KB)
+                  </Typography>
+                  <IconButton 
+                    size="small" 
+                    color="error" 
+                    onClick={() => setParticipantsFile(null)}
+                    sx={{ ml: 1 }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              )}
             </Box>
-            <Divider sx={{ my: 1 }} />
           </Grid>
 
-          {/* Participant List */}
-          <Grid item xs={12}>
-            {participants.map((participant, index) => (
-              <Paper
-                key={index}
-                elevation={1}
-                sx={{
-                  p: 2,
-                  mb: 2,
-                  border: "1px solid #e0e0e0",
-                  position: "relative",
-                }}
-              >
-                <IconButton
-                  color="error"
-                  sx={{ position: "absolute", top: 8, right: 8 }}
-                  onClick={() => handleRemoveParticipant(index)}
-                  disabled={participants.length === 1}
-                >
-                  <DeleteIcon />
-                </IconButton>
-
-                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
-                  Participant {index + 1}
-                </Typography>
-
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Name"
-                      variant="outlined"
-                      value={participant.name}
-                      required
-                      onChange={(e) =>
-                        handleParticipantChange(index, "name", e.target.value)
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Designation"
-                      variant="outlined"
-                      value={participant.designation}
-                      required
-                      onChange={(e) =>
-                        handleParticipantChange(index, "designation", e.target.value)
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                      }}
-                    >
-                      <Button
-                        variant="outlined"
-                        component="label"
-                        color="primary"
-                      >
-                        Upload Signature
-                        <input
-                          type="file"
-                          accept="image/*"
-                          hidden
-                          onChange={(e) => handleParticipantSignatureUpload(index, e)}
-                        />
-                      </Button>
-                      {participant.signature && (
-                        <Avatar
-                          src={participant.signature}
-                          alt="Participant Signature"
-                          variant="rounded"
-                          sx={{ width: 100, height: 56 }}
-                        />
-                      )}
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Paper>
-            ))}
-          </Grid>
           {/* Remarks */}
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">

@@ -13,11 +13,14 @@ import {
   DialogContent, 
   Typography,
   TablePagination,
-  TextField
+  TextField,
+  CircularProgress,
+  Link
 } from '@mui/material';
 import ImageViewer from '../../../utils/signatureViewer';
 import ToolboxAttendanceDialog from '../../../components/pages/hse/toolbox-talks';
-
+import { useGetToolTalkAttendanceQuery } from '../../../api/hse/toolbox/toolBoxApi';
+// import { useGetToolTalkAttendanceQuery } from '../../services/api'; // Adjust the import path as needed
 function ToolboxTalk() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -25,44 +28,10 @@ function ToolboxTalk() {
   const [selectedToolboxTalk, setSelectedToolboxTalk] = useState(null);
   const [openPointsModal, setOpenPointsModal] = useState(false);
   const [openParticipantsModal, setOpenParticipantsModal] = useState(false);
-  const [openCreateDialog,setCreateDialog] =useState(false);
-
-  const dummyToolboxData = [{
-    "site": "Construction Site B",
-    "date": "2025-03-27",
-    "time": "10:00 AM",
-    "tbt_permit_no": "TBT-2025-0012",
-    "permit_date": "2025-03-26",
-    "tbt_conducted_by": "Mark Robinson",
-    "contractor_name": "ABC Constructions Ltd.",
-    "points_discussed": {
-      "use_of_ppe": "Yes",
-      "use_of_tools": "Yes",
-      "hazards_at_workplace": "Yes",
-      "action_in_emergency": "Yes",
-      "health_status": "Yes",
-      "custom_points": "No"
-    },
-    "job_activity_details": "Installation of scaffolding for structural reinforcement.",
-    "participants": [
-      {
-        "name": "John Doe",
-        "designation": "Safety Officer",
-        "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-      },
-      {
-        "name": "Alice Johnson",
-        "designation": "Project Manager",
-        "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-      },
-      {
-        "name": "Robert Smith",
-        "designation": "Engineer",
-        "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-      },
-    ],
-    "remarks": "The toolbox talk was successfully conducted. All participants acknowledged the safety measures and actively engaged in discussions."
-  }];
+  const [openCreateDialog, setCreateDialog] = useState(false);
+  
+  // Fetch toolbox talk attendance data using the provided hook
+  const { data: toolboxTalkData, isLoading, isError } = useGetToolTalkAttendanceQuery();
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -73,12 +42,21 @@ function ToolboxTalk() {
     setPage(0);
   };
 
+  // Function to handle file download
+  const handleFileDownload = (fileUrl) => {
+    if (fileUrl) {
+      window.open(fileUrl, '_blank');
+    }
+  };
+
   // Filtering logic
-  const filteredToolboxTalks = dummyToolboxData.filter((talk) =>
-    talk.site.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    talk.tbt_conducted_by.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    talk.tbt_permit_no.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredToolboxTalks = toolboxTalkData?.data 
+    ? toolboxTalkData.data.filter((talk) => 
+        talk.site_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        talk.tbt_conducted_by_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        talk.tbt_against_permit_no.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   const currentRows = filteredToolboxTalks.slice(
     page * rowsPerPage,
@@ -95,6 +73,26 @@ function ToolboxTalk() {
     setOpenParticipantsModal(true);
   };
 
+  // Display loading state
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <CircularProgress />
+      </div>
+    );
+  }
+
+  // Display error state
+  if (isError) {
+    return (
+      <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
+        <Typography variant="h6" color="error" align="center">
+          Error fetching toolbox talk data. Please try again later.
+        </Typography>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
       <h2 className="text-3xl text-[#29346B] font-semibold text-center mb-6">Toolbox Talk Records</h2>
@@ -106,7 +104,7 @@ function ToolboxTalk() {
           variant="outlined"
         />
         <Button
-        onClick={()=>setCreateDialog(true)}
+          onClick={() => setCreateDialog(true)}
           variant="contained"
           style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none', minHeight: 'auto' }}
         >
@@ -126,32 +124,40 @@ function ToolboxTalk() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {currentRows.map((talk) => (
-              <TableRow key={talk.tbt_permit_no}>
-                <TableCell align="center">{talk.site}</TableCell>
-                <TableCell align="center">{talk.permit_date}</TableCell>
-                <TableCell align="center">{talk.tbt_conducted_by}</TableCell>
-                <TableCell align="center">{talk.tbt_permit_no}</TableCell>
-                <TableCell align="center">
-                  <div className="flex flex-col gap-2">
-                    <Button 
-                      variant="contained" 
-                      color="primary"
-                      onClick={() => openPointsModalHandler(talk)}
-                    >
-                      View Points
-                    </Button>
-                    <Button 
-                      variant="contained" 
-                      color="secondary"
-                      onClick={() => openParticipantsModalHandler(talk)}
-                    >
-                      View Participants
-                    </Button>
-                  </div>
+            {currentRows.length > 0 ? (
+              currentRows.map((talk) => (
+                <TableRow key={talk.id}>
+                  <TableCell align="center">{talk.site_name}</TableCell>
+                  <TableCell align="center">{talk.permit_date}</TableCell>
+                  <TableCell align="center">{talk.tbt_conducted_by_name}</TableCell>
+                  <TableCell align="center">{talk.tbt_against_permit_no}</TableCell>
+                  <TableCell align="center">
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        variant="contained" 
+                        color="primary"
+                        onClick={() => openPointsModalHandler(talk)}
+                      >
+                        View Points
+                      </Button>
+                      <Button 
+                        variant="contained" 
+                        color="secondary"
+                        onClick={() => openParticipantsModalHandler(talk)}
+                      >
+                        View Participants
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  No records found
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -167,7 +173,7 @@ function ToolboxTalk() {
         style={{ borderTop: '1px solid #e0e0e0' }}
       />
 
-      {/* Points Discussed Modal */}
+      {/* Points Discussed Modal - Updated to match the API response format */}
       <Dialog 
         open={openPointsModal} 
         onClose={() => setOpenPointsModal(false)}
@@ -179,16 +185,29 @@ function ToolboxTalk() {
           {selectedToolboxTalk && (
             <>
               <Typography variant="h6" gutterBottom>
-                Job Activity: {selectedToolboxTalk.job_activity_details}
+                Job Activity: {selectedToolboxTalk.job_activity_in_detail}
               </Typography>
               <Typography variant="subtitle1" gutterBottom>
                 Detailed Points:
               </Typography>
-              {Object.entries(selectedToolboxTalk.points_discussed).map(([key, value]) => (
-                <Typography key={key} variant="body1" gutterBottom>
-                  • {key.replace(/_/g, ' ').toUpperCase()}: {value}
-                </Typography>
-              ))}
+              <Typography variant="body1" gutterBottom>
+                • USE OF PPEs: {selectedToolboxTalk.use_of_ppes_topic_discussed}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                • USE OF TOOLS: {selectedToolboxTalk.use_of_tools_topic_discussed}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                • HAZARD AT WORK PLACE: {selectedToolboxTalk.hazard_at_work_place_topic_discussed}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                • USE OF ACTION IN AN EMERGENCY: {selectedToolboxTalk.use_of_action_in_an_emergency_topic_discussed}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                • HEALTH STATUS: {selectedToolboxTalk.use_of_health_status_topic_discussed}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                • OTHERS: {selectedToolboxTalk.use_of_others_topic_discussed}
+              </Typography>
               {selectedToolboxTalk.remarks && (
                 <>
                   <Typography variant="subtitle1" gutterBottom className="mt-4">
@@ -204,7 +223,7 @@ function ToolboxTalk() {
         </DialogContent>
       </Dialog>
 
-      {/* Participants Modal */}
+      {/* Participants Modal - Updated to show file download button */}
       <Dialog 
         open={openParticipantsModal} 
         onClose={() => setOpenParticipantsModal(false)}
@@ -213,19 +232,42 @@ function ToolboxTalk() {
       >
         <DialogTitle>Participants Details</DialogTitle>
         <DialogContent>
-          {selectedToolboxTalk && selectedToolboxTalk.participants.map((participant, index) => (
-            <div key={index} className="mb-4 p-3 border rounded">
-              <Typography><strong>Name:</strong> {participant.name}</Typography>
-              <Typography><strong>Designation:</strong> {participant.designation}</Typography>
+          {selectedToolboxTalk && (
+            <div className="mb-4 p-3 border rounded">
+              <Typography variant="h6" gutterBottom>Contractor Information</Typography>
+              <Typography><strong>Name of Contractor:</strong> {selectedToolboxTalk.name_of_contractor}</Typography>
+              
+              <Typography variant="h6" gutterBottom className="mt-4">TBT Conducted By</Typography>
+              <Typography><strong>Name:</strong> {selectedToolboxTalk.tbt_conducted_by_name}</Typography>
               <Typography><strong>Signature:</strong></Typography>
               <ImageViewer 
-                src={participant.signature} 
-                alt={`${participant.name} Signature`} 
+                src={selectedToolboxTalk.tbt_conducted_by_signature} 
+                alt={`${selectedToolboxTalk.tbt_conducted_by_name} Signature`} 
               />
+              
+              {selectedToolboxTalk.participant_upload_attachments && (
+                <div className="mt-4">
+                  <Typography variant="h6" gutterBottom>Participant Attachments</Typography>
+                  <div className="flex items-center gap-2">
+                    <Typography>
+                      <strong>File:</strong> {selectedToolboxTalk.participant_upload_attachments.split('/').pop()}
+                    </Typography>
+                    <Button 
+                      variant="contained" 
+                      color="primary" 
+                      size="small"
+                      onClick={() => handleFileDownload(selectedToolboxTalk.participant_upload_attachments)}
+                    >
+                      Download
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
-          ))}
+          )}
         </DialogContent>
       </Dialog>
+      
       <ToolboxAttendanceDialog
         open={openCreateDialog}
         setOpen={setCreateDialog}
