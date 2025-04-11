@@ -9,7 +9,12 @@ import {
   Select,
   MenuItem,
   InputAdornment,
-  Chip
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
@@ -19,14 +24,11 @@ import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HistoryIcon from "@mui/icons-material/History";
-// import { UploadDocumentsModal, ViewDocumentsModal } from "./DocumentModals";
-// import ComplianceReportsModal from "./ComplianceReportsModal"; 
-// from "@mui/icons-material/CheckCircleOutline";
-// import HistoryIcon from "@mui/icons-material/History";
+import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import { UploadDocumentsModal, ViewDocumentsModal } from "../../components/pages/quality/ViewDocumentsModal";
 import ComplianceReportsModal from "../../components/pages/quality/ComplianceReportsModal";
-// import { UploadDocumentsModal, ViewDocumentsModal } from "./DocumentModals";
-// ComplianceReportsModal
+
 // Mock data for projects
 const mockProjects = {
   data: [
@@ -185,6 +187,11 @@ function QualityInspectionPage() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   
+  // Add Item Modal state
+  const [addItemModalOpen, setAddItemModalOpen] = useState(false);
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemCategory, setNewItemCategory] = useState("1");
+  
   // Simulate API loading state for items
   const [isLoadingItems, setIsLoadingItems] = useState(false);
   
@@ -238,6 +245,23 @@ function QualityInspectionPage() {
 
     setFilteredItems(result);
   }, [items, searchTerm, sortOption, filterCategory]);
+
+  // Handler for Add Item modal
+  const handleOpenAddItemModal = () => {
+    setAddItemModalOpen(true);
+  };
+
+  const handleCloseAddItemModal = () => {
+    setAddItemModalOpen(false);
+    setNewItemName("");
+    setNewItemCategory("1");
+  };
+
+  const handleAddItem = () => {
+    // This would actually add the item in a real implementation
+    console.log("Adding new item:", { name: newItemName, category: newItemCategory });
+    handleCloseAddItemModal();
+  };
 
   // Handlers for various button actions
   const handleUploadDocuments = (item) => {
@@ -299,6 +323,16 @@ function QualityInspectionPage() {
   const handleViewHistory = (item) => {
     console.log("View history for:", item);
     // This would open a history view in a real implementation
+  };
+
+  const handleVerifyVendor = (item) => {
+    console.log("Verify vendor for:", item);
+    // This would handle vendor verification in a real implementation
+  };
+
+  const handleGenerateInspection = (item) => {
+    console.log("Generate inspection for:", item);
+    // This would handle inspection generation in a real implementation
   };
 
   // Format date for display
@@ -438,6 +472,7 @@ function QualityInspectionPage() {
             <div className="flex gap-2">
               <Button
                 variant="contained"
+                onClick={handleOpenAddItemModal}
                 sx={{
                   bgcolor: "#FACC15",
                   color: "#29346B",
@@ -480,6 +515,7 @@ function QualityInspectionPage() {
                     <th className="py-2 px-3 text-[#29346B] border text-left">Documents</th>
                     <th className="py-2 px-3 text-[#29346B] border text-left">Inspection</th>
                     <th className="py-2 px-3 text-[#29346B] border text-left">MDCC</th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">Vendor Approval</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -546,7 +582,7 @@ function QualityInspectionPage() {
                           </div>
                         </td>
                         <td className="py-2 px-3 border">
-                          <div className="flex">
+                          <div className="flex flex-col space-y-1">
                             <Button
                               variant="contained"
                               size="small"
@@ -554,11 +590,25 @@ function QualityInspectionPage() {
                               sx={{
                                 bgcolor: "#A855F7",
                                 "&:hover": { bgcolor: "#9333EA" },
-                                padding: "2px 8px"
+                                padding: "2px 8px",
+                                marginBottom: "4px"
                               }}
                               startIcon={<AssignmentIcon />}
                             >
                               Observations
+                            </Button>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => handleGenerateInspection(item)}
+                              sx={{
+                                bgcolor: "#3B82F6",
+                                "&:hover": { bgcolor: "#2563EB" },
+                                padding: "2px 8px"
+                              }}
+                              startIcon={<AssessmentIcon />}
+                            >
+                              Generate Inspection Call
                             </Button>
                           </div>
                         </td>
@@ -568,33 +618,32 @@ function QualityInspectionPage() {
                               variant="contained"
                               size="small"
                               onClick={() => handleUploadMDCC(item)}
-                              // disabled={item.status !== "approved" && !item.has_mdcc}
                               sx={{
-                                // bgcolor: item.has_mdcc ? "#d1d5db" : "#10B981",
-                                "&:hover": { bgcolor: item.has_mdcc ? "#d1d5db" : "#0ea271" },
+                                bgcolor: "#10B981",
+                                "&:hover": { bgcolor: "#0ea271" },
                                 marginBottom: "4px",
                                 padding: "2px 8px"
                               }}
                               startIcon={<CheckCircleOutlineIcon />}
                             >
-                            Generate MDCC
-                              {/* {item.has_mdcc ? "Generate MDCC" : "Upload MDCC"} */}
+                              Generate MDCC
                             </Button>
-                            {/* <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => handleViewHistory(item)}
-                              sx={{
-                                borderColor: "#6B7280",
-                                color: "#6B7280",
-                                "&:hover": { borderColor: "#4B5563", backgroundColor: "#f0f0f0" },
-                                padding: "2px 8px"
-                              }}
-                              startIcon={<HistoryIcon />}
-                            >
-                              History
-                            </Button> */}
                           </div>
+                        </td>
+                        <td className="py-2 px-3 border">
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleVerifyVendor(item)}
+                            sx={{
+                              bgcolor: "#F59E0B",
+                              "&:hover": { bgcolor: "#D97706" },
+                              padding: "2px 8px"
+                            }}
+                            startIcon={<VerifiedUserIcon />}
+                          >
+                            Verify Vendor
+                          </Button>
                         </td>
                       </tr>
                     );
@@ -628,6 +677,61 @@ function QualityInspectionPage() {
         handleClose={handleCloseComplianceModal}
         itemDetails={selectedItem}
       />
+
+      {/* Add Item Modal */}
+      <Dialog open={addItemModalOpen} onClose={handleCloseAddItemModal}>
+        <DialogTitle sx={{ bgcolor: "#29346B", color: "white" }}>Add New Item</DialogTitle>
+        <DialogContent sx={{ pt: 2, minWidth: "400px" }}>
+          <DialogContentText sx={{ mb: 2 }}>
+            Please enter the details for the new item.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="item-name"
+            label="Item Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={newItemName}
+            onChange={(e) => setNewItemName(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="category-select-label">Category</InputLabel>
+            <Select
+              labelId="category-select-label"
+              id="category-select"
+              value={newItemCategory}
+              label="Category"
+              onChange={(e) => setNewItemCategory(e.target.value)}
+            >
+              <MenuItem value="1">Category 1</MenuItem>
+              <MenuItem value="2">Category 2</MenuItem>
+              <MenuItem value="3">Category 3</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button 
+            onClick={handleCloseAddItemModal}
+            sx={{ color: "#29346B" }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleAddItem}
+            variant="contained"
+            sx={{
+              bgcolor: "#FACC15",
+              color: "#29346B",
+              "&:hover": { bgcolor: "#e5b812" }
+            }}
+          >
+            Add Item
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

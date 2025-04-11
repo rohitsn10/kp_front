@@ -27,6 +27,8 @@ import { trailerInspectionApi } from "../api/hse/trailerInspection/trailerInspec
 import { mockDrillApi } from "../api/hse/mockdrill/mockDrillApi.js";
 import { craneHydraApi } from "../api/hse/crane/craneHydraApi.js";
 import { safetyTrainingApi } from "../api/hse/safetyTraining/safetyTrainingApi.js";
+import { toolTalkAttendanceApi } from "../api/hse/toolbox/toolBoxApi.js";
+import { firstAidRecordApi } from "../api/hse/firstAidRecord/firstAidRecordApi.js";
 
 const store = configureStore({
   reducer: {
@@ -58,6 +60,8 @@ const store = configureStore({
     [trailerInspectionApi.reducerPath]: trailerInspectionApi.reducer,
     [mockDrillApi.reducerPath]: mockDrillApi.reducer,
     [safetyTrainingApi.reducerPath]: safetyTrainingApi.reducer,
+    [toolTalkAttendanceApi.reducerPath]:toolTalkAttendanceApi.reducer,
+    [firstAidRecordApi.reducerPath]:firstAidRecordApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -89,6 +93,8 @@ const store = configureStore({
       .concat(trailerInspectionApi.middleware)
       .concat(mockDrillApi.middleware)  
       .concat(safetyTrainingApi.middleware)
+      .concat(toolTalkAttendanceApi.middleware)
+      .concat(firstAidRecordApi.middleware)
 });
 
 export default store;

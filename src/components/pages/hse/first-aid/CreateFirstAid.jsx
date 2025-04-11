@@ -7,17 +7,26 @@ import {
   DialogTitle,
   TextField,
   Grid,
+  CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useCreateFirstAidRecordMutation } from "../../../../api/hse/firstAidRecord/firstAidRecordApi";
+// import { useCreateFirstAidRecordMutation } from "./firstAidRecordApi"; // Import the mutation hook
 
-export default function IncidentReportDialog({ open, setOpen }) {
+export default function FirstAidDialog({ open, setOpen }) {
+  // State for form fields
+  const [siteName, setSiteName] = useState("");
   const [date, setDate] = useState("");
   const [name, setName] = useState("");
   const [designation, setDesignation] = useState("");
   const [employeeOf, setEmployeeOf] = useState("");
   const [description, setDescription] = useState("");
 
+  // RTK Query mutation hook
+  const [createFirstAidRecord, { isLoading }] = useCreateFirstAidRecordMutation();
+
   const validateForm = () => {
+    if (!siteName.trim()) return toast.error("Site name is required!");
     if (!date.trim()) return toast.error("Date is required!");
     if (!name.trim()) return toast.error("Name is required!");
     if (!designation.trim()) return toast.error("Designation is required!");
@@ -49,20 +58,44 @@ export default function IncidentReportDialog({ open, setOpen }) {
     },
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const formData = {
-      date: date,
-      name: name,
-      designation: designation,
-      employee_of: employeeOf,
-      description: description,
-    };
+    // Create FormData object for API submission
+    const formData = new FormData();
+    formData.append("site_name", siteName);
+    formData.append("location", "1"); // You may want to make this dynamic
+    formData.append("date", date);
+    formData.append("first_aid_name", name); // Changed from "name" to "first_aid_name"
+    formData.append("designation", designation);
+    formData.append("employee_of", employeeOf);
+    formData.append("description", description);
 
-    console.log(formData);
-    toast.success("Incident report submitted successfully!");
-    setOpen(false);
+    try {
+      // Call the API using the RTK Query mutation hook
+      const response = await createFirstAidRecord(formData).unwrap();
+      
+      // Check response status
+      if (response.status === true) {
+        toast.success(response.message || "First aid record submitted successfully!");
+        setOpen(false);
+        
+        // Reset form fields
+        setSiteName("");
+        setDate("");
+        setName("");
+        setDesignation("");
+        setEmployeeOf("");
+        setDescription("");
+      } else {
+        // Handle error from API
+        toast.error(response.message || "Failed to submit first aid record");
+      }
+    } catch (error) {
+      // Handle network or unexpected errors
+      console.error("Error submitting first aid record:", error);
+      toast.error(error.data?.message || "An error occurred while submitting the form");
+    }
   };
 
   return (
@@ -72,6 +105,21 @@ export default function IncidentReportDialog({ open, setOpen }) {
       </DialogTitle>
       <DialogContent>
         <Grid container spacing={3}>
+          {/* Site Name - New field */}
+          <Grid item xs={12}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Site Name<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Site Name"
+              value={siteName}
+              sx={commonInputStyles}
+              onChange={(e) => setSiteName(e.target.value)}
+            />
+          </Grid>
+
           {/* Date */}
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
@@ -152,12 +200,18 @@ export default function IncidentReportDialog({ open, setOpen }) {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleClose} color="secondary" variant="outlined">
+        <Button 
+          onClick={handleClose} 
+          color="secondary" 
+          variant="outlined"
+          disabled={isLoading}
+        >
           Cancel
         </Button>
         <Button
           onClick={handleSubmit}
           color="primary"
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -173,7 +227,11 @@ export default function IncidentReportDialog({ open, setOpen }) {
           }}
           variant="contained"
         >
-          Submit
+          {isLoading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            "Submit"
+          )}
         </Button>
       </DialogActions>
     </Dialog>
