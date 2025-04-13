@@ -10,7 +10,9 @@ import { FaClipboardCheck, FaTools, FaTruck, FaFireExtinguisher, FaUserShield, F
 
 const HSECards = ({ selectedSite }) => {
   const navigate = useNavigate()
-
+  const landbankId = selectedSite?.landbank;
+  console.log("Selected Site Landbank ID",selectedSite?.landbank)
+  
   const cards = [
     {
       id: 'permit-to-work',
@@ -212,9 +214,18 @@ const HSECards = ({ selectedSite }) => {
       },
   ]
 
+  // const handleCardClick = (card) => {
+  //   // Navigate to the specific route, passing site information
+  //   navigate(`/hse/${card.id}`)
+  // }
   const handleCardClick = (card) => {
-    // Navigate to the specific route, passing site information
-    navigate(`/hse/${card.id}`)
+    // Navigate to the specific route, passing landbank ID as a URL parameter
+    if (landbankId) {
+      navigate(`/hse/${card.id}/${landbankId}`);
+    } else {
+      // If no landbank ID is available, navigate without it
+      navigate(`/hse/${card.id}`);
+    }
   }
 
   return (

@@ -451,28 +451,28 @@ function App() {
           <Route index element={<HseMainPage />} />
 
           {/* Nested HSE section routes */}
-          <Route path="permit-to-work" element={<PermitToWork />} />
-          <Route path="incident-investigation" element={<IncidentInvestigation />} />
-          <Route path="incident-report" element={<IncidentReport />} />
-          <Route path="safety-violation" element={<SafetyViolation />} />
-          <Route path="boom-lift-inspection" element={<BoomLiftInspection />} />
-          <Route path="crane-hydra-inspection" element={<CraneHydraInspection />} />
-          <Route path="trailer-inspection" element={<TrailerInspection />} />
-          <Route path="mock-drill-report" element={<MockDrillReport />} />
-          <Route path="safety-training" element={<SafetyTraining />} />
-          <Route path="internal-audit-report" element={<InternalAuditReport />} />
-          <Route path="induction-training" element={<InductionTraining />} />
-          <Route path="physical-fitness-certificate" element={<PhysicalFitnessCertificate />} />
-          <Route path="safety-meeting-minutes" element={<SafetyMeetingMinutes />} />
-          <Route path="toolbox-talk" element={<ToolboxTalk />} />
-          <Route path="first-aid-record" element={<FirstAidRecord />} />
-          <Route path="ladder-checklist" element={<LadderChecklist />} />
-          <Route path="excavation-checklist" element={<ExcavationChecklist />} />
-          <Route path="suggestion-scheme" element={<SuggestionScheme />} />
-          <Route path="monthly-fire-extinguisher-inspection" element={<MonthlyFireExtinguisher />} />
-          <Route path="loto-register" element={<LotoRegister />} />
-          <Route path="full-body-harness-checklist" element={<FullBodyHarnessChecklist />} />
-          <Route path="risk-assessment" element={<RiskAssessment />} />
+          <Route path="permit-to-work/:locationId?" element={<PermitToWork />} />
+  <Route path="incident-investigation/:locationId?" element={<IncidentInvestigation />} />
+  <Route path="incident-report/:locationId?" element={<IncidentReport />} />
+  <Route path="safety-violation/:locationId?" element={<SafetyViolation />} />
+  <Route path="boom-lift-inspection/:locationId?" element={<BoomLiftInspection />} />
+  <Route path="crane-hydra-inspection/:locationId?" element={<CraneHydraInspection />} />
+  <Route path="trailer-inspection/:locationId?" element={<TrailerInspection />} />
+  <Route path="mock-drill-report/:locationId?" element={<MockDrillReport />} />
+  <Route path="safety-training/:locationId?" element={<SafetyTraining />} />
+  <Route path="internal-audit-report/:locationId?" element={<InternalAuditReport />} />
+  <Route path="induction-training/:locationId?" element={<InductionTraining />} />
+  <Route path="physical-fitness-certificate/:locationId?" element={<PhysicalFitnessCertificate />} />
+  <Route path="safety-meeting-minutes/:locationId?" element={<SafetyMeetingMinutes />} />
+  <Route path="toolbox-talk/:locationId?" element={<ToolboxTalk />} />
+  <Route path="first-aid-record/:locationId?" element={<FirstAidRecord />} />
+  <Route path="ladder-checklist/:locationId?" element={<LadderChecklist />} />
+  <Route path="excavation-checklist/:locationId?" element={<ExcavationChecklist />} />
+  <Route path="suggestion-scheme/:locationId?" element={<SuggestionScheme />} />
+  <Route path="monthly-fire-extinguisher-inspection/:locationId?" element={<MonthlyFireExtinguisher />} />
+  <Route path="loto-register/:locationId?" element={<LotoRegister />} />
+  <Route path="full-body-harness-checklist/:locationId?" element={<FullBodyHarnessChecklist />} />
+  <Route path="risk-assessment/:locationId?" element={<RiskAssessment />} />
           {/* Add more HSE sections as needed */}
         </Route>
         <Route path="*" element={<Navigate to="/" />} />

@@ -16,6 +16,10 @@ import {
   TextField
 } from '@mui/material';
 import CreateAuditForm from '../../../components/pages/hse/internal-audit/CreateAuditForm';
+import CorrectionForm from '../../../components/pages/hse/internal-audit/CorrectionForm';
+import VerificationForm from '../../../components/pages/hse/internal-audit/VerificationForm';
+import ClosureReportForm from '../../../components/pages/hse/internal-audit/ClosureReportForm';
+import { useParams } from 'react-router-dom';
 
 // Reusable Image Viewer Component
 const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
@@ -62,9 +66,16 @@ function InternalAuditReport() {
   const [selectedAudit, setSelectedAudit] = useState(null);
   const [openDetailsModal, setOpenDetailsModal] = useState(false);
   const [modalView, setModalView] = useState('observations'); // 'observations', 'correction', 'verification'
-  const [createAudit,setCreateAudit]=useState(false);
+  const [createAudit, setCreateAudit] = useState(false);
+  
+  // New state for the additional forms
+  const [addCorrectionForm, setAddCorrectionForm] = useState(false);
+  const [addVerificationForm, setAddVerificationForm] = useState(false);
+  const [addClosureForm, setAddClosureForm] = useState(false);
+  
   const dummyAudit = [
     {
+      "id": 1,
       "site": "Manufacturing Plant A",
       "date": "2025-04-02",
       "observations": {
@@ -103,6 +114,7 @@ function InternalAuditReport() {
       }
     },
     {
+      "id": 2,
       "site": "Manufacturing Plant B",
       "date": "2025-04-02",
       "observations": {
@@ -142,6 +154,9 @@ function InternalAuditReport() {
     }
   ];
 
+  const { locationId } = useParams();
+  console.log(locationId)
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -165,6 +180,22 @@ function InternalAuditReport() {
     setSelectedAudit(audit);
     setModalView(view);
     setOpenDetailsModal(true);
+  };
+
+  // New handlers for opening the different forms
+  const openCorrectionHandler = (audit) => {
+    setSelectedAudit(audit);
+    setAddCorrectionForm(true);
+  };
+
+  const openVerificationHandler = (audit) => {
+    setSelectedAudit(audit);
+    setAddVerificationForm(true);
+  };
+
+  const openClosureHandler = (audit) => {
+    setSelectedAudit(audit);
+    setAddClosureForm(true);
   };
 
   const renderModalContent = () => {
@@ -255,7 +286,7 @@ function InternalAuditReport() {
           variant="outlined"
         />
         <Button
-        onClick={()=>setCreateAudit(true)}
+          onClick={() => setCreateAudit(true)}
           variant="contained"
           style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none', minHeight: 'auto' }}
         >
@@ -270,7 +301,8 @@ function InternalAuditReport() {
               <TableCell align="center">Date</TableCell>
               <TableCell align="center">Agreed Completion Date</TableCell>
               <TableCell align="center">Status</TableCell>
-              <TableCell align="center">Actions</TableCell>
+              <TableCell align="center">View Details</TableCell>
+              <TableCell align="center">Add Information</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -309,6 +341,34 @@ function InternalAuditReport() {
                     </Button>
                   </div>
                 </TableCell>
+                <TableCell align="center">
+                  <div className="flex justify-center gap-2">
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      color="primary"
+                      onClick={() => openCorrectionHandler(audit)}
+                    >
+                      Add Correction
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      color="secondary"
+                      onClick={() => openVerificationHandler(audit)}
+                    >
+                      Add Verification
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      color="success"
+                      onClick={() => openClosureHandler(audit)}
+                    >
+                      Add Closure
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -335,10 +395,32 @@ function InternalAuditReport() {
       >
         {renderModalContent()}
       </Dialog>
+
+      {/* All the form components */}
       <CreateAuditForm
-      open={createAudit}
-      setOpen={setCreateAudit}
+        open={createAudit}
+        setOpen={setCreateAudit}
       />
+      
+      {/* Add the new forms */}
+      {selectedAudit && (
+        <>
+          <CorrectionForm
+            open={addCorrectionForm}
+            setOpen={setAddCorrectionForm}
+          />
+          
+          <VerificationForm
+            open={addVerificationForm}
+            setOpen={setAddVerificationForm}
+          />
+          
+          <ClosureReportForm
+            open={addClosureForm}
+            setOpen={setAddClosureForm}
+          />
+        </>
+      )}
     </div>
   );
 }
