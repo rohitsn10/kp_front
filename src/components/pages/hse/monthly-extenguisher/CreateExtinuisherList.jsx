@@ -17,21 +17,25 @@ import {
   FormControl,
   InputLabel,
   Paper,
+  CircularProgress,
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
+import { useCreateFireExtinguisherInspectionMutation } from "../../../../api/hse/extinguisher/extinguisherApi";
 
 export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
+  const [createFireExtinguisherInspection, { isLoading }] = 
+    useCreateFireExtinguisherInspectionMutation();
+
   const [site, setSite] = useState("");
   const [dateOfInspection, setDateOfInspection] = useState("");
   const [extinguishers, setExtinguishers] = useState([
     {
-      extinguisher_number: "",
       extinguisher_no: "",
       extinguisher_type: "",
-      weight_kg: "",
+      weight: "", // Changed from weight_kg to match API
       location: "",
-      seal_intact: "",
+      seal_intact: "", // Will convert to boolean before submission
       pressure_in_gauge: "",
       tube_nozzle: "",
       painting_condition: "",
@@ -42,10 +46,9 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
       remarks: "",
     },
     {
-      extinguisher_number: "",
       extinguisher_no: "",
       extinguisher_type: "",
-      weight_kg: "",
+      weight: "",
       location: "",
       seal_intact: "",
       pressure_in_gauge: "",
@@ -58,7 +61,8 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
       remarks: "",
     },
   ]);
-  const [checkedBy, setCheckedBy] = useState({ name: "", signature: null });
+  const [checkedBy, setCheckedBy] = useState({ name: "" });
+  const [signatureFile, setSignatureFile] = useState(null); // Store the actual file
 
   const validateForm = () => {
     if (!site.trim()) return toast.error("Site is required!");
@@ -66,17 +70,15 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
 
     for (let i = 0; i < extinguishers.length; i++) {
       const ext = extinguishers[i];
-      if (!ext.extinguisher_number.trim())
-        return toast.error(`Extinguisher ${i + 1}: Extinguisher Number is required!`);
       if (!ext.extinguisher_no.trim())
         return toast.error(`Extinguisher ${i + 1}: Extinguisher No. is required!`);
       if (!ext.extinguisher_type.trim())
         return toast.error(`Extinguisher ${i + 1}: Extinguisher Type is required!`);
-      if (!ext.weight_kg.trim())
-        return toast.error(`Extinguisher ${i + 1}: Weight (kg) is required!`);
+      if (!ext.weight.toString().trim())
+        return toast.error(`Extinguisher ${i + 1}: Weight is required!`);
       if (!ext.location.trim())
         return toast.error(`Extinguisher ${i + 1}: Location is required!`);
-      if (!ext.seal_intact.trim())
+      if (!ext.seal_intact.toString().trim())
         return toast.error(`Extinguisher ${i + 1}: Seal Intact is required!`);
       if (!ext.pressure_in_gauge.trim())
         return toast.error(`Extinguisher ${i + 1}: Pressure in Gauge is required!`);
@@ -97,7 +99,7 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
     }
 
     if (!checkedBy.name.trim()) return toast.error("Checked By Name is required!");
-    if (!checkedBy.signature) return toast.error("Checked By Signature is required!");
+    if (!signatureFile) return toast.error("Checked By Signature is required!");
 
     return true;
   };
@@ -126,10 +128,9 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
     setExtinguishers([
       ...extinguishers,
       {
-        extinguisher_number: "",
         extinguisher_no: "",
         extinguisher_type: "",
-        weight_kg: "",
+        weight: "",
         location: "",
         seal_intact: "",
         pressure_in_gauge: "",
@@ -153,6 +154,9 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
   const handleCheckedBySignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setSignatureFile(file);
+      
+      // Preview the image
       const reader = new FileReader();
       reader.onload = () => {
         setCheckedBy({ ...checkedBy, signature: reader.result });
@@ -160,20 +164,56 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
       reader.readAsDataURL(file);
     }
   };
+  
 
-  const handleSubmit = () => {
+
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const formData = {
-      site: site,
-      date_of_inspection: dateOfInspection,
-      extinguishers: extinguishers,
-      checked_by: checkedBy,
-    };
+    // Process extinguishers to match API format
+    const processedExtinguishers = extinguishers.map(ext => ({
+      extinguisher_no: ext.extinguisher_no,
+      extinguisher_type: ext.extinguisher_type,
+      weight: ext.weight,
+      location: ext.location,
+      seal_intact: ext.seal_intact === "Yes" || ext.seal_intact === true,
+      pressure_in_gauge: ext.pressure_in_gauge,
+      tube_nozzle: ext.tube_nozzle,
+      painting_condition: ext.painting_condition,
+      refilling_date: ext.refilling_date,
+      due_date_refilling: ext.due_date_refilling,
+      due_date_hydro_test: ext.due_date_hydro_test,
+      access: ext.access,
+      remarks: ext.remarks
+    }));
+    
+    // Create FormData object
+    const formData = new FormData();
+    
+    // Add basic fields
+    formData.append('site_name', site);
+    formData.append('date_of_inspection', dateOfInspection);
+    formData.append('checked_by_name', checkedBy.name);
+    
+    // Add signature file
+    if (signatureFile) {
+      formData.append('signature', signatureFile);
+    }
+    
+    // Add extinguishers as a JSON string
+    formData.append('extinguishers', JSON.stringify(processedExtinguishers));
 
-    console.log(formData);
-    toast.success("Fire extinguisher inspection data submitted successfully!");
-    setOpen(false);
+    try {
+      // Call the API with FormData
+      await createFireExtinguisherInspection(formData).unwrap();
+      toast.success("Fire extinguisher inspection data submitted successfully!");
+      
+      // Reset form and close dialog
+      setOpen(false);
+    } catch (error) {
+      console.error('Failed to submit:', error);
+      toast.error(error.data?.message || "Failed to submit inspection data. Please try again.");
+    }
   };
 
   return (
@@ -266,22 +306,6 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
                 Extinguisher {index + 1}
               </Typography>
               <Grid container spacing={2}>
-                {/* <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    label="Extinguisher Number"
-                    variant="outlined"
-                    value={extinguisher.extinguisher_number}
-                    sx={commonInputStyles}
-                    onChange={(e) =>
-                      handleExtinguisherChange(
-                        index,
-                        "extinguisher_number",
-                        e.target.value
-                      )
-                    }
-                  />
-                </Grid> */}
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
@@ -300,10 +324,10 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <FormControl fullWidth variant="outlined">
-                    <InputLabel id="extinguisher-type-label">Extinguisher Type</InputLabel>
+                    <InputLabel id={`extinguisher-type-label-${index}`}>Extinguisher Type</InputLabel>
                     <Select
-                      labelId="extinguisher-type-label"
-                      id="extinguisher-type"
+                      labelId={`extinguisher-type-label-${index}`}
+                      id={`extinguisher-type-${index}`}
                       value={extinguisher.extinguisher_type}
                       label="Extinguisher Type"
                       sx={commonInputStyles}
@@ -319,7 +343,6 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
                       <MenuItem value="Dry Powder">Dry Powder</MenuItem>
                       <MenuItem value="Foam">Foam</MenuItem>
                       <MenuItem value="Water">Water</MenuItem>
-                      {/* Add more types as needed */}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -328,12 +351,14 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
                     fullWidth
                     label="Weight (kg)"
                     variant="outlined"
-                    value={extinguisher.weight_kg}
+                    type="number"
+                    step="0.1"
+                    value={extinguisher.weight}
                     sx={commonInputStyles}
                     onChange={(e) =>
                       handleExtinguisherChange(
                         index,
-                        "weight_kg",
+                        "weight",
                         e.target.value
                       )
                     }
@@ -356,68 +381,95 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    label="Seal Intact"
-                    variant="outlined"
-                    value={extinguisher.seal_intact}
-                    sx={commonInputStyles}
-                    onChange={(e) =>
-                      handleExtinguisherChange(
-                        index,
-                        "seal_intact",
-                        e.target.value
-                      )
-                    }
-                  />
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id={`seal-intact-label-${index}`}>Seal Intact</InputLabel>
+                    <Select
+                      labelId={`seal-intact-label-${index}`}
+                      id={`seal-intact-${index}`}
+                      value={extinguisher.seal_intact}
+                      label="Seal Intact"
+                      sx={commonInputStyles}
+                      onChange={(e) =>
+                        handleExtinguisherChange(
+                          index,
+                          "seal_intact",
+                          e.target.value
+                        )
+                      }
+                    >
+                      <MenuItem value="Yes">Yes</MenuItem>
+                      <MenuItem value="No">No</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    label="Pressure in Gauge"
-                    variant="outlined"
-                    value={extinguisher.pressure_in_gauge}
-                    sx={commonInputStyles}
-                    onChange={(e) =>
-                      handleExtinguisherChange(
-                        index,
-                        "pressure_in_gauge",
-                        e.target.value
-                      )
-                    }
-                  />
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id={`pressure-gauge-label-${index}`}>Pressure in Gauge</InputLabel>
+                    <Select
+                      labelId={`pressure-gauge-label-${index}`}
+                      id={`pressure-gauge-${index}`}
+                      value={extinguisher.pressure_in_gauge}
+                      label="Pressure in Gauge"
+                      sx={commonInputStyles}
+                      onChange={(e) =>
+                        handleExtinguisherChange(
+                          index,
+                          "pressure_in_gauge",
+                          e.target.value
+                        )
+                      }
+                    >
+                      <MenuItem value="Normal">Normal</MenuItem>
+                      <MenuItem value="High">High</MenuItem>
+                      <MenuItem value="Low">Low</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    label="Tube/Nozzle"
-                    variant="outlined"
-                    value={extinguisher.tube_nozzle}
-                    sx={commonInputStyles}
-                    onChange={(e) =>
-                      handleExtinguisherChange(
-                        index,
-                        "tube_nozzle",
-                        e.target.value
-                      )
-                    }
-                  />
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id={`tube-nozzle-label-${index}`}>Tube/Nozzle</InputLabel>
+                    <Select
+                      labelId={`tube-nozzle-label-${index}`}
+                      id={`tube-nozzle-${index}`}
+                      value={extinguisher.tube_nozzle}
+                      label="Tube/Nozzle"
+                      sx={commonInputStyles}
+                      onChange={(e) =>
+                        handleExtinguisherChange(
+                          index,
+                          "tube_nozzle",
+                          e.target.value
+                        )
+                      }
+                    >
+                      <MenuItem value="Intact">Intact</MenuItem>
+                      <MenuItem value="Loose">Loose</MenuItem>
+                      <MenuItem value="Damaged">Damaged</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    label="Painting Condition"
-                    variant="outlined"
-                    value={extinguisher.painting_condition}
-                    sx={commonInputStyles}
-                    onChange={(e) =>
-                      handleExtinguisherChange(
-                        index,
-                        "painting_condition",
-                        e.target.value
-                      )
-                    }
-                  />
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id={`painting-condition-label-${index}`}>Painting Condition</InputLabel>
+                    <Select
+                      labelId={`painting-condition-label-${index}`}
+                      id={`painting-condition-${index}`}
+                      value={extinguisher.painting_condition}
+                      label="Painting Condition"
+                      sx={commonInputStyles}
+                      onChange={(e) =>
+                        handleExtinguisherChange(
+                          index,
+                          "painting_condition",
+                          e.target.value
+                        )
+                      }
+                    >
+                      <MenuItem value="Good">Good</MenuItem>
+                      <MenuItem value="Fair">Fair</MenuItem>
+                      <MenuItem value="Poor">Poor</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <TextField
@@ -474,20 +526,27 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    label="Access"
-                    variant="outlined"
-                    value={extinguisher.access}
-                    sx={commonInputStyles}
-                    onChange={(e) =>
-                      handleExtinguisherChange(
-                        index,
-                        "access",
-                        e.target.value
-                      )
-                    }
-                  />
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id={`access-label-${index}`}>Access</InputLabel>
+                    <Select
+                      labelId={`access-label-${index}`}
+                      id={`access-${index}`}
+                      value={extinguisher.access}
+                      label="Access"
+                      sx={commonInputStyles}
+                      onChange={(e) =>
+                        handleExtinguisherChange(
+                          index,
+                          "access",
+                          e.target.value
+                        )
+                      }
+                    >
+                      <MenuItem value="Easily Accessible">Easily Accessible</MenuItem>
+                      <MenuItem value="Partially Blocked">Partially Blocked</MenuItem>
+                      <MenuItem value="Blocked">Blocked</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <TextField
@@ -581,6 +640,7 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
         <Button
           onClick={handleSubmit}
           color="primary"
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -595,8 +655,9 @@ export default function FireExtinguisherInspectionDialog({ open, setOpen }) {
             },
           }}
           variant="contained"
+          startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
         >
-          Submit
+          {isLoading ? "Submitting..." : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

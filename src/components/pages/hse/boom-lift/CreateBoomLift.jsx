@@ -414,24 +414,24 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
           <h3 className="text-xl font-bold text-[#29346B] mb-4">Inspection Details</h3>
           
           {/* Inspection Fields */}
-          {renderInspectionField('all_valid_document', 'All Valid Documents')}
-          {renderInspectionField('operator_fitness_certificate', 'Operator Fitness Certificate')}
+          {renderInspectionField('all_valid_document', 'All valid documents (Registration, Insurance, License, Operator authority letter, Form 10)')}
+          {renderInspectionField('operator_fitness_certificate', 'Operator fitness certificate including eye test')}
           {renderInspectionField('main_horn_reverse_horn', 'Main Horn & Reverse Horn')}
-          {renderInspectionField('emergency_lowering', 'Emergency Lowering')}
+          {renderInspectionField('emergency_lowering', 'Emergency lowering function properly')}
           {renderInspectionField('tyre_pressure_condition', 'Tyre Pressure & Condition')}
-          {renderInspectionField('any_leakage', 'Any Leakage')}
-          {renderInspectionField('smooth_function', 'Smooth Function')}
+          {renderInspectionField('any_leakage', 'Hydraulic cylinder & any leakage.')}
+          {renderInspectionField('smooth_function', 'Smooth function of hydraulic boom')}
           {renderInspectionField('brake_stop_hold', 'Brake Stop & Hold')}
-          {renderInspectionField('condition_of_all', 'Condition of All')}
-          {renderInspectionField('guard_rails_without_damage', 'Guard Rails Without Damage')}
+          {renderInspectionField('condition_of_all', 'Condition of all lever button.')}
+          {renderInspectionField('guard_rails_without_damage', 'Guard rails are in good condition without any damage on platform')}
           {renderInspectionField('toe_guard', 'Toe Guard')}
           {renderInspectionField('platform_condition', 'Platform Condition')}
-          {renderInspectionField('door_lock_platform', 'Door Lock Platform')}
-          {renderInspectionField('swl', 'SWL (Safe Working Load)')}
-          {renderInspectionField('over_load_indicator_cut_off_devices', 'Overload Indicator & Cut-off Devices')}
+          {renderInspectionField('door_lock_platform', 'Door Lock Arrangement for Platform')}
+          {renderInspectionField('swl', 'SWL mentioned on boom lift')}
+          {renderInspectionField('over_load_indicator_cut_off_devices', 'Over load indicator & cut off devices working properly.')}
           {renderInspectionField('battery_condition', 'Battery Condition')}
-          {renderInspectionField('operator_list', 'Operator List')}
-          {renderInspectionField('ppe', 'PPE')}
+          {renderInspectionField('operator_list', 'Display Authorized operator list')}
+          {renderInspectionField('ppe', 'PPE (Safety shoes & helmet)')}
         </div>
         
         {/* Added new fields section */}

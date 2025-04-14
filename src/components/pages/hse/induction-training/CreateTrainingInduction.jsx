@@ -25,26 +25,15 @@ import {
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon, CloudUpload as CloudUploadIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
-
-// No longer needed since we have individual state variables for each topic
-// const PREDEFINED_TOPICS = [
-//   "Site/Plant familiarization",
-//   "Company Policy and Objectives",
-//   "Standard operating procedures /Checklists",
-//   "Use of fire-fighting equipment",
-//   "Displayed Emergency Contact Details",
-//   "Assemble Point",
-//   "Mandatory PPEs",
-//   "Restricted Area",
-//   "Location of Drinking Water & Wash Room",
-//   "No Alcohol Consumption inside Plant/Site",
-//   "Smoking Zone",
-//   "Speed Limit",
-//   "Display ID Card",
-//   "Other"
-// ];
+import { useCreateInductionTrainingMutation, useGetAllInductionTrainingsQuery } from "../../../../api/hse/induction/inductionApi";
+// Import the mutation hook from our RTK API file
+// import { useCreateInductionTrainingMutation } from "../services/inductionTrainingApi";
 
 export default function TrainingInductionDialog({ open, setOpen }) {
+  // Initialize the RTK mutation hook
+  const [createInductionTraining, { isLoading }] = useCreateInductionTrainingMutation();
+  const { refetch} = useGetAllInductionTrainingsQuery();
+
   const [site, setSite] = useState("");
   const [date, setDate] = useState("");
   const [facultyName, setFacultyName] = useState("");
@@ -71,11 +60,31 @@ export default function TrainingInductionDialog({ open, setOpen }) {
   const [remarks, setRemarks] = useState("");
 
   const validateForm = () => {
-    if (!site.trim()) return toast.error("Site is required!");
-    if (!date.trim()) return toast.error("Date is required!");
-    if (!facultyName.trim()) return toast.error("Faculty Name is required!");
-    if (!topic.trim()) return toast.error("Training Topic is required!");
-    if (!facultySignature) return toast.error("Faculty Signature is required!");
+    // Validation checks - return false after showing error to prevent submission
+    if (!site.trim()) {
+      toast.error("Site is required!");
+      return false;
+    }
+    
+    if (!date.trim()) {
+      toast.error("Date is required!");
+      return false;
+    }
+    
+    if (!facultyName.trim()) {
+      toast.error("Faculty Name is required!");
+      return false;
+    }
+    
+    if (!topic.trim()) {
+      toast.error("Training Topic is required!");
+      return false;
+    }
+    
+    if (!facultySignature) {
+      toast.error("Faculty Signature is required!");
+      return false;
+    }
     
     // Check if at least one topic has a value
     const hasAtLeastOneTopic = 
@@ -94,10 +103,17 @@ export default function TrainingInductionDialog({ open, setOpen }) {
       topic13.trim() !== "" || 
       topic14.trim() !== "";
       
-    if (!hasAtLeastOneTopic) return toast.error("At least one topic must be filled!");
+    if (!hasAtLeastOneTopic) {
+      toast.error("At least one topic must be filled!");
+      return false;
+    }
     
-    if (!participantsFile) return toast.error("Participants Excel sheet is required!");
+    if (!participantsFile) {
+      toast.error("Participants file is required!");
+      return false;
+    }
 
+    // All validations passed
     return true;
   };
 
@@ -126,23 +142,20 @@ export default function TrainingInductionDialog({ open, setOpen }) {
   const handleFacultySignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setFacultySignature(reader.result);
-      };
-      reader.readAsDataURL(file);
+      // Instead of converting to base64, just store the file directly for FormData
+      setFacultySignature(file);
     }
   };
 
   const handleParticipantsFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Check if file is Excel
-      const validExtensions = ['.xlsx', '.xls', '.csv'];
+      // Check if file is Excel or Word (based on your API which accepts docx)
+      const validExtensions = ['.xlsx', '.xls', '.csv', '.doc', '.docx'];
       const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
       
       if (!validExtensions.includes(fileExtension)) {
-        toast.error("Please upload a valid Excel or CSV file!");
+        toast.error("Please upload a valid Excel, Word or CSV file!");
         return;
       }
       
@@ -150,32 +163,24 @@ export default function TrainingInductionDialog({ open, setOpen }) {
     }
   };
 
-  // We no longer need this since we have individual handlers
-  // const handleTopicChange = (topicName, value) => {
-  //   setTopicValues(prev => ({
-  //     ...prev,
-  //     [topicName]: value
-  //   }));
-  // };
-
-  const handleSubmit = () => {
-    if (!validateForm()) return;
+  const handleSubmit = async () => {
+    // Validate the form before submission
+    if (!validateForm()) {
+      return; // Stop execution if validation fails
+    }
 
     // Create FormData object
     const formData = new FormData();
     
-    // Append basic fields
-    formData.append("site", site);
+    // Append basic fields (matching the API endpoint field names)
+    formData.append("site_name", site);
     formData.append("date", date);
     formData.append("faculty_name", facultyName);
-    formData.append("topic", topic);
-    formData.append("remarks", remarks);
+    formData.append("training_topics", topic);
     
     // Append faculty signature
     if (facultySignature) {
-      // Convert base64 to blob and append
-      const facultySignatureBlob = dataURItoBlob(facultySignature);
-      formData.append("faculty_signature", facultySignatureBlob);
+      formData.append("faculty_signature", facultySignature);
     }
     
     // Append each topic individually
@@ -194,34 +199,38 @@ export default function TrainingInductionDialog({ open, setOpen }) {
     if (topic13.trim() !== "") formData.append("topic_13", topic13);
     if (topic14.trim() !== "") formData.append("topic_14", topic14);
     
-    // Append participants Excel file
+    // Append participants file
     if (participantsFile) {
       formData.append("participants_file", participantsFile);
     }
-
-    // Log FormData contents for debugging (will only show keys, not values)
-    for (let pair of formData.entries()) {
-      console.log(pair[0] + ': ' + pair[1]);
-    }
-
-    // This would be where you send the formData to your API
-    console.log("FormData ready to be submitted");
-    toast.success("Training attendance data submitted successfully!");
-    setOpen(false);
-  };
-
-  // Helper function to convert base64 to Blob
-  const dataURItoBlob = (dataURI) => {
-    const byteString = atob(dataURI.split(',')[1]);
-    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
     
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
+    // Add remarks if needed (not in the original CURL request but might be useful)
+    if (remarks.trim() !== "") formData.append("remarks", remarks);
+
+    try {
+      // Call the RTK mutation to send the data to the API
+      const response = await createInductionTraining(formData).unwrap();
+      
+      // Check if the response status is successful
+      if (response && response.status === true) {
+        // Success handling
+        console.log("API Response:", response);
+        toast.success(response.message || "Induction training data submitted successfully!");
+        refetch();
+        // Close the dialog and reset form if needed
+        setOpen(false);
+        
+        // You might want to trigger a refetch of data if displaying a list
+        // refreshData();
+      } else {
+        // Handle case where API returns a failure status
+        toast.error(response?.message || "Failed to submit training data. Please try again.");
+      }
+    } catch (error) {
+      // Error handling for network/server errors
+      console.error("API Error:", error);
+      toast.error(error.data?.message || "Failed to submit training data. Please try again.");
     }
-    
-    return new Blob([ab], { type: mimeString });
   };
 
   return (
@@ -323,12 +332,19 @@ export default function TrainingInductionDialog({ open, setOpen }) {
                 />
               </Button>
               {facultySignature && (
-                <Avatar
-                  src={facultySignature}
-                  alt="Faculty Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="body2">
+                    {facultySignature.name} ({Math.round(facultySignature.size / 1024)} KB)
+                  </Typography>
+                  <IconButton 
+                    size="small" 
+                    color="error" 
+                    onClick={() => setFacultySignature(null)}
+                    sx={{ ml: 1 }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
               )}
             </Box>
           </Grid>
@@ -527,10 +543,10 @@ export default function TrainingInductionDialog({ open, setOpen }) {
             >
               <CloudUploadIcon sx={{ fontSize: 48, color: "#29346B", mb: 2 }} />
               <Typography variant="h6" gutterBottom>
-                Upload Participants Excel Sheet
+                Upload Participants File
               </Typography>
               <Typography variant="body2" color="textSecondary" align="center" sx={{ mb: 2 }}>
-                Upload an Excel file (.xlsx, .xls) or CSV file with participants information
+                Upload an Excel file (.xlsx, .xls), Word file (.docx, .doc) or CSV file with participants information
               </Typography>
               <Button
                 variant="contained"
@@ -545,7 +561,7 @@ export default function TrainingInductionDialog({ open, setOpen }) {
                 Select File
                 <input
                   type="file"
-                  accept=".xlsx,.xls,.csv"
+                  accept=".xlsx,.xls,.csv,.doc,.docx"
                   hidden
                   onChange={handleParticipantsFileUpload}
                 />
@@ -593,6 +609,7 @@ export default function TrainingInductionDialog({ open, setOpen }) {
         </Button>
         <Button
           onClick={handleSubmit}
+          disabled={isLoading}
           color="primary"
           sx={{
             backgroundColor: "#f6812d",
@@ -609,7 +626,7 @@ export default function TrainingInductionDialog({ open, setOpen }) {
           }}
           variant="contained"
         >
-          Submit
+          {isLoading ? "Submitting..." : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

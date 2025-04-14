@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -13,56 +13,44 @@ import {
   DialogContent, 
   Typography,
   TablePagination,
-  TextField
+  TextField,
+  Box,
+  CircularProgress
 } from '@mui/material';
+import { 
+  Download as DownloadIcon 
+} from '@mui/icons-material';
 import ImageViewer from '../../../utils/signatureViewer';
 import TrainingInductionDialog from '../../../components/pages/hse/induction-training/CreateTrainingInduction';
-import AttendanceFormDialog from '../../../components/pages/hse/induction-training/CreateAttendance';
-
+import { useGetAllInductionTrainingsQuery } from '../../../api/hse/induction/inductionApi';
+// import { useGetAllInductionTrainingsQuery } from '../../../services/annexuresApi'; // Update with your actual API path
 function InductionTraining() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTraining, setSelectedTraining] = useState(null);
   const [openTopicsModal, setOpenTopicsModal] = useState(false);
-  const [openParticipantsModal, setOpenParticipantsModal] = useState(false);
   const [openCreateDialog, setCreateDialog] = useState(false);
-  const [openAttendanceDialog, setOpenAttendanceDialog] = useState(false);
+  
+  // Replace the dummy data with the actual API call
+  const { data: inductionTrainingsResponse, isLoading, error } = useGetAllInductionTrainingsQuery();
+  const inductionTrainings = inductionTrainingsResponse?.data || [];
 
-  const dummyInduction = [
-    {
-      "site": "Training Facility A",
-      "date": "2025-03-27",
-      "faculty_name": "Dr. Jane Smith",
-      "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature",
-      "topic": "Workplace Safety and Hazard Prevention",
-      "topics_discussed": [
-        "Site/Plant familiarization",
-        "Company Policy and Objectives",
-        "Standard operating procedures / Checklists",
-        "Use of fire-fighting equipment",
-        "Displayed Emergency Contact Details"
-      ],
-      "participants": [
-        {
-          "name": "John Doe",
-          "designation": "Safety Officer",
-          "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-        },
-        {
-          "name": "David Martinez",
-          "designation": "Operations Manager",
-          "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-        },
-        {
-          "name": "Sophia Wilson",
-          "designation": "HR Coordinator",
-          "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-        }
-        // ... other participants
-      ],
-      "remarks": "Training session was well received. Participants engaged actively and provided positive feedback."
-    }
+  const topicLabels = [
+    "1. Site/Plant familiarization.",
+    "2. Company Policy and Objectives.",
+    "3. Standard operating procedures /Checklists.",
+    "4. Use of fire-fighting equipment.",
+    "5. Displayed Emergency Contact Details.",
+    "6. Assemble Point.",
+    "7. Mandatory PPEs.",
+    "8. Restricted Area.",
+    "9. Location of Drinking Water & Wash Room.",
+    "10. No Alcohol Consumption inside Plant/Site.",
+    "11. Smoking Zone.",
+    "12. Speed Limit.",
+    "13. Display ID Card.",
+    "14. Other"
   ];
 
   const handleChangePage = (event, newPage) => {
@@ -75,9 +63,9 @@ function InductionTraining() {
   };
 
   // Filtering logic
-  const filteredTrainings = dummyInduction.filter((training) =>
-    training.site.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    training.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredTrainings = inductionTrainings.filter((training) =>
+    training.site_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    training.training_topics.toLowerCase().includes(searchTerm.toLowerCase()) ||
     training.faculty_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -91,41 +79,65 @@ function InductionTraining() {
     setOpenTopicsModal(true);
   };
 
-  const openParticipantsModalHandler = (training) => {
-    setSelectedTraining(training);
-    setOpenParticipantsModal(true);
-  };
-  
-  const openAttendanceHandler = (training) => {
-    setSelectedTraining(training);
-    setOpenAttendanceDialog(true);
+  // Function to handle file download
+  const handleDownloadFile = (filePath) => {
+    // Create a link with the file path
+    const link = document.createElement('a');
+    link.href = filePath;
+    link.target = '_blank';
+    link.download = filePath.split('/').pop(); // Extract filename
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  // Placeholder for the attendance submission handler
-  const handleAttendanceSubmit = (data) => {
-    console.log("Attendance data submitted for training:", selectedTraining);
-    console.log("Attendance data:", data);
-    // Submission logic will be implemented later as requested
+  // Prepare topics array for display
+  const getTopicsArray = (training) => {
+    if (!training) return [];
+    
+    const topics = [];
+    for (let i = 1; i <= 14; i++) {
+      const topicKey = `topic_${i}`;
+      if (training[topicKey] && training[topicKey].trim() !== '') {
+        topics.push(training[topicKey]);
+      }
+    }
+    return topics;
   };
+
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
+        <Typography color="error">Error loading data. Please try again later.</Typography>
+      </Box>
+    );
+  }
 
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
       <h2 className="text-3xl text-[#29346B] font-semibold text-center mb-6">Induction Training Records</h2>
-      <div className="flex flex-row  flex-wrap gap-4 justify-between p-6 md:p-4 mb-5">
-
-      <TextField
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Search by Site, Topic, or Faculty"
-        variant="outlined"
-      />
-              <Button
-              onClick={()=>setCreateDialog(true)}
-                variant="contained"
-                style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none', minHeight: 'auto' }}
-              >
-                Add Induction Training
-              </Button>
+      <div className="flex flex-row flex-wrap gap-4 justify-between p-6 md:p-4 mb-5">
+        <TextField
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search by Site, Topic, or Faculty"
+          variant="outlined"
+        />
+        <Button
+          onClick={() => setCreateDialog(true)}
+          variant="contained"
+          style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none', minHeight: 'auto' }}
+        >
+          Add Induction Training
+        </Button>
       </div>
 
       <TableContainer component={Paper} style={{ borderRadius: '8px' }}>
@@ -142,14 +154,15 @@ function InductionTraining() {
           </TableHead>
           <TableBody>
             {currentRows.map((training) => (
-              <TableRow key={training.site}>
-                <TableCell align="center">{training.site}</TableCell>
-                <TableCell align="center">{training.topic}</TableCell>
+              <TableRow key={training.id}>
+                <TableCell align="center">{training.site_name}</TableCell>
+                <TableCell align="center">{training.training_topics}</TableCell>
                 <TableCell align="center">{training.date}</TableCell>
                 <TableCell align="center">{training.faculty_name}</TableCell>
                 <TableCell align="center">
                   <ImageViewer 
-                    src={training.signature} 
+                    // src={training.faculty_signature} 
+                    src={`${import.meta.env.VITE_API_KEY}${training.faculty_signature}`}
                     alt={`${training.faculty_name} Signature`} 
                   />
                 </TableCell>
@@ -165,22 +178,10 @@ function InductionTraining() {
                     <Button 
                       variant="contained" 
                       color="secondary"
-                      onClick={() => openParticipantsModalHandler(training)}
+                      onClick={() => handleDownloadFile(training.participants_file)}
+                      startIcon={<DownloadIcon />}
                     >
-                      View Participants
-                    </Button>
-                    <Button 
-                      variant="contained" 
-                      style={{ 
-                        backgroundColor: '#f6812d',
-                        color: 'white',
-                        '&:hover': {
-                          backgroundColor: '#E66A1F',
-                        }
-                      }}
-                      onClick={() => openAttendanceHandler(training)}
-                    >
-                      Record Attendance
+                      Download Participants
                     </Button>
                   </div>
                 </TableCell>
@@ -213,51 +214,42 @@ function InductionTraining() {
           {selectedTraining && (
             <>
               <Typography variant="h6" gutterBottom>
-                Main Topic: {selectedTraining.topic}
+                Main Topic: {selectedTraining.training_topics}
               </Typography>
-              <Typography variant="subtitle1" gutterBottom>
+              <Typography variant="subtitle1" gutterBottom mb={2}>
                 Detailed Topics:
               </Typography>
-              {selectedTraining.topics_discussed.map((topic, index) => (
-                <Typography key={index} variant="body1" gutterBottom>
-                  • {topic}
-                </Typography>
-              ))}
-              {selectedTraining.remarks && (
-                <>
-                  <Typography variant="subtitle1" gutterBottom className="mt-4">
-                    Remarks:
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedTraining.remarks}
-                  </Typography>
-                </>
-              )}
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: '1fr', 
+                gap: 1.5,
+                mb: 2 
+              }}>
+                {topicLabels.map((label, index) => {
+                  const topicKey = `topic_${index + 1}`;
+                  const topicContent = selectedTraining[topicKey] || '';
+                  
+                  return (
+                    <Box 
+                      key={index} 
+                      sx={{ 
+                        display: 'flex', 
+                        borderBottom: '1px solid #e0e0e0',
+                        pb: 1 
+                      }}
+                    >
+                      <Typography variant="body1" component="span" fontWeight="bold" width="50%" pr={2}>
+                        {label}
+                      </Typography>
+                      <Typography variant="body1" component="span" width="50%">
+                        {topicContent}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
             </>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Participants Modal */}
-      <Dialog 
-        open={openParticipantsModal} 
-        onClose={() => setOpenParticipantsModal(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Participants Details</DialogTitle>
-        <DialogContent>
-          {selectedTraining && selectedTraining.participants.map((participant, index) => (
-            <div key={index} className="mb-4 p-3 border rounded">
-              <Typography><strong>Name:</strong> {participant.name}</Typography>
-              <Typography><strong>Designation:</strong> {participant.designation}</Typography>
-              <Typography><strong>Signature:</strong></Typography>
-              <ImageViewer 
-                src={participant.signature} 
-                alt={`${participant.name} Signature`} 
-              />
-            </div>
-          ))}
         </DialogContent>
       </Dialog>
       
@@ -266,20 +258,6 @@ function InductionTraining() {
         open={openCreateDialog}
         setOpen={setCreateDialog}
       />
-      
-      {/* Attendance Form Dialog */}
-      {selectedTraining && (
-        <AttendanceFormDialog
-          open={openAttendanceDialog}
-          setOpen={setOpenAttendanceDialog}
-          onSubmit={handleAttendanceSubmit}
-          initialData={{
-            site: selectedTraining.site,
-            date: new Date().toISOString().split('T')[0], // Today's date
-            time: new Date().toTimeString().slice(0, 5) // Current time
-          }}
-        />
-      )}
     </div>
   );
 }

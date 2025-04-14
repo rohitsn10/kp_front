@@ -29,7 +29,9 @@ import { craneHydraApi } from "../api/hse/crane/craneHydraApi.js";
 import { safetyTrainingApi } from "../api/hse/safetyTraining/safetyTrainingApi.js";
 import { toolTalkAttendanceApi } from "../api/hse/toolbox/toolBoxApi.js";
 import { firstAidRecordApi } from "../api/hse/firstAidRecord/firstAidRecordApi.js";
-
+import { fireExtinguisherInspectionApi } from "../api/hse/extinguisher/extinguisherApi.js";
+import { inductionTrainingApi } from "../api/hse/induction/inductionApi.js";
+ 
 const store = configureStore({
   reducer: {
     [userApi.reducerPath]: userApi.reducer,
@@ -61,7 +63,9 @@ const store = configureStore({
     [mockDrillApi.reducerPath]: mockDrillApi.reducer,
     [safetyTrainingApi.reducerPath]: safetyTrainingApi.reducer,
     [toolTalkAttendanceApi.reducerPath]:toolTalkAttendanceApi.reducer,
-    [firstAidRecordApi.reducerPath]:firstAidRecordApi.reducer
+    [firstAidRecordApi.reducerPath]:firstAidRecordApi.reducer,
+    [fireExtinguisherInspectionApi.reducerPath]:fireExtinguisherInspectionApi.reducer,
+    [inductionTrainingApi.reducerPath]:inductionTrainingApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -95,6 +99,8 @@ const store = configureStore({
       .concat(safetyTrainingApi.middleware)
       .concat(toolTalkAttendanceApi.middleware)
       .concat(firstAidRecordApi.middleware)
+      .concat(fireExtinguisherInspectionApi.middleware)
+      .concat(inductionTrainingApi.middleware)
 });
 
 export default store;

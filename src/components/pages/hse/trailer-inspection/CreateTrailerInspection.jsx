@@ -414,29 +414,32 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
           <h3 className="text-xl font-bold text-[#29346B] mb-4">Inspection Details</h3>
           
           {/* Inspection Fields */}
-          {renderInspectionField('all_valid_document', 'All Valid Documents')}
-          {renderInspectionField('driver_fitness_certificate', 'Driver Fitness Certificate')}
+          {renderInspectionField('all_valid_document', 'All valid documents are available - Registration, Insurance, Vehicle Fitness, PUC &  License')}
+          {renderInspectionField('driver_fitness_certificate', 'Driver fitness certificate including eye  test.')}
           {renderInspectionField('main_horn_reverse_horn', 'Main Horn & Reverse Horn')}
           {renderInspectionField('cutch_brake', 'Clutch & Brake')}
           {renderInspectionField('tyre_pressure_condition', 'Tyre Pressure & Condition')}
           {renderInspectionField('head_light_indicator', 'Head Light & Indicator')}
           {renderInspectionField('seat_belt', 'Seat Belt')}
           {renderInspectionField('wiper_blade', 'Wiper Blade')}
-          {renderInspectionField('side_mirror', 'Side Mirror')}
+          {renderInspectionField('side_mirror', 'Side view Mirror')}
           {renderInspectionField('wind_screen', 'Wind Screen')}
-          {renderInspectionField('door_lock', 'Door Lock')}
+          {renderInspectionField('door_lock', 'Door/Door Lock')}
           {renderInspectionField('battery_condition', 'Battery Condition')}
           {renderInspectionField('hand_brake', 'Hand Brake')}
-          {renderInspectionField('any_leakage', 'Any Leakage')}
-          {renderInspectionField('speedometere', 'Speedometer')}
-          {renderInspectionField('guard_parts', 'Guard Parts')}
-          {renderInspectionField('ppe', 'PPE')}
+          {renderInspectionField('any_leakage', 'Condition of hydraulic cylinder & any  leakage')}
+          {renderInspectionField('speedometere', 'Speedometer & Gauge')}
+          {renderInspectionField('guard_parts', 'Guard for moving Parts')}
+          {renderInspectionField('ppe', 'PPEs  (Safety shoes & helmet)')}
         </div>
         
         {/* Added new fields section */}
         <div className="my-4 border-t border-gray-300 pt-4">
           {/* <h3 className="text-xl font-bold text-[#29346B] mb-4">Summary & Sign-off</h3> */}
-          
+          <p className="mb-4 text-[#29346B] text-lg"> <span className="text-slate-950 font-semibold">Note:</span>  This checklist is applicable for all vehicles like- Truck /JCB / Tractor / Transit Mixer /  
+     Conveyance Vehicles /    Loader / Roller etc.
+
+</p>
           <Grid container spacing={3}>
             {/* Remarks field */}
             <Grid item xs={12}>
