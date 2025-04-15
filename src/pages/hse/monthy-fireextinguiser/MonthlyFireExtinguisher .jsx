@@ -1,5 +1,3 @@
-MonthlyFireExtinguisher 
-
 import React, { useState } from 'react';
 import {
   Table,
@@ -17,10 +15,13 @@ import {
   TablePagination,
   TextField,
   Chip,
-  Box
+  Box,
+  CircularProgress,
+  Alert
 } from '@mui/material';
-// import CreateExtinguisherList from '../../../components/pages/hse/monthly-extenguisher/CreateExtinuisherList';
 import FireExtinguisherInspectionDialog from '../../../components/pages/hse/monthly-extenguisher/CreateExtinuisherList';
+import { useGetAllFireExtinguisherInspectionsQuery } from '../../../api/hse/extinguisher/extinguisherApi';
+// import { useGetAllFireExtinguisherInspectionsQuery } from '../../store/services/api'; // Adjust the import path as needed
 
 // Reusable Image Viewer Component
 const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
@@ -68,95 +69,10 @@ function MonthlyFireExtinguisher() {
   const [openDetailsModal, setOpenDetailsModal] = useState(false);
   const [selectedExtinguisher, setSelectedExtinguisher] = useState(null);
   const [openExtinguisherModal, setOpenExtinguisherModal] = useState(false);
+  const [openCreateList, setOpenCreateList] = useState(false);
 
-  const [openCreateList,setOpenCreateList]=useState(false)
-
-  const dummyInspections = [
-    {
-      "site": "Warehouse B",
-      "date_of_inspection": "2025-04-02",
-      "extinguishers": [
-        {
-          "extinguisher_number": "EXT-001",
-          "extinguisher_no": "12345",
-          "extinguisher_type": "CO2",
-          "weight_kg": 5,
-          "location": "Main Entrance",
-          "seal_intact": "Yes",
-          "pressure_in_gauge": "Normal",
-          "tube_nozzle": "OK",
-          "painting_condition": "Good",
-          "refilling_date": "2024-12-10",
-          "due_date_refilling": "2025-12-10",
-          "due_date_hydro_test": "2027-12-10",
-          "access": "Unobstructed",
-          "remarks": "In good condition"
-        },
-        {
-          "extinguisher_number": "EXT-002",
-          "extinguisher_no": "67890",
-          "extinguisher_type": "Dry Powder",
-          "weight_kg": 9,
-          "location": "Control Room",
-          "seal_intact": "No",
-          "pressure_in_gauge": "Low",
-          "tube_nozzle": "Needs Replacement",
-          "painting_condition": "Scratched",
-          "refilling_date": "2024-08-15",
-          "due_date_refilling": "2025-08-15",
-          "due_date_hydro_test": "2028-08-15",
-          "access": "Partially Blocked",
-          "remarks": "Needs maintenance"
-        }
-      ],
-      "checked_by": {
-        "name": "John Doe",
-        "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-      }
-    },
-    {
-      "site": "Manufacturing Plant C",
-      "date_of_inspection": "2025-03-25",
-      "extinguishers": [
-        {
-          "extinguisher_number": "EXT-003",
-          "extinguisher_no": "24680",
-          "extinguisher_type": "Foam",
-          "weight_kg": 6,
-          "location": "Production Area",
-          "seal_intact": "Yes",
-          "pressure_in_gauge": "Normal",
-          "tube_nozzle": "OK",
-          "painting_condition": "Good",
-          "refilling_date": "2024-11-05",
-          "due_date_refilling": "2025-11-05",
-          "due_date_hydro_test": "2027-11-05",
-          "access": "Unobstructed",
-          "remarks": "New installation"
-        },
-        {
-          "extinguisher_number": "EXT-004",
-          "extinguisher_no": "13579",
-          "extinguisher_type": "Water",
-          "weight_kg": 9,
-          "location": "Break Room",
-          "seal_intact": "Yes",
-          "pressure_in_gauge": "High",
-          "tube_nozzle": "OK",
-          "painting_condition": "Fair",
-          "refilling_date": "2024-10-20",
-          "due_date_refilling": "2025-10-20",
-          "due_date_hydro_test": "2028-10-20",
-          "access": "Unobstructed",
-          "remarks": "Pressure needs to be checked"
-        }
-      ],
-      "checked_by": {
-        "name": "Jane Smith",
-        "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-      }
-    }
-  ];
+  // Fetch data using the RTK Query hook
+  const { data: inspectionsData, isLoading, isError, error } = useGetAllFireExtinguisherInspectionsQuery();
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -168,9 +84,11 @@ function MonthlyFireExtinguisher() {
   };
 
   // Filtering logic
-  const filteredInspections = dummyInspections.filter((inspection) =>
-    inspection.site.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredInspections = inspectionsData 
+    ? inspectionsData.filter((inspection) =>
+        inspection.site_name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   const currentRows = filteredInspections.slice(
     page * rowsPerPage,
@@ -203,12 +121,18 @@ function MonthlyFireExtinguisher() {
   };
 
   const getConditionColor = (condition) => {
-    switch (condition.toLowerCase()) {
+    if (!condition) return 'default';
+    
+    const conditionStr = String(condition).toLowerCase();
+    
+    switch (conditionStr) {
       case 'yes':
       case 'ok':
       case 'good':
       case 'normal':
+      case 'clear':
       case 'unobstructed':
+      case 'true':
         return 'success';
       case 'fair':
       case 'partially blocked':
@@ -218,11 +142,41 @@ function MonthlyFireExtinguisher() {
       case 'low':
       case 'high':
       case 'scratched':
+      case 'false':
         return 'error';
       default:
         return 'default';
     }
   };
+
+  // Rendering logic for different states
+  if (isLoading) {
+    return (
+      <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5 flex justify-center items-center" style={{ minHeight: '400px' }}>
+        <CircularProgress />
+        <Typography variant="h6" style={{ marginLeft: '16px' }}>
+          Loading fire extinguisher inspection data...
+        </Typography>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
+        <Alert severity="error" style={{ marginBottom: '16px' }}>
+          Error loading data: {error?.data?.message || "Failed to fetch inspection records"}
+        </Alert>
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
@@ -235,56 +189,65 @@ function MonthlyFireExtinguisher() {
           variant="outlined"
         />
         <Button
-        onClick={()=>setOpenCreateList(true)}
+          onClick={() => setOpenCreateList(true)}
           variant="contained"
           style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none', minHeight: 'auto' }}
         >
           Add New Inspection
         </Button>
       </div>
-      <TableContainer component={Paper} style={{ borderRadius: '8px' }}>
-        <Table>
-          <TableHead>
-            <TableRow style={{ backgroundColor: '#F2EDED' }}>
-              <TableCell align="center">Site</TableCell>
-              <TableCell align="center">Date of Inspection</TableCell>
-              <TableCell align="center">Number of Extinguishers</TableCell>
-              <TableCell align="center">Inspector</TableCell>
-              <TableCell align="center">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {currentRows.map((inspection, index) => (
-              <TableRow key={index}>
-                <TableCell align="center">{inspection.site}</TableCell>
-                <TableCell align="center">{inspection.date_of_inspection}</TableCell>
-                <TableCell align="center">{inspection.extinguishers.length}</TableCell>
-                <TableCell align="center">{inspection.checked_by.name}</TableCell>
-                <TableCell align="center">
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => openInspectionDetailsHandler(inspection)}
-                  >
-                    View Details
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
 
-      <TablePagination
-        component="div"
-        count={filteredInspections.length}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        rowsPerPageOptions={[5, 10, 25]}
-        style={{ borderTop: '1px solid #e0e0e0' }}
-      />
+      {inspectionsData && inspectionsData.length === 0 ? (
+        <Alert severity="info" style={{ margin: '32px 0' }}>
+          No fire extinguisher inspection records found. Create a new inspection using the "Add New Inspection" button.
+        </Alert>
+      ) : (
+        <>
+          <TableContainer component={Paper} style={{ borderRadius: '8px' }}>
+            <Table>
+              <TableHead>
+                <TableRow style={{ backgroundColor: '#F2EDED' }}>
+                  <TableCell align="center">Site</TableCell>
+                  <TableCell align="center">Date of Inspection</TableCell>
+                  <TableCell align="center">Number of Extinguishers</TableCell>
+                  <TableCell align="center">Inspector</TableCell>
+                  <TableCell align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {currentRows.map((inspection, index) => (
+                  <TableRow key={inspection.id}>
+                    <TableCell align="center">{inspection.site_name}</TableCell>
+                    <TableCell align="center">{inspection.date_of_inspection}</TableCell>
+                    <TableCell align="center">{inspection.fire_extinguisher_details.length}</TableCell>
+                    <TableCell align="center">{inspection.checked_by_name}</TableCell>
+                    <TableCell align="center">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => openInspectionDetailsHandler(inspection)}
+                      >
+                        View Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <TablePagination
+            component="div"
+            count={filteredInspections.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[5, 10, 25]}
+            style={{ borderTop: '1px solid #e0e0e0' }}
+          />
+        </>
+      )}
 
       {/* Inspection Details Modal */}
       <Dialog
@@ -295,7 +258,7 @@ function MonthlyFireExtinguisher() {
       >
         <DialogTitle>
           <div className="flex justify-between items-center">
-            <Typography variant="h6">Inspection Details: {selectedInspection?.site}</Typography>
+            <Typography variant="h6">Inspection Details: {selectedInspection?.site_name}</Typography>
             <Typography variant="subtitle1">Date: {selectedInspection?.date_of_inspection}</Typography>
           </div>
         </DialogTitle>
@@ -305,18 +268,20 @@ function MonthlyFireExtinguisher() {
               <Box mb={3}>
                 <Typography variant="subtitle1" gutterBottom>Inspector Information:</Typography>
                 <div className="flex items-center gap-4">
-                  <Typography><strong>Name:</strong> {selectedInspection.checked_by.name}</Typography>
+                  <Typography><strong>Name:</strong> {selectedInspection.checked_by_name}</Typography>
                   <div>
                     <Typography><strong>Signature:</strong></Typography>
                     <ImageViewer
-                      src={selectedInspection.checked_by.signature}
+                      src={selectedInspection.signature}
                       alt="Inspector Signature"
                     />
                   </div>
                 </div>
               </Box>
               
-              <Typography variant="h6" gutterBottom>Extinguishers ({selectedInspection.extinguishers.length})</Typography>
+              <Typography variant="h6" gutterBottom>
+                Extinguishers ({selectedInspection.fire_extinguisher_details.length})
+              </Typography>
               <TableContainer component={Paper} style={{ marginTop: '16px' }}>
                 <Table size="small">
                   <TableHead>
@@ -330,11 +295,11 @@ function MonthlyFireExtinguisher() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {selectedInspection.extinguishers.map((extinguisher, idx) => (
+                    {selectedInspection.fire_extinguisher_details.map((extinguisher, idx) => (
                       <TableRow key={idx}>
-                        <TableCell>{extinguisher.extinguisher_number}</TableCell>
+                        <TableCell>{extinguisher.extinguisher_no}</TableCell>
                         <TableCell>{extinguisher.extinguisher_type}</TableCell>
-                        <TableCell>{extinguisher.weight_kg} kg</TableCell>
+                        <TableCell>{extinguisher.weight} kg</TableCell>
                         <TableCell>{extinguisher.location}</TableCell>
                         <TableCell>
                           {getStatusChip(extinguisher.due_date_refilling)}
@@ -367,7 +332,7 @@ function MonthlyFireExtinguisher() {
       >
         <DialogTitle>
           <Typography variant="h6">
-            Extinguisher Details: {selectedExtinguisher?.extinguisher_number}
+            Extinguisher Details: {selectedExtinguisher?.extinguisher_no}
           </Typography>
         </DialogTitle>
         <DialogContent>
@@ -377,10 +342,9 @@ function MonthlyFireExtinguisher() {
                 <div>
                   <Typography variant="subtitle2">Basic Information</Typography>
                   <Paper className="p-3 mt-2">
-                    <Typography><strong>ID:</strong> {selectedExtinguisher.extinguisher_number}</Typography>
-                    <Typography><strong>Serial Number:</strong> {selectedExtinguisher.extinguisher_no}</Typography>
+                    <Typography><strong>ID:</strong> {selectedExtinguisher.extinguisher_no}</Typography>
                     <Typography><strong>Type:</strong> {selectedExtinguisher.extinguisher_type}</Typography>
-                    <Typography><strong>Weight:</strong> {selectedExtinguisher.weight_kg} kg</Typography>
+                    <Typography><strong>Weight:</strong> {selectedExtinguisher.weight} kg</Typography>
                     <Typography><strong>Location:</strong> {selectedExtinguisher.location}</Typography>
                   </Paper>
                 </div>
@@ -406,7 +370,7 @@ function MonthlyFireExtinguisher() {
                     <Typography>
                       <strong>Seal Intact:</strong> {' '}
                       <Chip 
-                        label={selectedExtinguisher.seal_intact} 
+                        label={selectedExtinguisher.seal_intact ? "Yes" : "No"} 
                         color={getConditionColor(selectedExtinguisher.seal_intact)}
                         size="small"
                       />
@@ -457,9 +421,10 @@ function MonthlyFireExtinguisher() {
           )}
         </DialogContent>
       </Dialog>
+      
       <FireExtinguisherInspectionDialog
-      open={openCreateList}
-      setOpen={setOpenCreateList}
+        open={openCreateList}
+        setOpen={setOpenCreateList}
       />
     </div>
   );

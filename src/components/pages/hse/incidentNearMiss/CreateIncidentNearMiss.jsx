@@ -276,7 +276,7 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
 
           <div className="mb-3">
             <label className="block mb-1 text-[#29346B] font-semibold">
-              Physical Factor<span className="text-red-600"> *</span>
+              Physical Factor (Machinary/ equipment fault)<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
@@ -292,7 +292,7 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
 
           <div className="mb-3">
             <label className="block mb-1 text-[#29346B] font-semibold">
-              Human Factor<span className="text-red-600"> *</span>
+              Human Factor(Fault by Human)<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
@@ -308,7 +308,7 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
 
           <div>
             <label className="block mb-1 text-[#29346B] font-semibold">
-              System Factor<span className="text-red-600"> *</span>
+              System Factor (Lagging of procedure)<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth

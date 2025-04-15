@@ -31,6 +31,7 @@ import { toolTalkAttendanceApi } from "../api/hse/toolbox/toolBoxApi.js";
 import { firstAidRecordApi } from "../api/hse/firstAidRecord/firstAidRecordApi.js";
 import { fireExtinguisherInspectionApi } from "../api/hse/extinguisher/extinguisherApi.js";
 import { inductionTrainingApi } from "../api/hse/induction/inductionApi.js";
+import { harnessInspectionApi } from "../api/hse/harness/harnessApi.js";
  
 const store = configureStore({
   reducer: {
@@ -65,7 +66,8 @@ const store = configureStore({
     [toolTalkAttendanceApi.reducerPath]:toolTalkAttendanceApi.reducer,
     [firstAidRecordApi.reducerPath]:firstAidRecordApi.reducer,
     [fireExtinguisherInspectionApi.reducerPath]:fireExtinguisherInspectionApi.reducer,
-    [inductionTrainingApi.reducerPath]:inductionTrainingApi.reducer
+    [inductionTrainingApi.reducerPath]:inductionTrainingApi.reducer,
+    [harnessInspectionApi.reducerPath]:harnessInspectionApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -101,6 +103,7 @@ const store = configureStore({
       .concat(firstAidRecordApi.middleware)
       .concat(fireExtinguisherInspectionApi.middleware)
       .concat(inductionTrainingApi.middleware)
+      .concat(harnessInspectionApi.middleware)
 });
 
 export default store;

@@ -14,19 +14,25 @@ import {
   FormControlLabel,
   Radio,
   Box,
+  Avatar,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useCreateHarnessInspectionMutation, useGetAllHarnessInspectionsQuery } from "../../../../api/hse/harness/harnessApi";
+// import { useCreateHarnessInspectionMutation } from "../path/to/harnessInspectionApi"; // Update path as needed
 
-export default function HarnessInspectionDialog({ open, setOpen }) {
+export default function HarnessInspectionDialog({ open, setOpen, onSuccess }) {
   const [site, setSite] = useState("");
   const [makeModel, setMakeModel] = useState("");
   const [manufacturingDate, setManufacturingDate] = useState("");
   const [dateOfInspection, setDateOfInspection] = useState("");
   const [report, setReport] = useState("");
   const [inspectorName, setInspectorName] = useState("");
-  const [inspectorSignature, setInspectorSignature] = useState("");
+  const [inspectorSignature, setInspectorSignature] = useState(null);
+  const [inspectorSignatureFile, setInspectorSignatureFile] = useState(null);
+    // const { refetch } = useGetAllHarnessInspectionsQuery();
+  
+  // Keeping this for future implementation
   const [visualPhysicalChecks, setVisualPhysicalChecks] = useState([
-    // Removed "Visual / Physical Checks" from the list
     { check: "Harness no fissure, wear or twisted strap", status: "", remarks: "" },
     { check: "Waist bucket", status: "", remarks: "" },
     { check: "Both leg Strap buckle", status: "", remarks: "" },
@@ -41,22 +47,51 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
     { check: "Snap hooks mouth opening & closing", status: "", remarks: "" },
   ]);
 
+  // RTK Query mutation hook
+  const [createHarnessInspection, { isLoading }] = useCreateHarnessInspectionMutation();
+
   const validateForm = () => {
-    if (!site.trim()) return toast.error("Site is required!");
-    if (!makeModel.trim()) return toast.error("Make/Model is required!");
-    if (!manufacturingDate.trim()) return toast.error("Manufacturing Date is required!");
-    if (!dateOfInspection.trim()) return toast.error("Date of Inspection is required!");
+    if (!site.trim()){
+      toast.error("Site is required!")
+      return false;
+    };
+    if (!makeModel.trim()) {
+      toast.error("Make/Model is required!");
+      return false;
+    }
+    if (!manufacturingDate.trim()) {
+      toast.error("Manufacturing Date is required!");
+      return false;
+    }
+    if (!dateOfInspection.trim()) {
+      toast.error("Date of Inspection is required!");
+      return false;
+    }
 
     for (let i = 0; i < visualPhysicalChecks.length; i++) {
-      if (!visualPhysicalChecks[i].status.trim())
-        return toast.error(`Status for ${visualPhysicalChecks[i].check} is required!`);
-      if (!visualPhysicalChecks[i].remarks.trim())
-        return toast.error(`Remarks for ${visualPhysicalChecks[i].check} is required!`);
+      if (!visualPhysicalChecks[i].status.trim()) {
+        toast.error(`Status for ${visualPhysicalChecks[i].check} is required!`);
+        return false;
+      }
+      if (!visualPhysicalChecks[i].remarks.trim()) {
+        toast.error(`Remarks for ${visualPhysicalChecks[i].check} is required!`);
+        return false;
+      }
     }
     
-    if (!report.trim()) return toast.error("Report is required!");
-    if (!inspectorName.trim()) return toast.error("Inspector Name is required!");
-    if (!inspectorSignature.trim()) return toast.error("Inspector Signature is required!");
+    if (!report.trim()) {
+      toast.error("Report is required!");
+      return false;
+    }
+    if (!inspectorName.trim()) {
+      toast.error("Inspector Name is required!");
+      return false;
+    }
+
+    if (!inspectorSignature) {
+      toast.error("Inspector Signature is required!");
+      return false;
+    }
 
     return true;
   };
@@ -68,19 +103,32 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
       borderRadius: "6px",
       transition: "border 0.2s ease-in-out",
       "&:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on hover
+        borderColor: "#FACC15",
         borderBottom: "4px solid #FACC15",
       },
       "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on focus
+        borderColor: "#FACC15",
         borderWidth: "2px",
         borderBottom: "4px solid #FACC15",
       },
     },
     "& .MuiOutlinedInput-notchedOutline": {
-      border: "1px solid #FACC15", // Default border
-      borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
+      border: "1px solid #FACC15",
+      borderBottom: "4px solid #FACC15",
     },
+  };
+
+  const handleSignatureUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setInspectorSignatureFile(file);
+      
+      const reader = new FileReader();
+      reader.onload = () => {
+        setInspectorSignature(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleCheckChange = (index, field, value) => {
@@ -89,23 +137,81 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
     setVisualPhysicalChecks(newChecks);
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) return;
+  const handleSubmit = async () => {
+  const isValid = validateForm();
+  if (!isValid) return;
 
-    const formData = {
-      site: site,
-      make_model: makeModel,
-      manufacturing_date: manufacturingDate,
-      date_of_inspection: dateOfInspection,
-      visual_physical_checks: visualPhysicalChecks,
-      report: report,
-      inspector_name: inspectorName,
-      inspector_signature: inspectorSignature,
+    // Create FormData object for file upload support
+    const formData = new FormData();
+    
+    // Mapping from UI form to API model structure
+    formData.append("site_name", site);
+    formData.append("make_model", makeModel);
+    formData.append("manufacturing_date", manufacturingDate);
+    formData.append("date_of_inspection", dateOfInspection);
+    
+    // Map visual physical checks to the API model fields
+    const checksMap = {
+      0: { status: "wear_or_twisted_strap_status", remarks: "wear_or_twisted_strap_remarks" },
+      1: { status: "waist_buckle_status", remarks: "waist_buckle_remarks" },
+      2: { status: "both_leg_strap_buckle_status", remarks: "both_leg_strap_buckle_remarks" },
+      3: { status: "waist_buckle_status_2", remarks: "waist_buckle_remarks_2" },
+      4: { status: "metal_d_ring_status", remarks: "metal_d_ring_remarks" },
+      5: { status: "buckle_working_status", remarks: "buckle_working_remarks" },
+      6: { status: "harness_shelf_life_status", remarks: "harness_shelf_life_remarks" },
+      7: { status: "lanyard_wear_twist_status", remarks: "lanyard_wear_twist_remarks" },
+      8: { status: "lanyard_two_ropes_status", remarks: "lanyard_two_ropes_remarks" },
+      9: { status: "sleeve_fissures_status", remarks: "sleeve_fissures_remarks" },
+      10: { status: "shock_absorber_status", remarks: "shock_absorber_remarks" },
+      11: { status: "snap_hooks_status", remarks: "snap_hooks_remarks" },
     };
+    
+    // Add each check to the form data with correct field names
+    for (let i = 0; i < visualPhysicalChecks.length; i++) {
+      // Convert "OK" to true and "Not OK" to false
+      const statusValue = visualPhysicalChecks[i].status === "OK";
+      formData.append(checksMap[i].status, statusValue);
+      formData.append(checksMap[i].remarks, visualPhysicalChecks[i].remarks);
+    }
+    
+    formData.append("report", report);
+    formData.append("inspector_name", inspectorName);
+    
+    // Inspector signature is optional for now, but will be added in the future
+    if (inspectorSignatureFile) {
+      formData.append("inspector_signature", inspectorSignatureFile);
+    }
 
-    console.log(formData);
-    toast.success("Harness inspection data submitted successfully!");
-    setOpen(false);
+    try {
+      const response = await createHarnessInspection(formData).unwrap();
+      if (response.status) {
+        toast.success(response.message || "Harness inspection submitted successfully!");
+        if (onSuccess) onSuccess();
+        handleClose();
+        // Reset form after successful submission
+        // refetch()
+        resetForm();
+      } else {
+        toast.error("Error submitting harness inspection");
+      }
+    } catch (error) {
+      console.error("Error submitting harness inspection:", error);
+      toast.error(error.data?.message || "An error occurred while submitting the form");
+    }
+  };
+
+  const resetForm = () => {
+    setSite("");
+    setMakeModel("");
+    setManufacturingDate("");
+    setDateOfInspection("");
+    setReport("");
+    setInspectorName("");
+    setInspectorSignature(null);
+    setInspectorSignatureFile(null);
+    setVisualPhysicalChecks(
+      visualPhysicalChecks.map(check => ({ ...check, status: "", remarks: "" }))
+    );
   };
 
   return (
@@ -200,7 +306,6 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
-                  {/* Changed from TextField to RadioGroup for Status */}
                   <FormControl component="fieldset">
                     <Typography variant="body2" color="textSecondary">
                       Status<span className="text-red-600"> *</span>
@@ -289,17 +394,53 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
             />
           </Grid>
           
-          <Grid item xs={12} md={6}>
+          {/* <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Inspector Signature"
               variant="outlined"
-              placeholder="Enter inspector's signature"
+              placeholder="Enter inspector's signature (optional for now)"
               value={inspectorSignature}
               sx={commonInputStyles}
               onChange={(e) => setInspectorSignature(e.target.value)}
             />
+          </Grid> */}
+          <Grid item xs={12} md={6}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Signature<span className="text-red-600"> *</span>
+            </label>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ height: "56px" }}
+              >
+                Upload Signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleSignatureUpload}
+                />
+              </Button>
+              {inspectorSignature && (
+                <Avatar
+                  src={inspectorSignature}
+                  alt="Inspector Signature"
+                  variant="rounded"
+                  sx={{ width: 100, height: 56 }}
+                />
+              )}
+            </Box>
           </Grid>
+
         </Grid>
       </DialogContent>
 
@@ -310,6 +451,7 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
         <Button
           onClick={handleSubmit}
           color="primary"
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -325,7 +467,7 @@ export default function HarnessInspectionDialog({ open, setOpen }) {
           }}
           variant="contained"
         >
-          Submit
+          {isLoading ? "Submitting..." : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>
