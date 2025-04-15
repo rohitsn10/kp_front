@@ -431,7 +431,8 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
               variant="h6"
               className="text-[#29346B] font-semibold mb-2"
             >
-              Review By Site In-Charge
+              Review by Site In-charge / Project Manager 
+              (Root Cause Analysis is must in case of Incident.)
             </Typography>
             <Divider />
           </Grid>

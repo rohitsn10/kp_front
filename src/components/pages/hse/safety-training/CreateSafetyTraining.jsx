@@ -9,12 +9,9 @@ import {
   Grid,
   Typography,
   Divider,
-  IconButton,
-  Paper,
   Box,
   Avatar,
 } from "@mui/material";
-import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
 
 export default function TrainingAttendanceDialog({ open, setOpen }) {
@@ -22,10 +19,10 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
   const [date, setDate] = useState("");
   const [facultyName, setFacultyName] = useState("");
   const [topic, setTopic] = useState("");
+  const [remarks, setRemarks] = useState("");
   const [facultySignature, setFacultySignature] = useState(null);
-  const [participants, setParticipants] = useState([
-    { name: "", designation: "", signature: null },
-  ]);
+  const [participantDoc, setParticipantDoc] = useState(null);
+  const [participantDocName, setParticipantDocName] = useState("");
 
   const validateForm = () => {
     if (!site.trim()) return toast.error("Site is required!");
@@ -33,14 +30,7 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
     if (!facultyName.trim()) return toast.error("Faculty Name is required!");
     if (!topic.trim()) return toast.error("Training Topic is required!");
     if (!facultySignature) return toast.error("Faculty Signature is required!");
-
-    if (participants.length === 0) return toast.error("At least one participant is required!");
-
-    for (let i = 0; i < participants.length; i++) {
-      if (!participants[i].name.trim()) return toast.error(`Participant ${i + 1} name is required!`);
-      if (!participants[i].designation.trim()) return toast.error(`Participant ${i + 1} designation is required!`);
-      if (!participants[i].signature) return toast.error(`Participant ${i + 1} signature is required!`);
-    }
+    if (!participantDoc) return toast.error("Participant document is required!");
 
     return true;
   };
@@ -67,22 +57,6 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
     },
   };
 
-  const handleAddParticipant = () => {
-    setParticipants([...participants, { name: "", designation: "", signature: null }]);
-  };
-
-  const handleRemoveParticipant = (index) => {
-    const newParticipants = [...participants];
-    newParticipants.splice(index, 1);
-    setParticipants(newParticipants);
-  };
-
-  const handleParticipantChange = (index, field, value) => {
-    const newParticipants = [...participants];
-    newParticipants[index][field] = value;
-    setParticipants(newParticipants);
-  };
-
   const handleFacultySignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -96,34 +70,45 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
     }
   };
 
-  const handleParticipantSignatureUpload = (index, e) => {
+  const handleParticipantDocUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        handleParticipantChange(index, "signature", reader.result);
-      };
-      reader.readAsDataURL(file);
+      setParticipantDoc(file);
+      setParticipantDocName(file.name);
     }
   };
 
   const handleSubmit = () => {
     if (!validateForm()) return;
 
-    const formData = {
-      site: site,
-      date: date,
-      faculty_name: facultyName,
-      signature: facultySignature, // In a real implementation, this would be the URL returned from the server
-      topic: topic,
-      participants: participants.map(p => ({
-        name: p.name,
-        designation: p.designation,
-        signature: p.signature, // In a real implementation, this would be the URL returned from the server
-      })),
-    };
+    // Create FormData object to handle file uploads
+    const formData = new FormData();
+    formData.append("site", site);
+    formData.append("date", date);
+    formData.append("faculty_name", facultyName);
+    formData.append("topic", topic);
+    formData.append("remarks", remarks);
+    
+    // In a real implementation, you would handle the signature file differently
+    // Here we're just appending the dataURL, but in practice you'd upload the file
+    // and get a URL from the server
+    formData.append("faculty_signature", facultySignature);
+    
+    // Append the participant document
+    formData.append("participant_document", participantDoc);
 
-    console.log(formData);
+    // Log the FormData (for demonstration purposes)
+    console.log("Form data to be submitted:", {
+      site,
+      date,
+      faculty_name: facultyName,
+      topic,
+      remarks,
+      // We can't directly console.log FormData contents,
+      // so showing the file name for the participant document
+      participant_document: participantDocName
+    });
+    
     toast.success("Training attendance data submitted successfully!");
     setOpen(false);
   };
@@ -186,6 +171,23 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
             />
           </Grid>
 
+          {/* Remarks */}
+          <Grid item xs={12}>
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Remarks
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Remarks (Optional)"
+              value={remarks}
+              multiline
+              rows={3}
+              sx={commonInputStyles}
+              onChange={(e) => setRemarks(e.target.value)}
+            />
+          </Grid>
+
           {/* Faculty Information */}
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
@@ -237,114 +239,51 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
             </Box>
           </Grid>
 
-          {/* Participants Section */}
+          {/* Participant Document Upload Section */}
           <Grid item xs={12} mt={2}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6" className="text-[#29346B] font-semibold">
                 Participants
               </Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleAddParticipant}
-                sx={{
-                  backgroundColor: "#29346B",
-                  "&:hover": {
-                    backgroundColor: "#202a5a",
-                  },
-                }}
-              >
-                Add Participant
-              </Button>
             </Box>
             <Divider sx={{ my: 1 }} />
           </Grid>
 
-          {/* Participant List */}
           <Grid item xs={12}>
-            {participants.map((participant, index) => (
-              <Paper
-                key={index}
-                elevation={1}
-                sx={{
-                  p: 2,
-                  mb: 2,
-                  border: "1px solid #e0e0e0",
-                  position: "relative",
-                }}
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Participant Document<span className="text-red-600"> *</span>
+            </label>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                marginBottom: 2,
+              }}
+            >
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ height: "56px" }}
               >
-                <IconButton
-                  color="error"
-                  sx={{ position: "absolute", top: 8, right: 8 }}
-                  onClick={() => handleRemoveParticipant(index)}
-                  disabled={participants.length === 1}
-                >
-                  <DeleteIcon />
-                </IconButton>
-                
-                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
-                  Participant {index + 1}
+                Upload Document
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
+                  hidden
+                  onChange={handleParticipantDocUpload}
+                />
+              </Button>
+              {participantDocName && (
+                <Typography>
+                  {participantDocName}
                 </Typography>
-                
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Name"
-                      variant="outlined"
-                      value={participant.name}
-                      required
-                      onChange={(e) =>
-                        handleParticipantChange(index, "name", e.target.value)
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Designation"
-                      variant="outlined"
-                      value={participant.designation}
-                      required
-                      onChange={(e) =>
-                        handleParticipantChange(index, "designation", e.target.value)
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                      }}
-                    >
-                      <Button
-                        variant="outlined"
-                        component="label"
-                        color="primary"
-                      >
-                        Upload Signature
-                        <input
-                          type="file"
-                          accept="image/*"
-                          hidden
-                          onChange={(e) => handleParticipantSignatureUpload(index, e)}
-                        />
-                      </Button>
-                      {participant.signature && (
-                        <Avatar
-                          src={participant.signature}
-                          alt="Participant Signature"
-                          variant="rounded"
-                          sx={{ width: 100, height: 56 }}
-                        />
-                      )}
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Paper>
-            ))}
+              )}
+            </Box>
+            <Typography variant="caption" color="textSecondary">
+              Supported formats: PDF, DOC, DOCX, XLS, XLSX
+            </Typography>
           </Grid>
         </Grid>
       </DialogContent>
