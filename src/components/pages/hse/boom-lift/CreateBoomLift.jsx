@@ -256,7 +256,7 @@ export default function BoomLiftInspectionDialog({ open, setOpen }) {
       identification_number: identificationNumber,
       inspection_date: formattedDate,
       site_name: siteName,
-      location: location,
+      location: Number(location),
       remarks: remarks,
       inspected_by_name: inspectedByName,
       inspected_by_signature: inspectedBySignature,

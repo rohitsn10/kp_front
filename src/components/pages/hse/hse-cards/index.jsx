@@ -10,8 +10,8 @@ import { FaClipboardCheck, FaTools, FaTruck, FaFireExtinguisher, FaUserShield, F
 
 const HSECards = ({ selectedSite }) => {
   const navigate = useNavigate()
-  const landbankId = selectedSite?.landbank;
-  console.log("Selected Site Landbank ID",selectedSite?.landbank)
+  const landbankId = selectedSite;
+  console.log("Selected Site Landbank ID",landbankId)
   
   const cards = [
     {
