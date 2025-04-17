@@ -31,7 +31,7 @@ function ToolboxTalk() {
   const [openCreateDialog, setCreateDialog] = useState(false);
   
   // Fetch toolbox talk attendance data using the provided hook
-  const { data: toolboxTalkData, isLoading, isError } = useGetToolTalkAttendanceQuery();
+  const { data: toolboxTalkData, isLoading, isError,refetch } = useGetToolTalkAttendanceQuery();
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);

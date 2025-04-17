@@ -25,15 +25,16 @@ import {
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon, CloudUpload as CloudUploadIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
-import { useCreateInductionTrainingMutation, useGetAllInductionTrainingsQuery } from "../../../../api/hse/induction/inductionApi";
+import { useCreateInductionTrainingMutation } from "../../../../api/hse/induction/inductionApi";
+import { useParams } from "react-router-dom";
 // Import the mutation hook from our RTK API file
 // import { useCreateInductionTrainingMutation } from "../services/inductionTrainingApi";
 
 export default function TrainingInductionDialog({ open, setOpen }) {
   // Initialize the RTK mutation hook
   const [createInductionTraining, { isLoading }] = useCreateInductionTrainingMutation();
-  const { refetch} = useGetAllInductionTrainingsQuery();
-
+  // const { refetch} = useGetAllInductionTrainingsQuery();
+  const { locationId } = useParams();
   const [site, setSite] = useState("");
   const [date, setDate] = useState("");
   const [facultyName, setFacultyName] = useState("");
@@ -173,6 +174,7 @@ export default function TrainingInductionDialog({ open, setOpen }) {
     const formData = new FormData();
     
     // Append basic fields (matching the API endpoint field names)
+    formData.append('location',locationId)
     formData.append("site_name", site);
     formData.append("date", date);
     formData.append("faculty_name", facultyName);
@@ -216,7 +218,7 @@ export default function TrainingInductionDialog({ open, setOpen }) {
         // Success handling
         console.log("API Response:", response);
         toast.success(response.message || "Induction training data submitted successfully!");
-        refetch();
+        // refetch();
         // Close the dialog and reset form if needed
         setOpen(false);
         

@@ -25,9 +25,11 @@ export const inductionTrainingApi = createApi({
     }),
     
     // Endpoint for getting all induction trainings
-    getAllInductionTrainings: builder.query({
-      query: () => ({
-        url: "annexures_module/get_induction_training",
+    getInductionTrainings: builder.query({
+      query: (locationId) => ({
+        url: locationId 
+          ? `annexures_module/get_induction_training/${locationId}` 
+          : "annexures_module/get_induction_training",
         method: "GET",
       }),
     }),
@@ -44,6 +46,6 @@ export const inductionTrainingApi = createApi({
 
 export const {
   useCreateInductionTrainingMutation,
-  useGetAllInductionTrainingsQuery,
+  useGetInductionTrainingsQuery ,
   useGetLocationWiseInductionTrainingsQuery,
 } = inductionTrainingApi;

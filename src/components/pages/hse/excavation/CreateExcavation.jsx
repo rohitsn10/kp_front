@@ -12,17 +12,20 @@ import {
   Box,
   Avatar,
   FormControlLabel,
-  Checkbox,
-  RadioGroup,
   Radio,
   FormControl,
   FormLabel,
+  RadioGroup,
+  CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
-
+import { useParams } from "react-router-dom";
+import { useCreateExcavationPermitMutation } from "../../../../api/hse/excavation/excavationPermitApi";
+// import { useCreateExcavationPermitMutation } from "../services/excavationPermitApi"; // Import the mutation hook
 export default function ExcavationPermitDialog({ open, setOpen }) {
   const [site, setSite] = useState("");
   const [permitNo, setPermitNo] = useState("");
+  const { locationId } = useParams();
   const [date, setDate] = useState("");
   const [descriptionOfWork, setDescriptionOfWork] = useState("");
   const [locationAreaOfWork, setLocationAreaOfWork] = useState("");
@@ -56,6 +59,9 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
   });
   const [remarks, setRemarks] = useState("");
   const [checkedBy, setCheckedBy] = useState({ name: "", signature: null });
+
+  // RTK mutation hook
+  const [createExcavationPermit, { isLoading }] = useCreateExcavationPermitMutation();
 
   const validateForm = () => {
     if (!site.trim()) return toast.error("Site is required!");
@@ -113,18 +119,18 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
       borderRadius: "6px",
       transition: "border 0.2s ease-in-out",
       "&:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on hover
+        borderColor: "#FACC15",
         borderBottom: "4px solid #FACC15",
       },
       "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on focus
+        borderColor: "#FACC15",
         borderWidth: "2px",
         borderBottom: "4px solid #FACC15",
       },
     },
     "& .MuiOutlinedInput-notchedOutline": {
-      border: "1px solid #FACC15", // Default border
-      borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
+      border: "1px solid #FACC15",
+      borderBottom: "4px solid #FACC15",
     },
   };
 
@@ -138,6 +144,7 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
           [field]: {
             ...clearancesForExcavation[field],
             signature: reader.result,
+            signatureFile: file, // Store the actual file for FormData
           },
         });
       };
@@ -153,6 +160,7 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
         setPrecautionsTakenByAcceptor({
           ...precautionsTakenByAcceptor,
           signature: reader.result,
+          signatureFile: file, // Store the actual file for FormData
         });
       };
       reader.readAsDataURL(file);
@@ -164,34 +172,129 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        setCheckedBy({ ...checkedBy, signature: reader.result });
+        setCheckedBy({ 
+          ...checkedBy, 
+          signature: reader.result,
+          signatureFile: file, // Store the actual file for FormData
+        });
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const formData = {
-      site: site,
-      permit_no: permitNo,
-      date: date,
-      description_of_work: descriptionOfWork,
-      location_area_of_work: locationAreaOfWork,
-      size_of_excavation: sizeOfExcavation,
-      starting_the_work: startingTheWork,
-      expected_duration_of_work: expectedDurationOfWork,
-      purpose_of_excavation: purposeOfExcavation,
-      clearances_for_excavation: clearancesForExcavation,
-      precautions_taken_by_acceptor: precautionsTakenByAcceptor,
-      remarks: remarks,
-      checked_by: checkedBy,
-    };
+    // Create FormData object for API submission
+    const formData = new FormData();
+    
+    // Basic fields
+    formData.append('site_name', site);
+    formData.append('location', locationId);
+    formData.append('permit_number', permitNo);
+    formData.append('date', new Date(date).toISOString());
+    formData.append('description_of_work', descriptionOfWork);
+    formData.append('location_area_work', locationAreaOfWork);
+    
+    // Size of excavation
+    formData.append('length', sizeOfExcavation.length);
+    formData.append('breadth', sizeOfExcavation.breadth);
+    formData.append('depth', sizeOfExcavation.depth);
+    
+    // Starting the work
+    formData.append('start_work_date', startingTheWork.date);
+    formData.append('start_work_time', startingTheWork.time);
+    
+    // Duration
+    formData.append('duration_work_day', expectedDurationOfWork.day);
+    formData.append('duration_work_hors', expectedDurationOfWork.hour);
+    
+    // Purpose
+    formData.append('purpose_of_excavation', purposeOfExcavation);
+    
+    // Electrical cables
+    formData.append('electrical_cable_description', clearancesForExcavation.electrical_cables.description);
+    formData.append('electrical_cable_name', clearancesForExcavation.electrical_cables.name);
+    formData.append('electrical_cable_date', new Date(clearancesForExcavation.electrical_cables.date).toISOString());
+    if (clearancesForExcavation.electrical_cables.signatureFile) {
+      formData.append('sign_upload', clearancesForExcavation.electrical_cables.signatureFile);
+    }
+    
+    // Water/gas pipes
+    formData.append('water_gas_description', clearancesForExcavation.water_gas_pipes.description);
+    formData.append('water_gas_name', clearancesForExcavation.water_gas_pipes.name);
+    formData.append('water_gas_date', new Date(clearancesForExcavation.water_gas_pipes.date).toISOString());
+    if (clearancesForExcavation.water_gas_pipes.signatureFile) {
+      formData.append('water_sign_upload', clearancesForExcavation.water_gas_pipes.signatureFile);
+    }
+    
+    // Telephone/IT cables
+    formData.append('telephone_description', clearancesForExcavation.telephone_it_cables.description);
+    formData.append('telephone_name', clearancesForExcavation.telephone_it_cables.name);
+    formData.append('telephone_date', new Date(clearancesForExcavation.telephone_it_cables.date).toISOString());
+    if (clearancesForExcavation.telephone_it_cables.signatureFile) {
+      formData.append('telephone_sign_upload', clearancesForExcavation.telephone_it_cables.signatureFile);
+    }
+    
+    // Precautions
+    formData.append('road_barricading', precautionsTakenByAcceptor.road_barricading_done === 'Yes');
+    formData.append('warning_sign', precautionsTakenByAcceptor.warning_signs_provided === 'Yes');
+    formData.append('barricading_excavated_area', precautionsTakenByAcceptor.barricading_excavated_area === 'Yes');
+    formData.append('shoring_carried', precautionsTakenByAcceptor.shoring_carried_out === 'Yes');
+    formData.append('any_other_precaution', precautionsTakenByAcceptor.other_precautions);
+    formData.append('name_acceptor', precautionsTakenByAcceptor.name);
+    if (precautionsTakenByAcceptor.signatureFile) {
+      formData.append('acceptor_sign_upload', precautionsTakenByAcceptor.signatureFile);
+    }
+    
+    // Remarks and checker
+    formData.append('remarks', remarks);
+    formData.append('check_by_name', checkedBy.name);
+    if (checkedBy.signatureFile) {
+      formData.append('check_by_sign', checkedBy.signatureFile);
+    }
 
-    console.log(formData);
-    toast.success("Excavation permit data submitted successfully!");
-    setOpen(false);
+    try {
+      // Use the RTK mutation to send the data
+      const response = await createExcavationPermit(formData).unwrap();
+      toast.success("Excavation permit submitted successfully!");
+      setOpen(false);
+      
+      // Optional: Reset form fields after successful submission
+      resetForm();
+    } catch (error) {
+      console.error("Error submitting excavation permit:", error);
+      toast.error(error.data?.message || "Failed to submit excavation permit. Please try again.");
+    }
+  };
+
+  // Function to reset form fields
+  const resetForm = () => {
+    setSite("");
+    setPermitNo("");
+    setDate("");
+    setDescriptionOfWork("");
+    setLocationAreaOfWork("");
+    setSizeOfExcavation({ length: "", breadth: "", depth: "" });
+    setStartingTheWork({ date: "", time: "" });
+    setExpectedDurationOfWork({ day: "", hour: "" });
+    setPurposeOfExcavation("");
+    setClearancesForExcavation({
+      electrical_cables: { description: "", name: "", signature: null, date: "" },
+      water_gas_pipes: { description: "", name: "", signature: null, date: "" },
+      telephone_it_cables: { description: "", name: "", signature: null, date: "" },
+    });
+    setPrecautionsTakenByAcceptor({
+      road_barricading_done: "No",
+      warning_signs_provided: "No",
+      barricading_excavated_area: "No",
+      shoring_carried_out: "No",
+      other_precautions: "",
+      name: "",
+      signature: null,
+    });
+    setRemarks("");
+    setCheckedBy({ name: "", signature: null });
   };
 
   return (
@@ -229,6 +332,7 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
             />
           </Grid>
 
+          {/* Rest of the UI remains the same */}
           {/* Date & Description of Work */}
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
@@ -499,7 +603,6 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
                   <TextField
                     fullWidth
                     type="date"
-                    // label="Date"
                     variant="outlined"
                     value={clearance.date}
                     sx={commonInputStyles}
@@ -809,6 +912,7 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
         <Button
           onClick={handleSubmit}
           color="primary"
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -824,7 +928,11 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
           }}
           variant="contained"
         >
-          Submit
+          {isLoading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            "Submit"
+          )}
         </Button>
       </DialogActions>
     </Dialog>

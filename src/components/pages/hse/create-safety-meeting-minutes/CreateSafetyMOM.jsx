@@ -22,6 +22,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Avatar,
+  Box,
 } from "@mui/material";
 // import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 // import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
@@ -29,14 +31,18 @@ import { toast } from "react-toastify";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useCreateMinutesOfSafetyTrainingMutation } from "../../../../api/hse/safetyTrainingMinutes/safetyTrainingMinutes";
+import { useParams } from "react-router-dom";
 
 export default function CreateHSEMeetingMinutes({ open, setOpen }) {
   // Basic Information
+  const { locationId } = useParams();
   const [site, setSite] = useState("");
   const [time, setTime] = useState("");
   const [momRecordedBy, setMomRecordedBy] = useState("");
   const [momIssueDate, setMomIssueDate] = useState(null);
   const [chairmanName, setChairmanName] = useState("");
+  const [createMinutesOfSafetyTraining, { isLoading }] = useCreateMinutesOfSafetyTrainingMutation();
   
   // HSE Performance Data
   const [hsePerformanceData, setHsePerformanceData] = useState([
@@ -80,8 +86,41 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
   
   // Signatures
   const [minutesPreparedBy, setMinutesPreparedBy] = useState("");
-  const [signaturePreparedBy, setSignaturePreparedBy] = useState("");
-  const [signatureChairman, setSignatureChairman] = useState("");
+  const [signaturePreparedBy, setSignaturePreparedBy] = useState(null);
+  const [signaturePreparedByPreview,setSignaturePreparedByPreview]=useState(null)
+  const [signatureChairman, setSignatureChairman] = useState(null);
+  const [signatureChairmanPreview,setSignatureChairmanPreview]=useState(null)
+
+
+  const handleSignaturePrepare = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSignaturePreparedBy(file); // Store the File object directly
+      
+      // You can still preview the image if needed
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSignaturePreparedByPreview(reader.result); // For preview only
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Similarly for chairman signature
+  const handleSignatureChairman = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSignatureChairman(file);
+      
+      // For preview if needed
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSignatureChairmanPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   // Style for all input fields
   const commonInputStyles = {
@@ -138,67 +177,85 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
 
   const handleClose = () => setOpen(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     if (!validateForm()) return;
 
-    // Format the data to match the expected JSON structure
     const formattedHseData = hsePerformanceData.map(item => ({
       parameter: item.parameter,
-      month: parseInt(item.month) || 0,
-      year_to_date: parseInt(item.year_to_date) || 0
+      month: item.month,
+      year_to_date: item.year_to_date
     }));
-
+  
     const formattedSafetyTraining = safetyTraining.map(item => ({
       topics: item.topics,
       conducted_by: item.conducted_by,
-      participations: parseInt(item.participations) || 0
+      participations: item.participations
     }));
-
-    const formData = {
-      site,
-      time,
-      mom_recorded_by: momRecordedBy,
-      mom_issue_date: momIssueDate ? momIssueDate.toISOString().split('T')[0] : '',
-      chairman_name: chairmanName,
-      hse_performance_data: formattedHseData,
-      incident_investigation: incidentInvestigation.map(item => ({
-        action_item: item.action_item,
-        responsibility: item.responsibility,
-        target_date: item.target_date ? item.target_date.toISOString().split('T')[0] : ''
-      })),
-      safety_training: formattedSafetyTraining,
-      internal_audit: internalAudit.map(item => ({
-        action_item: item.action_item,
-        responsibility: item.responsibility,
-        target_date: item.target_date ? item.target_date.toISOString().split('T')[0] : ''
-      })),
-      mock_drill: mockDrill.map(item => ({
-        action_item: item.action_item,
-        responsibility: item.responsibility,
-        target_date: item.target_date ? item.target_date.toISOString().split('T')[0] : ''
-      })),
-      procedure_checklist_update: procedureChecklistUpdate,
-      review_last_meeting: reviewLastMeeting.map(item => ({
-        topic: item.topic,
-        action_by: item.action_by,
-        target_date: item.target_date ? item.target_date.toISOString().split('T')[0] : '',
-        review_status: item.review_status
-      })),
-      new_points_discussed: newPointsDiscussed.map(item => ({
-        topic: item.topic,
-        action_by: item.action_by,
-        target_date: item.target_date ? item.target_date.toISOString().split('T')[0] : '',
-        remarks: item.remarks
-      })),
-      minutes_prepared_by: minutesPreparedBy,
-      signature_prepared_by: signaturePreparedBy || "https://dummyimage.com/150x50/000/fff.png&text=Signature",
-      signature_chairman: signatureChairman || "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-    };
-
-    console.log(formData);
     
-    // Here you would make the API call to post the data
-    // Example API call commented out similar to your reference component
+    const formData = new FormData();
+  
+    // Append all the regular data first
+    formData.append('site_name', site);
+    formData.append('location',locationId)
+    formData.append('time', time);
+    formData.append('mom_recorded_by', momRecordedBy);
+    formData.append('mom_issue_date', momIssueDate ? momIssueDate.toISOString().split('T')[0] : '');
+    formData.append('chairman_name', chairmanName);
+    formData.append('hse_performance_data', JSON.stringify(formattedHseData));
+    formData.append('incident_investigation', JSON.stringify(incidentInvestigation.map(item => ({
+      action_item: item.action_item,
+      responsibility: item.responsibility,
+      target_date: item.target_date ? item.target_date.toISOString().split('T')[0] : ''
+    }))));
+    formData.append('safety_training', JSON.stringify(formattedSafetyTraining));
+    formData.append('internal_audit', JSON.stringify(internalAudit.map(item => ({
+      action_item: item.action_item,
+      responsibility: item.responsibility,
+      target_date: item.target_date ? item.target_date.toISOString().split('T')[0] : ''
+    }))));
+    formData.append('mock_drill', JSON.stringify(mockDrill.map(item => ({
+      action_item: item.action_item,
+      responsibility: item.responsibility,
+      target_date: item.target_date ? item.target_date.toISOString().split('T')[0] : ''
+    }))));
+    formData.append('procedure_checklist_update', JSON.stringify(procedureChecklistUpdate));
+    formData.append('review_last_meeting', JSON.stringify(reviewLastMeeting.map(item => ({
+      topic: item.topic,
+      action_by: item.action_by,
+      target_date: item.target_date ? item.target_date.toISOString().split('T')[0] : '',
+      review_status: item.review_status
+    }))));
+    formData.append('new_points_discussed', JSON.stringify(newPointsDiscussed.map(item => ({
+      topic: item.topic,
+      action_by: item.action_by,
+      target_date: item.target_date ? item.target_date.toISOString().split('T')[0] : '',
+      remarks: item.remarks
+    }))));
+    formData.append('minutes_prepared_by', minutesPreparedBy);
+    
+    // Append the signature files
+    if (signaturePreparedBy) {
+      formData.append('signature_prepared_by', signaturePreparedBy);
+    }
+    
+    if (signatureChairman) {
+      formData.append('signature_chairman', signatureChairman);
+    }
+  
+    try {
+      // Call the mutation with formData
+      const response = await createMinutesOfSafetyTraining(formData).unwrap();
+      
+      if (response.status) {
+        toast.success("HSE Meeting Minutes submitted successfully!");
+        setOpen(false);
+      } else {
+        toast.error(response.message || "Failed to submit HSE Meeting Minutes");
+      }
+    } catch (error) {
+      toast.error(error.data?.message || "An error occurred while submitting");
+      console.error("Error submitting HSE Meeting Minutes:", error);
+    }
 
     toast.success("HSE Meeting Minutes submitted successfully!");
     setOpen(false);
@@ -258,6 +315,22 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
                 <label className="block mb-1 text-[#29346B] font-semibold">
                   MOM Issue Date<span className="text-red-600"> *</span>
                 </label>
+                <div>
+                {/* <label className="block mb-1 text-[#29346B] font-semibold">
+                  MOM Issue Date<span className="text-red-600"> *</span>
+                </label> */}
+                <TextField
+                  type="date"
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  value={momIssueDate ? momIssueDate.toISOString().split('T')[0] : ''}
+                  sx={commonInputStyles}
+                  onChange={(e) => setMomIssueDate(new Date(e.target.value))}
+                />
+              </div>
                 {/* <DatePicker
                   value={momIssueDate}
                   onChange={(date) => setMomIssueDate(date)}
@@ -271,17 +344,17 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
                     />
                   )}
                 /> */ }
-                <TextField
-    type="date"
-    fullWidth
-    variant="outlined"
-    InputLabelProps={{
-      shrink: true,
-    }}
-    
-    sx={commonInputStyles}
-    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), reviewLastMeeting, setReviewLastMeeting)}
-  />
+                {/* <TextField
+                  type="date"
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  
+                  sx={commonInputStyles}
+                  onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), reviewLastMeeting, setReviewLastMeeting)}
+                /> */}
                
                 
               </div>
@@ -445,6 +518,7 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
                                 />
                               )}
                             /> */}
+
                             <TextField
     type="date"
     fullWidth
@@ -454,7 +528,7 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
     }}
     value={item.target_date ? new Date(item.target_date).toISOString().split('T')[0] : ''}
     sx={commonInputStyles}
-    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), reviewLastMeeting, setReviewLastMeeting)}
+onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), incidentInvestigation, setIncidentInvestigation)}
   />
                           </TableCell>
                           <TableCell>
@@ -637,7 +711,7 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
     }}
     value={item.target_date ? new Date(item.target_date).toISOString().split('T')[0] : ''}
     sx={commonInputStyles}
-    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), reviewLastMeeting, setReviewLastMeeting)}
+    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), internalAudit, setInternalAudit)}
   />
                           </TableCell>
                           <TableCell>
@@ -736,7 +810,7 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
     }}
     value={item.target_date ? new Date(item.target_date).toISOString().split('T')[0] : ''}
     sx={commonInputStyles}
-    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), reviewLastMeeting, setReviewLastMeeting)}
+    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), mockDrill, setMockDrill)}
   />
                           </TableCell>
                           <TableCell>
@@ -1035,7 +1109,7 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
     }}
     value={item.target_date ? new Date(item.target_date).toISOString().split('T')[0] : ''}
     sx={commonInputStyles}
-    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), reviewLastMeeting, setReviewLastMeeting)}
+    onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value), newPointsDiscussed, setNewPointsDiscussed)}
   />
               </TableCell>
               <TableCell>
@@ -1096,48 +1170,76 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
       />
     </div>
     <div>
-      <label className="block mb-1 text-[#29346B] font-semibold">
-        Signature (Prepared By)
-      </label>
-      <TextField
-        fullWidth
-        variant="outlined"
-        placeholder="Signature URL or Base64"
-        value={signaturePreparedBy}
-        sx={commonInputStyles}
-        onChange={(e) => setSignaturePreparedBy(e.target.value)}
-      />
-      {signaturePreparedBy && (
-        <div className="mt-2">
-          <img 
-            src={signaturePreparedBy} 
-            alt="Prepared By Signature" 
-            className="max-h-16" 
-          />
-        </div>
-      )}
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+               Signature Prepared by<span className="text-red-600"> *</span>
+            </label>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ height: "56px" }}
+              >
+                Upload Signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleSignaturePrepare}
+                />
+              </Button>
+              {signaturePreparedByPreview && (
+                <Avatar
+                  src={signaturePreparedByPreview}
+                  alt="Faculty Signature"
+                  variant="rounded"
+                  sx={{ width: 100, height: 56 }}
+                />
+              )}
+            </Box>
+
     </div>
     <div>
-      <label className="block mb-1 text-[#29346B] font-semibold">
-        Signature (Chairman)
-      </label>
-      <TextField
-        fullWidth
-        variant="outlined"
-        placeholder="Signature URL or Base64"
-        value={signatureChairman}
-        sx={commonInputStyles}
-        onChange={(e) => setSignatureChairman(e.target.value)}
-      />
-      {signatureChairman && (
-        <div className="mt-2">
-          <img 
-            src={signatureChairman} 
-            alt="Chairman Signature" 
-            className="max-h-16" 
-          />
-        </div>
-      )}
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+            Chairman Signature <span className="text-red-600"> *</span>
+            </label>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ height: "56px" }}
+              >
+                Upload Signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleSignatureChairman}
+                />
+              </Button>
+              {signatureChairmanPreview && (
+                <Avatar
+                  src={signatureChairmanPreview}
+                  alt="Faculty Signature"
+                  variant="rounded"
+                  sx={{ width: 100, height: 56 }}
+                />
+              )}
+            </Box>
+
     </div>
   </div>
 </div>

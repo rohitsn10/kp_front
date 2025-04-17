@@ -32,6 +32,8 @@ import { firstAidRecordApi } from "../api/hse/firstAidRecord/firstAidRecordApi.j
 import { fireExtinguisherInspectionApi } from "../api/hse/extinguisher/extinguisherApi.js";
 import { inductionTrainingApi } from "../api/hse/induction/inductionApi.js";
 import { harnessInspectionApi } from "../api/hse/harness/harnessApi.js";
+import { excavationPermitApi } from "../api/hse/excavation/excavationPermitApi.js";
+import { safetyTrainingMinutesApi } from "../api/hse/safetyTrainingMinutes/safetyTrainingMinutes.js";
  
 const store = configureStore({
   reducer: {
@@ -67,7 +69,9 @@ const store = configureStore({
     [firstAidRecordApi.reducerPath]:firstAidRecordApi.reducer,
     [fireExtinguisherInspectionApi.reducerPath]:fireExtinguisherInspectionApi.reducer,
     [inductionTrainingApi.reducerPath]:inductionTrainingApi.reducer,
-    [harnessInspectionApi.reducerPath]:harnessInspectionApi.reducer
+    [harnessInspectionApi.reducerPath]:harnessInspectionApi.reducer,
+    [excavationPermitApi.reducerPath]:excavationPermitApi.reducer,
+    [safetyTrainingMinutesApi.reducerPath]:safetyTrainingMinutesApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -104,6 +108,8 @@ const store = configureStore({
       .concat(fireExtinguisherInspectionApi.middleware)
       .concat(inductionTrainingApi.middleware)
       .concat(harnessInspectionApi.middleware)
+      .concat(excavationPermitApi.middleware)
+      .concat(safetyTrainingMinutesApi.middleware)
 });
 
 export default store;

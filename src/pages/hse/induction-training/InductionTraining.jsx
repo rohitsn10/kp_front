@@ -22,8 +22,9 @@ import {
 } from '@mui/icons-material';
 import ImageViewer from '../../../utils/signatureViewer';
 import TrainingInductionDialog from '../../../components/pages/hse/induction-training/CreateTrainingInduction';
-import { useGetAllInductionTrainingsQuery } from '../../../api/hse/induction/inductionApi';
-// import { useGetAllInductionTrainingsQuery } from '../../../services/annexuresApi'; // Update with your actual API path
+import { useGetInductionTrainingsQuery } from '../../../api/hse/induction/inductionApi';
+import { useParams } from 'react-router-dom';
+
 function InductionTraining() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -31,9 +32,12 @@ function InductionTraining() {
   const [selectedTraining, setSelectedTraining] = useState(null);
   const [openTopicsModal, setOpenTopicsModal] = useState(false);
   const [openCreateDialog, setCreateDialog] = useState(false);
+  const { locationId } = useParams();
   
-  // Replace the dummy data with the actual API call
-  const { data: inductionTrainingsResponse, isLoading, error } = useGetAllInductionTrainingsQuery();
+  // Use the updated query hook with locationId parameter
+  const { data: inductionTrainingsResponse, isLoading, error } = useGetInductionTrainingsQuery(
+    locationId ? parseInt(locationId) : undefined
+  );
   const inductionTrainings = inductionTrainingsResponse?.data || [];
 
   const topicLabels = [
@@ -161,7 +165,6 @@ function InductionTraining() {
                 <TableCell align="center">{training.faculty_name}</TableCell>
                 <TableCell align="center">
                   <ImageViewer 
-                    // src={training.faculty_signature} 
                     src={`${import.meta.env.VITE_API_KEY}${training.faculty_signature}`}
                     alt={`${training.faculty_name} Signature`} 
                   />

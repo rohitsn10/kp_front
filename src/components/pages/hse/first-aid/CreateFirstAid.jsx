@@ -13,7 +13,7 @@ import { toast } from "react-toastify";
 import { useCreateFirstAidRecordMutation } from "../../../../api/hse/firstAidRecord/firstAidRecordApi";
 // import { useCreateFirstAidRecordMutation } from "./firstAidRecordApi"; // Import the mutation hook
 
-export default function FirstAidDialog({ open, setOpen }) {
+export default function FirstAidDialog({ open, setOpen,onSuccess }) {
   // State for form fields
   const [siteName, setSiteName] = useState("");
   const [date, setDate] = useState("");
@@ -78,6 +78,7 @@ export default function FirstAidDialog({ open, setOpen }) {
       // Check response status
       if (response.status === true) {
         toast.success(response.message || "First aid record submitted successfully!");
+        onSuccess();
         setOpen(false);
         
         // Reset form fields

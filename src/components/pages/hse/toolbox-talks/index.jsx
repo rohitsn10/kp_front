@@ -13,11 +13,12 @@ import {
   Avatar,
 } from "@mui/material";
 import { toast } from "react-toastify";
-import { useCreateToolTalkAttendanceMutation } from "../../../../api/hse/toolbox/toolBoxApi";
+import { useCreateToolTalkAttendanceMutation, useGetToolTalkAttendanceQuery } from "../../../../api/hse/toolbox/toolBoxApi";
 // import { useCreateToolTalkAttendanceMutation } from "../path/to/toolTalkAttendanceApi"; // Update with your actual path
 
 export default function ToolboxAttendanceDialog({ open, setOpen }) {
   const [createToolTalkAttendance, { isLoading }] = useCreateToolTalkAttendanceMutation();
+  const { refetch } = useGetToolTalkAttendanceQuery();
 
   const [site, setSite] = useState("");
   const [location, setLocation] = useState("");
@@ -148,7 +149,7 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
 
       // Call the mutation
       await createToolTalkAttendance(formData).unwrap();
-      
+      refetch();
       toast.success("Toolbox talk attendance data submitted successfully!");
       setOpen(false);
     } catch (error) {
