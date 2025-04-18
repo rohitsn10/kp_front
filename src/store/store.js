@@ -35,6 +35,7 @@ import { harnessInspectionApi } from "../api/hse/harness/harnessApi.js";
 import { excavationPermitApi } from "../api/hse/excavation/excavationPermitApi.js";
 import { safetyTrainingMinutesApi } from "../api/hse/safetyTrainingMinutes/safetyTrainingMinutes.js";
 import { suggestionSchemeReportApi } from "../api/hse/suggestionScheme/suggestionSchemeReportApi .js";
+import { ladderInspectionApi } from "../api/hse/ladder/ladderInspectionApi.js";
  
 const store = configureStore({
   reducer: {
@@ -73,7 +74,8 @@ const store = configureStore({
     [harnessInspectionApi.reducerPath]:harnessInspectionApi.reducer,
     [excavationPermitApi.reducerPath]:excavationPermitApi.reducer,
     [safetyTrainingMinutesApi.reducerPath]:safetyTrainingMinutesApi.reducer,
-    [suggestionSchemeReportApi.reducerPath]:suggestionSchemeReportApi.reducer
+    [suggestionSchemeReportApi.reducerPath]:suggestionSchemeReportApi.reducer,
+    [ladderInspectionApi.reducerPath]:ladderInspectionApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -113,6 +115,7 @@ const store = configureStore({
       .concat(excavationPermitApi.middleware)
       .concat(safetyTrainingMinutesApi.middleware)
       .concat(suggestionSchemeReportApi.middleware)
+      .concat(ladderInspectionApi.middleware)
 });
 
 export default store;

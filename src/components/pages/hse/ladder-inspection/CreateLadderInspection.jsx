@@ -11,10 +11,15 @@ import {
   Divider,
   Box,
   Avatar,
+  CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useCreateLadderInspectionMutation } from "../../../../api/hse/ladder/ladderInspectionApi";
+import { useParams } from "react-router-dom";
+// import { useCreateLadderInspectionMutation } from "../services/ladderInspectionApi"; // Adjust path as needed
 
-export default function LadderInspectionDialog({ open, setOpen }) {
+export default function LadderInspectionDialog({ open, setOpen,onSuccess }) {
+  const { locationId } = useParams();
   const [site, setSite] = useState("");
   const [ladderNo, setLadderNo] = useState("");
   const [dateOfInspection, setDateOfInspection] = useState("");
@@ -34,6 +39,9 @@ export default function LadderInspectionDialog({ open, setOpen }) {
     name: "",
     signature: null,
   });
+
+  // RTK Query hook for creating ladder inspection
+  const [createLadderInspection, { isLoading }] = useCreateLadderInspectionMutation();
 
   const validateForm = () => {
     if (!site.trim()) return toast.error("Site is required!");
@@ -76,32 +84,82 @@ export default function LadderInspectionDialog({ open, setOpen }) {
   const handleInspectedCheckedBySignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Store the actual file for form submission
+      setInspectedCheckedBy({
+        ...inspectedCheckedBy,
+        signatureFile: file,
+      });
+      
+      // Create preview for display
       const reader = new FileReader();
       reader.onload = () => {
-        setInspectedCheckedBy({
-          ...inspectedCheckedBy,
+        setInspectedCheckedBy(prev => ({
+          ...prev,
           signature: reader.result,
-        });
+        }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const formData = {
-      site: site,
-      ladder_no: ladderNo,
-      date_of_inspection: dateOfInspection,
-      visual_physical_checks: visualPhysicalChecks,
-      remarks: remarks,
-      inspected_checked_by: inspectedCheckedBy,
-    };
+    // Create FormData for API submission
+    const formData = new FormData();
+    
+    // Add basic fields
+    formData.append("site_name", site);
+    formData.append("location", locationId);
+    formData.append("ladder_no", ladderNo);
+    formData.append("date_of_inspection", dateOfInspection);
+    formData.append("remarks", remarks);
+    formData.append("inspected_by_name", inspectedCheckedBy.name);
+    
+    // Add visual/physical checks
+    Object.entries(visualPhysicalChecks).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+    
+    // Add signature file if available
+    if (inspectedCheckedBy.signatureFile) {
+      formData.append("inspected_by_signature", inspectedCheckedBy.signatureFile);
+    }
 
-    console.log(formData);
-    toast.success("Ladder inspection data submitted successfully!");
-    setOpen(false);
+    try {
+      const response = await createLadderInspection(formData).unwrap();
+      if (response.status) {
+        toast.success(response.message || "Ladder inspection data submitted successfully!");
+        // Reset form
+        setSite("");
+        setLadderNo("");
+        setDateOfInspection("");
+        setVisualPhysicalChecks({
+          rail_strings_damaged: "",
+          rung_missing: "",
+          rung_broken: "",
+          rung_distance_uneven: "",
+          rungs_loose: "",
+          top_hook_missing_damaged: "",
+          bottom_non_skid_pad_missing_damaged: "",
+          non_slip_bases: "",
+          custom_check: "",
+        });
+        setRemarks("");
+        setInspectedCheckedBy({
+          name: "",
+          signature: null,
+          signatureFile: null,
+        });
+        onSuccess();
+        setOpen(false);
+      } else {
+        toast.error(response.message || "Failed to submit ladder inspection data");
+      }
+    } catch (error) {
+      console.error("Error submitting ladder inspection:", error);
+      toast.error(error.data?.message || "An error occurred while submitting the form");
+    }
   };
 
   return (
@@ -264,7 +322,7 @@ export default function LadderInspectionDialog({ open, setOpen }) {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleClose} color="secondary" variant="outlined">
+        <Button onClick={handleClose} color="secondary" variant="outlined" disabled={isLoading}>
           Cancel
         </Button>
         <Button
@@ -284,8 +342,9 @@ export default function LadderInspectionDialog({ open, setOpen }) {
             },
           }}
           variant="contained"
+          disabled={isLoading}
         >
-          Submit
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>
