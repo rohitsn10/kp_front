@@ -26,7 +26,7 @@ export const harnessInspectionApi = createApi({
     // Endpoint for getting all harness inspections
     getAllHarnessInspections: builder.query({
       query: () => ({
-        url: "annexures_module/get_harness_inspection",
+        url: `annexures_module/get_harness_inspection/${locationId}`,
         method: "GET",
       }),
     }),

@@ -26,7 +26,7 @@ export const fireExtinguisherInspectionApi = createApi({
     // Endpoint for getting all fire extinguisher inspections
     getAllFireExtinguisherInspections: builder.query({
       query: () => ({
-        url: "annexures_module/get_fire_extinguisher_inspection",
+        url: `annexures_module/get_fire_extinguisher_inspection/${locationId}`,
         method: "GET",
       }),
     }),

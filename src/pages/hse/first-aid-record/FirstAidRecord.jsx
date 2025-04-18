@@ -1,23 +1,24 @@
-import React, { useState } from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
-  Button, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
+import React, { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
   Typography,
   TablePagination,
   TextField,
-  CircularProgress
-} from '@mui/material';
-import IncidentReportDialog from '../../../components/pages/hse/first-aid/CreateFirstAid';
-import { useGetAllFirstAidRecordsQuery } from '../../../api/hse/firstAidRecord/firstAidRecordApi';
+  CircularProgress,
+} from "@mui/material";
+import IncidentReportDialog from "../../../components/pages/hse/first-aid/CreateFirstAid";
+import { useGetAllFirstAidRecordsQuery } from "../../../api/hse/firstAidRecord/firstAidRecordApi";
+import { useParams } from "react-router-dom";
 // import { useGetAllFirstAidRecordsQuery } from '../../api'; // Adjust the import path as needed
 
 function FirstAidRecord() {
@@ -27,10 +28,17 @@ function FirstAidRecord() {
   const [selectedFirstAid, setSelectedFirstAid] = useState(null);
   const [openDescriptionModal, setOpenDescriptionModal] = useState(false);
   const [openCreateDialog, setCreateDialog] = useState(false);
-  
+  const { locationId } = useParams();
   // Using the RTK Query hook to fetch data
-  const { data: response, isLoading, isError, refetch } = useGetAllFirstAidRecordsQuery();
-  
+  const {
+    data: response,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetAllFirstAidRecordsQuery(
+    locationId ? parseInt(locationId) : undefined
+  );
+
   // Extract the first aid records from the API response
   const firstAidRecords = response?.data || [];
 
@@ -44,11 +52,18 @@ function FirstAidRecord() {
   };
 
   // Filtering logic
-  const filteredFirstAidRecords = firstAidRecords.filter((record) =>
-    (record.first_aid_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (record.designation?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (record.employee_of?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (record.site_name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+  const filteredFirstAidRecords = firstAidRecords.filter(
+    (record) =>
+      (record.first_aid_name?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      ) ||
+      (record.designation?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      ) ||
+      (record.employee_of?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      ) ||
+      (record.site_name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
   );
 
   const currentRows = filteredFirstAidRecords.slice(
@@ -85,8 +100,10 @@ function FirstAidRecord() {
 
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
-      <h2 className="text-3xl text-[#29346B] font-semibold text-center mb-6">First Aid Records</h2>
-      
+      <h2 className="text-3xl text-[#29346B] font-semibold text-center mb-6">
+        First Aid Records
+      </h2>
+
       <div className="flex flex-row flex-wrap gap-4 justify-between p-6 md:p-4 mb-5">
         <TextField
           value={searchTerm}
@@ -96,13 +113,13 @@ function FirstAidRecord() {
         />
         <Button
           variant="contained"
-          style={{ 
-            backgroundColor: '#FF8C00', 
-            color: 'white', 
-            fontWeight: 'bold', 
-            fontSize: '16px', 
-            textTransform: 'none', 
-            minHeight: 'auto' 
+          style={{
+            backgroundColor: "#FF8C00",
+            color: "white",
+            fontWeight: "bold",
+            fontSize: "16px",
+            textTransform: "none",
+            minHeight: "auto",
           }}
           onClick={() => setCreateDialog(true)}
         >
@@ -110,10 +127,10 @@ function FirstAidRecord() {
         </Button>
       </div>
 
-      <TableContainer component={Paper} style={{ borderRadius: '8px' }}>
+      <TableContainer component={Paper} style={{ borderRadius: "8px" }}>
         <Table>
           <TableHead>
-            <TableRow style={{ backgroundColor: '#F2EDED' }}>
+            <TableRow style={{ backgroundColor: "#F2EDED" }}>
               <TableCell align="center">Date</TableCell>
               <TableCell align="center">Site Name</TableCell>
               <TableCell align="center">Name</TableCell>
@@ -138,8 +155,8 @@ function FirstAidRecord() {
                   <TableCell align="center">{record.designation}</TableCell>
                   <TableCell align="center">{record.employee_of}</TableCell>
                   <TableCell align="center">
-                    <Button 
-                      variant="contained" 
+                    <Button
+                      variant="contained"
                       color="primary"
                       onClick={() => openDescriptionModalHandler(record)}
                     >
@@ -161,12 +178,12 @@ function FirstAidRecord() {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={[5, 10, 25]}
-        style={{ borderTop: '1px solid #e0e0e0' }}
+        style={{ borderTop: "1px solid #e0e0e0" }}
       />
 
       {/* Description Modal */}
-      <Dialog 
-        open={openDescriptionModal} 
+      <Dialog
+        open={openDescriptionModal}
         onClose={() => setOpenDescriptionModal(false)}
         maxWidth="md"
         fullWidth
@@ -196,7 +213,7 @@ function FirstAidRecord() {
               <Typography variant="body1">
                 <strong>Location:</strong> {selectedFirstAid.location_name}
               </Typography>
-              
+
               <Typography variant="h6" gutterBottom className="mt-4">
                 Description
               </Typography>

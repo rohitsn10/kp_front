@@ -17,7 +17,8 @@ import {
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import BoomLiftInspectionDialog from "../../../components/pages/hse/boom-lift/CreateBoomLift";
-import { useGetBoomLiftInspectionQuery } from "../../../api/hse/boomLift/boomliftApi";
+import { useGetToolTalkAttendanceQuery } from "../../../api/hse/toolbox/toolBoxApi";
+import { useParams } from "react-router-dom";
 function BoomLiftInspection() {
   const dummyBoomLift = [
     {
@@ -265,7 +266,8 @@ function BoomLiftInspection() {
       }
     }
   ]
-const { data, isLoading, error } = useGetBoomLiftInspectionQuery();
+  const {locationId} = useParams();
+const { data, isLoading, error } = useGetBoomLiftInspectionQuery(locationId ? parseInt(locationId) : undefined);
 // Use either 'data?.data' if data is nested or fallback to dummy data
 const transformedData = (data?.data || dummyBoomLift).map((item) => {
   if (item.BoomLiftInspection) return item; // from dummyBoomLift

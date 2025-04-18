@@ -22,8 +22,8 @@ export const trailerInspectionApi = createApi({
       }),
     }),
     getTrailerInspection: builder.query({
-      query: () => ({
-        url: "annexures_module/get_trailer_inspection",
+      query: (locationId) => ({
+        url: `annexures_module/get_trailer_inspection/${locationId}`,
         method: "GET",
       }),
     }),

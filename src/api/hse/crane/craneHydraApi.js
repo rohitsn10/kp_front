@@ -23,7 +23,7 @@ export const craneHydraApi = createApi({
     }),
     getCraneHydraInspection: builder.query({
       query: () => ({
-        url: "annexures_module/get_crane_hydra_inspection",
+        url: `annexures_module/get_crane_hydra_inspection/${locationId}`,
         method: "GET",
       }),
     }),

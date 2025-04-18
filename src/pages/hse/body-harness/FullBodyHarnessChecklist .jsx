@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import HarnessInspectionDialog from '../../../components/pages/hse/body-harness/CreateHarnessChecklist';
 import { useGetAllHarnessInspectionsQuery } from '../../../api/hse/harness/harnessApi';
+import { useParams } from 'react-router-dom';
 // import { useGetAllHarnessInspectionsQuery } from '../../../path/to/your/api'; // Adjust the import path as needed
 
 function FullBodyHarnessChecklist() {
@@ -28,9 +29,9 @@ function FullBodyHarnessChecklist() {
   const [openDetailsModal, setOpenDetailsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [createHarnessChecklist, setCreateHarnessChecklist] = useState(false);
-
+  const { locationId } = useParams();
   // Use the RTK Query hook to fetch data
-  const { data: harnessResponse, error, isLoading,refetch } = useGetAllHarnessInspectionsQuery();
+  const { data: harnessResponse, error, isLoading,refetch } = useGetAllHarnessInspectionsQuery(locationId ? parseInt(locationId) : undefined);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);

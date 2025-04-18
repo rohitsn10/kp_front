@@ -182,7 +182,7 @@ export default function TrainingInductionDialog({ open, setOpen }) {
     
     // Append faculty signature
     if (facultySignature) {
-      formData.append("faculty_signature", facultySignature);
+      formData.append("faculty_signature", facultySignature); 
     }
     
     // Append each topic individually

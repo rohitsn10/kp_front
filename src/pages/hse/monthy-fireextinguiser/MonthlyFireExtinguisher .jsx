@@ -21,6 +21,7 @@ import {
 } from '@mui/material';
 import FireExtinguisherInspectionDialog from '../../../components/pages/hse/monthly-extenguisher/CreateExtinuisherList';
 import { useGetAllFireExtinguisherInspectionsQuery } from '../../../api/hse/extinguisher/extinguisherApi';
+import { useParams } from 'react-router-dom';
 // import { useGetAllFireExtinguisherInspectionsQuery } from '../../store/services/api'; // Adjust the import path as needed
 
 // Reusable Image Viewer Component
@@ -70,9 +71,9 @@ function MonthlyFireExtinguisher() {
   const [selectedExtinguisher, setSelectedExtinguisher] = useState(null);
   const [openExtinguisherModal, setOpenExtinguisherModal] = useState(false);
   const [openCreateList, setOpenCreateList] = useState(false);
-
+  const {locationId}=useParams();
   // Fetch data using the RTK Query hook
-  const { data: inspectionsData, isLoading, isError, error } = useGetAllFireExtinguisherInspectionsQuery();
+  const { data: inspectionsData, isLoading, isError, error } = useGetAllFireExtinguisherInspectionsQuery(locationId ? parseInt(locationId) : undefined);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);

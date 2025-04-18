@@ -18,6 +18,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import CraneHydraInspectionDialog from "../../../components/pages/hse/crane-hydra-inspecton/CreateCraneHydra.jsx";
 import { useGetCraneHydraInspectionQuery } from "../../../api/hse/crane/craneHydraApi.js";
+import { useParams } from "react-router-dom";
 
 function CraneHydraInspection() {
   const [page, setPage] = useState(0);
@@ -26,8 +27,10 @@ function CraneHydraInspection() {
   const [openDetails, setOpenDetails] = useState(false);
   const [openChecklist, setOpenChecklist] = useState(false);
   const [selectedInspection, setSelectedInspection] = useState(null);
-  const { data } = useGetCraneHydraInspectionQuery();
+  const {locationId} = useParams();
+  const { data } = useGetCraneHydraInspectionQuery(locationId ? parseInt(locationId) : undefined);
   const [openCreateDialog, setOpenDialog] = useState(false);
+  
   // const [createDialog,setCreateDialog] = useState(false);
 
   const handleOpenDetails = (inspection) => {

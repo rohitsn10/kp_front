@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import TrainingAttendanceDialog from "../../../components/pages/hse/safety-training/CreateSafetyTraining";
 import { useGetSafetyTrainingAttendanceQuery } from "../../../api/hse/safetyTraining/safetyTrainingApi";
+import { useParams } from "react-router-dom";
 const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
   const [open, setOpen] = useState(false);
 
@@ -60,7 +61,8 @@ function SafetyTraining() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTraining, setSelectedTraining] = useState(null);
   const [openParticipantsModal, setOpenParticipantsModal] = useState(false);
-  const { data, isLoading, error } = useGetSafetyTrainingAttendanceQuery();
+  const{locationId} = useParams();
+  const { data, isLoading, error } = useGetSafetyTrainingAttendanceQuery(locationId ? parseInt(locationId) : undefined);
   const [openCreateDialog, setCreateDialog] = useState(false);
   const dummySafetyData = [
     {

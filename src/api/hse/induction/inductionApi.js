@@ -31,7 +31,7 @@ export const inductionTrainingApi = createApi({
           ? `annexures_module/get_induction_training/${locationId}` 
           : "annexures_module/get_induction_training",
         method: "GET",
-      }),
+      }), 
     }),
     
     // Endpoint for getting location-wise induction trainings

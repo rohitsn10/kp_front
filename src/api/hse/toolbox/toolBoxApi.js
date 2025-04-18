@@ -24,8 +24,8 @@ export const toolTalkAttendanceApi = createApi({
       }),
     }),
     getToolTalkAttendance: builder.query({
-      query: () => ({
-        url: "annexures_module/get_tooltalk_attendence",
+      query: (locationId) => ({
+        url: `annexures_module/get_tooltalk_attendence/${locationId}`,
         method: "GET",
       }),
     }),
