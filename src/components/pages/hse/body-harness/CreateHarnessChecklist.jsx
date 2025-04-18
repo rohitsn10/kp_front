@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreateHarnessInspectionMutation, useGetAllHarnessInspectionsQuery } from "../../../../api/hse/harness/harnessApi";
+import { useParams } from "react-router-dom";
 // import { useCreateHarnessInspectionMutation } from "../path/to/harnessInspectionApi"; // Update path as needed
 
 export default function HarnessInspectionDialog({ open, setOpen, onSuccess }) {
@@ -30,7 +31,7 @@ export default function HarnessInspectionDialog({ open, setOpen, onSuccess }) {
   const [inspectorSignature, setInspectorSignature] = useState(null);
   const [inspectorSignatureFile, setInspectorSignatureFile] = useState(null);
     // const { refetch } = useGetAllHarnessInspectionsQuery();
-  
+    const { locationId } = useParams();
   // Keeping this for future implementation
   const [visualPhysicalChecks, setVisualPhysicalChecks] = useState([
     { check: "Harness no fissure, wear or twisted strap", status: "", remarks: "" },
@@ -145,6 +146,7 @@ export default function HarnessInspectionDialog({ open, setOpen, onSuccess }) {
     const formData = new FormData();
     
     // Mapping from UI form to API model structure
+    formData.append('location', locationId);
     formData.append("site_name", site);
     formData.append("make_model", makeModel);
     formData.append("manufacturing_date", manufacturingDate);

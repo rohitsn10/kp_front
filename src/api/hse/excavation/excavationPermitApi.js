@@ -26,7 +26,7 @@ export const excavationPermitApi = createApi({
     // Endpoint for getting location-specific excavation permits
     getLocationExcavationPermits: builder.query({
       query: (locationId) => ({
-        url: `get_excavationpermit/${locationId}`,
+        url: `annexures_module/get_excavationpermit/${locationId}`,
         method: "GET",
       }),
     }),

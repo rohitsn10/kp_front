@@ -30,9 +30,16 @@ function FullBodyHarnessChecklist() {
   const [searchTerm, setSearchTerm] = useState("");
   const [createHarnessChecklist, setCreateHarnessChecklist] = useState(false);
   const { locationId } = useParams();
-  // Use the RTK Query hook to fetch data
-  const { data: harnessResponse, error, isLoading,refetch } = useGetAllHarnessInspectionsQuery(locationId ? parseInt(locationId) : undefined);
-
+  const parsedLocationId = locationId ? parseInt(locationId, 10) : null;
+  const { 
+    data: harnessResponse, 
+    error, 
+    isLoading,
+    refetch 
+  } = useGetAllHarnessInspectionsQuery(parsedLocationId, {
+    // Skip the query if locationId is invalid
+    skip: parsedLocationId === null || isNaN(parsedLocationId)
+  });
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };

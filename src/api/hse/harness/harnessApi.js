@@ -24,12 +24,25 @@ export const harnessInspectionApi = createApi({
     }),
     
     // Endpoint for getting all harness inspections
-    getAllHarnessInspections: builder.query({
-      query: () => ({
-        url: `annexures_module/get_harness_inspection/${locationId}`,
-        method: "GET",
-      }),
-    }),
+getAllHarnessInspections: builder.query({
+  query: (locationId) => {
+    // Validate the locationId parameter
+    if (!locationId || isNaN(locationId)) {
+      throw new Error('Valid location ID is required');
+    }
+    
+    // Return the endpoint with locationId
+    return {
+      url: `annexures_module/get_harness_inspection/${locationId}`,
+      method: "GET",
+    };
+  },
+  // Add proper error handling
+  transformErrorResponse: (response) => {
+    console.error('Error in harness inspections query:', response);
+    return response;
+  },
+}),
   }),
 });
 
