@@ -17,11 +17,12 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreateCraneHydraInspectionMutation } from "../../../../api/hse/crane/craneHydraApi";
+import { useParams } from "react-router-dom";
 
-export default function CraneHydraInspectionDialog({ open, setOpen }) {
+export default function CraneHydraInspectionDialog({ open, setOpen,onSuccess }) {
   // RTK mutation hook
   const [createCraneHydraInspection, { isLoading }] = useCreateCraneHydraInspectionMutation();
-  
+  const { locationId } = useParams();
   // Basic information
   const [equipmentName, setEquipmentName] = useState("");
   const [makeModel, setMakeModel] = useState("");
@@ -34,7 +35,7 @@ export default function CraneHydraInspectionDialog({ open, setOpen }) {
   const [remarks, setRemarks] = useState("");
   const [inspectedByName, setInspectedByName] = useState("");
   const [inspectedBySignature, setInspectedBySignature] = useState(null);
-
+  const [signaturePreview, setSignaturePreview] = useState(null);
   // Inspection fields - each field has observations, action_by, and remarks
   const [inspectionFields, setInspectionFields] = useState({
     all_valid_document: {
@@ -207,9 +208,12 @@ export default function CraneHydraInspectionDialog({ open, setOpen }) {
   const handleSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setInspectedBySignature(file); // Store the actual file object
+      
+      // If you still need to show a preview:
       const reader = new FileReader();
       reader.onload = () => {
-        setInspectedBySignature(reader.result);
+        setSignaturePreview(reader.result); // New state for preview only
       };
       reader.readAsDataURL(file);
     }
@@ -219,40 +223,55 @@ export default function CraneHydraInspectionDialog({ open, setOpen }) {
     if (!validateForm()) return;
   
     try {
-      let formattedDate = inspectionDate;
-      if (inspectionDate) {
-        try {
-          const dateObj = new Date(inspectionDate);
-          if (!isNaN(dateObj.getTime())) {
-            formattedDate = dateObj.toISOString();
-          }
-        } catch (error) {
-          console.error("Date formatting error:", error);
-        }
-      }
-  
-      const requestData = {
-        equipment_name: equipmentName,
-        make_model: makeModel,
-        identification_number: identificationNumber,
-        inspection_date: formattedDate,
-        site_name: siteName,
-        location: location,
-        remarks: remarks,
-        inspected_by_name: inspectedByName,
-        inspected_by_signature: inspectedBySignature,
-      };
+      // let formattedDate = inspectionDate;
+      // if (inspectionDate) {
+      //   try {
+      //     const dateObj = new Date(inspectionDate);
+      //     if (!isNaN(dateObj.getTime())) {
+      //       formattedDate = dateObj.toISOString();
+      //     }
+      //   } catch (error) {
+      //     console.error("Date formatting error:", error);
+      //   }
+      // }
+      const formData = new FormData();
+      formData.append('equipment_name', equipmentName);
+      formData.append('make_model', makeModel);
+      formData.append('identification_number', identificationNumber);
+      formData.append('inspection_date', inspectionDate);
+      formData.append('site_name', siteName);
+      formData.append('location', locationId); 
+
+          // Add inspected information
+    formData.append('inspected_name', inspectedByName);
+    
+    // Convert base64 signature to file if it exists
+    if (inspectedBySignature) {
+      formData.append('inspected_sign', inspectedBySignature);
+    }
+      // const requestData = {
+      //   equipment_name: equipmentName,
+      //   make_model: makeModel,
+      //   identification_number: identificationNumber,
+      //   inspection_date: formattedDate,
+      //   site_name: siteName,
+      //   location: location,
+      //   remarks: remarks,
+      //   inspected_by_name: inspectedByName,
+      //   inspected_by_signature: inspectedBySignature,
+      // };
   
       for (const [key, value] of Object.entries(inspectionFields)) {
-        requestData[`${key}_observations`] = value.observations;
-        requestData[`${key}_action_by`] = value.action_by;
-        requestData[`${key}_remarks`] = value.remarks || "No remarks";
+        formData.append(`${key}_observations`, value.observations);
+        formData.append(`${key}_action_by`, value.action_by);
+        formData.append(`${key}_remarks`, value.remarks || "");
       }
   
-      const response = await createCraneHydraInspection(requestData).unwrap();
+      const response = await createCraneHydraInspection(formData).unwrap();
   
       if (response.status) {
         toast.success(response.message || "Crane inspection submitted successfully!");
+        onSuccess();
         resetForm();
         setOpen(false);
       } else {
@@ -491,9 +510,9 @@ export default function CraneHydraInspectionDialog({ open, setOpen }) {
                     onChange={handleSignatureUpload}
                   />
                 </Button>
-                {inspectedBySignature && (
+                {signaturePreview && (
                   <Avatar
-                    src={inspectedBySignature}
+                    src={signaturePreview}
                     alt="Inspector Signature"
                     variant="rounded"
                     sx={{ width: 100, height: 56 }}

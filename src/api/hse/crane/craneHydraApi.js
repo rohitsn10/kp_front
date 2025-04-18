@@ -9,8 +9,7 @@ export const craneHydraApi = createApi({
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
-      headers.set("Content-Type", "application/json");
-      return headers;
+
     },
   }),
   endpoints: (builder) => ({
@@ -22,7 +21,7 @@ export const craneHydraApi = createApi({
       }),
     }),
     getCraneHydraInspection: builder.query({
-      query: () => ({
+      query: (locationId) => ({
         url: `annexures_module/get_crane_hydra_inspection/${locationId}`,
         method: "GET",
       }),

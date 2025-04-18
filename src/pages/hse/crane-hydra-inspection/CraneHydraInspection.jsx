@@ -21,16 +21,21 @@ import { useGetCraneHydraInspectionQuery } from "../../../api/hse/crane/craneHyd
 import { useParams } from "react-router-dom";
 
 function CraneHydraInspection() {
+    const { locationId } = useParams();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
   const [openDetails, setOpenDetails] = useState(false);
   const [openChecklist, setOpenChecklist] = useState(false);
   const [selectedInspection, setSelectedInspection] = useState(null);
-  const {locationId} = useParams();
-  const { data } = useGetCraneHydraInspectionQuery(locationId ? parseInt(locationId) : undefined);
+
+  // const { data } = useGetCraneHydraInspectionQuery(locationId ? parseInt(locationId) : undefined);
   const [openCreateDialog, setOpenDialog] = useState(false);
-  
+  const skipQuery = !locationId || isNaN(parseInt(locationId));
+    const { data, isLoading, error, refetch } = useGetCraneHydraInspectionQuery(
+      parseInt(locationId), 
+      { skip: skipQuery }
+    );
   // const [createDialog,setCreateDialog] = useState(false);
 
   const handleOpenDetails = (inspection) => {
@@ -162,6 +167,7 @@ function CraneHydraInspection() {
       <CraneHydraInspectionDialog
         open={openCreateDialog}
         setOpen={setOpenDialog}
+        onSuccess={()=>{refetch()}}
       />
 
       {/* Details Dialog */}
@@ -230,9 +236,12 @@ function CraneHydraInspection() {
                   key={index}
                   className="p-4 border rounded-lg shadow-sm bg-gray-50"
                 >
-                  <p>
+                  {/* <p>
                     <strong>Checkpoint:</strong> {baseKey.replace(/_/g, " ")}
-                  </p>
+                  </p> */}
+                  <p>
+  <strong>Checkpoint:</strong> <span class="capitalize">{baseKey.replace(/_/g, " ")}</span>
+</p>
                   <p>
                     <strong>Observations:</strong> {obsValue || ""}
                   </p>

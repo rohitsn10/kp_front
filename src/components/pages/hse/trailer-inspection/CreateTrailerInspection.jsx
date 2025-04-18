@@ -17,10 +17,12 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreateTrailerInspectionMutation } from "../../../../api/hse/trailerInspection/trailerInspectionApi";
+import { useParams } from "react-router-dom";
 // import { useCreateTrailerInspectionMutation } from "../services/api"; // Adjust the import path as necessary
 
-export default function TrailerInspectionDialog({ open, setOpen }) {
+export default function TrailerInspectionDialog({ open, setOpen, onSuccess }) {
   // API mutation hook
+  const { locationId } = useParams();
   const [createTrailerInspection, { isLoading }] = useCreateTrailerInspectionMutation();
 
   // Basic information
@@ -30,12 +32,12 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
   const [inspectionDate, setInspectionDate] = useState("");
   const [siteName, setSiteName] = useState("");
   const [location, setLocation] = useState("");
-  
+
   // New fields
   const [remarks, setRemarks] = useState("");
   const [inspectedByName, setInspectedByName] = useState("");
   const [inspectedBySignature, setInspectedBySignature] = useState(null);
-
+  const [signaturePreview, setSignaturePreview] = useState(null);
   // Inspection fields - each field has observations, action_by, and remarks
   const [inspectionFields, setInspectionFields] = useState({
     all_valid_document: {
@@ -140,7 +142,7 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
     if (!location.trim()) return toast.error("Location is required!");
     if (!inspectedByName.trim()) return toast.error("Inspected By Name is required!");
     if (!inspectedBySignature) return toast.error("Inspected By Signature is required!");
-    
+
     // Check if all inspection fields have observations filled
     for (const [key, value] of Object.entries(inspectionFields)) {
       if (!value.observations) {
@@ -185,14 +187,17 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
       borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
     },
   };
-  
+
   // Signature upload handler
   const handleSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setInspectedBySignature(file); // Store the actual file object
+
+      // If you still need to show a preview:
       const reader = new FileReader();
       reader.onload = () => {
-        setInspectedBySignature(reader.result);
+        setSignaturePreview(reader.result); // New state for preview only
       };
       reader.readAsDataURL(file);
     }
@@ -208,7 +213,7 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
     setRemarks("");
     setInspectedByName("");
     setInspectedBySignature(null);
-    
+
     // Reset all inspection fields
     const resetFields = {};
     for (const key in inspectionFields) {
@@ -237,34 +242,54 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
         console.error("Date formatting error:", error);
       }
     }
+    const formData = new FormData();
+    formData.append('equipment_name', equipmentName);
+    formData.append('make_model', makeModel);
+    formData.append('identification_number', identificationNumber);
+    formData.append('inspection_date', formattedDate);
+    formData.append('site_name', siteName);
+    formData.append('location', locationId);
+    formData.append('inspected_name', inspectedByName);
+    if (inspectedBySignature) {
+      formData.append('inspected_sign', inspectedBySignature);
+    }
 
     // Transform the state data to match the API request format
-    const requestData = {
-      equipment_name: equipmentName,
-      make_model: makeModel,
-      identification_number: identificationNumber,
-      inspection_date: formattedDate,
-      site_name: siteName,
-      location: location,
-      remarks: remarks,
-      inspected_by_name: inspectedByName,
-      inspected_by_signature: inspectedBySignature,
-    };
+    // const requestData = {
+    //   equipment_name: equipmentName,
+    //   make_model: makeModel,
+    //   identification_number: identificationNumber,
+    //   inspection_date: formattedDate,
+    //   site_name: siteName,
+    //   location: location,
+    //   remarks: remarks,
+    //   inspected_by_name: inspectedByName,
+    //   inspected_by_signature: inspectedBySignature,
+    // };
 
     // Add all inspection fields to request data
+    // for (const [key, value] of Object.entries(inspectionFields)) {
+    //   requestData[`${key}_observations`] = value.observations;
+    //   requestData[`${key}_action_by`] = value.action_by;
+    //   requestData[`${key}_remarks`] = value.remarks;
+    // }
     for (const [key, value] of Object.entries(inspectionFields)) {
-      requestData[`${key}_observations`] = value.observations;
-      requestData[`${key}_action_by`] = value.action_by;
-      requestData[`${key}_remarks`] = value.remarks;
+      formData.append(`${key}_observations`, value.observations);
+      formData.append(`${key}_action_by`, value.action_by);
+      formData.append(`${key}_remarks`, value.remarks || "");
     }
 
     try {
       // Call the mutation hook with the request data
-      const response = await createTrailerInspection(requestData).unwrap();
-      console.log("API Response:", response);
-      toast.success("Trailer inspection submitted successfully!");
-      resetForm();
-      setOpen(false);
+      const response = await createTrailerInspection(formData).unwrap();
+      if (response.status) {
+        toast.success(response.message || "Trailer Lift inspection submitted successfully!");
+        onSuccess();
+        resetForm();
+        setOpen(false);
+      } else {
+        toast.error(response.message || "Failed to submit inspection.");
+      }
     } catch (error) {
       console.error("API Error:", error);
       const errorMessage = error.data?.message || "Failed to submit trailer inspection";
@@ -292,14 +317,14 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
                 </MenuItem>
               ))}
             </Select> */}
-                        <TextField
-                          fullWidth
-                          label="Observations"
-                          variant="outlined"
-                          value={inspectionFields[fieldKey].observations}
-                          onChange={(e) => handleInspectionFieldChange(fieldKey, 'observations', e.target.value)}
-                          sx={commonInputStyles}
-                        />
+            <TextField
+              fullWidth
+              label="Observations"
+              variant="outlined"
+              value={inspectionFields[fieldKey].observations}
+              onChange={(e) => handleInspectionFieldChange(fieldKey, 'observations', e.target.value)}
+              sx={commonInputStyles}
+            />
           </FormControl>
         </Grid>
         <Grid item xs={12} md={4}>
@@ -412,7 +437,7 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
 
         <div className="my-4 border-t border-gray-300 pt-4">
           <h3 className="text-xl font-bold text-[#29346B] mb-4">Inspection Details</h3>
-          
+
           {/* Inspection Fields */}
           {renderInspectionField('all_valid_document', 'All valid documents are available - Registration, Insurance, Vehicle Fitness, PUC &  License')}
           {renderInspectionField('driver_fitness_certificate', 'Driver fitness certificate including eye  test.')}
@@ -432,14 +457,14 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
           {renderInspectionField('guard_parts', 'Guard for moving Parts')}
           {renderInspectionField('ppe', 'PPEs  (Safety shoes & helmet)')}
         </div>
-        
+
         {/* Added new fields section */}
         <div className="my-4 border-t border-gray-300 pt-4">
           {/* <h3 className="text-xl font-bold text-[#29346B] mb-4">Summary & Sign-off</h3> */}
-          <p className="mb-4 text-[#29346B] text-lg"> <span className="text-slate-950 font-semibold">Note:</span>  This checklist is applicable for all vehicles like- Truck /JCB / Tractor / Transit Mixer /  
-     Conveyance Vehicles /    Loader / Roller etc.
+          <p className="mb-4 text-[#29346B] text-lg"> <span className="text-slate-950 font-semibold">Note:</span>  This checklist is applicable for all vehicles like- Truck /JCB / Tractor / Transit Mixer /
+            Conveyance Vehicles /    Loader / Roller etc.
 
-</p>
+          </p>
           <Grid container spacing={3}>
             {/* Remarks field */}
             <Grid item xs={12}>
@@ -455,7 +480,7 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
                 className="mb-4"
               />
             </Grid>
-            
+
             {/* Inspected By Name field */}
             <Grid item xs={12} md={6}>
               <TextField
@@ -469,7 +494,7 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
                 className="mb-4"
               />
             </Grid>
-            
+
             {/* Inspected By Signature field */}
             <Grid item xs={12} md={6}>
               <label className="block mb-1 text-[#29346B] font-semibold">
@@ -490,9 +515,9 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
                     onChange={handleSignatureUpload}
                   />
                 </Button>
-                {inspectedBySignature && (
+                {signaturePreview && (
                   <Avatar
-                    src={inspectedBySignature}
+                    src={signaturePreview}
                     alt="Inspector Signature"
                     variant="rounded"
                     sx={{ width: 100, height: 56 }}
@@ -508,8 +533,8 @@ export default function TrailerInspectionDialog({ open, setOpen }) {
         <Button onClick={handleClose} color="secondary" variant="outlined">
           Cancel
         </Button>
-        <Button 
-          onClick={handleSubmit} 
+        <Button
+          onClick={handleSubmit}
           disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
