@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+// Solution 1: Fix the hook usage with better parameter handling
+
+import React, { useState, useEffect } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -21,7 +23,7 @@ import ImageViewer from '../../../utils/signatureViewer';
 import ToolboxAttendanceDialog from '../../../components/pages/hse/toolbox-talks';
 import { useGetToolTalkAttendanceQuery } from '../../../api/hse/toolbox/toolBoxApi';
 import { useParams } from 'react-router-dom';
-// import { useGetToolTalkAttendanceQuery } from '../../services/api'; // Adjust the import path as needed
+
 function ToolboxTalk() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -30,10 +32,25 @@ function ToolboxTalk() {
   const [openPointsModal, setOpenPointsModal] = useState(false);
   const [openParticipantsModal, setOpenParticipantsModal] = useState(false);
   const [openCreateDialog, setCreateDialog] = useState(false);
-  const {locationId}= useParams();
-  // Fetch toolbox talk attendance data using the provided hook
-  const { data: toolboxTalkData, isLoading, isError,refetch } = useGetToolTalkAttendanceQuery(locationId ? parseInt(locationId) : undefined);
+  
+  // Get locationId from URL params
+  const { locationId } = useParams();
+  
+  // Make sure locationId is a valid number before passing to the query
+  const parsedLocationId = locationId ? parseInt(locationId, 10) : null;
+  
+  // Use the query hook with proper skip option to prevent invalid requests
+  const { 
+    data: toolboxTalkData, 
+    isLoading, 
+    isError,
+    refetch 
+  } = useGetToolTalkAttendanceQuery(parsedLocationId, {
+    // Skip the query if locationId is null/invalid
+    skip: parsedLocationId === null || isNaN(parsedLocationId),
+  });
 
+  // Rest of your component code...
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -43,7 +60,6 @@ function ToolboxTalk() {
     setPage(0);
   };
 
-  // Function to handle file download
   const handleFileDownload = (fileUrl) => {
     if (fileUrl) {
       window.open(fileUrl, '_blank');
@@ -74,6 +90,17 @@ function ToolboxTalk() {
     setOpenParticipantsModal(true);
   };
 
+  // Display error if locationId is missing
+  if (!parsedLocationId || isNaN(parsedLocationId)) {
+    return (
+      <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
+        <Typography variant="h6" color="error" align="center">
+          Invalid location ID. Please check the URL and try again.
+        </Typography>
+      </div>
+    );
+  }
+
   // Display loading state
   if (isLoading) {
     return (
@@ -90,6 +117,14 @@ function ToolboxTalk() {
         <Typography variant="h6" color="error" align="center">
           Error fetching toolbox talk data. Please try again later.
         </Typography>
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={() => refetch()}
+          className="mt-4 mx-auto block"
+        >
+          Retry
+        </Button>
       </div>
     );
   }
@@ -174,7 +209,8 @@ function ToolboxTalk() {
         style={{ borderTop: '1px solid #e0e0e0' }}
       />
 
-      {/* Points Discussed Modal - Updated to match the API response format */}
+      {/* Modals remain the same */}
+      {/* Points Discussed Modal */}
       <Dialog 
         open={openPointsModal} 
         onClose={() => setOpenPointsModal(false)}
@@ -224,7 +260,7 @@ function ToolboxTalk() {
         </DialogContent>
       </Dialog>
 
-      {/* Participants Modal - Updated to show file download button */}
+      {/* Participants Modal */}
       <Dialog 
         open={openParticipantsModal} 
         onClose={() => setOpenParticipantsModal(false)}

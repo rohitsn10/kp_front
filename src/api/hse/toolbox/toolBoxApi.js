@@ -24,10 +24,26 @@ export const toolTalkAttendanceApi = createApi({
       }),
     }),
     getToolTalkAttendance: builder.query({
-      query: (locationId) => ({
-        url: `annexures_module/get_tooltalk_attendence/${locationId}`,
-        method: "GET",
-      }),
+      query: (locationId) => {
+        // Handle the case where locationId might be undefined or null
+        if (!locationId) {
+          // You might throw an error or return a specific URL for this case
+          throw new Error('Location ID is required');
+        }
+        return {
+          url: `annexures_module/location_wise_get_tooltalk_attendence/${locationId}`,
+          method: "GET",
+        };
+      },
+      transformErrorResponse: (response, meta, arg) => {
+        console.error('Error in toolbox talk query:', response);
+        return response;
+      },
+
+      transformResponse: (response, meta, arg) => {
+
+        return response;
+      },
     }),
   }),
 });

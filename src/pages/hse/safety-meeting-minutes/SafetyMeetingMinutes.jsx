@@ -13,19 +13,24 @@ import {
   DialogContent,
   Typography,
   TablePagination,
-  TextField
+  TextField,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import CreateHSEMeetingMinutes from '../../../components/pages/hse/create-safety-meeting-minutes/CreateSafetyMOM';
-// import CreateSafetyMeeting from '../../../components/pages/hse/safety-meeting/CreateSafetyMeeting';
+import { useGetMinutesOfSafetyTrainingQuery } from '../../../api/hse/safetyTrainingMinutes/safetyTrainingMinutes';
+import { useParams } from 'react-router-dom';
 
 // Reusable Image Viewer Component
 const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
   const [open, setOpen] = useState(false);
+  const baseUrl = import.meta.env.VITE_API_KEY || '';
+  const fullImageUrl = src && !src.startsWith('http') ? `${baseUrl}${src}` : src;
 
   return (
     <>
       <img
-        src={src}
+        src={fullImageUrl}
         alt={alt}
         onClick={() => setOpen(true)}
         style={{
@@ -42,7 +47,7 @@ const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
       >
         <DialogContent>
           <img
-            src={src}
+            src={fullImageUrl}
             alt={alt}
             style={{
               width: '100%',
@@ -63,228 +68,15 @@ function SafetyMeeting() {
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [openDetailsModal, setOpenDetailsModal] = useState(false);
   const [openCreateDialog, setCreateDialog] = useState(false);
-
-  const dummySafetyMeeting = [{
-    "site": "Construction Site D",
-    "time": "10:00 AM",
-    "mom_recorded_by": "Alice Johnson",
-    "mom_issue_date": "2025-04-01",
-    "chairman_name": "Robert Smith",
-    "hse_performance_data": [
-      {
-        "parameter": "Incidents Reported",
-        "month": 2,
-        "year_to_date": 5
-      },
-      {
-        "parameter": "Near Misses",
-        "month": 3,
-        "year_to_date": 8
-      }
-    ],
-    "incident_investigation": [
-      {
-        "action_item": "Improve hazard signage visibility",
-        "responsibility": "Safety Officer",
-        "target_date": "2025-04-10"
-      },
-      {
-        "action_item": "Improve hazard signage visibility",
-        "responsibility": "Safety Officer",
-        "target_date": "2025-04-10"
-      }
-    ],
-    "safety_training": [
-      {
-        "topics": "Fire Safety and Emergency Procedures",
-        "conducted_by": "James Lee",
-        "participations": 25
-      },
-      {
-        "topics": "Fire Safety and Emergency Procedures",
-        "conducted_by": "James Lee",
-        "participations": 25
-      }
-    ],
-    "internal_audit": [
-      {
-        "action_item": "Update PPE compliance checks",
-        "responsibility": "QA Manager",
-        "target_date": "2025-04-15"
-      },
-      {
-        "action_item": "Update PPE compliance checks",
-        "responsibility": "QA Manager",
-        "target_date": "2025-04-15"
-      }
-    ],
-    "mock_drill": [
-      {
-        "action_item": "Fire evacuation drill",
-        "responsibility": "HSE Team",
-        "target_date": "2025-04-20"
-      },
-      {
-        "action_item": "Fire evacuation drill",
-        "responsibility": "HSE Team",
-        "target_date": "2025-04-20"
-      }
-    ],
-    "procedure_checklist_update": [
-      {
-        "description": "Revised Lockout-Tagout procedures",
-        "procedure": "Updated LOTO process",
-        "checklist": "LOTO Checklist v2"
-      },
-      {
-        "description": "Revised Lockout-Tagout procedures",
-        "procedure": "Updated LOTO process",
-        "checklist": "LOTO Checklist v2"
-      }
-    ],
-    "review_last_meeting": [
-      {
-        "topic": "Safety harness inspections",
-        "action_by": "HSE Officer",
-        "target_date": "2025-04-05",
-        "review_status": "In Progress"
-      },
-      {
-        "topic": "Safety harness inspections",
-        "action_by": "HSE Officer",
-        "target_date": "2025-04-05",
-        "review_status": "In Progress"
-      }
-    ],
-    "new_points_discussed": [
-      {
-        "topic": "Traffic management during peak hours",
-        "action_by": "Site Manager",
-        "target_date": "2025-04-12",
-        "remarks": "Additional safety measures needed"
-      },
-      {
-        "topic": "Traffic management during peak hours",
-        "action_by": "Site Manager",
-        "target_date": "2025-04-12",
-        "remarks": "Additional safety measures needed"
-      }
-    ],
-    "minutes_prepared_by": "Alice Johnson",
-    "signature_prepared_by": "https://dummyimage.com/150x50/000/fff.png&text=Signature",
-    "signature_chairman": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-  },
-  {
-    "site": "Construction Site D",
-    "time": "10:00 AM",
-    "mom_recorded_by": "Alice Johnson",
-    "mom_issue_date": "2025-04-01",
-    "chairman_name": "Robert Smith",
-    "hse_performance_data": [
-      {
-        "parameter": "Incidents Reported",
-        "month": 2,
-        "year_to_date": 5
-      },
-      {
-        "parameter": "Near Misses",
-        "month": 3,
-        "year_to_date": 8
-      }
-    ],
-    "incident_investigation": [
-      {
-        "action_item": "Improve hazard signage visibility",
-        "responsibility": "Safety Officer",
-        "target_date": "2025-04-10"
-      },
-      {
-        "action_item": "Improve hazard signage visibility",
-        "responsibility": "Safety Officer",
-        "target_date": "2025-04-10"
-      }
-    ],
-    "safety_training": [
-      {
-        "topics": "Fire Safety and Emergency Procedures",
-        "conducted_by": "James Lee",
-        "participations": 25
-      },
-      {
-        "topics": "Fire Safety and Emergency Procedures",
-        "conducted_by": "James Lee",
-        "participations": 25
-      }
-    ],
-    "internal_audit": [
-      {
-        "action_item": "Update PPE compliance checks",
-        "responsibility": "QA Manager",
-        "target_date": "2025-04-15"
-      },
-      {
-        "action_item": "Update PPE compliance checks",
-        "responsibility": "QA Manager",
-        "target_date": "2025-04-15"
-      }
-    ],
-    "mock_drill": [
-      {
-        "action_item": "Fire evacuation drill",
-        "responsibility": "HSE Team",
-        "target_date": "2025-04-20"
-      },
-      {
-        "action_item": "Fire evacuation drill",
-        "responsibility": "HSE Team",
-        "target_date": "2025-04-20"
-      }
-    ],
-    "procedure_checklist_update": [
-      {
-        "description": "Revised Lockout-Tagout procedures",
-        "procedure": "Updated LOTO process",
-        "checklist": "LOTO Checklist v2"
-      },
-      {
-        "description": "Revised Lockout-Tagout procedures",
-        "procedure": "Updated LOTO process",
-        "checklist": "LOTO Checklist v2"
-      }
-    ],
-    "review_last_meeting": [
-      {
-        "topic": "Safety harness inspections",
-        "action_by": "HSE Officer",
-        "target_date": "2025-04-05",
-        "review_status": "In Progress"
-      },
-      {
-        "topic": "Safety harness inspections",
-        "action_by": "HSE Officer",
-        "target_date": "2025-04-05",
-        "review_status": "In Progress"
-      }
-    ],
-    "new_points_discussed": [
-      {
-        "topic": "Traffic management during peak hours",
-        "action_by": "Site Manager",
-        "target_date": "2025-04-12",
-        "remarks": "Additional safety measures needed"
-      },
-      {
-        "topic": "Traffic management during peak hours",
-        "action_by": "Site Manager",
-        "target_date": "2025-04-12",
-        "remarks": "Additional safety measures needed"
-      }
-    ],
-    "minutes_prepared_by": "Alice Johnson",
-    "signature_prepared_by": "https://dummyimage.com/150x50/000/fff.png&text=Signature",
-    // "chairman_name": "Robert Smith",
-    "signature_chairman": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-  }];
+  const { locationId } = useParams();
+  
+  // RTK Query hook integration
+  const { 
+    data, 
+    isLoading, 
+    isError, 
+    error 
+  } = useGetMinutesOfSafetyTrainingQuery(locationId);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -295,12 +87,12 @@ function SafetyMeeting() {
     setPage(0);
   };
 
-  // Filtering logic
-  const filteredMeetings = dummySafetyMeeting.filter((meeting) =>
-    meeting.site.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  // Filtering logic with real data
+  const filteredMeetings = data?.data ? data.data.filter((meeting) =>
+    meeting.site_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     meeting.chairman_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     meeting.mom_recorded_by.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) : [];
 
   const currentRows = filteredMeetings.slice(
     page * rowsPerPage,
@@ -314,6 +106,15 @@ function SafetyMeeting() {
 
   // Helper function to render table sections
   const renderSectionTable = (title, data, columns) => {
+    if (!data || data.length === 0) {
+      return (
+        <div className="mt-6">
+          <Typography variant="h6">{title}</Typography>
+          <Typography variant="body2" className="mt-2">No data available</Typography>
+        </div>
+      );
+    }
+
     return (
       <div className="mt-6">
         <Typography variant="h6">{title}</Typography>
@@ -327,11 +128,13 @@ function SafetyMeeting() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {data.map((item, index) => (
+              {data?.map((item, index) => (
                 <TableRow key={index}>
-                  {Object.keys(item).map((key, idx) => (
-                    <TableCell key={idx} align="center">{item[key]}</TableCell>
-                  ))}
+                  {columns.map((col, idx) => {
+                    // Map column names to object keys
+                    const key = Object.keys(item)[idx];
+                    return <TableCell key={idx} align="center">{item[key]}</TableCell>;
+                  })}
                 </TableRow>
               ))}
             </TableBody>
@@ -340,6 +143,50 @@ function SafetyMeeting() {
       </div>
     );
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5 flex justify-center items-center" style={{ minHeight: '300px' }}>
+        <CircularProgress />
+        <Typography variant="h6" className="ml-3">Loading safety meeting data...</Typography>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (isError) {
+    return (
+      <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
+        <Alert severity="error">
+          Error loading safety meeting data: {error?.message || 'Unknown error occurred'}
+        </Alert>
+      </div>
+    );
+  }
+
+  // Show empty state
+  if (!data?.data || data.data.length === 0) {
+    return (
+      <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
+        <h2 className="text-3xl text-[#29346B] font-semibold text-center mb-6">Safety Meeting Records</h2>
+        <div className="flex justify-end mb-5">
+          <Button
+            onClick={() => setCreateDialog(true)}
+            variant="contained"
+            style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none', minHeight: 'auto' }}
+          >
+            Add Safety Meeting
+          </Button>
+        </div>
+        <Alert severity="info">No safety meeting records found. Create a new meeting to get started.</Alert>
+        <CreateHSEMeetingMinutes
+          open={openCreateDialog}
+          setOpen={setCreateDialog}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
@@ -373,9 +220,9 @@ function SafetyMeeting() {
           </TableHead>
           <TableBody>
             {currentRows.map((meeting, index) => (
-              <TableRow key={index}>
-                <TableCell align="center">{meeting.site}</TableCell>
-                <TableCell align="center">{meeting.mom_issue_date}</TableCell>
+              <TableRow key={meeting.id}>
+                <TableCell align="center">{meeting.site_name}</TableCell>
+                <TableCell align="center">{new Date(meeting.mom_issue_date).toLocaleDateString()}</TableCell>
                 <TableCell align="center">{meeting.time}</TableCell>
                 <TableCell align="center">{meeting.chairman_name}</TableCell>
                 <TableCell align="center">{meeting.mom_recorded_by}</TableCell>
@@ -417,8 +264,8 @@ function SafetyMeeting() {
           {selectedMeeting && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Typography><strong>Site:</strong> {selectedMeeting.site}</Typography>
-                <Typography><strong>Date:</strong> {selectedMeeting.mom_issue_date}</Typography>
+                <Typography><strong>Site:</strong> {selectedMeeting.site_name}</Typography>
+                <Typography><strong>Date:</strong> {new Date(selectedMeeting.mom_issue_date).toLocaleDateString()}</Typography>
                 <Typography><strong>Time:</strong> {selectedMeeting.time}</Typography>
                 <Typography><strong>Chairman:</strong> {selectedMeeting.chairman_name}</Typography>
                 <Typography><strong>Recorded By:</strong> {selectedMeeting.mom_recorded_by}</Typography>
@@ -469,19 +316,27 @@ function SafetyMeeting() {
                 <div className="p-3 border rounded">
                   <Typography><strong>Minutes Prepared By:</strong> {selectedMeeting.minutes_prepared_by}</Typography>
                   <Typography className="mt-2"><strong>Signature:</strong></Typography>
-                  <ImageViewer
-                    src={selectedMeeting.signature_prepared_by}
-                    alt="Preparer's Signature"
-                  />
+                  {selectedMeeting.signature_prepared_by ? (
+                    <ImageViewer
+                      src={selectedMeeting.signature_prepared_by}
+                      alt="Preparer's Signature"
+                    />
+                  ) : (
+                    <Typography variant="body2">No signature available</Typography>
+                  )}
                 </div>
                 
                 <div className="p-3 border rounded">
                   <Typography><strong>Chairman:</strong> {selectedMeeting.chairman_name}</Typography>
                   <Typography className="mt-2"><strong>Signature:</strong></Typography>
-                  <ImageViewer
-                    src={selectedMeeting.signature_chairman}
-                    alt="Chairman's Signature"
-                  />
+                  {selectedMeeting.signature_chairman ? (
+                    <ImageViewer
+                      src={selectedMeeting.signature_chairman}
+                      alt="Chairman's Signature"
+                    />
+                  ) : (
+                    <Typography variant="body2">No signature available</Typography>
+                  )}
                 </div>
               </div>
             </div>
@@ -489,13 +344,9 @@ function SafetyMeeting() {
         </DialogContent>
       </Dialog>
       <CreateHSEMeetingMinutes
-                open={openCreateDialog}
-                setOpen={setCreateDialog}
-      />
-      {/* <CreateSafetyMeeting
         open={openCreateDialog}
         setOpen={setCreateDialog}
-      /> */}
+      />
     </div>
   );
 }

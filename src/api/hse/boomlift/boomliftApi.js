@@ -9,7 +9,7 @@ export const boomLiftInspectionApi = createApi({
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
-      headers.set("Content-Type", "application/json");
+      // headers.set("Content-Type", "application/json");
       return headers;
     },
   }),
@@ -22,7 +22,7 @@ export const boomLiftInspectionApi = createApi({
       }),
     }),
     getBoomLiftInspection: builder.query({
-      query: () => ({
+      query: (locationId) => ({
         url: `annexures_module/get_boom_lift_inspection/${locationId}`,
         method: "GET",
       }),

@@ -104,8 +104,6 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
       faculty_name: facultyName,
       topic,
       remarks,
-      // We can't directly console.log FormData contents,
-      // so showing the file name for the participant document
       participant_document: participantDocName
     });
     

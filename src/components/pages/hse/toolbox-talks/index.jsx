@@ -14,14 +14,15 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreateToolTalkAttendanceMutation, useGetToolTalkAttendanceQuery } from "../../../../api/hse/toolbox/toolBoxApi";
+import { useParams } from "react-router-dom";
 // import { useCreateToolTalkAttendanceMutation } from "../path/to/toolTalkAttendanceApi"; // Update with your actual path
 
 export default function ToolboxAttendanceDialog({ open, setOpen }) {
   const [createToolTalkAttendance, { isLoading }] = useCreateToolTalkAttendanceMutation();
   const { refetch } = useGetToolTalkAttendanceQuery();
-
+  const { locationId } = useParams();
   const [site, setSite] = useState("");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState(locationId);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [permitNo, setPermitNo] = useState("");
@@ -173,7 +174,6 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
             <Divider />
           </Grid>
 
-          {/* Site, Location, Date & Time */}
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Site Name<span className="text-red-600"> *</span>
@@ -187,7 +187,7 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
               onChange={(e) => setSite(e.target.value)}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          {/* <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Location<span className="text-red-600"> *</span>
             </label>
@@ -199,7 +199,7 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
               sx={commonInputStyles}
               onChange={(e) => setLocation(e.target.value)}
             />
-          </Grid>
+          </Grid> */}
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Date<span className="text-red-600"> *</span>

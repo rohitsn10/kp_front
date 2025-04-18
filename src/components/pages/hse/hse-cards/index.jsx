@@ -113,15 +113,15 @@ const HSECards = ({ selectedSite }) => {
         borderColor: 'border-purple-300',
         textColor: 'text-purple-800'
       },
-      {
-        id: 'physical-fitness-certificate',
-        title: 'PHYSICAL FITNESS CERTIFICATE',
-        description: 'Ensure employee fitness certification',
-        icon: <FaHeartbeat className="w-12 h-12 text-pink-600" />,
-        bgColor: 'bg-pink-50',
-        borderColor: 'border-pink-300',
-        textColor: 'text-pink-800'
-      },
+      // {
+      //   id: 'physical-fitness-certificate',
+      //   title: 'PHYSICAL FITNESS CERTIFICATE',
+      //   description: 'Ensure employee fitness certification',
+      //   icon: <FaHeartbeat className="w-12 h-12 text-pink-600" />,
+      //   bgColor: 'bg-pink-50',
+      //   borderColor: 'border-pink-300',
+      //   textColor: 'text-pink-800'
+      // },
       {
         id: 'safety-meeting-minutes',
         title: 'MINUTES OF SAFETY MEETING',
@@ -203,15 +203,15 @@ const HSECards = ({ selectedSite }) => {
         borderColor: 'border-teal-300',
         textColor: 'text-teal-800',
       },
-      {
-        id: 'risk-assessment',
-        title: 'RISK ASSESSMENT',
-        description: 'Identify and evaluate potential hazards',
-        icon: <FaExclamationCircle className="w-12 h-12 text-red-500" />,
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-300',
-        textColor: 'text-red-800',
-      },
+      // {
+      //   id: 'risk-assessment',
+      //   title: 'RISK ASSESSMENT',
+      //   description: 'Identify and evaluate potential hazards',
+      //   icon: <FaExclamationCircle className="w-12 h-12 text-red-500" />,
+      //   bgColor: 'bg-red-50',
+      //   borderColor: 'border-red-300',
+      //   textColor: 'text-red-800',
+      // },
   ]
 
   // const handleCardClick = (card) => {
