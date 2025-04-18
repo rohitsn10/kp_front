@@ -26,7 +26,7 @@ export const firstAidRecordApi = createApi({
     
     // Endpoint for getting all first aid records (the third curl)
     getAllFirstAidRecords: builder.query({
-      query: () => ({
+      query: (locationId) => ({
         url: `annexures_module/get_first_aid_record/${locationId}`,
         method: "GET",
       }),
@@ -34,10 +34,23 @@ export const firstAidRecordApi = createApi({
     
     // Endpoint for getting location-wise first aid records (the second curl)
     getLocationWiseFirstAidRecords: builder.query({
-      query: (locationId) => ({
-        url: `annexures_module/get_location_wise_first_aid_record/${locationId}`,
-        method: "POST",
-      }),
+      query: (locationId) => {
+        // Validate the locationId parameter
+        if (!locationId || isNaN(locationId)) {
+          throw new Error('Valid location ID is required');
+        }
+        
+        // Return the API endpoint with valid locationId
+        return {
+          url: `annexures_module/get_location_wise_first_aid_record/${locationId}`,
+          method: "GET",
+        };
+      },
+      // Add proper error handling
+      transformErrorResponse: (response, meta, arg) => {
+        console.error('Error in first aid records query:', response);
+        return response;
+      },
     }),
   }),
 });

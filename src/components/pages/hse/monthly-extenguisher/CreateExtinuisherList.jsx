@@ -23,6 +23,8 @@ import {
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { useCreateFireExtinguisherInspectionMutation, useGetAllFireExtinguisherInspectionsQuery } from '../../../../api/hse/extinguisher/extinguisherApi';
+import { useParams } from 'react-router-dom';
+import { toast } from "react-toastify";
 // Import the hook instead of axios
 // import { useCreateFireExtinguisherInspectionMutation } from 'your-api-slice-path'; // Replace with your actual API slice path
 
@@ -39,7 +41,7 @@ const FireExtinguisherInspectionDialog = ({ open, setOpen }) => {
   const [checkedByName, setCheckedByName] = useState('');
   const [signature, setSignature] = useState(null);
     const { refetch } = useGetAllFireExtinguisherInspectionsQuery();
-  
+    const { locationId } = useParams();
   // Validation states
   const [errors, setErrors] = useState({
     siteName: false,
@@ -224,6 +226,7 @@ const FireExtinguisherInspectionDialog = ({ open, setOpen }) => {
       const formData = new FormData();
       
       // Add the main inspection details
+      formData.append('location', locationId);
       formData.append('site_name', siteName);
       formData.append('date_of_inspection', dateOfInspection);
       formData.append('checked_by_name', checkedByName);
@@ -236,7 +239,7 @@ const FireExtinguisherInspectionDialog = ({ open, setOpen }) => {
       const response = await createFireExtinguisherInspection(formData).unwrap();
       
       // Handle successful response
-      console.log('Response:', response);
+      // console.log('Response:', response);
       
       // Check if response has the expected structure
       if (response && response.status === true) {
@@ -245,7 +248,8 @@ const FireExtinguisherInspectionDialog = ({ open, setOpen }) => {
           message: response.message || 'Fire extinguisher inspection created successfully',
           severity: 'success'
         });
-        refetch();
+        // toast.sucess("Fire extinguisher inspection created successfully")
+        // refetch();
         // Reset form and close dialog
         resetForm();
         setOpen(false);
@@ -256,6 +260,7 @@ const FireExtinguisherInspectionDialog = ({ open, setOpen }) => {
           message: 'Form submitted but received unexpected response format',
           severity: 'warning'
         });
+
       }
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -264,6 +269,8 @@ const FireExtinguisherInspectionDialog = ({ open, setOpen }) => {
         message: error.data?.message || 'Failed to submit inspection form',
         severity: 'error'
       });
+      // toast.sucess("Failed to submit inspection form")
+
     }
   };
 

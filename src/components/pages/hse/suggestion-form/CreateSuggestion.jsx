@@ -11,18 +11,20 @@ import {
   Divider,
   Box,
   Avatar,
+  CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useParams } from "react-router-dom";
+import { useCreateSuggestionSchemeReportMutation } from "../../../../api/hse/suggestionScheme/suggestionSchemeReportApi ";
 
 export default function SuggestionFormDialog({ open, setOpen }) {
+  const { locationId } = useParams();
   const [site, setSite] = useState("");
   const [date, setDate] = useState("");
   const [name, setName] = useState("");
   const [designation, setDesignation] = useState("");
   const [descriptionOfSuggestion, setDescriptionOfSuggestion] = useState("");
-  const [benefitsUponImplementation, setBenefitsUponImplementation] = useState(
-    ""
-  );
+  const [benefitsUponImplementation, setBenefitsUponImplementation] = useState("");
   const [evaluation, setEvaluation] = useState({
     evaluated_by: "",
     name: "",
@@ -30,6 +32,9 @@ export default function SuggestionFormDialog({ open, setOpen }) {
     remarks: "",
     signature: null,
   });
+  
+  // RTK Query mutation hook
+  const [createSuggestionSchemeReport, { isLoading }] = useCreateSuggestionSchemeReportMutation();
 
   const validateForm = () => {
     if (!site.trim()) return toast.error("Site is required!");
@@ -58,48 +63,87 @@ export default function SuggestionFormDialog({ open, setOpen }) {
       borderRadius: "6px",
       transition: "border 0.2s ease-in-out",
       "&:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on hover
+        borderColor: "#FACC15",
         borderBottom: "4px solid #FACC15",
       },
       "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on focus
+        borderColor: "#FACC15",
         borderWidth: "2px",
         borderBottom: "4px solid #FACC15",
       },
     },
     "& .MuiOutlinedInput-notchedOutline": {
-      border: "1px solid #FACC15", // Default border
-      borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
+      border: "1px solid #FACC15",
+      borderBottom: "4px solid #FACC15",
     },
   };
 
   const handleEvaluationSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setEvaluation({ ...evaluation, signature: file }); // Store the file object directly for FormData
+      
+      // Create a preview for display
       const reader = new FileReader();
       reader.onload = () => {
-        setEvaluation({ ...evaluation, signature: reader.result });
+        setEvaluation(prev => ({ ...prev, signaturePreview: reader.result }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const formData = {
-      site: site,
-      date: date,
-      name: name,
-      designation: designation,
-      description_of_suggestion: descriptionOfSuggestion,
-      benefits_upon_implementation: benefitsUponImplementation,
-      evaluation: evaluation,
-    };
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('site', site);
+    formData.append('location', locationId);
+    formData.append('date', date);
+    formData.append('name', name);
+    formData.append('designation', designation);
+    formData.append('suggestion_description', descriptionOfSuggestion);
+    formData.append('benefits_upon_implementation', benefitsUponImplementation);
+    formData.append('evaluated_by', evaluation.evaluated_by);
+    formData.append('evaluator_name', evaluation.name);
+    formData.append('evaluator_designation', evaluation.designation);
+    formData.append('evaluation_remarks', evaluation.remarks);
+    
+    // Append the file if it exists
+    if (evaluation.signature instanceof File) {
+      formData.append('evaluator_signature', evaluation.signature);
+    }
 
-    console.log(formData);
-    toast.success("Suggestion submitted successfully!");
-    setOpen(false);
+    try {
+      const response = await createSuggestionSchemeReport(formData).unwrap();
+      if (response.status) {
+        toast.success("Suggestion submitted successfully!");
+        resetForm();
+        setOpen(false);
+      } else {
+        toast.error(response.message || "Failed to submit suggestion");
+      }
+    } catch (error) {
+      toast.error(error.data?.message || "An error occurred while submitting the suggestion");
+      console.error("Submission error:", error);
+    }
+  };
+
+  const resetForm = () => {
+    setSite("");
+    setDate("");
+    setName("");
+    setDesignation("");
+    setDescriptionOfSuggestion("");
+    setBenefitsUponImplementation("");
+    setEvaluation({
+      evaluated_by: "",
+      name: "",
+      designation: "",
+      remarks: "",
+      signature: null,
+      signaturePreview: null
+    });
   };
 
   return (
@@ -310,9 +354,9 @@ export default function SuggestionFormDialog({ open, setOpen }) {
                   onChange={handleEvaluationSignatureUpload}
                 />
               </Button>
-              {evaluation.signature && (
+              {evaluation.signaturePreview && (
                 <Avatar
-                  src={evaluation.signature}
+                  src={evaluation.signaturePreview}
                   alt="Evaluator Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -330,6 +374,7 @@ export default function SuggestionFormDialog({ open, setOpen }) {
         <Button
           onClick={handleSubmit}
           color="primary"
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -345,7 +390,7 @@ export default function SuggestionFormDialog({ open, setOpen }) {
           }}
           variant="contained"
         >
-          Submit
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

@@ -122,7 +122,7 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
     try {
       // Create FormData for the API call
       const formData = new FormData();
-      formData.append("id","1")
+      // formData.append("id","1")
       formData.append("site_name", site);
       formData.append("location", location);
       formData.append("date", date);

@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreateFirstAidRecordMutation } from "../../../../api/hse/firstAidRecord/firstAidRecordApi";
+import { useParams } from "react-router-dom";
 // import { useCreateFirstAidRecordMutation } from "./firstAidRecordApi"; // Import the mutation hook
 
 export default function FirstAidDialog({ open, setOpen,onSuccess }) {
@@ -21,7 +22,7 @@ export default function FirstAidDialog({ open, setOpen,onSuccess }) {
   const [designation, setDesignation] = useState("");
   const [employeeOf, setEmployeeOf] = useState("");
   const [description, setDescription] = useState("");
-
+  const { locationId } = useParams();
   // RTK Query mutation hook
   const [createFirstAidRecord, { isLoading }] = useCreateFirstAidRecordMutation();
 
@@ -64,7 +65,7 @@ export default function FirstAidDialog({ open, setOpen,onSuccess }) {
     // Create FormData object for API submission
     const formData = new FormData();
     formData.append("site_name", siteName);
-    formData.append("location", "1"); // You may want to make this dynamic
+    formData.append("location", locationId); // You may want to make this dynamic
     formData.append("date", date);
     formData.append("first_aid_name", name); // Changed from "name" to "first_aid_name"
     formData.append("designation", designation);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -17,9 +17,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import IncidentReportDialog from "../../../components/pages/hse/first-aid/CreateFirstAid";
-import { useGetAllFirstAidRecordsQuery } from "../../../api/hse/firstAidRecord/firstAidRecordApi";
+import { useGetAllFirstAidRecordsQuery, useGetLocationWiseFirstAidRecordsQuery } from "../../../api/hse/firstAidRecord/firstAidRecordApi";
 import { useParams } from "react-router-dom";
-// import { useGetAllFirstAidRecordsQuery } from '../../api'; // Adjust the import path as needed
 
 function FirstAidRecord() {
   const [page, setPage] = useState(0);
@@ -28,19 +27,32 @@ function FirstAidRecord() {
   const [selectedFirstAid, setSelectedFirstAid] = useState(null);
   const [openDescriptionModal, setOpenDescriptionModal] = useState(false);
   const [openCreateDialog, setCreateDialog] = useState(false);
+  
+  // Get locationId from URL params and parse it properly
   const { locationId } = useParams();
-  // Using the RTK Query hook to fetch data
+  const parsedLocationId = locationId ? parseInt(locationId, 10) : null;
+  
+  // Log for debugging
+  console.log('Location ID from URL:', locationId);
+  console.log('Parsed Location ID:', parsedLocationId);
+  
+  // Use the query with proper skip option
   const {
     data: response,
     isLoading,
     isError,
     refetch,
-  } = useGetAllFirstAidRecordsQuery(
-    locationId ? parseInt(locationId) : undefined
-  );
+  } = useGetLocationWiseFirstAidRecordsQuery(parsedLocationId, {
+    // Skip the query if location ID is not valid
+    skip: parsedLocationId === null || isNaN(parsedLocationId),
+  });
 
-  // Extract the first aid records from the API response
   const firstAidRecords = response?.data || [];
+
+  // Log the response for debugging
+  useEffect(() => {
+    console.log('First Aid Records Response:', response);
+  }, [response]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -82,6 +94,17 @@ function FirstAidRecord() {
     setCreateDialog(false);
   };
 
+  // Display error if locationId is missing or invalid
+  if (!parsedLocationId || isNaN(parsedLocationId)) {
+    return (
+      <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
+        <Typography variant="h6" color="error" align="center">
+          Invalid location ID. Please check the URL and try again.
+        </Typography>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -92,8 +115,18 @@ function FirstAidRecord() {
 
   if (isError) {
     return (
-      <div className="text-center text-red-500 p-4">
-        Error loading first aid records. Please try again later.
+      <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
+        <Typography variant="h6" color="error" align="center">
+          Error loading first aid records. Please try again later.
+        </Typography>
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={() => refetch()}
+          className="mt-4 mx-auto block"
+        >
+          Retry
+        </Button>
       </div>
     );
   }

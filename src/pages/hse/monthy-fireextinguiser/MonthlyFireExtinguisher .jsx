@@ -22,7 +22,6 @@ import {
 import FireExtinguisherInspectionDialog from '../../../components/pages/hse/monthly-extenguisher/CreateExtinuisherList';
 import { useGetAllFireExtinguisherInspectionsQuery } from '../../../api/hse/extinguisher/extinguisherApi';
 import { useParams } from 'react-router-dom';
-// import { useGetAllFireExtinguisherInspectionsQuery } from '../../store/services/api'; // Adjust the import path as needed
 
 // Reusable Image Viewer Component
 const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
@@ -71,9 +70,30 @@ function MonthlyFireExtinguisher() {
   const [selectedExtinguisher, setSelectedExtinguisher] = useState(null);
   const [openExtinguisherModal, setOpenExtinguisherModal] = useState(false);
   const [openCreateList, setOpenCreateList] = useState(false);
-  const {locationId}=useParams();
-  // Fetch data using the RTK Query hook
-  const { data: inspectionsData, isLoading, isError, error } = useGetAllFireExtinguisherInspectionsQuery(locationId ? parseInt(locationId) : undefined);
+  
+  // Get locationId from URL params and parse it properly
+  const { locationId } = useParams();
+  const parsedLocationId = locationId ? parseInt(locationId, 10) : null;
+  
+  console.log('Location ID from URL:', locationId);
+  console.log('Parsed Location ID:', parsedLocationId);
+
+  // Using the query hook with proper skip option
+  const { 
+    data: response, 
+    isLoading, 
+    isError, 
+    error,
+    refetch 
+  } = useGetAllFireExtinguisherInspectionsQuery(parsedLocationId, {
+    skip: parsedLocationId === null || isNaN(parsedLocationId)
+  });
+
+  // Extract the actual data array from the response
+  const inspectionsData = response?.data || [];
+  
+  console.log('API Response:', response);
+  console.log('Inspections Data:', inspectionsData);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -85,11 +105,9 @@ function MonthlyFireExtinguisher() {
   };
 
   // Filtering logic
-  const filteredInspections = inspectionsData 
-    ? inspectionsData.filter((inspection) =>
-        inspection.site_name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
+  const filteredInspections = inspectionsData.filter(
+    (inspection) => inspection.site_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const currentRows = filteredInspections.slice(
     page * rowsPerPage,
@@ -150,6 +168,17 @@ function MonthlyFireExtinguisher() {
     }
   };
 
+  // Display error if locationId is missing or invalid
+  if (!parsedLocationId || isNaN(parsedLocationId)) {
+    return (
+      <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
+        <Alert severity="error" style={{ marginBottom: '16px' }}>
+          Invalid location ID. Please check the URL and try again.
+        </Alert>
+      </div>
+    );
+  }
+
   // Rendering logic for different states
   if (isLoading) {
     return (
@@ -171,7 +200,8 @@ function MonthlyFireExtinguisher() {
         <Button 
           variant="contained" 
           color="primary"
-          onClick={() => window.location.reload()}
+          onClick={() => refetch()}
+          className="mt-4 mx-auto block"
         >
           Retry
         </Button>
@@ -198,7 +228,7 @@ function MonthlyFireExtinguisher() {
         </Button>
       </div>
 
-      {inspectionsData && inspectionsData.length === 0 ? (
+      {inspectionsData.length === 0 ? (
         <Alert severity="info" style={{ margin: '32px 0' }}>
           No fire extinguisher inspection records found. Create a new inspection using the "Add New Inspection" button.
         </Alert>
@@ -216,23 +246,31 @@ function MonthlyFireExtinguisher() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {currentRows.map((inspection, index) => (
-                  <TableRow key={inspection.id}>
-                    <TableCell align="center">{inspection.site_name}</TableCell>
-                    <TableCell align="center">{inspection.date_of_inspection}</TableCell>
-                    <TableCell align="center">{inspection.fire_extinguisher_details.length}</TableCell>
-                    <TableCell align="center">{inspection.checked_by_name}</TableCell>
-                    <TableCell align="center">
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => openInspectionDetailsHandler(inspection)}
-                      >
-                        View Details
-                      </Button>
+                {currentRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      No records found matching your search criteria
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  currentRows.map((inspection, index) => (
+                    <TableRow key={inspection.id || index}>
+                      <TableCell align="center">{inspection.site_name}</TableCell>
+                      <TableCell align="center">{inspection.date_of_inspection}</TableCell>
+                      <TableCell align="center">{inspection.fire_extinguisher_details?.length || 0}</TableCell>
+                      <TableCell align="center">{inspection.checked_by_name}</TableCell>
+                      <TableCell align="center">
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => openInspectionDetailsHandler(inspection)}
+                        >
+                          View Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -270,55 +308,64 @@ function MonthlyFireExtinguisher() {
                 <Typography variant="subtitle1" gutterBottom>Inspector Information:</Typography>
                 <div className="flex items-center gap-4">
                   <Typography><strong>Name:</strong> {selectedInspection.checked_by_name}</Typography>
-                  <div>
-                    <Typography><strong>Signature:</strong></Typography>
-                    <ImageViewer
-                      src={selectedInspection.signature}
-                      alt="Inspector Signature"
-                    />
-                  </div>
+                  {selectedInspection.signature && (
+                    <div>
+                      <Typography><strong>Signature:</strong></Typography>
+                      <ImageViewer
+                        src={selectedInspection.signature}
+                        alt="Inspector Signature"
+                      />
+                    </div>
+                  )}
                 </div>
               </Box>
               
               <Typography variant="h6" gutterBottom>
-                Extinguishers ({selectedInspection.fire_extinguisher_details.length})
+                Extinguishers ({selectedInspection.fire_extinguisher_details?.length || 0})
               </Typography>
-              <TableContainer component={Paper} style={{ marginTop: '16px' }}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow style={{ backgroundColor: '#F2EDED' }}>
-                      <TableCell>ID</TableCell>
-                      <TableCell>Type</TableCell>
-                      <TableCell>Weight</TableCell>
-                      <TableCell>Location</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {selectedInspection.fire_extinguisher_details.map((extinguisher, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>{extinguisher.extinguisher_no}</TableCell>
-                        <TableCell>{extinguisher.extinguisher_type}</TableCell>
-                        <TableCell>{extinguisher.weight} kg</TableCell>
-                        <TableCell>{extinguisher.location}</TableCell>
-                        <TableCell>
-                          {getStatusChip(extinguisher.due_date_refilling)}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => openExtinguisherDetailsHandler(extinguisher)}
-                          >
-                            Details
-                          </Button>
-                        </TableCell>
+              
+              {!selectedInspection.fire_extinguisher_details || selectedInspection.fire_extinguisher_details.length === 0 ? (
+                <Alert severity="info">
+                  No extinguisher details available for this inspection.
+                </Alert>
+              ) : (
+                <TableContainer component={Paper} style={{ marginTop: '16px' }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow style={{ backgroundColor: '#F2EDED' }}>
+                        <TableCell>ID</TableCell>
+                        <TableCell>Type</TableCell>
+                        <TableCell>Weight</TableCell>
+                        <TableCell>Location</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Actions</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {selectedInspection.fire_extinguisher_details.map((extinguisher, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell>{extinguisher.extinguisher_no}</TableCell>
+                          <TableCell>{extinguisher.extinguisher_type}</TableCell>
+                          <TableCell>{extinguisher.weight} kg</TableCell>
+                          <TableCell>{extinguisher.location}</TableCell>
+                          <TableCell>
+                            {getStatusChip(extinguisher.due_date_refilling)}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => openExtinguisherDetailsHandler(extinguisher)}
+                            >
+                              Details
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
             </>
           )}
         </DialogContent>
@@ -426,6 +473,7 @@ function MonthlyFireExtinguisher() {
       <FireExtinguisherInspectionDialog
         open={openCreateList}
         setOpen={setOpenCreateList}
+        locationId={parsedLocationId}
       />
     </div>
   );
