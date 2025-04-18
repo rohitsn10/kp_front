@@ -11,33 +11,52 @@ import {
   Divider,
   Box,
   Avatar,
+  CircularProgress
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useCreateCorrectionInternalAuditReportMutation } from "../../../../api/hse/internalAudit/internalAuditReportApi ";
+// import { useCreateCorrectionInternalAuditReportMutation } from "../../../api/hse/internalAudit/internalAuditReportApi"; // Adjust import path as needed
 
-export default function CorrectionForm({ open, setOpen }) {
+export default function CorrectionForm({ open, setOpen, auditId, onSuccess }) {
   const [correction, setCorrection] = useState({
-    corrective_preventive_action: "",
     root_cause: "",
-    auditee: { name: "", signature: null, date: "" },
+    corrective_action: "",
+    correction_auditee_name: "",
+    correction_auditee_sign: null,
+    correction_auditee_date: ""
   });
 
+  // RTK mutation hook
+  const [createCorrectionReport, { isLoading }] = useCreateCorrectionInternalAuditReportMutation();
+
   const validateForm = () => {
-    // Correction validation
     if (!correction.root_cause.trim()) 
       return toast.error("Root Cause is required!");
-    if (!correction.corrective_preventive_action.trim())
+    if (!correction.corrective_action.trim())
       return toast.error("Corrective/Preventive Action is required!");
-    if (!correction.auditee.name.trim()) 
+    if (!correction.correction_auditee_name.trim()) 
       return toast.error("Auditee Name is required!");
-    if (!correction.auditee.signature)
+    if (!correction.correction_auditee_sign)
       return toast.error("Auditee Signature is required!");
-    if (!correction.auditee.date.trim()) 
+    if (!correction.correction_auditee_date.trim()) 
       return toast.error("Auditee Date is required!");
 
     return true;
   };
 
-  const handleClose = () => setOpen(false);
+  const handleClose = () => {
+    if (!isLoading) {
+      setOpen(false);
+      // Reset form
+      setCorrection({
+        root_cause: "",
+        corrective_action: "",
+        correction_auditee_name: "",
+        correction_auditee_sign: null,
+        correction_auditee_date: ""
+      });
+    }
+  };
 
   const commonInputStyles = {
     "& .MuiOutlinedInput-root": {
@@ -51,27 +70,54 @@ export default function CorrectionForm({ open, setOpen }) {
     },
   };
 
-  const handleSignatureUpload = (setter, field, e) => {
+  const handleSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Store the actual file for form submission
+      setCorrection(prev => ({
+        ...prev,
+        correction_auditee_sign: file
+      }));
+
+      // Create a preview
       const reader = new FileReader();
       reader.onload = () => {
-        setter((prev) => ({ ...prev, [field]: reader.result }));
+        setCorrection(prev => ({
+          ...prev,
+          signaturePreview: reader.result
+        }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
+    
+    try {
+      // Create FormData object for file upload
+      const formData = new FormData();
+      formData.append('audit_report', auditId);
+      formData.append('root_cause', correction.root_cause);
+      formData.append('corrective_action', correction.corrective_action);
+      formData.append('correction_auditee_name', correction.correction_auditee_name);
+      formData.append('correction_auditee_sign', correction.correction_auditee_sign);
+      formData.append('correction_auditee_date', correction.correction_auditee_date);
 
-    const formData = {
-      correction: correction,
-    };
-
-    console.log(formData);
-    toast.success("Correction information submitted successfully!");
-    setOpen(false);
+      // Call the mutation
+      const response = await createCorrectionReport(formData).unwrap();
+      
+      if (response.status) {
+        toast.success("Correction information submitted successfully!");
+        onSuccess(); // Trigger refetch of the audit list
+        handleClose();
+      } else {
+        toast.error(response.message || "Failed to submit correction information");
+      }
+    } catch (error) {
+      console.error("Error submitting correction:", error);
+      toast.error(error.data?.message || "An error occurred while submitting the correction");
+    }
   };
 
   return (
@@ -107,12 +153,14 @@ export default function CorrectionForm({ open, setOpen }) {
               onChange={(e) =>
                 setCorrection({ ...correction, root_cause: e.target.value })
               }
+              disabled={isLoading}
             />
           </Grid>
 
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Corrective Action for Actual Observation / Preventive Action for Potential Observation<span className="text-red-600"> *</span>
+              Corrective Action for Actual Observation / Preventive Action for Potential Observation
+              <span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
@@ -120,14 +168,15 @@ export default function CorrectionForm({ open, setOpen }) {
               rows={4}
               variant="outlined"
               placeholder="Enter Corrective/Preventive Action"
-              value={correction.corrective_preventive_action}
+              value={correction.corrective_action}
               sx={commonInputStyles}
               onChange={(e) =>
                 setCorrection({
                   ...correction,
-                  corrective_preventive_action: e.target.value,
+                  corrective_action: e.target.value,
                 })
               }
+              disabled={isLoading}
             />
           </Grid>
 
@@ -139,16 +188,18 @@ export default function CorrectionForm({ open, setOpen }) {
               fullWidth
               variant="outlined"
               placeholder="Enter Name"
-              value={correction.auditee.name}
+              value={correction.correction_auditee_name}
               sx={commonInputStyles}
               onChange={(e) =>
-                setCorrection((prev) => ({
+                setCorrection(prev => ({
                   ...prev,
-                  auditee: { ...prev.auditee, name: e.target.value },
+                  correction_auditee_name: e.target.value
                 }))
               }
+              disabled={isLoading}
             />
           </Grid>
+
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Auditee Signature<span className="text-red-600"> *</span>
@@ -165,18 +216,19 @@ export default function CorrectionForm({ open, setOpen }) {
                 component="label"
                 color="primary"
                 sx={{ height: "56px" }}
+                disabled={isLoading}
               >
                 Upload Signature
                 <input
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) => handleSignatureUpload(setCorrection, "auditee.signature", e)}
+                  onChange={handleSignatureUpload}
                 />
               </Button>
-              {correction.auditee.signature && (
+              {correction.signaturePreview && (
                 <Avatar
-                  src={correction.auditee.signature}
+                  src={correction.signaturePreview}
                   alt="Auditee Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -193,21 +245,27 @@ export default function CorrectionForm({ open, setOpen }) {
               fullWidth
               variant="outlined"
               type="date"
-              value={correction.auditee.date}
+              value={correction.correction_auditee_date}
               sx={commonInputStyles}
               onChange={(e) =>
-                setCorrection((prev) => ({
+                setCorrection(prev => ({
                   ...prev,
-                  auditee: { ...prev.auditee, date: e.target.value },
+                  correction_auditee_date: e.target.value
                 }))
               }
+              disabled={isLoading}
             />
           </Grid>
         </Grid>
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleClose} color="secondary" variant="outlined">
+        <Button 
+          onClick={handleClose} 
+          color="secondary" 
+          variant="outlined"
+          disabled={isLoading}
+        >
           Cancel
         </Button>
         <Button
@@ -227,8 +285,9 @@ export default function CorrectionForm({ open, setOpen }) {
             },
           }}
           variant="contained"
+          disabled={isLoading}
         >
-          Submit
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

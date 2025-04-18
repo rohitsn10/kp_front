@@ -11,27 +11,44 @@ import {
   Divider,
   Box,
   Avatar,
+  CircularProgress
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useCreateVerificationInternalAuditReportMutation } from "../../../../api/hse/internalAudit/internalAuditReportApi ";
+// import { useCreateVerificationInternalAuditReportMutation } from "../../../api/hse/internalAudit/internalAuditReportApi"; // Adjust import path as needed
 
-export default function VerificationForm({ open, setOpen }) {
+export default function VerificationForm({ open, setOpen, auditId, onSuccess }) {
   const [verification, setVerification] = useState({
-    auditor: { name: "", signature: null, date: "" },
+    verification_auditor_name: "",
+    verification_auditor_sign: null,
+    verification_auditor_date: ""
   });
 
+  // RTK mutation hook
+  const [createVerificationReport, { isLoading }] = useCreateVerificationInternalAuditReportMutation();
+
   const validateForm = () => {
-    // Verification validation
-    if (!verification.auditor.name.trim())
+    if (!verification.verification_auditor_name.trim())
       return toast.error("Auditor Name is required!");
-    if (!verification.auditor.signature)
+    if (!verification.verification_auditor_sign)
       return toast.error("Auditor Signature is required!");
-    if (!verification.auditor.date.trim())
+    if (!verification.verification_auditor_date.trim())
       return toast.error("Auditor Date is required!");
 
     return true;
   };
 
-  const handleClose = () => setOpen(false);
+  const handleClose = () => {
+    if (!isLoading) {
+      setOpen(false);
+      // Reset form
+      setVerification({
+        verification_auditor_name: "",
+        verification_auditor_sign: null,
+        verification_auditor_date: ""
+      });
+    }
+  };
 
   const commonInputStyles = {
     "& .MuiOutlinedInput-root": {
@@ -45,27 +62,52 @@ export default function VerificationForm({ open, setOpen }) {
     },
   };
 
-  const handleSignatureUpload = (setter, field, e) => {
+  const handleSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Store the actual file for form submission
+      setVerification(prev => ({
+        ...prev,
+        verification_auditor_sign: file
+      }));
+
+      // Create a preview
       const reader = new FileReader();
       reader.onload = () => {
-        setter((prev) => ({ ...prev, [field]: reader.result }));
+        setVerification(prev => ({
+          ...prev,
+          signaturePreview: reader.result
+        }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
+    
+    try {
+      // Create FormData object for file upload
+      const formData = new FormData();
+      formData.append('audit_report', auditId);
+      formData.append('verification_auditor_name', verification.verification_auditor_name);
+      formData.append('verification_auditor_sign', verification.verification_auditor_sign);
+      formData.append('verification_auditor_date', verification.verification_auditor_date);
 
-    const formData = {
-      verification: verification,
-    };
-
-    console.log(formData);
-    toast.success("Verification information submitted successfully!");
-    setOpen(false);
+      // Call the mutation
+      const response = await createVerificationReport(formData).unwrap();
+      
+      if (response.status) {
+        toast.success("Verification information submitted successfully!");
+        onSuccess(); // Trigger refetch of the audit list
+        handleClose();
+      } else {
+        toast.error(response.message || "Failed to submit verification information");
+      }
+    } catch (error) {
+      console.error("Error submitting verification:", error);
+      toast.error(error.data?.message || "An error occurred while submitting the verification");
+    }
   };
 
   return (
@@ -94,14 +136,15 @@ export default function VerificationForm({ open, setOpen }) {
               fullWidth
               variant="outlined"
               placeholder="Enter Name"
-              value={verification.auditor.name}
+              value={verification.verification_auditor_name}
               sx={commonInputStyles}
               onChange={(e) =>
                 setVerification((prev) => ({
                   ...prev,
-                  auditor: { ...prev.auditor, name: e.target.value },
+                  verification_auditor_name: e.target.value,
                 }))
               }
+              disabled={isLoading}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -120,20 +163,19 @@ export default function VerificationForm({ open, setOpen }) {
                 component="label"
                 color="primary"
                 sx={{ height: "56px" }}
+                disabled={isLoading}
               >
                 Upload Signature
                 <input
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) =>
-                    handleSignatureUpload(setVerification, "auditor.signature", e)
-                  }
+                  onChange={handleSignatureUpload}
                 />
               </Button>
-              {verification.auditor.signature && (
+              {verification.signaturePreview && (
                 <Avatar
-                  src={verification.auditor.signature}
+                  src={verification.signaturePreview}
                   alt="Auditor Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -150,21 +192,27 @@ export default function VerificationForm({ open, setOpen }) {
               fullWidth
               variant="outlined"
               type="date"
-              value={verification.auditor.date}
+              value={verification.verification_auditor_date}
               sx={commonInputStyles}
               onChange={(e) =>
                 setVerification((prev) => ({
                   ...prev,
-                  auditor: { ...prev.auditor, date: e.target.value },
+                  verification_auditor_date: e.target.value,
                 }))
               }
+              disabled={isLoading}
             />
           </Grid>
         </Grid>
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleClose} color="secondary" variant="outlined">
+        <Button 
+          onClick={handleClose} 
+          color="secondary" 
+          variant="outlined"
+          disabled={isLoading}
+        >
           Cancel
         </Button>
         <Button
@@ -184,8 +232,9 @@ export default function VerificationForm({ open, setOpen }) {
             },
           }}
           variant="contained"
+          disabled={isLoading}
         >
-          Submit
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

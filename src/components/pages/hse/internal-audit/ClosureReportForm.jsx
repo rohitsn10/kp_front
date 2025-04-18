@@ -11,30 +11,48 @@ import {
   Divider,
   Box,
   Avatar,
+  CircularProgress
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useCreateClosureInternalAuditReportMutation } from "../../../../api/hse/internalAudit/internalAuditReportApi ";
+// import { useCreateClosureInternalAuditReportMutation } from "../../../api/hse/internalAudit/internalAuditReportApi"; // Adjust import path as needed
 
-export default function ClosureReportForm({ open, setOpen }) {
+export default function ClosureReportForm({ open, setOpen, auditId, onSuccess }) {
   const [closure, setClosure] = useState({
-    report_of_closure: "",
-    site_incharge: { name: "", signature: null, date: "" },
+    report_closure: "",
+    siteincharge_name: "",
+    siteincharge_sign: null,
+    siteincharge_date: ""
   });
 
+  // RTK mutation hook
+  const [createClosureReport, { isLoading }] = useCreateClosureInternalAuditReportMutation();
+
   const validateForm = () => {
-    // Closure validation
-    if (!closure.report_of_closure.trim())
+    if (!closure.report_closure.trim())
       return toast.error("Report of Closure is required!");
-    if (!closure.site_incharge.name.trim())
+    if (!closure.siteincharge_name.trim())
       return toast.error("Site In-Charge Name is required!");
-    if (!closure.site_incharge.signature)
+    if (!closure.siteincharge_sign)
       return toast.error("Site In-Charge Signature is required!");
-    if (!closure.site_incharge.date.trim())
+    if (!closure.siteincharge_date.trim())
       return toast.error("Site In-Charge Date is required!");
 
     return true;
   };
 
-  const handleClose = () => setOpen(false);
+  const handleClose = () => {
+    if (!isLoading) {
+      setOpen(false);
+      // Reset form
+      setClosure({
+        report_closure: "",
+        siteincharge_name: "",
+        siteincharge_sign: null,
+        siteincharge_date: ""
+      });
+    }
+  };
 
   const commonInputStyles = {
     "& .MuiOutlinedInput-root": {
@@ -48,27 +66,53 @@ export default function ClosureReportForm({ open, setOpen }) {
     },
   };
 
-  const handleSignatureUpload = (setter, field, e) => {
+  const handleSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Store the actual file for form submission
+      setClosure(prev => ({
+        ...prev,
+        siteincharge_sign: file
+      }));
+
+      // Create a preview
       const reader = new FileReader();
       reader.onload = () => {
-        setter((prev) => ({ ...prev, [field]: reader.result }));
+        setClosure(prev => ({
+          ...prev,
+          signaturePreview: reader.result
+        }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
+    
+    try {
+      // Create FormData object for file upload
+      const formData = new FormData();
+      formData.append('audit_report', auditId);
+      formData.append('report_closure', closure.report_closure);
+      formData.append('siteincharge_name', closure.siteincharge_name);
+      formData.append('siteincharge_sign', closure.siteincharge_sign);
+      formData.append('siteincharge_date', closure.siteincharge_date);
 
-    const formData = {
-      closure: closure,
-    };
-
-    console.log(formData);
-    toast.success("Closure Report submitted successfully!");
-    setOpen(false);
+      // Call the mutation
+      const response = await createClosureReport(formData).unwrap();
+      
+      if (response.status) {
+        toast.success("Closure Report submitted successfully!");
+        onSuccess(); // Trigger refetch of the audit list
+        handleClose();
+      } else {
+        toast.error(response.message || "Failed to submit closure report");
+      }
+    } catch (error) {
+      console.error("Error submitting closure report:", error);
+      toast.error(error.data?.message || "An error occurred while submitting the closure report");
+    }
   };
 
   return (
@@ -99,14 +143,15 @@ export default function ClosureReportForm({ open, setOpen }) {
               rows={4}
               variant="outlined"
               placeholder="Enter Report of Closure"
-              value={closure.report_of_closure}
+              value={closure.report_closure}
               sx={commonInputStyles}
               onChange={(e) =>
                 setClosure({
                   ...closure,
-                  report_of_closure: e.target.value,
+                  report_closure: e.target.value,
                 })
               }
+              disabled={isLoading}
             />
           </Grid>
 
@@ -118,16 +163,18 @@ export default function ClosureReportForm({ open, setOpen }) {
               fullWidth
               variant="outlined"
               placeholder="Enter Name"
-              value={closure.site_incharge.name}
+              value={closure.siteincharge_name}
               sx={commonInputStyles}
               onChange={(e) =>
-                setClosure((prev) => ({
+                setClosure(prev => ({
                   ...prev,
-                  site_incharge: { ...prev.site_incharge, name: e.target.value },
+                  siteincharge_name: e.target.value
                 }))
               }
+              disabled={isLoading}
             />
           </Grid>
+          
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Site In-Charge/Site Head - Signature<span className="text-red-600"> *</span>
@@ -144,20 +191,19 @@ export default function ClosureReportForm({ open, setOpen }) {
                 component="label"
                 color="primary"
                 sx={{ height: "56px" }}
+                disabled={isLoading}
               >
                 Upload Signature
                 <input
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) =>
-                    handleSignatureUpload(setClosure, "site_incharge.signature", e)
-                  }
+                  onChange={handleSignatureUpload}
                 />
               </Button>
-              {closure.site_incharge.signature && (
+              {closure.signaturePreview && (
                 <Avatar
-                  src={closure.site_incharge.signature}
+                  src={closure.signaturePreview}
                   alt="Site In-Charge Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -174,21 +220,27 @@ export default function ClosureReportForm({ open, setOpen }) {
               fullWidth
               variant="outlined"
               type="date"
-              value={closure.site_incharge.date}
+              value={closure.siteincharge_date}
               sx={commonInputStyles}
               onChange={(e) =>
-                setClosure((prev) => ({
+                setClosure(prev => ({
                   ...prev,
-                  site_incharge: { ...prev.site_incharge, date: e.target.value },
+                  siteincharge_date: e.target.value
                 }))
               }
+              disabled={isLoading}
             />
           </Grid>
         </Grid>
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleClose} color="secondary" variant="outlined">
+        <Button 
+          onClick={handleClose} 
+          color="secondary" 
+          variant="outlined"
+          disabled={isLoading}
+        >
           Cancel
         </Button>
         <Button
@@ -208,8 +260,9 @@ export default function ClosureReportForm({ open, setOpen }) {
             },
           }}
           variant="contained"
+          disabled={isLoading}
         >
-          Submit
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

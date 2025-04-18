@@ -11,34 +11,36 @@ import {
   Divider,
   Box,
   Avatar,
+  CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useParams } from "react-router-dom";
+import { useCreateInternalAuditReportMutation } from "../../../../api/hse/internalAudit/internalAuditReportApi ";
+// import { useCreateInternalAuditReportMutation } from "../redux/internalAuditReportApi"; // Adjust the import path as needed
 
-export default function CreateAuditForm({ open, setOpen }) {
-  const [site, setSite] = useState("");
+export default function CreateAuditForm({ open, setOpen, onSuccess }) {
+  const { locationId } = useParams();
+  const [site_name, setSiteName] = useState("");
   const [date, setDate] = useState("");
-  const [observations, setObservations] = useState({
-    observation_details: "",
-    auditor_observer: { name: "", signature: null },
-    auditee: { name: "", signature: null },
-    agreed_completion_date: "",
-  });
+  const [observer_details, setObserverDetails] = useState("");
+  const [observer_name, setObserverName] = useState("");
+  const [observer_sign, setObserverSign] = useState(null);
+  const [auditee_name, setAuditeeName] = useState("");
+  const [auditee_sign, setAuditeeSign] = useState(null);
+  const [agreed_completion_date, setAgreedCompletionDate] = useState("");
+  
+  // Using the RTK Query mutation hook
+  const [createInternalAuditReport, { isLoading }] = useCreateInternalAuditReportMutation();
 
   const validateForm = () => {
-    if (!site.trim()) return toast.error("Site is required!");
+    if (!site_name.trim()) return toast.error("Site is required!");
     if (!date.trim()) return toast.error("Date is required!");
-
-    // Observations
-    if (!observations.observation_details.trim())
-      return toast.error("Observations are required!");
-    if (!observations.auditor_observer.name.trim())
-      return toast.error("Auditor/Observer Name is required!");
-    if (!observations.auditor_observer.signature)
-      return toast.error("Auditor/Observer Signature is required!");
-    if (!observations.auditee.name.trim()) return toast.error("Auditee Name is required!");
-    if (!observations.auditee.signature) return toast.error("Auditee Signature is required!");
-    if (!observations.agreed_completion_date.trim())
-      return toast.error("Agreed Completion Date is required!");
+    if (!observer_details.trim()) return toast.error("Observations are required!");
+    if (!observer_name.trim()) return toast.error("Auditor/Observer Name is required!");
+    if (!observer_sign) return toast.error("Auditor/Observer Signature is required!");
+    if (!auditee_name.trim()) return toast.error("Auditee Name is required!");
+    if (!auditee_sign) return toast.error("Auditee Signature is required!");
+    if (!agreed_completion_date.trim()) return toast.error("Agreed Completion Date is required!");
 
     return true;
   };
@@ -57,29 +59,62 @@ export default function CreateAuditForm({ open, setOpen }) {
     },
   };
 
-  const handleSignatureUpload = (setter, field, e) => {
+  const handleObserverSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setObserverSign(file);
+      
+      // For preview
       const reader = new FileReader();
-      reader.onload = () => {
-        setter((prev) => ({ ...prev, [field]: reader.result }));
+      reader.onload = (event) => {
+        document.getElementById('observer-sign-preview').src = event.target.result;
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
+  const handleAuditeeSignatureUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAuditeeSign(file);
+      
+      // For preview
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        document.getElementById('auditee-sign-preview').src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const formData = {
-      site: site,
-      date: date,
-      observations: observations,
-    };
+    // Create FormData object for file upload
+    const formData = new FormData();
+    formData.append('site_name', site_name);
+    formData.append('location', locationId);
+    formData.append('date', date);
+    formData.append('observer_details', observer_details);
+    formData.append('observer_name', observer_name);
+    formData.append('observer_sign', observer_sign);
+    formData.append('auditee_name', auditee_name);
+    formData.append('auditee_sign', auditee_sign);
+    formData.append('agreed_completion_date', agreed_completion_date);
 
-    console.log(formData);
-    toast.success("Basic Audit Information submitted successfully!");
-    setOpen(false);
+    try {
+      const response = await createInternalAuditReport(formData).unwrap();
+      if (response.status) {
+        toast.success(response.message || "Internal audit report created successfully!");
+        if (onSuccess) onSuccess();
+        setOpen(false);
+      } else {
+        toast.error(response.message || "Failed to create internal audit report");
+      }
+    } catch (error) {
+      console.error("Error creating internal audit report:", error);
+      toast.error(error.data?.message || "An error occurred while submitting the form");
+    }
   };
 
   return (
@@ -98,9 +133,9 @@ export default function CreateAuditForm({ open, setOpen }) {
               fullWidth
               variant="outlined"
               placeholder="Enter Site"
-              value={site}
+              value={site_name}
               sx={commonInputStyles}
-              onChange={(e) => setSite(e.target.value)}
+              onChange={(e) => setSiteName(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -138,14 +173,9 @@ export default function CreateAuditForm({ open, setOpen }) {
               rows={4}
               variant="outlined"
               placeholder="Enter detailed observations"
-              value={observations.observation_details}
+              value={observer_details}
               sx={commonInputStyles}
-              onChange={(e) =>
-                setObservations((prev) => ({
-                  ...prev,
-                  observation_details: e.target.value,
-                }))
-              }
+              onChange={(e) => setObserverDetails(e.target.value)}
             />
           </Grid>
 
@@ -157,14 +187,9 @@ export default function CreateAuditForm({ open, setOpen }) {
               fullWidth
               variant="outlined"
               placeholder="Enter Name"
-              value={observations.auditor_observer.name}
+              value={observer_name}
               sx={commonInputStyles}
-              onChange={(e) =>
-                setObservations((prev) => ({
-                  ...prev,
-                  auditor_observer: { ...prev.auditor_observer, name: e.target.value },
-                }))
-              }
+              onChange={(e) => setObserverName(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -189,15 +214,13 @@ export default function CreateAuditForm({ open, setOpen }) {
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) =>
-                    handleSignatureUpload(setObservations, "auditor_observer.signature", e)
-                  }
+                  onChange={handleObserverSignatureUpload}
                 />
               </Button>
-              {observations.auditor_observer.signature && (
+              {observer_sign && (
                 <Avatar
-                  src={observations.auditor_observer.signature}
-                  alt="Auditor Signature"
+                  id="observer-sign-preview"
+                  alt="Observer Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
                 />
@@ -213,14 +236,9 @@ export default function CreateAuditForm({ open, setOpen }) {
               fullWidth
               variant="outlined"
               placeholder="Enter Name"
-              value={observations.auditee.name}
+              value={auditee_name}
               sx={commonInputStyles}
-              onChange={(e) =>
-                setObservations((prev) => ({
-                  ...prev,
-                  auditee: { ...prev.auditee, name: e.target.value },
-                }))
-              }
+              onChange={(e) => setAuditeeName(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -245,12 +263,12 @@ export default function CreateAuditForm({ open, setOpen }) {
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) => handleSignatureUpload(setObservations, "auditee.signature", e)}
+                  onChange={handleAuditeeSignatureUpload}
                 />
               </Button>
-              {observations.auditee.signature && (
+              {auditee_sign && (
                 <Avatar
-                  src={observations.auditee.signature}
+                  id="auditee-sign-preview"
                   alt="Auditee Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -267,26 +285,22 @@ export default function CreateAuditForm({ open, setOpen }) {
               fullWidth
               variant="outlined"
               type="date"
-              value={observations.agreed_completion_date}
+              value={agreed_completion_date}
               sx={commonInputStyles}
-              onChange={(e) =>
-                setObservations((prev) => ({
-                  ...prev,
-                  agreed_completion_date: e.target.value,
-                }))
-              }
+              onChange={(e) => setAgreedCompletionDate(e.target.value)}
             />
           </Grid>
         </Grid>
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleClose} color="secondary" variant="outlined">
+        <Button onClick={handleClose} color="secondary" variant="outlined" disabled={isLoading}>
           Cancel
         </Button>
         <Button
           onClick={handleSubmit}
           color="primary"
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -301,8 +315,9 @@ export default function CreateAuditForm({ open, setOpen }) {
             },
           }}
           variant="contained"
+          startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
         >
-          Submit
+          {isLoading ? "Submitting..." : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>
