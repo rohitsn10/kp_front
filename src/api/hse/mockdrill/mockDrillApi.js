@@ -27,8 +27,8 @@ export const mockDrillApi = createApi({
       }),
     }),
     getMockDrillReport: builder.query({
-      query: () => ({
-        url: "annexures_module/get_mock_drill_report",
+      query: (locationId) => ({
+        url: `annexures_module/get_mock_drill_report/${locationId}`,
         method: "GET",
       }),
     }),

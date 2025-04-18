@@ -27,7 +27,7 @@ export const firstAidRecordApi = createApi({
     // Endpoint for getting all first aid records (the third curl)
     getAllFirstAidRecords: builder.query({
       query: () => ({
-        url: "annexures_module/get_first_aid_record",
+        url: `annexures_module/get_first_aid_record/${locationId}`,
         method: "GET",
       }),
     }),

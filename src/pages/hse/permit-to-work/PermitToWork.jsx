@@ -13,13 +13,15 @@ import {
 } from "@mui/material";
 import PermitToWorkDialog from "../../../components/pages/hse/permitTowork/CreatePermitToWork";
 import { useGetPermitToWorkQuery } from "../../../api/hse/permitTowork/permitToworkApi";
+import { useParams } from "react-router-dom";
 
 const PermitToWork = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
-  const { data, isLoading, refetch } = useGetPermitToWorkQuery();
+  const {locationId}=useParams();
+  const { data, isLoading, refetch } = useGetPermitToWorkQuery(locationId ? parseInt(locationId) : undefined);
 
   const filteredPermits = (data?.data || []).filter((permit) =>
     permit.permit_number.toLowerCase().includes(searchTerm.toLowerCase())

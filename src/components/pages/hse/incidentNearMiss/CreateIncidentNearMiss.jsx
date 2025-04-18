@@ -226,7 +226,7 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
     //   setOpen(false);
     // })
     // .catch(error => {
-    //   toast.error("Error updating report: " + error.message);
+    //   toast.error("Error updating report: " + error.message); 
     // });
 
     toast.success("Investigation report updated successfully!");

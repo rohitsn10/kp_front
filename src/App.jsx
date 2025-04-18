@@ -76,7 +76,6 @@ const HseLayout = () => {
 };
 
 function App() {
-
   return (
     <div>
       <Routes>
@@ -187,7 +186,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
 
         <Route
           path="/project/view_projects_details/:projectId"
@@ -417,7 +415,9 @@ function App() {
           path="/sfa-page"
           element={
             <ProtectedRoute>
-              <MainLayout><SiteVisitTable /></MainLayout>
+              <MainLayout>
+                <SiteVisitTable />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -425,15 +425,19 @@ function App() {
           path="/design-documents"
           element={
             <ProtectedRoute>
-              <MainLayout><DesignDocumentsPage /></MainLayout>
+              <MainLayout>
+                <DesignDocumentsPage />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
-                <Route
+        <Route
           path="/quality-assurance"
           element={
             <ProtectedRoute>
-              <MainLayout><QualityInspectionPage /></MainLayout>
+              <MainLayout>
+                <QualityInspectionPage />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -451,28 +455,88 @@ function App() {
           <Route index element={<HseMainPage />} />
 
           {/* Nested HSE section routes */}
-          <Route path="permit-to-work/:locationId?" element={<PermitToWork />} />
-  <Route path="incident-investigation/:locationId?" element={<IncidentInvestigation />} />
-  <Route path="incident-report/:locationId?" element={<IncidentReport />} />
-  <Route path="safety-violation/:locationId?" element={<SafetyViolation />} />
-  <Route path="boom-lift-inspection/:locationId?" element={<BoomLiftInspection />} />
-  <Route path="crane-hydra-inspection/:locationId?" element={<CraneHydraInspection />} />
-  <Route path="trailer-inspection/:locationId?" element={<TrailerInspection />} />
-  <Route path="mock-drill-report/:locationId?" element={<MockDrillReport />} />
-  <Route path="safety-training/:locationId?" element={<SafetyTraining />} />
-  <Route path="internal-audit-report/:locationId?" element={<InternalAuditReport />} />
-  <Route path="induction-training/:locationId?" element={<InductionTraining />} />
-  <Route path="physical-fitness-certificate/:locationId?" element={<PhysicalFitnessCertificate />} />
-  <Route path="safety-meeting-minutes/:locationId?" element={<SafetyMeetingMinutes />} />
-  <Route path="toolbox-talk/:locationId?" element={<ToolboxTalk />} />
-  <Route path="first-aid-record/:locationId?" element={<FirstAidRecord />} />
-  <Route path="ladder-checklist/:locationId?" element={<LadderChecklist />} />
-  <Route path="excavation-checklist/:locationId?" element={<ExcavationChecklist />} />
-  <Route path="suggestion-scheme/:locationId?" element={<SuggestionScheme />} />
-  <Route path="monthly-fire-extinguisher-inspection/:locationId?" element={<MonthlyFireExtinguisher />} />
-  <Route path="loto-register/:locationId?" element={<LotoRegister />} />
-  <Route path="full-body-harness-checklist/:locationId?" element={<FullBodyHarnessChecklist />} />
-  <Route path="risk-assessment/:locationId?" element={<RiskAssessment />} />
+          <Route
+            path="permit-to-work/:locationId?"
+            element={<PermitToWork />}
+          />
+          <Route
+            path="incident-investigation/:locationId?"
+            element={<IncidentInvestigation />}
+          />
+          <Route
+            path="incident-report/:locationId?"
+            element={<IncidentReport />}
+          />
+          <Route
+            path="safety-violation/:locationId?"
+            element={<SafetyViolation />}
+          />
+          <Route
+            path="boom-lift-inspection/:locationId?"
+            element={<BoomLiftInspection />}
+          />
+          <Route
+            path="crane-hydra-inspection/:locationId?"
+            element={<CraneHydraInspection />}
+          />
+          <Route
+            path="trailer-inspection/:locationId?"
+            element={<TrailerInspection />}
+          />
+          <Route
+            path="mock-drill-report/:locationId?"
+            element={<MockDrillReport />}
+          />
+          <Route
+            path="safety-training/:locationId?"
+            element={<SafetyTraining />}
+          />
+          <Route
+            path="internal-audit-report/:locationId?"
+            element={<InternalAuditReport />}
+          />
+          <Route
+            path="induction-training/:locationId?"
+            element={<InductionTraining />}
+          />
+          <Route
+            path="physical-fitness-certificate/:locationId?"
+            element={<PhysicalFitnessCertificate />}
+          />
+          <Route
+            path="safety-meeting-minutes/:locationId?"
+            element={<SafetyMeetingMinutes />}
+          />
+          <Route path="toolbox-talk/:locationId?" element={<ToolboxTalk />} />
+          <Route
+            path="first-aid-record/:locationId?"
+            element={<FirstAidRecord />}
+          />
+          <Route
+            path="ladder-checklist/:locationId?"
+            element={<LadderChecklist />}
+          />
+          <Route
+            path="excavation-checklist/:locationId?"
+            element={<ExcavationChecklist />}
+          />
+          <Route
+            path="suggestion-scheme/:locationId?"
+            element={<SuggestionScheme />}
+          />
+          <Route
+            path="monthly-fire-extinguisher-inspection/:locationId?"
+            element={<MonthlyFireExtinguisher />}
+          />
+          <Route path="loto-register/:locationId?" element={<LotoRegister />} />
+          <Route
+            path="full-body-harness-checklist/:locationId?"
+            element={<FullBodyHarnessChecklist />}
+          />
+          <Route
+            path="risk-assessment/:locationId?"
+            element={<RiskAssessment />}
+          />
           {/* Add more HSE sections as needed */}
         </Route>
         <Route path="*" element={<Navigate to="/" />} />

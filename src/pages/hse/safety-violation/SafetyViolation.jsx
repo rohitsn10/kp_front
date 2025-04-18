@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import CreateSafetyViolation from '../../../components/pages/hse/safetyViolation/CreateSafetyViolation';
 import { useGetSafetyViolationReportQuery } from '../../../api/hse/safetyViolation/safetyViolatioApi';
+import { useParams } from 'react-router-dom';
 
 const SafetyViolation = () => {
   const [page, setPage] = useState(0);
@@ -26,8 +27,8 @@ const SafetyViolation = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogContent, setDialogContent] = useState(null);
   const [createDialog, setCreateDialog] = useState(false);
-
-  const { data, isLoading, error } = useGetSafetyViolationReportQuery();
+  const { locationId } = useParams();
+  const { data, isLoading, error } = useGetSafetyViolationReportQuery(locationId ? parseInt(locationId) : undefined);
 
   const safetyViolations = data?.data || [];
 

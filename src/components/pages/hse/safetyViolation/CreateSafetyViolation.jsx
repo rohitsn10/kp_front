@@ -12,10 +12,12 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreateSafetyViolationReportMutation } from "../../../../api/hse/safetyViolation/safetyViolatioApi";
+import { useParams } from "react-router-dom";
 
 export default function CreateSafetyViolation({ open, setOpen }) {
   // RTK mutation hook
-  const [createSafetyViolationReport, { isLoading }] = useCreateSafetyViolationReportMutation();
+  const [createSafetyViolationReport, { isLoading }] =
+    useCreateSafetyViolationReportMutation();
 
   const [siteName, setSiteName] = useState("");
   const [siteDate, setSiteDate] = useState("");
@@ -28,9 +30,10 @@ export default function CreateSafetyViolation({ open, setOpen }) {
   const [issuedByDepartment, setIssuedByDepartment] = useState("");
   const [issuedBySignature, setIssuedBySignature] = useState(null);
   const [contractorsName, setContractorsName] = useState("");
-  const [descriptionSafetyViolation, setDescriptionSafetyViolation] = useState("");
+  const [descriptionSafetyViolation, setDescriptionSafetyViolation] =
+    useState("");
   const [actionTaken, setActionTaken] = useState("");
-  
+  const { locationId } = useParams();
   // New fields for the additional sections
   const [siteHseoName, setSiteHseoName] = useState("");
   const [siteHseoSignature, setSiteHseoSignature] = useState(null);
@@ -50,46 +53,49 @@ export default function CreateSafetyViolation({ open, setOpen }) {
       { value: issuedByDesignation, label: "Issuer Designation" },
       { value: issuedByDepartment, label: "Issuer Department" },
       { value: contractorsName, label: "Contractor's Name" },
-      { value: descriptionSafetyViolation, label: "Description of Safety Violation" },
+      {
+        value: descriptionSafetyViolation,
+        label: "Description of Safety Violation",
+      },
       { value: actionTaken, label: "Action Taken" },
       { value: siteHseoName, label: "Site HSEO Name" },
       { value: siteInChargeName, label: "Site In Charge Name" },
       { value: projectManagerName, label: "Project Manager Name" },
     ];
-  
+
     // Check text fields
-    const emptyField = requiredFields.find(field => !field.value.trim());
+    const emptyField = requiredFields.find((field) => !field.value.trim());
     if (emptyField) {
       toast.error(`${emptyField.label} is required!`);
       return false;
     }
-    
+
     // Check signatures
     if (!issuedToSignature) {
       toast.error("Violator Signature is required!");
       return false;
     }
-    
+
     if (!issuedBySignature) {
       toast.error("Issuer Signature is required!");
       return false;
     }
-    
+
     if (!siteHseoSignature) {
       toast.error("Site HSEO Signature is required!");
       return false;
     }
-    
+
     if (!siteInChargeSignature) {
       toast.error("Site In Charge Signature is required!");
       return false;
     }
-    
+
     if (!projectManagerSignature) {
       toast.error("Project Manager Signature is required!");
       return false;
     }
-  
+
     return true;
   };
 
@@ -104,25 +110,26 @@ export default function CreateSafetyViolation({ open, setOpen }) {
       issued_to_violator_name: issuedToViolatorName,
       issued_to_designation: issuedToDesignation,
       issued_to_department: issuedToDepartment,
-      issued_to_signature: issuedToSignature, // Now it's the signature data URL
+      issued_to_sign: issuedToSignature, // Now it's the signature data URL
       issued_by_name: issuedByName,
       issued_by_designation: issuedByDesignation,
       issued_by_department: issuedByDepartment,
-      issued_by_signature: issuedBySignature, // Now it's the signature data URL
+      issued_by_sign: issuedBySignature, // Now it's the signature data URL
       contractors_name: contractorsName,
       description_safety_violation: descriptionSafetyViolation,
       action_taken: actionTaken,
-      site_hseo_name: siteHseoName,
-      site_hseo_signature: siteHseoSignature, // Now it's the signature data URL
-      site_in_charge_name: siteInChargeName,
-      site_in_charge_signature: siteInChargeSignature, // Now it's the signature data URL
-      project_manager_name: projectManagerName,
-      project_manager_signature: projectManagerSignature // Now it's the signature data URL
+      hseo_name: siteHseoName,
+      hseo_sign: siteHseoSignature, // Now it's the signature data URL
+      site_incharge_name: siteInChargeName,
+      site_incharge_sign: siteInChargeSignature, // Now it's the signature data URL
+      manager_name: projectManagerName,
+      manager_sign: projectManagerSignature, // Now it's the signature data URL
+      location: locationId,
     };
 
     try {
       const response = await createSafetyViolationReport(formData).unwrap();
-  
+
       if (response.status) {
         toast.success(response.message || "Report submitted successfully!");
         setOpen(false);
@@ -158,7 +165,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
     setProjectManagerName("");
     setProjectManagerSignature(null);
   };
-  
+
   const commonInputStyles = {
     "& .MuiOutlinedInput-root": {
       borderRadius: "6px",
@@ -178,7 +185,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
       borderBottom: "4px solid #FACC15",
     },
   };
-  
+
   // Signature upload handlers
   const handleSignatureUpload = (setter) => (e) => {
     const file = e.target.files[0];
@@ -229,7 +236,9 @@ export default function CreateSafetyViolation({ open, setOpen }) {
 
         {/* Issued To Section */}
         <div className="mb-4 p-4 border border-gray-200 rounded-lg">
-          <h3 className="text-[#29346B] text-xl font-semibold mb-3">Issued To (Violator Details)</h3>
+          <h3 className="text-[#29346B] text-xl font-semibold mb-3">
+            Issued To (Violator Details)
+          </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -272,7 +281,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
               />
             </div>
           </div>
-          
+
           {/* Signature field for Issued To with upload functionality */}
           <div className="mt-4">
             <label className="block mb-1 text-[#29346B] font-semibold">
@@ -307,7 +316,9 @@ export default function CreateSafetyViolation({ open, setOpen }) {
 
         {/* Issued By Section */}
         <div className="mb-4 p-4 border border-gray-200 rounded-lg">
-          <h3 className="text-[#29346B] text-xl font-semibold mb-3">Issued By (Reporter Details)</h3>
+          <h3 className="text-[#29346B] text-xl font-semibold mb-3">
+            Issued By (Reporter Details)
+          </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -350,7 +361,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
               />
             </div>
           </div>
-          
+
           {/* Signature field for Issued By with upload functionality */}
           <div className="mt-4">
             <label className="block mb-1 text-[#29346B] font-semibold">
@@ -401,7 +412,8 @@ export default function CreateSafetyViolation({ open, setOpen }) {
         {/* Description of Safety Violation */}
         <div className="mb-4">
           <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-            Description of Safety Violation<span className="text-red-600"> *</span>
+            Description of Safety Violation
+            <span className="text-red-600"> *</span>
           </label>
           <TextField
             fullWidth
@@ -431,13 +443,15 @@ export default function CreateSafetyViolation({ open, setOpen }) {
             onChange={(e) => setActionTaken(e.target.value)}
           />
         </div>
-        
+
         {/* Additional Sections */}
-        
+
         {/* Site HSEO Section */}
         <div className="mb-4 p-4 border border-gray-200 rounded-lg">
-          <h3 className="text-[#29346B] text-xl font-semibold mb-3">Site HSEO</h3>
-          
+          <h3 className="text-[#29346B] text-xl font-semibold mb-3">
+            Site HSEO
+          </h3>
+
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <label className="block mb-1 text-[#29346B] font-semibold">
@@ -452,7 +466,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
                 onChange={(e) => setSiteHseoName(e.target.value)}
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <label className="block mb-1 text-[#29346B] font-semibold">
                 Signature<span className="text-red-600"> *</span>
@@ -484,11 +498,13 @@ export default function CreateSafetyViolation({ open, setOpen }) {
             </Grid>
           </Grid>
         </div>
-        
+
         {/* Site In Charge Section */}
         <div className="mb-4 p-4 border border-gray-200 rounded-lg">
-          <h3 className="text-[#29346B] text-xl font-semibold mb-3">Site In Charge</h3>
-          
+          <h3 className="text-[#29346B] text-xl font-semibold mb-3">
+            Site In Charge
+          </h3>
+
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <label className="block mb-1 text-[#29346B] font-semibold">
@@ -503,7 +519,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
                 onChange={(e) => setSiteInChargeName(e.target.value)}
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <label className="block mb-1 text-[#29346B] font-semibold">
                 Signature<span className="text-red-600"> *</span>
@@ -535,11 +551,13 @@ export default function CreateSafetyViolation({ open, setOpen }) {
             </Grid>
           </Grid>
         </div>
-        
+
         {/* Project Manager Section */}
         <div className="mb-4 p-4 border border-gray-200 rounded-lg">
-          <h3 className="text-[#29346B] text-xl font-semibold mb-3">Project Manager</h3>
-          
+          <h3 className="text-[#29346B] text-xl font-semibold mb-3">
+            Project Manager
+          </h3>
+
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <label className="block mb-1 text-[#29346B] font-semibold">
@@ -554,7 +572,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
                 onChange={(e) => setProjectManagerName(e.target.value)}
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <label className="block mb-1 text-[#29346B] font-semibold">
                 Signature<span className="text-red-600"> *</span>
@@ -589,9 +607,9 @@ export default function CreateSafetyViolation({ open, setOpen }) {
       </DialogContent>
 
       <DialogActions>
-        <Button 
-          onClick={handleClose} 
-          color="secondary" 
+        <Button
+          onClick={handleClose}
+          color="secondary"
           variant="outlined"
           sx={{
             borderColor: "#29346B",
@@ -607,8 +625,8 @@ export default function CreateSafetyViolation({ open, setOpen }) {
         >
           Cancel
         </Button>
-        <Button 
-          onClick={handleSubmit} 
+        <Button
+          onClick={handleSubmit}
           color="primary"
           variant="contained"
           disabled={isLoading}

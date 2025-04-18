@@ -23,7 +23,7 @@ export const boomLiftInspectionApi = createApi({
     }),
     getBoomLiftInspection: builder.query({
       query: () => ({
-        url: "annexures_module/get_boom_lift_inspection",
+        url: `annexures_module/get_boom_lift_inspection/${locationId}`,
         method: "GET",
       }),
     }),

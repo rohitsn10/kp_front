@@ -20,6 +20,7 @@ import {
 import ImageViewer from '../../../utils/signatureViewer';
 import ToolboxAttendanceDialog from '../../../components/pages/hse/toolbox-talks';
 import { useGetToolTalkAttendanceQuery } from '../../../api/hse/toolbox/toolBoxApi';
+import { useParams } from 'react-router-dom';
 // import { useGetToolTalkAttendanceQuery } from '../../services/api'; // Adjust the import path as needed
 function ToolboxTalk() {
   const [page, setPage] = useState(0);
@@ -29,9 +30,9 @@ function ToolboxTalk() {
   const [openPointsModal, setOpenPointsModal] = useState(false);
   const [openParticipantsModal, setOpenParticipantsModal] = useState(false);
   const [openCreateDialog, setCreateDialog] = useState(false);
-  
+  const {locationId}= useParams();
   // Fetch toolbox talk attendance data using the provided hook
-  const { data: toolboxTalkData, isLoading, isError,refetch } = useGetToolTalkAttendanceQuery();
+  const { data: toolboxTalkData, isLoading, isError,refetch } = useGetToolTalkAttendanceQuery(locationId ? parseInt(locationId) : undefined);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);

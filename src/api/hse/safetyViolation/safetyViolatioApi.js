@@ -22,8 +22,8 @@ export const safetyViolationApi = createApi({
       }),
     }),
     getSafetyViolationReport: builder.query({
-      query: () => ({
-        url: "annexures_module/get_safety_violation_report",
+      query: (locationId) => ({
+        url: `annexures_module/get_safety_violation_report/${locationId}`, 
         method: "GET",
       }),
     }),

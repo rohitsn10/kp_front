@@ -18,6 +18,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import TrailerInspectionDialog from "../../../components/pages/hse/trailer-inspection/CreateTrailerInspection";
 import { useGetTrailerInspectionQuery } from "../../../api/hse/trailerInspection/trailerInspectionApi";
+import { useParams } from "react-router-dom";
 
 function TrailerInspection() {
   const dummyCraneData = [
@@ -261,7 +262,8 @@ function TrailerInspection() {
   const [openDetails, setOpenDetails] = useState(false);
   const [openChecklist, setOpenChecklist] = useState(false);
   const [selectedInspection, setSelectedInspection] = useState(null);
-  const { data } = useGetTrailerInspectionQuery();
+  const {locationId}=useParams();
+  const { data } = useGetTrailerInspectionQuery(locationId ? parseInt(locationId) : undefined);
   const [openCreateDialog, setOpenDialog] = useState(false);
   const handleOpenDetails = (inspection) => {
     setSelectedInspection(inspection);
