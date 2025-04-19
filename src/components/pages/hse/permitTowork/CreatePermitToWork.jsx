@@ -14,6 +14,7 @@ import {
   Radio,
   RadioGroup,
   Autocomplete,
+  Typography,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreatePermitToWorkMutation } from "../../../../api/hse/permitTowork/permitToworkApi";
@@ -26,29 +27,33 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
   const [site_name, setSiteName] = useState("");
   const [department, setDepartment] = useState("");
   const [permit_number, setPermitNumber] = useState("");
+  const [permit_date, setPermitDate] = useState(""); // Added permit date
   const [external_agency_name, setExternalAgencyName] = useState("");
   const [type_of_permit, setTypeOfPermit] = useState("");
-  const [other_permit_type, setOtherPermitType] = useState(""); // Added for "Other" permit type
-  const [permit_issued_for, setPermitIssuedFor] = useState([]);
-  const [day, setDay] = useState("");
+  const [other_permit_type, setOtherPermitType] = useState(""); 
+  const [permit_valid_from, setPermitValidFrom] = useState(""); // Changed from permit_issued_for
+  const [permit_valid_to, setPermitValidTo] = useState(""); // Added permit valid to
+  const [permit_risk_type, setPermitRiskType] = useState("general"); // Added for risk type (general/critical)
   const [job_activity, setJobActivity] = useState("");
   const [location_area, setLocationArea] = useState("");
   const [tools_equipment, setToolsEquipment] = useState("");
   const [hazard_consideration, setHazardConsideration] = useState([]);
-  const [other_hazard, setOtherHazard] = useState(""); // Added for "Other" hazard
+  const [other_hazard, setOtherHazard] = useState(""); 
   const [job_preparation, setJobPreparation] = useState([]);
-  const [other_job_preparation, setOtherJobPreparation] = useState(""); // Added for "Other" job preparation
+  const [other_job_preparation, setOtherJobPreparation] = useState(""); 
   const [risk_assessment_number, setRiskAssessmentNumber] = useState("");
   const [fire_protection, setFireProtection] = useState([]);
-  const [other_fire_protection, setOtherFireProtection] = useState(""); // Added for "Other" fire protection
+  const [other_fire_protection, setOtherFireProtection] = useState(""); 
 
   const validateForm = () => {
     const requiredFields = [
       { value: site_name, label: "Site Name" },
       { value: department, label: "Department" },
       { value: permit_number, label: "Permit Number" },
+      { value: permit_date, label: "Permit Date" }, // Added date validation
       { value: type_of_permit === "other" ? other_permit_type : type_of_permit, label: "Type of Permit" },
-      { value: permit_issued_for.length > 0 ? "ok" : "", label: "Permit Issued For" },
+      { value: permit_valid_from, label: "Permit Valid From" }, // Changed validation
+      { value: permit_valid_to, label: "Permit Valid To" }, // Added validation
       { value: job_activity, label: "Job Activity" },
       { value: location_area, label: "Location" },
       { value: tools_equipment, label: "Tools & Equipment" },
@@ -103,35 +108,39 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
     "excavation",
     "equipment testing",
     "crane / hydra / jcb work",
-    "other", // Added "other" option
+    "other",
   ];
 
-  // Permit issued for options
-  const permitIssuedForOptions = ["day", "night"];
-
+  // Updated hazard options 
   const hazardOptions = [
     "fire",
     "electrical",
     "fall",
     "slip & trip",
+    "cut & injury",
     "toppling",
-    "other", // Added "other" option
+    "dust",
+    "other",
   ];
 
+  // Updated job preparation options - removed "method statement"
   const jobPreparationOptions = [
-    "work permit",
-    "method statement",
+    "work permit procedure",
     "risk assessment",
-    "safety training",
-    "other", // Added "other" option
+    "sop", // Added Safe Operating Procedure
+    "other",
   ];
 
+  // Updated fire protection options
   const fireProtectionOptions = [
     "fire extinguisher",
     "fire blanket",
     "fire watch",
+    "face shield",
+    "dust mask",
+    "full body harness",
     "ppe suit",
-    "other", // Added "other" option
+    "other",
   ];
 
   const handleClose = () => setOpen(false);
@@ -170,10 +179,12 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
       site_name,
       department,
       permit_number,
+      permit_date, // Added date to payload
       external_agency_name,
       type_of_permit: finalTypeOfPermit,
-      permit_issued_for,
-      day,
+      permit_valid_from, // Changed from permit_issued_for
+      permit_valid_to, // Added to payload
+      permit_risk_type, // Added to payload
       job_activity,
       location_area,
       tools_equipment,
@@ -266,9 +277,9 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
           </FormControl>
         </div>
 
-        {/* Permit Number & External Agency */}
+        {/* Permit Number, Date & External Agency */}
         <div className="flex gap-4 mb-4">
-          <div className="w-full">
+          <div className="w-1/3">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Permit Number<span className="text-red-600"> *</span>
             </label>
@@ -281,7 +292,20 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
               onChange={(e) => setPermitNumber(e.target.value)}
             />
           </div>
-          <div className="w-full">
+          <div className="w-1/3">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Date<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              type="date"
+              variant="outlined"
+              value={permit_date}
+              sx={commonInputStyles}
+              onChange={(e) => setPermitDate(e.target.value)}
+            />
+          </div>
+          <div className="w-1/3">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               External Agency Name (if any)
             </label>
@@ -296,7 +320,7 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
           </div>
         </div>
 
-        {/* Type of Permit (Radio buttons instead of checkboxes) */}
+        {/* Type of Permit (Radio buttons) */}
         <div className="mb-4">
           <FormControl component="fieldset">
             <FormLabel
@@ -334,49 +358,65 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
           </FormControl>
         </div>
 
-        {/* Permit Issued For (Checkboxes) */}
+        {/* Permit Valid From/To */}
         <div className="mb-4">
-          <FormLabel
-            component="legend"
-            className="text-[#29346B] text-lg font-semibold"
-          >
-            Permit Issued For<span className="text-red-600"> *</span>
-          </FormLabel>
-          <FormGroup row>
-            {permitIssuedForOptions.map((option) => (
-              <FormControlLabel
-                key={option}
-                control={
-                  <Checkbox
-                    checked={permit_issued_for.includes(option)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setPermitIssuedFor([...permit_issued_for, option]);
-                      } else {
-                        setPermitIssuedFor(permit_issued_for.filter(item => item !== option));
-                      }
-                    }}
-                  />
-                }
-                label={option.charAt(0).toUpperCase() + option.slice(1)}
-              />
-            ))}
-          </FormGroup>
+          <div className="flex flex-col mb-2">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Permit Valid<span className="text-red-600"> *</span>
+            </label>
+            <div className="flex gap-4">
+              <div className="w-1/2">
+                <TextField
+                  fullWidth
+                  type="time"
+                  variant="outlined"
+                  label="From (hrs)"
+                  value={permit_valid_from}
+                  sx={commonInputStyles}
+                  onChange={(e) => setPermitValidFrom(e.target.value)}
+                />
+              </div>
+              <div className="w-1/2">
+                <TextField
+                  fullWidth
+                  type="time"
+                  variant="outlined"
+                  label="To (hrs)"
+                  value={permit_valid_to}
+                  sx={commonInputStyles}
+                  onChange={(e) => setPermitValidTo(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* Day */}
+        
+        {/* Permit Risk Type */}
         <div className="mb-4">
-          <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-            Day<span className="text-red-600"> *</span>
-          </label>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Enter Day"
-            value={day}
-            sx={commonInputStyles}
-            onChange={(e) => setDay(e.target.value)}
-          />
+          <FormControl component="fieldset">
+            <FormLabel
+              component="legend"
+              className="text-[#29346B] text-lg font-semibold"
+            >
+              Permit Risk Type<span className="text-red-600"> *</span>
+            </FormLabel>
+            <RadioGroup
+              row
+              value={permit_risk_type}
+              onChange={(e) => setPermitRiskType(e.target.value)}
+            >
+              <FormControlLabel 
+                value="general" 
+                control={<Radio />} 
+                label="General/Low Risk PTW (Can be revalidated up to 25 days.)" 
+              />
+              <FormControlLabel
+                value="critical"
+                control={<Radio />}
+                label="Critical/High Risk PTW (HSEO/Dept. Head/Project Head/Site In-charge/ONM Head will validate)"
+              />
+            </RadioGroup>
+          </FormControl>
         </div>
 
         {/* Job Activity */}
@@ -494,7 +534,7 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
                     }}
                   />
                 }
-                label={item.charAt(0).toUpperCase() + item.slice(1)}
+                label={item === "sop" ? "SOP (Safe Operating Procedure)" : (item.charAt(0).toUpperCase() + item.slice(1))}
               />
             ))}
           </FormGroup>
@@ -535,7 +575,7 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
             component="legend"
             className="text-[#29346B] text-lg font-semibold"
           >
-            Fire Protection<span className="text-red-600"> *</span>
+            Fire Protection & PPEs<span className="text-red-600"> *</span>
           </FormLabel>
           <FormGroup row>
             {fireProtectionOptions.map((item) => (
@@ -569,6 +609,11 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
               onChange={(e) => setOtherFireProtection(e.target.value)}
             />
           )}
+          
+          {/* Note about mandatory PPEs */}
+          <Typography variant="body2" className="mt-2 text-gray-600 italic">
+            Note: Safety shoes, Safety helmet, Safety goggles, Hand gloves are mandatory in addition to Job specific PPEs to be used.
+          </Typography>
         </div>
       </DialogContent>
 

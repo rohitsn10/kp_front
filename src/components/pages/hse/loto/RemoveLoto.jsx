@@ -11,10 +11,13 @@ import {
   Divider,
   Box,
   Avatar,
+  CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useUpdateLotoRegisterMutation } from "../../../../api/hse/loto/lotoRegisterApi";
+// import { useUpdateLotoRegisterMutation } from "../api/lotoRegisterApi"; // Update this path to your actual API file path
 
-export default function RemoveLogoutForm({ open, setOpen }) {
+export default function RemoveLogoutForm({ open, setOpen, lotoId=1 }) {
   const [removedDateTime, setRemovedDateTime] = useState("");
   const [removedLockTagNumber, setRemovedLockTagNumber] = useState("");
   const [removedPermitNumber, setRemovedPermitNumber] = useState("");
@@ -23,7 +26,11 @@ export default function RemoveLogoutForm({ open, setOpen }) {
   const [removedSiteInChargeName, setRemovedSiteInChargeName] = useState("");
   const [removedApprovedBySiteInChargeSignature, setRemovedApprovedBySiteInChargeSignature] = useState(null);
 
+  // Initialize the mutation hook
+  const [updateLotoRegister, { isLoading }] = useUpdateLotoRegisterMutation();
+
   const validateForm = () => {
+    if (!lotoId) return toast.error("No LOTO record selected!");
     if (!removedDateTime.trim()) return toast.error("Removed Date/Time is required!");
     if (!removedLockTagNumber.trim())
       return toast.error("Removed Lock/Tag Number is required!");
@@ -56,30 +63,60 @@ export default function RemoveLogoutForm({ open, setOpen }) {
   const handleSignatureUpload = (setter, e) => {
     const file = e.target.files[0];
     if (file) {
+      setter(file); // Store the actual file for FormData
+      
+      // For preview purpose
       const reader = new FileReader();
       reader.onload = () => {
-        setter(reader.result);
+        e.target.dataset.preview = reader.result;
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const formData = {
-      "removed-date-time": removedDateTime,
-      "removed-lock-tag-number": removedLockTagNumber,
-      "removed-permit-number": removedPermitNumber,
-      "removed-by-name": removedByName,
-      "removed-by-signature": removedBySignature,
-      "removed-siteInCharge-name": removedSiteInChargeName,
-      "removed-approvedBySiteInCharge-signature": removedApprovedBySiteInChargeSignature,
-    };
-
-    // console.log(formData);
-    toast.success("Lockout/Tagout removal form submitted successfully!");
-    setOpen(false);
+    // Create FormData instance
+    const formData = new FormData();
+    
+    // Add removal fields
+    formData.append('removed_datetime', removedDateTime);
+    formData.append('removed_lock_tag_number', removedLockTagNumber);
+    formData.append('removed_permit_number', removedPermitNumber);
+    formData.append('removed_by_name', removedByName);
+    formData.append('removed_by_signature', removedBySignature);
+    formData.append('removed_site_incharge_name', removedSiteInChargeName);
+    formData.append('removed_approved_by_signature', removedApprovedBySiteInChargeSignature);
+    
+    try {
+      // Call the mutation with the FormData
+      const response = await updateLotoRegister({ 
+        id: lotoId, 
+        formData 
+      }).unwrap();
+      
+      if (response.status) {
+        toast.success("Lockout/Tagout removal form submitted successfully!");
+        resetForm();
+        setOpen(false);
+      } else {
+        toast.error(response.message || "Failed to submit form");
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error(error.data?.message || "An error occurred while submitting the form");
+    }
+  };
+  
+  const resetForm = () => {
+    setRemovedDateTime("");
+    setRemovedLockTagNumber("");
+    setRemovedPermitNumber("");
+    setRemovedByName("");
+    setRemovedBySignature(null);
+    setRemovedSiteInChargeName("");
+    setRemovedApprovedBySiteInChargeSignature(null);
   };
 
   return (
@@ -177,7 +214,7 @@ export default function RemoveLogoutForm({ open, setOpen }) {
               </Button>
               {removedBySignature && (
                 <Avatar
-                  src={removedBySignature}
+                  src={e => e.target.dataset.preview || ''}
                   alt="Removed By Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -231,7 +268,7 @@ export default function RemoveLogoutForm({ open, setOpen }) {
               </Button>
               {removedApprovedBySiteInChargeSignature && (
                 <Avatar
-                  src={removedApprovedBySiteInChargeSignature}
+                  src={e => e.target.dataset.preview || ''}
                   alt="Approved By Site In-Charge Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -249,6 +286,7 @@ export default function RemoveLogoutForm({ open, setOpen }) {
         <Button
           onClick={handleSubmit}
           color="primary"
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -264,7 +302,7 @@ export default function RemoveLogoutForm({ open, setOpen }) {
           }}
           variant="contained"
         >
-          Submit
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

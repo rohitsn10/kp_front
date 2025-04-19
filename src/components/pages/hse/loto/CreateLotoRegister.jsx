@@ -11,10 +11,15 @@ import {
   Divider,
   Box,
   Avatar,
+  CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useParams } from "react-router-dom";
+import { useCreateLotoRegisterMutation } from "../../../../api/hse/loto/lotoRegisterApi";
+// import { useCreateLotoRegisterMutation } from "../api/lotoRegisterApi"; // Update this path to your actual API file path
 
 export default function CreateLotoRegister({ open, setOpen }) {
+  const { locationId } = useParams();
   const [site, setSite] = useState("");
   const [appliedDateTime, setAppliedDateTime] = useState("");
   const [appliedLockTagNumber, setAppliedLockTagNumber] = useState("");
@@ -25,6 +30,9 @@ export default function CreateLotoRegister({ open, setOpen }) {
   const [appliedApprovedBySignature, setAppliedApprovedBySignature] = useState(
     null
   );
+
+  // Initialize the mutation hook
+  const [createLotoRegister, { isLoading }] = useCreateLotoRegisterMutation();
 
   const validateForm = () => {
     if (!site.trim()) return toast.error("Site is required!");
@@ -60,31 +68,63 @@ export default function CreateLotoRegister({ open, setOpen }) {
   const handleSignatureUpload = (setter, e) => {
     const file = e.target.files[0];
     if (file) {
+      setter(file); // Store the actual file for FormData
+      
+      // For preview purpose
       const reader = new FileReader();
       reader.onload = () => {
-        setter(reader.result);
+        e.target.dataset.preview = reader.result;
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const formData = {
-      Site: site,
-      "applied-date-time": appliedDateTime,
-      "applied-lock-tag-number": appliedLockTagNumber,
-      "applied-permit-number": appliedPermitNumber,
-      "applied-by-name": appliedByName,
-      "applied-by-signature": appliedBySignature,
-      "applied-approvedBy-name": appliedApprovedByName,
-      "applied-approvedBy-signature": appliedApprovedBySignature,
-    };
-
-    console.log(formData);
-    toast.success("Lockout/Tagout form submitted successfully!");
-    setOpen(false);
+    // Create FormData instance
+    const formData = new FormData();
+    
+    // Add applied_info fields
+    formData.append('site_name', site);
+    formData.append('location', locationId);
+    formData.append('applied_datetime', appliedDateTime);
+    formData.append('applied_lock_tag_number', appliedLockTagNumber);
+    formData.append('applied_permit_number', appliedPermitNumber);
+    formData.append('applied_by_name', appliedByName);
+    formData.append('applied_by_signature', appliedBySignature);
+    formData.append('applied_approved_by_name', appliedApprovedByName);
+    formData.append('applied_approved_by_signature', appliedApprovedBySignature);
+    
+    // Add location field for the main model
+    formData.append('location', locationId);
+    
+    try {
+      // Call the mutation with the FormData
+      const response = await createLotoRegister(formData).unwrap();
+      
+      if (response.status) {
+        toast.success("Lockout/Tagout form submitted successfully!");
+        resetForm();
+        setOpen(false);
+      } else {
+        toast.error(response.message || "Failed to submit form");
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error(error.data?.message || "An error occurred while submitting the form");
+    }
+  };
+  
+  const resetForm = () => {
+    setSite("");
+    setAppliedDateTime("");
+    setAppliedLockTagNumber("");
+    setAppliedPermitNumber("");
+    setAppliedByName("");
+    setAppliedBySignature(null);
+    setAppliedApprovedByName("");
+    setAppliedApprovedBySignature(null);
   };
 
   return (
@@ -197,7 +237,7 @@ export default function CreateLotoRegister({ open, setOpen }) {
               </Button>
               {appliedBySignature && (
                 <Avatar
-                  src={appliedBySignature}
+                  src={e => e.target.dataset.preview || ''}
                   alt="Applied By Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -251,7 +291,7 @@ export default function CreateLotoRegister({ open, setOpen }) {
               </Button>
               {appliedApprovedBySignature && (
                 <Avatar
-                  src={appliedApprovedBySignature}
+                  src={e => e.target.dataset.preview || ''}
                   alt="Approved By Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -269,6 +309,7 @@ export default function CreateLotoRegister({ open, setOpen }) {
         <Button
           onClick={handleSubmit}
           color="primary"
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -284,7 +325,7 @@ export default function CreateLotoRegister({ open, setOpen }) {
           }}
           variant="contained"
         >
-          Submit
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

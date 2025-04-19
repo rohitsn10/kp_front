@@ -26,11 +26,11 @@ import { useParams } from 'react-router-dom';
 // Reusable Image Viewer Component
 const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
   const [open, setOpen] = useState(false);
-
+ 
   return (
     <>
       <img
-        src={src}
+  src={`${import.meta.env.VITE_API_KEY}${src}`}
         alt={alt}
         onClick={() => setOpen(true)}
         style={{
@@ -474,6 +474,7 @@ function MonthlyFireExtinguisher() {
         open={openCreateList}
         setOpen={setOpenCreateList}
         locationId={parsedLocationId}
+        onSuccess={() => refetch()}
       />
     </div>
   );

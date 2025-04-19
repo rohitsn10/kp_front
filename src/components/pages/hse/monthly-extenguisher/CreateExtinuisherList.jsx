@@ -34,7 +34,7 @@ const pressureOptions = ["Normal", "Low", "High"];
 const conditionOptions = ["Good", "Fair", "Poor"];
 const accessOptions = ["Clear", "Partially Blocked", "Blocked"];
 
-const FireExtinguisherInspectionDialog = ({ open, setOpen }) => {
+const FireExtinguisherInspectionDialog = ({ open, setOpen,onSuccess }) => {
   // Form state
   const [siteName, setSiteName] = useState('');
   const [dateOfInspection, setDateOfInspection] = useState('');
@@ -251,6 +251,7 @@ const FireExtinguisherInspectionDialog = ({ open, setOpen }) => {
         // toast.sucess("Fire extinguisher inspection created successfully")
         // refetch();
         // Reset form and close dialog
+        onSuccess();
         resetForm();
         setOpen(false);
       } else {

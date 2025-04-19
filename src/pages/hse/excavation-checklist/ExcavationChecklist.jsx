@@ -19,6 +19,43 @@ import ExcavationPermitDialog from '../../../components/pages/hse/excavation/Cre
 import { useParams } from 'react-router-dom';
 import { useGetLocationExcavationPermitsQuery } from '../../../api/hse/excavation/excavationPermitApi';
 
+const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
+  const [open, setOpen] = useState(false);
+ 
+  return (
+    <>
+      <img
+        src={`${import.meta.env.VITE_API_KEY}${src}`}
+        alt={alt}
+        onClick={() => setOpen(true)}
+        style={{
+          width: `${width}px`,
+          height: `${height}px`,
+          cursor: 'pointer'
+        }}
+      />
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogContent>
+          <img
+            src={`${import.meta.env.VITE_API_KEY}${src}`}
+            alt={alt}
+            style={{
+              width: '100%',
+              maxHeight: '500px',
+              objectFit: 'contain'
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
 function ExcavationChecklist() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -257,7 +294,12 @@ function ExcavationChecklist() {
                 <Typography><strong>Date:</strong> {formatDate(selectedExcavation.electrical_cable_date)}</Typography>
                 <Typography><strong>Signature:</strong></Typography>
                 {selectedExcavation.sign_upload && (
-                  <img src={selectedExcavation.sign_upload} alt="Signature" style={{ maxWidth: '100%', maxHeight: '100px' }} />
+                  <ImageViewer
+                  src={selectedExcavation.sign_upload}
+                  alt="Signature"
+                  width={200} 
+                  height={70}
+                />
                 )}
               </div>
 
@@ -268,7 +310,12 @@ function ExcavationChecklist() {
                 <Typography><strong>Date:</strong> {formatDate(selectedExcavation.water_gas_date)}</Typography>
                 <Typography><strong>Signature:</strong></Typography>
                 {selectedExcavation.water_sign_upload && (
-                  <img src={selectedExcavation.water_sign_upload} alt="Signature" style={{ maxWidth: '100%', maxHeight: '100px' }} />
+                  <ImageViewer
+                  src={selectedExcavation.water_sign_upload}
+                  alt="Signature"
+                  width={200} 
+                  height={70}
+                />
                 )}
               </div>
 
@@ -279,7 +326,12 @@ function ExcavationChecklist() {
                 <Typography><strong>Date:</strong> {formatDate(selectedExcavation.telephone_date)}</Typography>
                 <Typography><strong>Signature:</strong></Typography>
                 {selectedExcavation.telephone_sign_upload && (
-                  <img src={selectedExcavation.telephone_sign_upload} alt="Signature" style={{ maxWidth: '100%', maxHeight: '100px' }} />
+                  <ImageViewer
+                  src={selectedExcavation.telephone_sign_upload}
+                  alt="Signature"
+                  width={200} 
+                  height={70}
+                />
                 )}
               </div>
             </>
@@ -306,7 +358,12 @@ function ExcavationChecklist() {
               <Typography className="mt-4"><strong>Name:</strong> {selectedExcavation.name_acceptor}</Typography>
               <Typography><strong>Signature:</strong></Typography>
               {selectedExcavation.acceptor_sign_upload && (
-                <img src={selectedExcavation.acceptor_sign_upload} alt="Signature" style={{ maxWidth: '100%', maxHeight: '100px' }} />
+                <ImageViewer
+                  src={selectedExcavation.acceptor_sign_upload}
+                  alt="Signature"
+                  width={200} 
+                  height={80}
+                />
               )}
             </div>
           )}
@@ -328,7 +385,12 @@ function ExcavationChecklist() {
               <Typography className="mt-4"><strong>Checked By:</strong> {selectedExcavation.check_by_name}</Typography>
               <Typography><strong>Signature:</strong></Typography>
               {selectedExcavation.check_by_sign && (
-                <img src={selectedExcavation.check_by_sign} alt="Signature" style={{ maxWidth: '100%', maxHeight: '100px' }} />
+                <ImageViewer
+                  src={selectedExcavation.check_by_sign}
+                  alt="Signature"
+                  width={200} 
+                  height={80}
+                />
               )}
             </div>
           )}

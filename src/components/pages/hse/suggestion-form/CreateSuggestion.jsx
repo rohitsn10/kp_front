@@ -17,7 +17,7 @@ import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
 import { useCreateSuggestionSchemeReportMutation } from "../../../../api/hse/suggestionScheme/suggestionSchemeReportApi ";
 
-export default function SuggestionFormDialog({ open, setOpen }) {
+export default function SuggestionFormDialog({ open, setOpen,onSuccess }) {
   const { locationId } = useParams();
   const [site, setSite] = useState("");
   const [date, setDate] = useState("");
@@ -119,6 +119,7 @@ export default function SuggestionFormDialog({ open, setOpen }) {
       if (response.status) {
         toast.success("Suggestion submitted successfully!");
         resetForm();
+        onSuccess();
         setOpen(false);
       } else {
         toast.error(response.message || "Failed to submit suggestion");

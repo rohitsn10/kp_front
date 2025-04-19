@@ -23,7 +23,7 @@ export const permitToWorkApi = createApi({
     }),
     getPermitToWork: builder.query({
       query: (locationId) => ({
-        url: `annexures_module/get_permit_to_work/${locationId}`,
+        url: `annexures_module/loaction_id_wise_permit_to_work/${locationId}`,
         method: "GET", 
       }),
     }),
