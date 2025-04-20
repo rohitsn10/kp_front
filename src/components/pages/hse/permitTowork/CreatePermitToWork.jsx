@@ -15,15 +15,18 @@ import {
   RadioGroup,
   Autocomplete,
   Typography,
+  Box,
+  Avatar,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreatePermitToWorkMutation } from "../../../../api/hse/permitTowork/permitToworkApi";
+import { useParams } from "react-router-dom";
 // import { useCreatePermitToWorkMutation } from "your-rtk-query-file"; // Import path may need adjustment
 
 export default function PermitToWorkDialog({ open, setOpen, refetch }) {
   const [createPermitToWork, { isLoading }] = useCreatePermitToWorkMutation();
-  
   // States updated to match API payload field names
+  const {locationId}=useParams();
   const [site_name, setSiteName] = useState("");
   const [department, setDepartment] = useState("");
   const [permit_number, setPermitNumber] = useState("");
@@ -44,6 +47,10 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
   const [risk_assessment_number, setRiskAssessmentNumber] = useState("");
   const [fire_protection, setFireProtection] = useState([]);
   const [other_fire_protection, setOtherFireProtection] = useState(""); 
+  // New state for issuer name and signature
+  const [issuer_name, setIssuerName] = useState("");
+  const [issuer_signature, setIssuerSignature] = useState(null);
+  const [signaturePreview, setSignaturePreview] = useState("");
 
   const validateForm = () => {
     const requiredFields = [
@@ -60,6 +67,8 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
       { value: hazard_consideration.length > 0 ? "ok" : "", label: "Hazard Consideration" },
       { value: job_preparation.length > 0 ? "ok" : "", label: "Job Preparation" },
       { value: fire_protection.length > 0 ? "ok" : "", label: "Fire Protection" },
+      { value: issuer_name, label: "Issuer Name" },
+      { value: issuer_signature ? "ok" : "", label: "Issuer Signature" },
     ];
   
     // Check general required fields
@@ -97,6 +106,20 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
     }
   
     return true;
+  };
+
+  // Handle signature upload
+  const handleSignatureUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setIssuerSignature(file);
+      // Create a preview URL for the image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSignaturePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Permit type options (changed to strings to match API)
@@ -147,59 +170,75 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-  
-    // Prepare hazard_consideration with "other" value if selected
-    let finalHazardConsideration = [...hazard_consideration];
-    if (hazard_consideration.includes("other") && other_hazard.trim()) {
-      // Replace "other" with the custom text
-      finalHazardConsideration = hazard_consideration.filter(h => h !== "other");
-      finalHazardConsideration.push(other_hazard.trim());
-    }
     
-    // Prepare job_preparation with "other" value if selected
-    let finalJobPreparation = [...job_preparation];
-    if (job_preparation.includes("other") && other_job_preparation.trim()) {
-      // Replace "other" with the custom text
-      finalJobPreparation = job_preparation.filter(j => j !== "other");
-      finalJobPreparation.push(other_job_preparation.trim());
-    }
+    // Keep "other" in the arrays but send custom text in separate fields
     
-    // Prepare fire_protection with "other" value if selected
-    let finalFireProtection = [...fire_protection];
-    if (fire_protection.includes("other") && other_fire_protection.trim()) {
-      // Replace "other" with the custom text
-      finalFireProtection = fire_protection.filter(f => f !== "other");
-      finalFireProtection.push(other_fire_protection.trim());
-    }
+    // Prepare the final type_of_permit - keep "other" as is
+    const finalTypeOfPermit = type_of_permit;
     
-    // Prepare the final type_of_permit
-    const finalTypeOfPermit = type_of_permit === "other" ? other_permit_type.trim() : type_of_permit;
-  
+    // Create form data to handle file upload
+    const formData = new FormData();
+    
+    // Add all text fields to formData
     const payload = {
+      location_id: Number(locationId),
       site_name,
       department,
       permit_number,
-      permit_date, // Added date to payload
+      permit_date,
       external_agency_name,
       type_of_permit: finalTypeOfPermit,
-      permit_valid_from, // Changed from permit_issued_for
-      permit_valid_to, // Added to payload
-      permit_risk_type, // Added to payload
+      permit_valid_from,
+      permit_valid_to,
+      permit_risk_type,
       job_activity,
       location_area,
       tools_equipment,
-      hazard_consideration: finalHazardConsideration,
-      job_preparation: finalJobPreparation,
+      hazard_consideration: hazard_consideration,
+      job_preparation: job_preparation,
       risk_assessment_number,
-      fire_protection: finalFireProtection
+      fire_protection: fire_protection,
+      issuer_name
     };
+    
+    // Add other fields as separate properties if they exist
+    if (hazard_consideration.includes("other") && other_hazard.trim()) {
+      payload.other_hazard_consideration = other_hazard.trim();
+    }
+    
+    if (job_preparation.includes("other") && other_job_preparation.trim()) {
+      payload.other_job_preparation = other_job_preparation.trim();
+    }
+    
+    if (fire_protection.includes("other") && other_fire_protection.trim()) {
+      payload.other_fire_protection = other_fire_protection.trim();
+    }
+    
+    if (type_of_permit === "other" && other_permit_type.trim()) {
+      payload.other_permit_description = other_permit_type.trim();
+    }
+    
+    // Append all text data as a single JSON field
+    Object.keys(payload).forEach(key => {
+      if (typeof payload[key] === 'object') {
+        formData.append(key, JSON.stringify(payload[key]));
+      } else {
+        formData.append(key, payload[key]);
+      }
+    });
+    
+    // Append the signature file
+    if (issuer_signature) {
+      formData.append('issuer_sign', issuer_signature);
+    }
   
     try {
-      const response = await createPermitToWork(payload).unwrap();
+      const response = await createPermitToWork(formData).unwrap();
   
       if (response.status) {
         toast.success(response.message || "Permit submitted successfully!");
         setOpen(false);
+        if (refetch) refetch();
       } else {
         toast.error(response.message || "Failed to submit permit.");
       }
@@ -207,6 +246,7 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
       toast.error(`Submission failed: ${error?.data?.message || "Unknown error"}`);
     }
   };
+  
   const commonInputStyles = {
     "& .MuiOutlinedInput-root": {
       borderRadius: "6px",
@@ -229,7 +269,7 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-      <DialogTitle className="text-[#29346B] text-2xl font-semibold">
+      <DialogTitle className="text-[rgb(41,52,107)] text-2xl font-semibold">
         Permit to Work
       </DialogTitle>
       <DialogContent>
@@ -614,6 +654,71 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
           <Typography variant="body2" className="mt-2 text-gray-600 italic">
             Note: Safety shoes, Safety helmet, Safety goggles, Hand gloves are mandatory in addition to Job specific PPEs to be used.
           </Typography>
+        </div>
+        
+        {/* NEW SECTION: Issuer Name and Signature */}
+        <div className="mb-4 mt-6 border-t pt-4">
+          <Typography variant="h6" className="text-[#29346B] text-lg font-semibold mb-4">
+            Permit Issuer Details
+          </Typography>
+          
+          {/* Issuer Name */}
+          <div className="mb-4">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Issuer Name<span className="text-red-600"> *</span>
+            </label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter issuer's full name"
+              value={issuer_name}
+              sx={commonInputStyles}
+              onChange={(e) => setIssuerName(e.target.value)}
+            />
+          </div>
+          
+          {/* Issuer Signature */}
+          <div className="mb-4">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Issuer Signature<span className="text-red-600"> *</span>
+            </label>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Button
+                variant="outlined"
+                component="label"
+                color="primary"
+                sx={{ 
+                  height: "56px",
+                  borderColor: "#FACC15",
+                  color: "#29346B",
+                  "&:hover": {
+                    borderColor: "#F6812D",
+                    backgroundColor: "rgba(246, 129, 45, 0.04)"
+                  }
+                }}
+              >
+                Upload Signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleSignatureUpload}
+                />
+              </Button>
+              {signaturePreview ? (
+                <Avatar
+                  src={signaturePreview}
+                  alt="Issuer Signature"
+                  variant="rounded"
+                  sx={{ width: 100, height: 56 }}
+                />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No signature uploaded
+                </Typography>
+              )}
+            </Box>
+          </div>
         </div>
       </DialogContent>
 

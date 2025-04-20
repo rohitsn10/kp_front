@@ -206,12 +206,12 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
       })),
       committee_members: committeeMembers.map((member, index) => ({
         name: member.name,
-        rank: member.rank,
+        rank: member.rank,  
         signature: member.signature
       })),
     };
 
-    console.log(formData);
+    // console.log(formData);
 
     // Here you would make the API call to update the data
     // Example:

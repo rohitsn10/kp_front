@@ -9,7 +9,7 @@ export const permitToWorkApi = createApi({
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
-      headers.set("Content-Type", "application/json");
+      // headers.set("Content-Type", "application/json");
       return headers;
     },
   }),
@@ -27,10 +27,39 @@ export const permitToWorkApi = createApi({
         method: "GET", 
       }),
     }),
+    approverApprovePermit: builder.mutation({
+      query: ({ permitId, formData }) => ({
+        url: `annexures_module/approver_approve_permit/${permitId}`,
+        method: "PUT",
+        body: formData,
+        formData: true, // Important for FormData handling
+      }),
+    }),
+    
+    receiverApprovePermit: builder.mutation({
+      query: ({ permitId, formData }) => ({
+        url: `annexures_module/receiver_approve_permit/${permitId}`,
+        method: "PUT",
+        body: formData,
+        formData: true, // Important for FormData handling
+      }),
+    }),
+    
+    closureOfPermit: builder.mutation({
+      query: ({ permitId, formData }) => ({
+        url: `annexures_module/closure_of_permit/${permitId}`,
+        method: "PUT",
+        body: formData,
+        formData: true, // Important for FormData handling
+      }),
+    }),
   }),
 });
 
 export const {
   useCreatePermitToWorkMutation,
   useGetPermitToWorkQuery,
+  useApproverApprovePermitMutation,
+  useReceiverApprovePermitMutation,
+  useClosureOfPermitMutation,
 } = permitToWorkApi;
