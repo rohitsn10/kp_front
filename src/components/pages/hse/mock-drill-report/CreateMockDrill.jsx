@@ -12,128 +12,83 @@ import {
   IconButton,
   Paper,
   Box,
-  Avatar,
   MenuItem,
   FormControl,
-  InputLabel,
   Select,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
-  FormLabel,
+  Avatar,
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { useCreateMockDrillReportMutation } from "../../../../api/hse/mockdrill/mockDrillApi";
+import { useParams } from "react-router-dom";
 
 export default function MockDrillDialog({ open, setOpen }) {
-  // Basic Information
-  const [site, setSite] = useState("");
-  const [location, setLocation] = useState("");
-  const [emergencyScenario, setEmergencyScenario] = useState("");
-  const [mockDrillType, setMockDrillType] = useState("");
-
+  const { locationId } = useParams();
   const [createMockDrillReport, { isLoading }] = useCreateMockDrillReportMutation();
   
+  // Basic Information
+  const [sitePlantName, setSitePlantName] = useState("");
+  const [location, setLocation] = useState(locationId || "");
+  const [emergencyScenario, setEmergencyScenario] = useState("");
+  const [typeOfMockDrill, setTypeOfMockDrill] = useState("");
+  
   // Mock Drill Conducted
-  const [drillDate, setDrillDate] = useState("");
-  const [startTime, setStartTime] = useState("");
+  const [mockDrillDate, setMockDrillDate] = useState("");
+  const [mockDrillTime, setMockDrillTime] = useState("");
   const [completedTime, setCompletedTime] = useState("");
-  const [responseTime, setResponseTime] = useState("");
+  const [overallTime, setOverallTime] = useState("");
   
-  // Drill Team Observer
-  const [teamLeader, setTeamLeader] = useState({ name: "", signature: null });
-  const [performanceOMControl, setPerformanceOMControl] = useState({ name: "", signature: null });
-  const [trafficEvacuation, setTrafficEvacuation] = useState({ name: "", signature: null });
-  const [rescueFirstAid, setRescueFirstAid] = useState({ name: "", signature: null });
+  // Drill details
+  const [teamLeaderIncidentController, setTeamLeaderIncidentController] = useState("");
+  const [performance, setPerformance] = useState("");
+  const [trafficOrEvacuation, setTrafficOrEvacuation] = useState("");
+  const [ambulanceFirstAidPpeRescue, setAmbulanceFirstAidPpeRescue] = useState("");
+  
+  // Images for drill details
+  const [teamLeaderImage, setTeamLeaderImage] = useState(null);
+  const [performanceImage, setPerformanceImage] = useState(null);
+  const [trafficImage, setTrafficImage] = useState(null);
+  const [ambulanceImage, setAmbulanceImage] = useState(null);
+  
+  // Team Members
   const [teamMembers, setTeamMembers] = useState([
-    { name: "", signature: null }
+    { name: "", image: null }
   ]);
-  
-  // State for actual file objects (for FormData)
-  const [signatureFiles, setSignatureFiles] = useState({
-    teamLeader: null,
-    performanceOMControl: null,
-    trafficEvacuation: null,
-    rescueFirstAid: null,
-    teamMembers: [null]
-  });
-  
-  // Table Top Records
-  const [tableTopScenarioRemarks, setTableTopScenarioRemarks] = useState("");
-  const [requiredParticipationRemarks, setRequiredParticipationRemarks] = useState("");
-  const [observersParticipationRemarks, setObserversParticipationRemarks] = useState("");
   
   // Description of Control Mitigation Measures
-  const [controlMitigationMeasures, setControlMitigationMeasures] = useState("");
+  const [descriptionOfControl, setDescriptionOfControl] = useState("");
   
   // Head Count at Assembly Point
-  const [peoplePresent, setPeoplePresent] = useState({
-    kpiEmployee: 0,
-    contractorEmployee: 0,
-    visitorsExternalAgencies: 0,
-    remarks: ""
-  });
+  const [kpiEmployee, setKpiEmployee] = useState(0);
+  const [contractorEmployee, setContractorEmployee] = useState(0);
+  const [visitorAngies, setVisitorAngies] = useState(0);
+  const [headCountRemarks, setHeadCountRemarks] = useState("");
   
-  const [actualParticipants, setActualParticipants] = useState({
-    kpiEmployee: 0,
-    contractorEmployee: 0,
-    visitorsExternalAgencies: 0,
-    remarks: ""
-  });
+  // Actual participants
+  const [actualKpiEmployee, setActualKpiEmployee] = useState(0);
+  const [actualContractorEmployee, setActualContractorEmployee] = useState(0);
+  const [actualVisitorAngies, setActualVisitorAngies] = useState(0);
+  const [actualRemarks, setActualRemarks] = useState("");
   
-  const [notParticipated, setNotParticipated] = useState({
-    kpiEmployee: 0,
-    contractorEmployee: 0,
-    visitorsExternalAgencies: 0,
-    remarks: ""
-  });
+  // Not participated
+  const [notParticipatedKpi, setNotParticipatedKpi] = useState(0);
+  const [notParticipatedContractor, setNotParticipatedContractor] = useState(0);
+  const [notParticipatedVisitor, setNotParticipatedVisitor] = useState(0);
+  const [notParticipatedRemarks, setNotParticipatedRemarks] = useState("");
+  
+  // Table Top Records
+  const [tableTopRecords, setTableTopRecords] = useState({});
   
   // Ratings
-  const [ratings, setRatings] = useState({
-    operationProcessControl: "Good",
-    performanceOMControl: "Good",
-    firstAidAmbulanceTeam: "Good",
-    trafficEvacuationAssembly: "Good",
-    communicationDuringDrill: "Good",
-    fireTeamResponse: "Good",
-    rescueTeamResponse: "Good",
-    other: "Good",
-    otherDescription: ""
+  const [ratingOfEmergencyTeamMembers, setRatingOfEmergencyTeamMembers] = useState([]);
+  const [overallRating, setOverallRating] = useState("");
+  
+  // Observations and Recommendations
+  const [observation, setObservation] = useState("");
+  const [recommendations, setRecommendations] = useState({
+    short_term: [""],
+    long_term: [""]
   });
-  
-  const [overallRating, setOverallRating] = useState("Good");
-  const [observations, setObservations] = useState("");
-  
-  // Recommendations
-  const [recommendations, setRecommendations] = useState([
-    { recommendation: "", responsibility: "", targetDate: "", status: "", actionRemarks: "" }
-  ]);
-
-  // Cleanup effect for object URLs
-  useEffect(() => {
-    return () => {
-      // Cleanup object URLs when component unmounts
-      if (teamLeader.signature && teamLeader.signature.startsWith("blob:")) {
-        URL.revokeObjectURL(teamLeader.signature);
-      }
-      if (performanceOMControl.signature && performanceOMControl.signature.startsWith("blob:")) {
-        URL.revokeObjectURL(performanceOMControl.signature);
-      }
-      if (trafficEvacuation.signature && trafficEvacuation.signature.startsWith("blob:")) {
-        URL.revokeObjectURL(trafficEvacuation.signature);
-      }
-      if (rescueFirstAid.signature && rescueFirstAid.signature.startsWith("blob:")) {
-        URL.revokeObjectURL(rescueFirstAid.signature);
-      }
-      
-      teamMembers.forEach(member => {
-        if (member.signature && member.signature.startsWith("blob:")) {
-          URL.revokeObjectURL(member.signature);
-        }
-      });
-    };
-  }, [teamLeader, performanceOMControl, trafficEvacuation, rescueFirstAid, teamMembers]);
 
   const commonInputStyles = {
     "& .MuiOutlinedInput-root": {
@@ -156,165 +111,103 @@ export default function MockDrillDialog({ open, setOpen }) {
   };
 
   const handleClose = () => setOpen(false);
-  const ratingOptions = ["Good", "Very Good", "Excellent"];
 
-  // Validation function
-  const validateForm = () => {
-    if (!site.trim()) return toast.error("Site is required!");
-    if (!location.trim()) return toast.error("Location is required!");
-    if (!emergencyScenario.trim()) return toast.error("Emergency scenario is required!");
-    if (!mockDrillType) return toast.error("Mock drill type is required!");
-    if (!drillDate) return toast.error("Drill date is required!");
-    if (!startTime) return toast.error("Start time is required!");
-    if (!completedTime) return toast.error("Completed time is required!");
-    if (!responseTime) return toast.error("Response time is required!");
-    
-    // Validate team leader
-    if (!teamLeader.name.trim()) return toast.error("Team Leader name is required!");
-    if (!teamLeader.signature) return toast.error("Team Leader signature is required!");
-    
-    // Validate other roles
-    if (!performanceOMControl.name.trim()) return toast.error("Performance O&M Control name is required!");
-    if (!performanceOMControl.signature) return toast.error("Performance O&M Control signature is required!");
-    
-    if (!trafficEvacuation.name.trim()) return toast.error("Traffic/Evacuation name is required!");
-    if (!trafficEvacuation.signature) return toast.error("Traffic/Evacuation signature is required!");
-    
-    if (!rescueFirstAid.name.trim()) return toast.error("Rescue/First Aid name is required!");
-    if (!rescueFirstAid.signature) return toast.error("Rescue/First Aid signature is required!");
-    
-    // Validate team members
-    for (let i = 0; i < teamMembers.length; i++) {
-      if (!teamMembers[i].name.trim())
-        return toast.error(`Team Member ${i + 1} name is required!`);
-      if (!teamMembers[i].signature)
-        return toast.error(`Team Member ${i + 1} signature is required!`);
+  // File handling functions
+  const handleFileChange = (setter, e) => {
+    if (e.target.files && e.target.files[0]) {
+      setter(e.target.files[0]);
     }
-    
-    // Validate recommendations
-    for (let i = 0; i < recommendations.length; i++) {
-      if (!recommendations[i].recommendation.trim())
-        return toast.error(`Recommendation ${i + 1} is required!`);
-      if (!recommendations[i].responsibility.trim())
-        return toast.error(`Responsibility for recommendation ${i + 1} is required!`);
-      if (!recommendations[i].targetDate.trim())
-        return toast.error(`Target date for recommendation ${i + 1} is required!`);
-      if (!recommendations[i].status.trim())
-        return toast.error(`Status for recommendation ${i + 1} is required!`);
-    }
-    
-    return true;
   };
 
-  // Signature upload handlers using FormData approach
-  const handleSignatureUpload = (setter, currentValue, role, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Create a preview URL for display
-      const objectUrl = URL.createObjectURL(file);
-      
-      // Update the signature preview
-      setter({ ...currentValue, signature: objectUrl });
-      
-      // Store the actual file for FormData
-      setSignatureFiles(prev => ({
-        ...prev,
-        [role]: file
-      }));
+  const handleTeamMemberFileChange = (index, e) => {
+    if (e.target.files && e.target.files[0]) {
+      const newTeamMembers = [...teamMembers];
+      newTeamMembers[index].image = e.target.files[0];
+      setTeamMembers(newTeamMembers);
     }
   };
   
-  const handleTeamMemberSignatureUpload = (index, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Create a preview URL for display
-      const objectUrl = URL.createObjectURL(file);
+  // Cleanup effect for object URLs
+  useEffect(() => {
+    return () => {
+      // Cleanup created object URLs when component unmounts
+      if (teamLeaderImage) URL.revokeObjectURL(URL.createObjectURL(teamLeaderImage));
+      if (performanceImage) URL.revokeObjectURL(URL.createObjectURL(performanceImage));
+      if (trafficImage) URL.revokeObjectURL(URL.createObjectURL(trafficImage));
+      if (ambulanceImage) URL.revokeObjectURL(URL.createObjectURL(ambulanceImage));
       
-      // Update the signature preview
-      const newTeamMembers = [...teamMembers];
-      newTeamMembers[index].signature = objectUrl;
-      setTeamMembers(newTeamMembers);
-      
-      // Store the actual file for FormData
-      setSignatureFiles(prev => {
-        const newTeamMemberFiles = [...prev.teamMembers];
-        newTeamMemberFiles[index] = file;
-        return {
-          ...prev,
-          teamMembers: newTeamMemberFiles
-        };
+      teamMembers.forEach(member => {
+        if (member.image) URL.revokeObjectURL(URL.createObjectURL(member.image));
       });
-    }
-  };
+    };
+  }, [teamLeaderImage, performanceImage, trafficImage, ambulanceImage, teamMembers]);
   
   // Team members handlers
   const handleAddTeamMember = () => {
-    setTeamMembers([...teamMembers, { name: "", signature: null }]);
-    // Also update the signature files array
-    setSignatureFiles(prev => ({
-      ...prev,
-      teamMembers: [...prev.teamMembers, null]
-    }));
+    setTeamMembers([...teamMembers, { name: "", image: null }]);
   };
   
   const handleRemoveTeamMember = (index) => {
     const newTeamMembers = [...teamMembers];
     newTeamMembers.splice(index, 1);
     setTeamMembers(newTeamMembers);
-    
-    // Also update the signature files array
-    setSignatureFiles(prev => {
-      const newTeamMemberFiles = [...prev.teamMembers];
-      newTeamMemberFiles.splice(index, 1);
-      return {
-        ...prev,
-        teamMembers: newTeamMemberFiles
-      };
-    });
   };
   
-  const handleTeamMemberChange = (index, field, value) => {
+  const handleTeamMemberNameChange = (index, value) => {
     const newTeamMembers = [...teamMembers];
-    newTeamMembers[index][field] = value;
+    newTeamMembers[index].name = value;
     setTeamMembers(newTeamMembers);
   };
   
   // Recommendations handlers
-  const handleAddRecommendation = () => {
-    setRecommendations([
-      ...recommendations,
-      { recommendation: "", responsibility: "", targetDate: "", status: "", actionRemarks: "" }
-    ]);
-  };
-  
-  const handleRemoveRecommendation = (index) => {
-    const newRecommendations = [...recommendations];
-    newRecommendations.splice(index, 1);
+  const handleShortTermRecommendationChange = (index, value) => {
+    const newRecommendations = {...recommendations};
+    newRecommendations.short_term[index] = value;
     setRecommendations(newRecommendations);
   };
   
-  const handleRecommendationChange = (index, field, value) => {
-    const newRecommendations = [...recommendations];
-    newRecommendations[index][field] = value;
+  const handleLongTermRecommendationChange = (index, value) => {
+    const newRecommendations = {...recommendations};
+    newRecommendations.long_term[index] = value;
     setRecommendations(newRecommendations);
   };
   
-  // Head count handlers
-  const handlePeoplePresentChange = (field, value) => {
-    setPeoplePresent({ ...peoplePresent, [field]: value });
+  const handleAddShortTermRecommendation = () => {
+    const newRecommendations = {...recommendations};
+    newRecommendations.short_term.push("");
+    setRecommendations(newRecommendations);
   };
   
-  const handleActualParticipantsChange = (field, value) => {
-    setActualParticipants({ ...actualParticipants, [field]: value });
+  const handleAddLongTermRecommendation = () => {
+    const newRecommendations = {...recommendations};
+    newRecommendations.long_term.push("");
+    setRecommendations(newRecommendations);
   };
   
-  const handleNotParticipatedChange = (field, value) => {
-    setNotParticipated({ ...notParticipated, [field]: value });
+  const handleRemoveShortTermRecommendation = (index) => {
+    const newRecommendations = {...recommendations};
+    newRecommendations.short_term.splice(index, 1);
+    setRecommendations(newRecommendations);
   };
   
-  // Rating handlers
-  const handleRatingChange = (field, value) => {
-    setRatings({ ...ratings, [field]: value });
+  const handleRemoveLongTermRecommendation = (index) => {
+    const newRecommendations = {...recommendations};
+    newRecommendations.long_term.splice(index, 1);
+    setRecommendations(newRecommendations);
+  };
+
+  // Validation function
+  const validateForm = () => {
+    if (!sitePlantName.trim()) return toast.error("Site plant name is required!");
+    if (!location.trim()) return toast.error("Location is required!");
+    if (!emergencyScenario.trim()) return toast.error("Emergency scenario is required!");
+    if (!typeOfMockDrill) return toast.error("Mock drill type is required!");
+    if (!mockDrillDate) return toast.error("Drill date is required!");
+    if (!mockDrillTime) return toast.error("Mock drill time is required!");
+    if (!completedTime) return toast.error("Completed time is required!");
+    if (!overallTime) return toast.error("Overall time is required!");
+    
+    return true;
   };
 
   const handleSubmit = async () => {
@@ -324,348 +217,98 @@ export default function MockDrillDialog({ open, setOpen }) {
     const formData = new FormData();
     
     // Append basic text fields
-    formData.append("site_plant_name", site);
-    formData.append("location", location);
+    formData.append("site_plant_name", sitePlantName);
+    formData.append("location", locationId);
     formData.append("emergncy_scenario_mock_drill", emergencyScenario);
-    formData.append("type_of_mock_drill", mockDrillType.toLowerCase());
-    formData.append("mock_drill_date", drillDate);
-    formData.append("mock_drill_time", startTime);
+    formData.append("type_of_mock_drill", typeOfMockDrill);
+    formData.append("mock_drill_date", mockDrillDate);
+    formData.append("mock_drill_time", mockDrillTime);
     formData.append("completed_time", completedTime);
-    formData.append("overall_time", responseTime);
+    formData.append("overall_time", overallTime);
     
-    // Append team leader information
-    formData.append("teamLeaderName", teamLeader.name);
-    formData.append("performanceOMControlName", performanceOMControl.name);
-    formData.append("trafficEvacuationName", trafficEvacuation.name);
-    formData.append("rescueFirstAidName", rescueFirstAid.name);
+    // Append drill details
+    formData.append("team_leader_incident_controller", teamLeaderIncidentController);
+    formData.append("performance", performance);
+    formData.append("traffic_or_evacuation", trafficOrEvacuation);
+    formData.append("ambulance_first_aid_ppe_rescue", ambulanceFirstAidPpeRescue);
     
-    // Append table top records
-    formData.append("scenarioConductedRemarks", tableTopScenarioRemarks);
-    formData.append("requiredParticipationRemarks", requiredParticipationRemarks);
-    formData.append("observersParticipationRemarks", observersParticipationRemarks);
+    // Append drill detail images
+    if (teamLeaderImage) {
+      formData.append("team_leader_incident_controller_image", teamLeaderImage);
+    }
+    if (performanceImage) {
+      formData.append("performance_image", performanceImage);
+    }
+    if (trafficImage) {
+      formData.append("traffic_or_evacuation_image", trafficImage);
+    }
+    if (ambulanceImage) {
+      formData.append("ambulance_first_aid_ppe_rescue_image", ambulanceImage);
+    }
     
-    // Append control mitigation measures as a string
-    formData.append("controlMitigationMeasures", controlMitigationMeasures);
+    // Append team members
+    teamMembers.forEach((member, index) => {
+      if (member.name) {
+        formData.append(`team_member_name_${index}`, member.name);
+      }
+      if (member.image) {
+        formData.append(`team_member_image_${index}`, member.image);
+      }
+    });
     
-    // Append head count information as JSON
-    formData.append("peoplePresent", JSON.stringify(peoplePresent));
-    formData.append("actualParticipants", JSON.stringify(actualParticipants));
-    formData.append("notParticipated", JSON.stringify(notParticipated));
+    // Append table top records as JSON
+    formData.append("table_top_records", JSON.stringify(tableTopRecords));
+    
+    // Append description of control
+    formData.append("description_of_control", descriptionOfControl);
+    
+    // Append head count information
+    formData.append("no_of_kpi_employee", kpiEmployee);
+    formData.append("no_of_contractor_employee", contractorEmployee);
+    formData.append("no_of_visitor_angies", visitorAngies);
+    formData.append("head_count_remarks", headCountRemarks);
+    
+    // Append actual participants
+    formData.append("no_of_kpi_employee", actualKpiEmployee);
+    formData.append("no_of_contractor_employee", actualContractorEmployee);
+    formData.append("no_of_visitor_angies", actualVisitorAngies);
+    formData.append("actual_remarks", actualRemarks);
+    
+    // Append not participated
+    formData.append("not_participated_kpi", notParticipatedKpi);
+    formData.append("not_participated_contractor", notParticipatedContractor);
+    formData.append("not_participated_visitor", notParticipatedVisitor);
+    formData.append("not_participated_remarks", notParticipatedRemarks);
     
     // Append ratings as JSON
-    formData.append("ratings", JSON.stringify(ratings));
-    formData.append("overallRating", overallRating);
+    formData.append("rating_of_emergency_team_members", JSON.stringify(ratingOfEmergencyTeamMembers));
+    formData.append("overall_rating", overallRating);
     
-    // Append observations
-    formData.append("observations", observations);
+    // Append observation
+    formData.append("observation", observation);
     
     // Append recommendations as JSON
     formData.append("recommendations", JSON.stringify(recommendations));
     
-    // Append signature files with role-specific names
-    if (signatureFiles.teamLeader) {
-      formData.append("teamLeaderSignature", signatureFiles.teamLeader);
-    }
-    if (signatureFiles.performanceOMControl) {
-      formData.append("performanceOMControlSignature", signatureFiles.performanceOMControl);
-    }
-    if (signatureFiles.trafficEvacuation) {
-      formData.append("trafficEvacuationSignature", signatureFiles.trafficEvacuation);
-    }
-    if (signatureFiles.rescueFirstAid) {
-      formData.append("rescueFirstAidSignature", signatureFiles.rescueFirstAid);
-    }
-    
-    // Create a team members data structure
-    // Note: We can't include the actual File objects in JSON, so we'll reference them by index
-    const teamMembersData = teamMembers.map((member, index) => ({
-      name: member.name,
-      signatureIndex: index // This associates the name with the signature file index
-    }));
-    
-    // Add team members data as JSON
-    formData.append("teamMembers", JSON.stringify(teamMembersData));
-    
-    // Add the signature files separately
-    signatureFiles.teamMembers.forEach((file, index) => {
-      if (file) {
-        formData.append(`teamMemberSignature_${index}`, file);
-      }
-    });
-    
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_KEY}/annexures_module/create_mock_drill_report`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
-          // No Content-Type header for FormData
-        },
-        body: formData // Your FormData object
-      });
+      // Use the RTK mutation hook to submit the form
+      const response = await createMockDrillReport(formData).unwrap();
       
-      console.log("Form Data Entries:");
-      for (let [key, value] of formData.entries()) {
-        // Check if the value is a File object
-        if (value instanceof File) {
-          console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
-        } else {
-          console.log(`${key}: ${value}`);
-        }
+      if (response.status) {
+        toast.success(response.message || "Mock drill report created successfully!");
+        setOpen(false);
+      } else {
+        toast.error(response.message || "Failed to create mock drill report");
       }
-      
-      toast.success("Mock drill data submitted successfully!");
-      setOpen(false);
     } catch (error) {
-      toast.error(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message || "An unexpected error occurred"}`);
     }
   };
   
-  // const handleSubmit = async () => {
-  //   if (!validateForm()) return;
-  
-  //   // Create FormData object
-  //   const formData = new FormData();
-    
-  //   // Append basic text fields
-  //   formData.append("site_plant_name", site);
-  //   formData.append("location", location);
-  //   formData.append("emergncy_scenario_mock_drill", emergencyScenario);
-  //   formData.append("type_of_mock_drill", mockDrillType.toLowerCase());
-  //   formData.append("mock_drill_date", drillDate);
-  //   formData.append("mock_drill_time", startTime);
-  //   formData.append("completed_time", completedTime);
-  //   formData.append("overall_time", responseTime);
-    
-  //   // Append team leader information
-  //   formData.append("teamLeaderName", teamLeader.name);
-  //   formData.append("performanceOMControlName", performanceOMControl.name);
-  //   formData.append("trafficEvacuationName", trafficEvacuation.name);
-  //   formData.append("rescueFirstAidName", rescueFirstAid.name);
-    
-  //   // Append team members information
-  //   teamMembers.forEach((member, index) => {
-  //     formData.append(`teamMemberName_${index}`, member.name);
-  //   });
-    
-  //   // Append table top records
-  //   formData.append("scenarioConductedRemarks", tableTopScenarioRemarks);
-  //   formData.append("requiredParticipationRemarks", requiredParticipationRemarks);
-  //   formData.append("observersParticipationRemarks", observersParticipationRemarks);
-    
-  //   // Append control mitigation measures as a string
-  //   formData.append("controlMitigationMeasures", controlMitigationMeasures);
-    
-  //   // Append head count information - flattened objects
-  //   formData.append("peoplePresent_kpiEmployee", peoplePresent.kpiEmployee);
-  //   formData.append("peoplePresent_contractorEmployee", peoplePresent.contractorEmployee);
-  //   formData.append("peoplePresent_visitorsExternalAgencies", peoplePresent.visitorsExternalAgencies);
-  //   formData.append("peoplePresent_remarks", peoplePresent.remarks);
-    
-  //   formData.append("actualParticipants_kpiEmployee", actualParticipants.kpiEmployee);
-  //   formData.append("actualParticipants_contractorEmployee", actualParticipants.contractorEmployee);
-  //   formData.append("actualParticipants_visitorsExternalAgencies", actualParticipants.visitorsExternalAgencies);
-  //   formData.append("actualParticipants_remarks", actualParticipants.remarks);
-    
-  //   formData.append("notParticipated_kpiEmployee", notParticipated.kpiEmployee);
-  //   formData.append("notParticipated_contractorEmployee", notParticipated.contractorEmployee);
-  //   formData.append("notParticipated_visitorsExternalAgencies", notParticipated.visitorsExternalAgencies);
-  //   formData.append("notParticipated_remarks", notParticipated.remarks);
-    
-  //   // Append ratings
-  //   Object.entries(ratings).forEach(([key, value]) => {
-  //     formData.append(`rating_${key}`, value);
-  //   });
-  //   formData.append("overallRating", overallRating);
-    
-  //   // Append observations
-  //   formData.append("observations", observations);
-    
-  //   // Append recommendations - flattened array of objects
-  //   recommendations.forEach((rec, index) => {
-  //     formData.append(`recommendation_${index}`, rec.recommendation);
-  //     formData.append(`recommendation_responsibility_${index}`, rec.responsibility);
-  //     formData.append(`recommendation_targetDate_${index}`, rec.targetDate);
-  //     formData.append(`recommendation_status_${index}`, rec.status);
-  //     formData.append(`recommendation_actionRemarks_${index}`, rec.actionRemarks);
-  //   });
-    
-  //   // Append signature files with role-specific names
-  //   if (signatureFiles.teamLeader) {
-  //     formData.append("teamLeaderSignature", signatureFiles.teamLeader);
-  //   }
-  //   if (signatureFiles.performanceOMControl) {
-  //     formData.append("performanceOMControlSignature", signatureFiles.performanceOMControl);
-  //   }
-  //   if (signatureFiles.trafficEvacuation) {
-  //     formData.append("trafficEvacuationSignature", signatureFiles.trafficEvacuation);
-  //   }
-  //   if (signatureFiles.rescueFirstAid) {
-  //     formData.append("rescueFirstAidSignature", signatureFiles.rescueFirstAid);
-  //   }
-    
-  //   // Append team member signatures
-  //   signatureFiles.teamMembers.forEach((file, index) => {
-  //     if (file) {
-  //       formData.append(`teamMemberSignature_${index}`, file);
-  //     }
-  //   });
-    
-  //   try {
-  //     // Example of how you would submit the form data
-  //     // const response = await fetch('https://your-api-endpoint.com/mock-drill', {
-  //     //   method: 'POST',
-  //     //   body: formData,
-  //     //   // No need to set Content-Type header, browser sets it automatically with boundary
-  //     // });
-      
-  //     // if (response.ok) {
-  //     //   toast.success("Mock drill data submitted successfully!");
-  //     //   setOpen(false);
-  //     // } else {
-  //     //   toast.error("Failed to submit mock drill data");
-  //     // }
-      
-  //     // For now, just log the formData and close the dialog
-  //     // const response = await createMockDrillReport(formData).unwrap();
-  //     const response = await fetch(`${import.meta.env.VITE_API_KEY}/annexures_module/create_mock_drill_report`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Authorization': `Bearer ${sessionStorage.getItem("token")}`,
-  //         // No Content-Type header for FormData
-  //       },
-  //       body: formData // Your FormData object
-  //     });
-  //     // console.log(response)
-  //     console.log("Form Data Entries:");
-  //     for (let [key, value] of formData.entries()) {
-  //       // Check if the value is a File object
-  //       if (value instanceof File) {
-  //         console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
-  //       } else {
-  //         console.log(`${key}: ${value}`);
-  //       }
-  //     }
-      
-  //     toast.success("Mock drill data submitted successfully!");
-  //     setOpen(false);
-  //   } catch (error) {
-  //     toast.error(`Error: ${error.message}`);
-  //   }
-  // };
-  // const handleSubmit = async () => {
-  //   if (!validateForm()) return;
-
-  //   // Create FormData object
-  //   const formData = new FormData();
-    
-  //   // Append basic text fields
-  //   // formData.append("site", site);
-  //   // formData.append("location", location);
-  //   // formData.append("emergencyScenario", emergencyScenario);
-  //   // formData.append("mockDrillType", mockDrillType);
-  //   // formData.append("drillDate", drillDate);
-  //   // formData.append("startTime", startTime);
-  //   // formData.append("completedTime", completedTime);
-  //   // formData.append("responseTime", responseTime);
-  //   formData.append("site_plant_name", site);
-  //   formData.append("location", location);
-  //   formData.append("emergncy_scenario_mock_drill", emergencyScenario);
-  //   formData.append("type_of_mock_drill", mockDrillType.toLowerCase());
-  //   formData.append("mock_drill_date", drillDate);
-  //   formData.append("mock_drill_time", startTime);
-  //   formData.append("completed_time", completedTime);
-  //   formData.append("overall_time", responseTime);
-    
-  //   // Append signature files with role-specific names
-  //   if (signatureFiles.teamLeader) {
-  //     formData.append("teamLeaderSignature", signatureFiles.teamLeader);
-  //   }
-  //   if (signatureFiles.performanceOMControl) {
-  //     formData.append("performanceOMControlSignature", signatureFiles.performanceOMControl);
-  //   }
-  //   if (signatureFiles.trafficEvacuation) {
-  //     formData.append("trafficEvacuationSignature", signatureFiles.trafficEvacuation);
-  //   }
-  //   if (signatureFiles.rescueFirstAid) {
-  //     formData.append("rescueFirstAidSignature", signatureFiles.rescueFirstAid);
-  //   }
-    
-  //   // Append team member signatures
-  //   signatureFiles.teamMembers.forEach((file, index) => {
-  //     if (file) {
-  //       formData.append(`teamMemberSignature_${index}`, file);
-  //     }
-  //   });
-    
-  //   // Create JSON data for all the other form fields
-  //   const jsonData = {
-  //     teamLeaderName: teamLeader.name,
-  //     performanceOMControlName: performanceOMControl.name,
-  //     trafficEvacuationName: trafficEvacuation.name,
-  //     rescueFirstAidName: rescueFirstAid.name,
-      
-  //     teamMembers: teamMembers.map(member => ({ name: member.name })),
-      
-  //     tableTopRecords: {
-  //       scenarioConductedRemarks: tableTopScenarioRemarks,
-  //       requiredParticipationRemarks: requiredParticipationRemarks,
-  //       observersParticipationRemarks: observersParticipationRemarks
-  //     },
-      
-  //     controlMitigationMeasures,
-      
-  //     headCountAtAssemblyPoint: {
-  //       peoplePresent,
-  //       actualParticipants,
-  //       notParticipated
-  //     },
-      
-  //     emergencyTeamRating: ratings,
-  //     overallRating,
-  //     observations,
-  //     recommendations
-  //   };
-    
-  //   // Append JSON data
-  //   formData.append("formData", JSON.stringify(jsonData));
-    
-  //   try {
-  //     // Example of how you would submit the form data
-  //     // const response = await fetch('https://your-api-endpoint.com/mock-drill', {
-  //     //   method: 'POST',
-  //     //   body: formData,
-  //     //   // No need to set Content-Type header, browser sets it automatically with boundary
-  //     // });
-      
-  //     // if (response.ok) {
-  //     //   toast.success("Mock drill data submitted successfully!");
-  //     //   setOpen(false);
-  //     // } else {
-  //     //   toast.error("Failed to submit mock drill data");
-  //     // }
-      
-  //     // For now, just log the formData and close the dialog
-  //     // console.log("FormData created with files");
-  //     console.log("Form Data Entries:");
-  //     for (let [key, value] of formData.entries()) {
-  //       // Check if the value is a File object
-  //       if (value instanceof File) {
-  //         console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
-  //       } else {
-  //         console.log(`${key}: ${value}`);
-  //       }
-  //     }
-      
-  //     toast.success("Mock drill data submitted successfully!");
-  //     setOpen(false);
-  //   } catch (error) {
-  //     toast.error(`Error: ${error.message}`);
-  //   }
-  // };
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
       <DialogTitle className="text-[#29346B] text-2xl font-semibold">
-        Mock Drill Form
+        Mock Drill Report Form
       </DialogTitle>
       <DialogContent>
         <Grid container spacing={3}>
@@ -680,25 +323,25 @@ export default function MockDrillDialog({ open, setOpen }) {
           {/* Site & Location */}
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Site<span className="text-red-600"> *</span>
+              Site Plant Name<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Enter Site Name"
-              value={site}
+              placeholder="Enter Site Plant Name"
+              value={sitePlantName}
               sx={commonInputStyles}
-              onChange={(e) => setSite(e.target.value)}
+              onChange={(e) => setSitePlantName(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Location<span className="text-red-600"> *</span>
+              Location ID<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Enter Location"
+              placeholder="Enter Location ID"
               value={location}
               sx={commonInputStyles}
               onChange={(e) => setLocation(e.target.value)}
@@ -708,7 +351,7 @@ export default function MockDrillDialog({ open, setOpen }) {
           {/* Emergency Scenario */}
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Emergency Scenario<span className="text-red-600"> *</span>
+              Emergency Scenario Mock Drill<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
@@ -723,15 +366,15 @@ export default function MockDrillDialog({ open, setOpen }) {
           {/* Drill Type */}
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Mock Drill Type<span className="text-red-600"> *</span>
+              Type of Mock Drill<span className="text-red-600"> *</span>
             </label>
             <FormControl fullWidth sx={commonInputStyles}>
               <Select
-                value={mockDrillType}
-                onChange={(e) => setMockDrillType(e.target.value)}
+                value={typeOfMockDrill}
+                onChange={(e) => setTypeOfMockDrill(e.target.value)}
               >
-                <MenuItem value="Table top Drill">Table top Drill</MenuItem>
-                <MenuItem value="Physical Practice Drill">Physical Practice Drill</MenuItem>
+                <MenuItem value="table top drill">Table Top Drill</MenuItem>
+                <MenuItem value="physical practice drill">Physical Practice Drill</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -753,22 +396,22 @@ export default function MockDrillDialog({ open, setOpen }) {
               fullWidth
               type="date"
               variant="outlined"
-              value={drillDate}
+              value={mockDrillDate}
               sx={commonInputStyles}
-              onChange={(e) => setDrillDate(e.target.value)}
+              onChange={(e) => setMockDrillDate(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={4}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Start Time<span className="text-red-600"> *</span>
+              Mock Drill Time<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               type="time"
               variant="outlined"
-              value={startTime}
+              value={mockDrillTime}
               sx={commonInputStyles}
-              onChange={(e) => setStartTime(e.target.value)}
+              onChange={(e) => setMockDrillTime(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={4}>
@@ -785,46 +428,46 @@ export default function MockDrillDialog({ open, setOpen }) {
             />
           </Grid>
 
-          {/* Response Time */}
+          {/* Overall Time */}
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Overall Response Time<span className="text-red-600"> *</span>
+              Overall Time<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
+              type="time"
               variant="outlined"
-              placeholder="HH:MM:SS"
-              value={responseTime}
+              value={overallTime}
               sx={commonInputStyles}
-              onChange={(e) => setResponseTime(e.target.value)}
+              onChange={(e) => setOverallTime(e.target.value)}
             />
           </Grid>
 
-          {/* Drill Team Observer Section */}
+          {/* Drill Details Section */}
           <Grid item xs={12} mt={2}>
             <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
-              Drill Team Observer
+              Drill Details
             </Typography>
             <Divider />
           </Grid>
 
-          {/* Team Leader */}
+          {/* Team Leader/Incident Controller */}
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Team Leader/Incident Controller - Name<span className="text-red-600"> *</span>
+              Team Leader/Incident Controller Name<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Enter Team Leader Name"
-              value={teamLeader.name}
+              placeholder="Enter Team Leader/Incident Controller Name"
+              value={teamLeaderIncidentController}
               sx={commonInputStyles}
-              onChange={(e) => setTeamLeader({ ...teamLeader, name: e.target.value })}
+              onChange={(e) => setTeamLeaderIncidentController(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Team Leader/Incident Controller - Signature<span className="text-red-600"> *</span>
+              Team Leader/Incident Controller Signature<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -844,12 +487,12 @@ export default function MockDrillDialog({ open, setOpen }) {
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) => handleSignatureUpload(setTeamLeader, teamLeader, "teamLeader", e)}
+                  onChange={(e) => handleFileChange(setTeamLeaderImage, e)}
                 />
               </Button>
-              {teamLeader.signature && (
+              {teamLeaderImage && (
                 <Avatar
-                  src={teamLeader.signature}
+                  src={teamLeaderImage ? URL.createObjectURL(teamLeaderImage) : ""}
                   alt="Team Leader Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -858,23 +501,23 @@ export default function MockDrillDialog({ open, setOpen }) {
             </Box>
           </Grid>
 
-          {/* Performance O&M */}
+          {/* Performance */}
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Performance - O&M and Control - Name<span className="text-red-600"> *</span>
+              Performance Name<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Enter Name"
-              value={performanceOMControl.name}
+              placeholder="Enter Performance Name"
+              value={performance}
               sx={commonInputStyles}
-              onChange={(e) => setPerformanceOMControl({ ...performanceOMControl, name: e.target.value })}
+              onChange={(e) => setPerformance(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Performance - O&M and Control - Signature<span className="text-red-600"> *</span>
+              Performance Signature<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -894,13 +537,13 @@ export default function MockDrillDialog({ open, setOpen }) {
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) => handleSignatureUpload(setPerformanceOMControl, performanceOMControl, "performanceOMControl", e)}
+                  onChange={(e) => handleFileChange(setPerformanceImage, e)}
                 />
               </Button>
-              {performanceOMControl.signature && (
+              {performanceImage && (
                 <Avatar
-                  src={performanceOMControl.signature}
-                  alt="Performance O&M Signature"
+                  src={performanceImage ? URL.createObjectURL(performanceImage) : ""}
+                  alt="Performance Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
                 />
@@ -911,20 +554,20 @@ export default function MockDrillDialog({ open, setOpen }) {
           {/* Traffic/Evacuation */}
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Traffic/Evacuation/Assembly Point & Head Count - Name<span className="text-red-600"> *</span>
+              Traffic/Evacuation Name<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Enter Name"
-              value={trafficEvacuation.name}
+              placeholder="Enter Traffic/Evacuation Name"
+              value={trafficOrEvacuation}
               sx={commonInputStyles}
-              onChange={(e) => setTrafficEvacuation({ ...trafficEvacuation, name: e.target.value })}
+              onChange={(e) => setTrafficOrEvacuation(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Traffic/Evacuation/Assembly Point & Head Count - Signature<span className="text-red-600"> *</span>
+              Traffic/Evacuation Signature<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -944,12 +587,12 @@ export default function MockDrillDialog({ open, setOpen }) {
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) => handleSignatureUpload(setTrafficEvacuation, trafficEvacuation, "trafficEvacuation", e)}
+                  onChange={(e) => handleFileChange(setTrafficImage, e)}
                 />
               </Button>
-              {trafficEvacuation.signature && (
+              {trafficImage && (
                 <Avatar
-                  src={trafficEvacuation.signature}
+                  src={trafficImage ? URL.createObjectURL(trafficImage) : ""}
                   alt="Traffic/Evacuation Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -958,23 +601,23 @@ export default function MockDrillDialog({ open, setOpen }) {
             </Box>
           </Grid>
 
-          {/* Rescue/First Aid */}
+          {/* Ambulance/First Aid/PPE/Rescue */}
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Rescue/First Aid/Ambulance/PPE - Name<span className="text-red-600"> *</span>
+              Ambulance/First Aid/PPE/Rescue Name<span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Enter Name"
-              value={rescueFirstAid.name}
+              placeholder="Enter Ambulance/First Aid/PPE/Rescue Name"
+              value={ambulanceFirstAidPpeRescue}
               sx={commonInputStyles}
-              onChange={(e) => setRescueFirstAid({ ...rescueFirstAid, name: e.target.value })}
+              onChange={(e) => setAmbulanceFirstAidPpeRescue(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Rescue/First Aid/Ambulance/PPE - Signature<span className="text-red-600"> *</span>
+              Ambulance/First Aid/PPE/Rescue Signature<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -994,13 +637,13 @@ export default function MockDrillDialog({ open, setOpen }) {
                   type="file"
                   accept="image/*"
                   hidden
-                  onChange={(e) => handleSignatureUpload(setRescueFirstAid, rescueFirstAid, "rescueFirstAid", e)}
+                  onChange={(e) => handleFileChange(setAmbulanceImage, e)}
                 />
               </Button>
-              {rescueFirstAid.signature && (
+              {ambulanceImage && (
                 <Avatar
-                  src={rescueFirstAid.signature}
-                  alt="Rescue/First Aid Signature"
+                  src={ambulanceImage ? URL.createObjectURL(ambulanceImage) : ""}
+                  alt="Ambulance/First Aid Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
                 />
@@ -1051,7 +694,7 @@ export default function MockDrillDialog({ open, setOpen }) {
                   disabled={teamMembers.length === 1}
                 >
                   <DeleteIcon />
-                  </IconButton>
+                </IconButton>
 
                 <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
                   Team Member {index + 1}
@@ -1064,13 +707,13 @@ export default function MockDrillDialog({ open, setOpen }) {
                       label="Name"
                       variant="outlined"
                       value={member.name}
-                      required
-                      onChange={(e) =>
-                        handleTeamMemberChange(index, "name", e.target.value)
-                      }
+                      onChange={(e) => handleTeamMemberNameChange(index, e.target.value)}
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
+                    <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+                      Signature<span className="text-red-600"> *</span>
+                    </label>
                     <Box
                       sx={{
                         display: "flex",
@@ -1082,18 +725,19 @@ export default function MockDrillDialog({ open, setOpen }) {
                         variant="outlined"
                         component="label"
                         color="primary"
+                        sx={{ height: "56px" }}
                       >
                         Upload Signature
                         <input
                           type="file"
                           accept="image/*"
                           hidden
-                          onChange={(e) => handleTeamMemberSignatureUpload(index, e)}
+                          onChange={(e) => handleTeamMemberFileChange(index, e)}
                         />
                       </Button>
-                      {member.signature && (
+                      {member.image && (
                         <Avatar
-                          src={member.signature}
+                          src={member.image ? URL.createObjectURL(member.image) : ""}
                           alt="Team Member Signature"
                           variant="rounded"
                           sx={{ width: 100, height: 56 }}
@@ -1106,66 +750,10 @@ export default function MockDrillDialog({ open, setOpen }) {
             ))}
           </Grid>
 
-          {/* Table Top Records Section */}
+          {/* Table Top Records */}
           <Grid item xs={12} mt={2}>
             <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
               Table Top Records
-            </Typography>
-            <Divider />
-          </Grid>
-
-          <Grid item xs={12}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Table top for the Scenario conducted - Remarks
-            </label>
-            <TextField
-              fullWidth
-              multiline
-              rows={2}
-              variant="outlined"
-              placeholder="Enter remarks"
-              value={tableTopScenarioRemarks}
-              sx={commonInputStyles}
-              onChange={(e) => setTableTopScenarioRemarks(e.target.value)}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Required Participation in the table top ensured - Remarks
-            </label>
-            <TextField
-              fullWidth
-              multiline
-              rows={2}
-              variant="outlined"
-              placeholder="Enter remarks"
-              value={requiredParticipationRemarks}
-              sx={commonInputStyles}
-              onChange={(e) => setRequiredParticipationRemarks(e.target.value)}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Observers Participation in the table top - Remarks
-            </label>
-            <TextField
-              fullWidth
-              multiline
-              rows={2}
-              variant="outlined"
-              placeholder="Enter remarks"
-              value={observersParticipationRemarks}
-              sx={commonInputStyles}
-              onChange={(e) => setObserversParticipationRemarks(e.target.value)}
-            />
-          </Grid>
-
-          {/* Control Mitigation Measures */}
-          <Grid item xs={12} mt={2}>
-            <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
-              Description of Control Mitigation Measures
             </Typography>
             <Divider />
           </Grid>
@@ -1176,10 +764,39 @@ export default function MockDrillDialog({ open, setOpen }) {
               multiline
               rows={4}
               variant="outlined"
-              placeholder="Enter control mitigation measures"
-              value={controlMitigationMeasures}
+              label="Table Top Records (JSON)"
+              placeholder='{"step1":"First alert raised","step2":"Evacuation initiated","step3":"Assembly point check"}'
+              value={JSON.stringify(tableTopRecords)}
               sx={commonInputStyles}
-              onChange={(e) => setControlMitigationMeasures(e.target.value)}
+              onChange={(e) => {
+                try {
+                  setTableTopRecords(JSON.parse(e.target.value));
+                } catch (error) {
+                  // Allow typing without parsing until valid JSON is entered
+                  setTableTopRecords(e.target.value);
+                }
+              }}
+            />
+          </Grid>
+
+          {/* Description of Control */}
+          <Grid item xs={12} mt={2}>
+            <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
+              Description of Control
+            </Typography>
+            <Divider />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              variant="outlined"
+              placeholder="Enter description of control"
+              value={descriptionOfControl}
+              sx={commonInputStyles}
+              onChange={(e) => setDescriptionOfControl(e.target.value)}
             />
           </Grid>
 
@@ -1201,31 +818,31 @@ export default function MockDrillDialog({ open, setOpen }) {
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    label="Nos. of KPI Employee"
+                    label="No. of KPI Employee"
                     type="number"
                     variant="outlined"
-                    value={peoplePresent.kpiEmployee}
-                    onChange={(e) => handlePeoplePresentChange("kpiEmployee", parseInt(e.target.value) || 0)}
+                    value={kpiEmployee}
+                    onChange={(e) => setKpiEmployee(e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    label="Nos. of Contractor Employee"
+                    label="No. of Contractor Employee"
                     type="number"
                     variant="outlined"
-                    value={peoplePresent.contractorEmployee}
-                    onChange={(e) => handlePeoplePresentChange("contractorEmployee", parseInt(e.target.value) || 0)}
+                    value={contractorEmployee}
+                    onChange={(e) => setContractorEmployee(e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    label="Nos. of Visitors/External Agencies"
+                    label="No. of Visitor Angies"
                     type="number"
                     variant="outlined"
-                    value={peoplePresent.visitorsExternalAgencies}
-                    onChange={(e) => handlePeoplePresentChange("visitorsExternalAgencies", parseInt(e.target.value) || 0)}
+                    value={visitorAngies}
+                    onChange={(e) => setVisitorAngies(e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -1233,8 +850,8 @@ export default function MockDrillDialog({ open, setOpen }) {
                     fullWidth
                     label="Remarks"
                     variant="outlined"
-                    value={peoplePresent.remarks}
-                    onChange={(e) => handlePeoplePresentChange("remarks", e.target.value)}
+                    value={headCountRemarks}
+                    onChange={(e) => setHeadCountRemarks(e.target.value)}
                   />
                 </Grid>
               </Grid>
@@ -1245,37 +862,37 @@ export default function MockDrillDialog({ open, setOpen }) {
           <Grid item xs={12}>
             <Paper sx={{ p: 2, mb: 2 }}>
               <Typography variant="subtitle1" fontWeight="bold" mb={2}>
-                Actual Participants Participate in Drill
+                Actual Participants in Drill
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    label="Nos. of KPI Employee"
+                    label="No. of KPI Employee"
                     type="number"
                     variant="outlined"
-                    value={actualParticipants.kpiEmployee}
-                    onChange={(e) => handleActualParticipantsChange("kpiEmployee", parseInt(e.target.value) || 0)}
+                    value={actualKpiEmployee}
+                    onChange={(e) => setActualKpiEmployee(e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    label="Nos. of Contractor Employee"
+                    label="No. of Contractor Employee"
                     type="number"
                     variant="outlined"
-                    value={actualParticipants.contractorEmployee}
-                    onChange={(e) => handleActualParticipantsChange("contractorEmployee", parseInt(e.target.value) || 0)}
+                    value={actualContractorEmployee}
+                    onChange={(e) => setActualContractorEmployee(e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    label="Nos. of Visitors/External Agencies"
+                    label="No. of Visitor Angies"
                     type="number"
                     variant="outlined"
-                    value={actualParticipants.visitorsExternalAgencies}
-                    onChange={(e) => handleActualParticipantsChange("visitorsExternalAgencies", parseInt(e.target.value) || 0)}
+                    value={actualVisitorAngies}
+                    onChange={(e) => setActualVisitorAngies(e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -1283,8 +900,8 @@ export default function MockDrillDialog({ open, setOpen }) {
                     fullWidth
                     label="Remarks"
                     variant="outlined"
-                    value={actualParticipants.remarks}
-                    onChange={(e) => handleActualParticipantsChange("remarks", e.target.value)}
+                    value={actualRemarks}
+                    onChange={(e) => setActualRemarks(e.target.value)}
                   />
                 </Grid>
               </Grid>
@@ -1295,37 +912,37 @@ export default function MockDrillDialog({ open, setOpen }) {
           <Grid item xs={12}>
             <Paper sx={{ p: 2, mb: 2 }}>
               <Typography variant="subtitle1" fontWeight="bold" mb={2}>
-                Nos. of people not participated in drill
+                People Not Participated in Drill
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    label="Nos. of KPI Employee"
+                    label="No. of KPI Employee"
                     type="number"
                     variant="outlined"
-                    value={notParticipated.kpiEmployee}
-                    onChange={(e) => handleNotParticipatedChange("kpiEmployee", parseInt(e.target.value) || 0)}
+                    value={notParticipatedKpi}
+                    onChange={(e) => setNotParticipatedKpi(e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    label="Nos. of Contractor Employee"
+                    label="No. of Contractor Employee"
                     type="number"
                     variant="outlined"
-                    value={notParticipated.contractorEmployee}
-                    onChange={(e) => handleNotParticipatedChange("contractorEmployee", parseInt(e.target.value) || 0)}
+                    value={notParticipatedContractor}
+                    onChange={(e) => setNotParticipatedContractor(e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    label="Nos. of Visitors/External Agencies"
+                    label="No. of Visitor Angies"
                     type="number"
                     variant="outlined"
-                    value={notParticipated.visitorsExternalAgencies}
-                    onChange={(e) => handleNotParticipatedChange("visitorsExternalAgencies", parseInt(e.target.value) || 0)}
+                    value={notParticipatedVisitor}
+                    onChange={(e) => setNotParticipatedVisitor(e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -1333,13 +950,14 @@ export default function MockDrillDialog({ open, setOpen }) {
                     fullWidth
                     label="Remarks"
                     variant="outlined"
-                    value={notParticipated.remarks}
-                    onChange={(e) => handleNotParticipatedChange("remarks", e.target.value)}
+                    value={notParticipatedRemarks}
+                    onChange={(e) => setNotParticipatedRemarks(e.target.value)}
                   />
                 </Grid>
               </Grid>
             </Paper>
           </Grid>
+
           {/* Rating of Emergency Team Members */}
           <Grid item xs={12} mt={2}>
             <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
@@ -1349,293 +967,154 @@ export default function MockDrillDialog({ open, setOpen }) {
           </Grid>
 
           <Grid item xs={12}>
-            <Paper sx={{ p: 2, mb: 2 }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <FormLabel>Operation & Process Control</FormLabel>
-                    <RadioGroup
-                      row
-                      value={ratings.operationProcessControl}
-                      onChange={(e) => handleRatingChange("operationProcessControl", e.target.value)}
-                    >
-                      {ratingOptions.map((option) => (
-                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <FormLabel>Performance - O&M and Control</FormLabel>
-                    <RadioGroup
-                      row
-                      value={ratings.performanceOMControl}
-                      onChange={(e) => handleRatingChange("performanceOMControl", e.target.value)}
-                    >
-                      {ratingOptions.map((option) => (
-                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <FormLabel>First Aid/Ambulance Team Response</FormLabel>
-                    <RadioGroup
-                      row
-                      value={ratings.firstAidAmbulanceTeam}
-                      onChange={(e) => handleRatingChange("firstAidAmbulanceTeam", e.target.value)}
-                    >
-                      {ratingOptions.map((option) => (
-                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <FormLabel>Traffic/Evacuation/Assembly Point & Head Count</FormLabel>
-                    <RadioGroup
-                      row
-                      value={ratings.trafficEvacuationAssembly}
-                      onChange={(e) => handleRatingChange("trafficEvacuationAssembly", e.target.value)}
-                    >
-                      {ratingOptions.map((option) => (
-                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <FormLabel>Communication During Drill</FormLabel>
-                    <RadioGroup
-                      row
-                      value={ratings.communicationDuringDrill}
-                      onChange={(e) => handleRatingChange("communicationDuringDrill", e.target.value)}
-                    >
-                      {ratingOptions.map((option) => (
-                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <FormLabel>Fire Fighting Team Response</FormLabel>
-                    <RadioGroup
-                      row
-                      value={ratings.fireTeamResponse}
-                      onChange={(e) => handleRatingChange("fireTeamResponse", e.target.value)}
-                    >
-                      {ratingOptions.map((option) => (
-                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <FormLabel>Rescue Team Response</FormLabel>
-                    <RadioGroup
-                      row
-                      value={ratings.rescueTeamResponse}
-                      onChange={(e) => handleRatingChange("rescueTeamResponse", e.target.value)}
-                    >
-                      {ratingOptions.map((option) => (
-                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <FormLabel>Other</FormLabel>
-                    <RadioGroup
-                      row
-                      value={ratings.other}
-                      onChange={(e) => handleRatingChange("other", e.target.value)}
-                    >
-                      {ratingOptions.map((option) => (
-                        <FormControlLabel key={option} value={option} control={<Radio />} label={option} />
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                </Grid>
-                
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Other (specify)"
-                    variant="outlined"
-                    value={ratings.otherDescription}
-                    onChange={(e) => handleRatingChange("otherDescription", e.target.value)}
-                  />
-                </Grid>
-              </Grid>
-            </Paper>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              variant="outlined"
+              label="Rating of Emergency Team Members (JSON array)"
+              placeholder='[{"member":"John Doe","rating":4.5},{"member":"Jane Smith","rating":4.2}]'
+              value={JSON.stringify(ratingOfEmergencyTeamMembers)}
+              sx={commonInputStyles}
+              onChange={(e) => {
+                try {
+                  setRatingOfEmergencyTeamMembers(JSON.parse(e.target.value));
+                } catch (error) {
+                  // Allow typing without parsing until valid JSON is entered
+                  setRatingOfEmergencyTeamMembers(e.target.value);
+                }
+              }}
+            />
           </Grid>
 
           {/* Overall Rating */}
           <Grid item xs={12}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Overall Rating
-            </label>
-            <FormControl fullWidth sx={commonInputStyles}>
-              <Select
-                value={overallRating}
-                onChange={(e) => setOverallRating(e.target.value)}
-              >
-                {ratingOptions.map((option) => (
-                  <MenuItem key={option} value={option}>{option}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <TextField
+              fullWidth
+              variant="outlined"
+              label="Overall Rating"
+              placeholder="4.5"
+              value={overallRating}
+              sx={commonInputStyles}
+              onChange={(e) => setOverallRating(e.target.value)}
+            />
           </Grid>
 
           {/* Observations */}
-          <Grid item xs={12}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+          <Grid item xs={12} mt={2}>
+            <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
               Observations
-            </label>
+            </Typography>
+            <Divider />
+          </Grid>
+
+          <Grid item xs={12}>
             <TextField
               fullWidth
               multiline
               rows={4}
               variant="outlined"
               placeholder="Enter observations"
-              value={observations}
+              value={observation}
               sx={commonInputStyles}
-              onChange={(e) => setObservations(e.target.value)}
+              onChange={(e) => setObservation(e.target.value)}
             />
           </Grid>
 
           {/* Recommendations Section */}
           <Grid item xs={12} mt={2}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6" className="text-[#29346B] font-semibold">
-                Recommendations
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleAddRecommendation}
-                sx={{
-                  backgroundColor: "#29346B",
-                  "&:hover": {
-                    backgroundColor: "#202a5a",
-                  },
-                }}
-              >
-                Add Recommendation
-              </Button>
-            </Box>
-            <Divider sx={{ my: 1 }} />
+            <Typography variant="h6" className="text-[#29346B] font-semibold mb-2">
+              Recommendations
+            </Typography>
+            <Divider />
           </Grid>
 
-          {/* Recommendations List */}
+          {/* Short Term Recommendations */}
           <Grid item xs={12}>
-            {recommendations.map((rec, index) => (
-              <Paper
-                key={index}
-                elevation={1}
-                sx={{
-                  p: 2,
-                  mb: 2,
-                  border: "1px solid #e0e0e0",
-                  position: "relative",
-                }}
-              >
-                <IconButton
-                  color="error"
-                  sx={{ position: "absolute", top: 8, right: 8 }}
-                  onClick={() => handleRemoveRecommendation(index)}
-                  disabled={recommendations.length === 1}
-                >
-                  <DeleteIcon />
-                </IconButton>
-
-                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
-                  Recommendation {index + 1}
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Short Term Recommendations
                 </Typography>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddShortTermRecommendation}
+                  sx={{
+                    backgroundColor: "#29346B",
+                    "&:hover": {
+                      backgroundColor: "#202a5a",
+                    },
+                  }}
+                >
+                  Add
+                </Button>
+              </Box>
+              
+              {recommendations.short_term.map((rec, index) => (
+                <Box key={index} display="flex" alignItems="center" mb={1}>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    placeholder="Enter short term recommendation"
+                    value={rec}
+                    onChange={(e) => handleShortTermRecommendationChange(index, e.target.value)}
+                  />
+                  <IconButton
+                    color="error"
+                    onClick={() => handleRemoveShortTermRecommendation(index)}
+                    disabled={recommendations.short_term.length === 1}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+              ))}
+            </Paper>
+          </Grid>
 
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Recommendation"
-                      variant="outlined"
-                      value={rec.recommendation}
-                      required
-                      onChange={(e) =>
-                        handleRecommendationChange(index, "recommendation", e.target.value)
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Responsibility"
-                      variant="outlined"
-                      value={rec.responsibility}
-                      required
-                      onChange={(e) =>
-                        handleRecommendationChange(index, "responsibility", e.target.value)
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Target Date"
-                      type="date"
-                      variant="outlined"
-                      value={rec.targetDate}
-                      required
-                      onChange={(e) =>
-                        handleRecommendationChange(index, "targetDate", e.target.value)
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <FormControl fullWidth>
-                      <InputLabel>Status</InputLabel>
-                      <Select
-                        value={rec.status}
-                        label="Status"
-                        onChange={(e) =>
-                          handleRecommendationChange(index, "status", e.target.value)
-                        }
-                      >
-                        <MenuItem value="Open">Open</MenuItem>
-                        <MenuItem value="In Progress">In Progress</MenuItem>
-                        <MenuItem value="Completed">Completed</MenuItem>
-                        <MenuItem value="Closed">Closed</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Action Remarks"
-                      variant="outlined"
-                      value={rec.actionRemarks}
-                      onChange={(e) =>
-                        handleRecommendationChange(index, "actionRemarks", e.target.value)
-                      }
-                    />
-                  </Grid>
-                </Grid>
-              </Paper>
-            ))}
+          {/* Long Term Recommendations */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Long Term Recommendations
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddLongTermRecommendation}
+                  sx={{
+                    backgroundColor: "#29346B",
+                    "&:hover": {
+                      backgroundColor: "#202a5a",
+                    },
+                  }}
+                >
+                  Add
+                </Button>
+              </Box>
+              
+              {recommendations.long_term.map((rec, index) => (
+                <Box key={index} display="flex" alignItems="center" mb={1}>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    placeholder="Enter long term recommendation"
+                    value={rec}
+                    onChange={(e) => handleLongTermRecommendationChange(index, e.target.value)}
+                  />
+                  <IconButton
+                    color="error"
+                    onClick={() => handleRemoveLongTermRecommendation(index)}
+                    disabled={recommendations.long_term.length === 1}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+              ))}
+            </Paper>
           </Grid>
         </Grid>
       </DialogContent>
@@ -1647,6 +1126,7 @@ export default function MockDrillDialog({ open, setOpen }) {
         <Button
           onClick={handleSubmit}
           color="primary"
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -1662,7 +1142,7 @@ export default function MockDrillDialog({ open, setOpen }) {
           }}
           variant="contained"
         >
-          Submit
+          {isLoading ? "Submitting..." : "Submit"}
         </Button>
       </DialogActions>
     </Dialog>

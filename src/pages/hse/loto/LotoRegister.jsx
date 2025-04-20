@@ -20,8 +20,11 @@ import ImageViewer from '../../../utils/signatureViewer';
 // import CreateLotoRegister from '../../../components/pages/hse/loto-register/CreateLotoRegister';
 import RemoveLogoutForm from '../../../components/pages/hse/loto/RemoveLoto.jsx';
 import CreateLotoRegister from '../../../components/pages/hse/loto/CreateLotoRegister';
+import { useParams } from 'react-router-dom';
+import { useGetLotoRegistersQuery } from '../../../api/hse/loto/lotoRegisterApi.js';
 
 function LotoRegister() {
+    const { locationId } = useParams();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
@@ -69,7 +72,14 @@ function LotoRegister() {
       "status": "Pending"
     }
   ];
-
+  const { 
+    data, 
+    isLoading, 
+    isError, 
+    error 
+  } = useGetLotoRegistersQuery(locationId);
+console.log(data)
+  
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };

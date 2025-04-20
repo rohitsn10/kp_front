@@ -59,6 +59,16 @@ export const lotoRegisterApi = createApi({
         return response;
       },
     }),
+    
+    // NEW ENDPOINT: Remove LOTO Register
+    removeLotoRegister: builder.mutation({
+      query: (formData) => ({
+        url: "annexures_module/remove_loto_register",
+        method: "POST",
+        body: formData,
+        formData: true, // Important for file uploads
+      }),
+    }),
   }),
 });
 
@@ -66,4 +76,5 @@ export const {
   useCreateLotoRegisterMutation,
   useUpdateLotoRegisterMutation,
   useGetLotoRegistersQuery,
+  useRemoveLotoRegisterMutation, // Export the new hook
 } = lotoRegisterApi;

@@ -14,8 +14,11 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreateIncidentNearmissReportMutation } from "../../../../api/hse/incidentReport/incidentReportApi";
+import { useParams } from "react-router-dom";
 
 export default function IncidentNearMissReportDialog({ open, setOpen }) {
+    const { locationId } = useParams();
+  
   const [nameOfSite, setNameOfSite] = useState("");
   const [createIncidentNearmissReport] =
     useCreateIncidentNearmissReportMutation();
@@ -34,15 +37,16 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
   const [apparentCause, setApparentCause] = useState("");
   const [preventiveAction, setPreventiveAction] = useState("");
   const [reviewByMembers, setReviewByMembers] = useState([
-    { name: "", signature: null },
-    { name: "", signature: null },
-    { name: "", signature: null },
+    { name: "", signature: null, signaturePreview: null },
+    { name: "", signature: null, signaturePreview: null },
+    { name: "", signature: null, signaturePreview: null },
   ]);
 
   const [reviewBySiteInCharge, setReviewBySiteInCharge] = useState({
     name: "",
     designation: "",
     signature: null,
+    signaturePreview: null,
   });
 
   const validateForm = () => {
@@ -109,22 +113,26 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = (event) => {
+        const newMembers = [...reviewByMembers];
         newMembers[index].signature = file;
+        newMembers[index].signaturePreview = event.target.result; // Store the data URL
         setReviewByMembers(newMembers);
       };
       reader.readAsDataURL(file);
     }
   };
+  
 
   const handleSiteInChargeSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = (event) => {
         setReviewBySiteInCharge({
           ...reviewBySiteInCharge,
           signature: file,
+          signaturePreview: event.target.result, // Store the data URL
         });
       };
       reader.readAsDataURL(file);
@@ -136,7 +144,7 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
 
     const formData = new FormData();
     formData.append("site_name", nameOfSite);
-    formData.append("location", location); // location should be ID
+    formData.append("location", locationId); // location should be ID
     formData.append("date_of_occurrence", dateOfOccurrence);
     formData.append("date_of_report", dateOfReport);
     formData.append("reported_by", incidentNearMissReportedBy);
@@ -448,14 +456,14 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
                         onChange={(e) => handleMemberSignatureUpload(index, e)}
                       />
                     </Button>
-                    {member.signature && (
-                      <Avatar
-                        src={URL.createObjectURL(member.signature)}
-                        alt={`Member ${index + 1} Signature`}
-                        variant="rounded"
-                        sx={{ width: 100, height: 56 }}
-                      />
-                    )}
+                    {member.signaturePreview && (
+  <Avatar
+    src={member.signaturePreview}
+    alt={`Member ${index + 1} Signature`}
+    variant="rounded"
+    sx={{ width: 100, height: 56 }}
+  />
+)}
                   </Box>
                 </Grid>
               </Grid>
@@ -537,14 +545,14 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
                   onChange={handleSiteInChargeSignatureUpload}
                 />
               </Button>
-              {reviewBySiteInCharge.signature && (
-                <Avatar
-                  src={URL.createObjectURL(reviewBySiteInCharge.signature)}
-                  alt="Site In-Charge Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
-              )}
+              {reviewBySiteInCharge.signaturePreview && (
+  <Avatar
+    src={reviewBySiteInCharge.signaturePreview}
+    alt="Site In-Charge Signature"
+    variant="rounded"
+    sx={{ width: 100, height: 56 }}
+  />
+)}
             </Box>
           </Grid>
         </Grid>

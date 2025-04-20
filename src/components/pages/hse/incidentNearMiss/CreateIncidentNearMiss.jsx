@@ -17,20 +17,23 @@ import {
   Grid,
   Paper,
   Typography,
-  Divider
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { toast } from "react-toastify";
+import { useCreateIncidentNearMissInvestigationMutation } from "../../../../api/hse/incidentNearmissInvestigation/incidentNearmissInvestigationApi";
+import { useParams } from "react-router-dom";
+// import { useCreateIncidentNearMissInvestigationMutation } from "../services/api"; // Adjust the import path as needed
 
 export default function CreateIncidentNearMiss({ open, setOpen }) {
+  const [createIncidentNearMiss, { isLoading }] = useCreateIncidentNearMissInvestigationMutation();
+  const {locationId}=useParams();
   // State for all fields based on the curl request
   const [siteName, setSiteName] = useState("");
   const [location, setLocation] = useState("");
   const [dateOfOccurrence, setDateOfOccurrence] = useState("");
   const [dateOfReport, setDateOfReport] = useState("");
   const [category, setCategory] = useState("incident");
-  // const [titleIncidentNearmiss, setTitleIncidentNearmiss] = useState("");
   const [description, setDescription] = useState("");
   const [investigationFindings, setInvestigationFindings] = useState("");
   const [physicalFactor, setPhysicalFactor] = useState("");
@@ -54,17 +57,18 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
       name: "",
       rank: "",
       signature: null,
+      signatureFile: null, // Added to store the actual file object
       id: Date.now()
     }
   ]);
 
   const validateForm = () => {
+    // Basic field validation
     if (!siteName.trim()) return toast.error("Site Name is required!");
     if (!location.trim()) return toast.error("Location is required!");
     if (!dateOfOccurrence.trim()) return toast.error("Date of Occurrence is required!");
     if (!dateOfReport.trim()) return toast.error("Date of Report is required!");
     if (!category) return toast.error("Category is required!");
-    // if (!titleIncidentNearmiss.trim()) return toast.error("Title of Incident/Near Miss is required!");
     if (!description.trim()) return toast.error("Description is required!");
     if (!investigationFindings.trim()) return toast.error("Investigation Findings are required!");
     if (!physicalFactor.trim()) return toast.error("Physical Factor is required!");
@@ -79,14 +83,33 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
       if (!rec.targetDate.trim()) return toast.error(`Recommendation ${i+1} target date is required!`);
     }
     
-    // Validate committee members
+    // Validate committee members with enhanced signature checking
     for (let i = 0; i < committeeMembers.length; i++) {
       const member = committeeMembers[i];
       if (!member.name.trim()) return toast.error(`Committee Member ${i+1} name is required!`);
       if (!member.rank.trim()) return toast.error(`Committee Member ${i+1} rank is required!`);
-      if (!member.signature) return toast.error(`Committee Member ${i+1} signature is required!`);
+      
+      // Extra debug for signature files
+      if (!member.signatureFile) {
+        console.error(`Missing signature file for member ${i+1}: ${member.name}`);
+        toast.error(`Committee Member ${i+1} signature is required!`);
+        return false;
+      } else {
+        // Additional check to make sure the file is valid
+        console.log(`Validating signature for member ${i+1}:`, 
+          member.signatureFile.name, 
+          member.signatureFile.type,
+          member.signatureFile.size
+        );
+        
+        // Check if it's a valid image file
+        if (!member.signatureFile.type.startsWith('image/')) {
+          toast.error(`Committee Member ${i+1} signature must be an image file!`);
+          return false;
+        }
+      }
     }
-
+  
     return true;
   };
 
@@ -150,6 +173,7 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
         name: "",
         rank: "",
         signature: null,
+        signatureFile: null,
         id: Date.now()
       }
     ]);
@@ -174,63 +198,98 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
   const handleSignatureUpload = (id, event) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        updateCommitteeMember(id, 'signature', e.target.result);
-      };
-      reader.readAsDataURL(file);
+      console.log(`File selected for member ${id}:`, file.name, file.type, file.size);
+      
+      // Store the actual file object - make sure it's properly stored
+      const updatedMembers = committeeMembers.map(member => 
+        member.id === id 
+          ? { ...member, signatureFile: file, signature: URL.createObjectURL(file) } 
+          : member
+      );
+      
+      setCommitteeMembers(updatedMembers);
+      
+      // Reset the file input
+      event.target.value = null;
     }
   };
-
-  const handleSubmit = () => {
+  
+  // 2. Then modify the handleSubmit function
+  const handleSubmit = async () => {
     if (!validateForm()) return;
-
-    const formData = {
-      site_name: siteName,
-      location: location,
-      date_of_occurrence: dateOfOccurrence,
-      date_of_report: dateOfReport,
-      category: category,
-      // title_incident_nearmiss: titleIncidentNearmiss,
-      description: description,
-      investigation_findings: investigationFindings,
-      physical_factor: physicalFactor,
-      human_factor: humanFactor,
-      system_factor: systemFactor,
-      recommendations_for_preventive_action: recommendations.map((rec, index) => ({
-        "sr_no": (index + 1).toString(),
-        description: rec.description,
-        responsibility: rec.responsibility,
-        target_date: rec.targetDate,
-        close_date: rec.closeDate || ""
-      })),
-      committee_members: committeeMembers.map((member, index) => ({
-        name: member.name,
-        rank: member.rank,  
-        signature: member.signature
-      })),
-    };
-
-    // console.log(formData);
-
-    // Here you would make the API call to update the data
-    // Example:
-    // axios.put(`http://127.0.0.1:8000/annexures_module/update_incident_nearmiss_investigation/${investigationId}`, formData, {
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': `Bearer ${token}`
-    //   }
-    // })
-    // .then(response => {
-    //   toast.success("Investigation report updated successfully!");
-    //   setOpen(false);
-    // })
-    // .catch(error => {
-    //   toast.error("Error updating report: " + error.message); 
-    // });
-
-    toast.success("Investigation report updated successfully!");
-    setOpen(false);
+  
+    try {
+      // Create a FormData object
+      const formData = new FormData();
+      
+      // Add basic fields
+      formData.append('site_name', siteName);
+      formData.append('location', locationId);
+      formData.append('date_of_occurrence', dateOfOccurrence);
+      formData.append('date_of_report', dateOfReport);
+      formData.append('category', category);
+      formData.append('description', description);
+      formData.append('investigation_findings', investigationFindings);
+      formData.append('physical_factor', physicalFactor);
+      formData.append('human_factor', humanFactor);
+      formData.append('system_factor', systemFactor);
+      
+      // Add recommendation_for_preventive_action as a JSON string
+      const recommendationsObj = {};
+      recommendations.forEach((rec, index) => {
+        recommendationsObj[`action${index + 1}`] = {
+          description: rec.description,
+          responsibility: rec.responsibility,
+          target_date: rec.targetDate,
+          close_date: rec.closeDate || ""
+        };
+      });
+      formData.append('recommendation_for_preventive_action', JSON.stringify(recommendationsObj));
+      
+      // Add committee members with special focus on signatures
+      committeeMembers.forEach((member, index) => {
+        formData.append(`committee_member_name_${index}`, member.name);
+        formData.append(`committee_member_rank_${index}`, member.rank);
+        
+        // Debug logging before adding the file
+        if (member.signatureFile) {
+          console.log(`About to append file for member ${index}:`, 
+            member.signatureFile.name, 
+            member.signatureFile.type, 
+            member.signatureFile.size
+          );
+          
+          // Just use the signatureFile directly - simpler is better
+          formData.append(`committee_member_signature_${index}`, member.signatureFile);
+        } else {
+          console.warn(`No signature file for member ${index}`);
+        }
+      });
+      
+      // Debug: Log the FormData entries to verify files are included
+      console.log("FormData entries:");
+      for (let pair of formData.entries()) {
+        if (pair[1] instanceof File) {
+          console.log(`Found file: ${pair[0]}`, pair[1].name, pair[1].type, pair[1].size);
+        } else {
+          console.log(pair[0], pair[1]);
+        }
+      }
+      
+      // Use the RTK Query mutation with the formData
+      const response = await createIncidentNearMiss(formData).unwrap();
+      
+      if (response && response.status) {
+        toast.success("Investigation report created successfully!");
+        setOpen(false);
+      } else {
+        const errorMessage = response?.message || "Failed to create report. Please try again.";
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error(error.message || "An error occurred while submitting the form");
+    }
   };
 
   return (
@@ -324,21 +383,6 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
             </RadioGroup>
           </FormControl>
         </div>
-
-        {/* Title */}
-        {/* <div className="mb-4">
-          <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-            Title of Incident/Near Miss<span className="text-red-600"> *</span>
-          </label>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Enter Title"
-            value={titleIncidentNearmiss}
-            sx={commonInputStyles}
-            onChange={(e) => setTitleIncidentNearmiss(e.target.value)}
-          />
-        </div> */}
 
         {/* Description */}
         <div className="mb-4">
@@ -672,6 +716,7 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
           onClick={handleSubmit}
           color="primary"
           variant="contained"
+          disabled={isLoading}
           sx={{
             backgroundColor: "#f6812d",
             color: "#FFFFFF",
@@ -686,7 +731,7 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
             },
           }}
         >
-          Update
+          {isLoading ? "Submitting..." : "Create"}
         </Button>
       </DialogActions>
     </Dialog>

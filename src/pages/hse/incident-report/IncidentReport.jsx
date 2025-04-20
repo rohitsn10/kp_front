@@ -208,7 +208,7 @@ function IncidentReport() {
                       <Typography><strong>Name:</strong> {member.name}</Typography>
                       <Typography><strong>Signature:</strong></Typography>
                       <ImageViewer
-                        src={member.signature}
+                        src={`${import.meta.env.VITE_API_KEY}${member.signature}`}
                         alt={`${member.name} Signature`}
                       />
                     </div>
@@ -223,7 +223,7 @@ function IncidentReport() {
                   <Typography><strong>Designation:</strong> {selectedIncident.review_by_site_in_charge.designation}</Typography>
                   <Typography><strong>Signature:</strong></Typography>
                   <ImageViewer
-                    src={selectedIncident.review_by_site_in_charge.signature}
+                    src={`${import.meta.env.VITE_API_KEY}${selectedIncident.review_by_site_in_charge.signature}`}
                     alt={`${selectedIncident.review_by_site_in_charge.name} Signature`}
                   />
                 </div>

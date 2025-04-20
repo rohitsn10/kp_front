@@ -11,9 +11,9 @@ export const mockDrillApi = createApi({
       }
       // headers.set("Content-Type", "application/json");
 
-      if (!(body instanceof FormData)) {
-        headers.set("Content-Type", "application/json");
-      }
+      // if (!(body instanceof FormData)) {
+      //   headers.set("Content-Type", "application/json");
+      // }
       return headers;
     },
   }),

@@ -16,6 +16,8 @@ import {
   DialogActions,
 } from "@mui/material";
 import CreateIncidentNearMiss from "../../../components/pages/hse/incidentNearMiss/CreateIncidentNearMiss";
+import { useParams } from "react-router-dom";
+import { useGetIncidentNearMissInvestigationQuery } from "../../../api/hse/incidentNearmissInvestigation/incidentNearmissInvestigationApi";
 
 const IncidentInvestigation = () => {
   const dummyIncidents = [
@@ -148,7 +150,14 @@ const IncidentInvestigation = () => {
       "remark": "Inspection and re-tightening of electrical connections completed."
     }
   ]
-
+  const { locationId } = useParams();
+    const { 
+      data, 
+      isLoading, 
+      isError, 
+      error 
+    } = useGetIncidentNearMissInvestigationQuery(locationId);
+console.log(data)
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");

@@ -16,8 +16,11 @@ import {
   TextField
 } from '@mui/material';
 import MockDrillReportDialog from '../../../components/pages/hse/mock-drill-report/CreateMockDrill';
+import { useParams } from 'react-router-dom';
+import { useGetMockDrillReportQuery } from '../../../api/hse/mockdrill/mockDrillApi';
 
 function MockDrillReport() {
+    const { locationId } = useParams();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selectedDrill, setSelectedDrill] = useState(null);
@@ -26,7 +29,13 @@ function MockDrillReport() {
   const [openHeadCountModal, setOpenHeadCountModal] = useState(false);
   const [openDetailsModal, setOpenDetailsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const { 
+    data, 
+    isLoading, 
+    isError, 
+    error 
+  } = useGetMockDrillReportQuery(locationId);
+  console.log(data)
   const [createMockDrill,setCreateMockDrill]=useState(false);
   const dummyDrill = [
     {
