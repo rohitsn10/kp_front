@@ -38,6 +38,7 @@ import { suggestionSchemeReportApi } from "../api/hse/suggestionScheme/suggestio
 import { ladderInspectionApi } from "../api/hse/ladder/ladderInspectionApi.js";
 import { internalAuditReportApi } from "../api/hse/internalAudit/internalAuditReportApi .js";
 import { lotoRegisterApi } from "../api/hse/loto/lotoRegisterApi.js";
+import { incidentNearmissApi } from "../api/hse/incidentReport/incidentReportApi.js";
  
 const store = configureStore({
   reducer: {
@@ -79,7 +80,8 @@ const store = configureStore({
     [suggestionSchemeReportApi.reducerPath]:suggestionSchemeReportApi.reducer,
     [ladderInspectionApi.reducerPath]:ladderInspectionApi.reducer,
     [internalAuditReportApi.reducerPath]:internalAuditReportApi.reducer,
-    [lotoRegisterApi.reducerPath]:lotoRegisterApi.reducer
+    [lotoRegisterApi.reducerPath]:lotoRegisterApi.reducer,
+    [incidentNearmissApi.reducerPath]:incidentNearmissApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -122,6 +124,7 @@ const store = configureStore({
       .concat(ladderInspectionApi.middleware)
       .concat(internalAuditReportApi.middleware)
       .concat(lotoRegisterApi.middleware)
+      .concat(incidentNearmissApi.middleware),
 });
 
 export default store;

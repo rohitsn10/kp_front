@@ -17,6 +17,8 @@ import {
 } from '@mui/material';
 import ImageViewer from '../../../utils/signatureViewer';
 import IncidentNearMissReportDialog from '../../../components/pages/hse/incident-report/CreateIncidentReport';
+import { useGetIncidentNearmissReportQuery } from '../../../api/hse/incidentReport/incidentReportApi';
+import { useParams } from 'react-router-dom';
 // import CreateIncidentReport from '../../../components/pages/hse/incident-report/CreateIncidentReport';
 
 // Reusable Image Viewer Component
@@ -28,77 +30,38 @@ function IncidentReport() {
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [openDetailsModal, setOpenDetailsModal] = useState(false);
   const [openCreateDialog, setCreateDialog] = useState(false);
-  
-  const dummyIncidentReport = [
-    {
-      "name_of_site": "Construction Site E",
-      "location": "Zone 3, Sector B",
-      "date_of_occurrence": "2025-03-28",
-      "date_of_report": "2025-03-29",
-      "incident_near_miss_reported_by": "Michael Green",
-      "designation": "Site Supervisor",
-      "employee_code": "EMP1023",
-      "vendor_name": "ABC Contractors",
-      "category": "Incident",
-      "description_of_incident_near_miss": "Worker slipped on wet surface near excavation site.",
-      "immediate_action_taken": "Area cordoned off and signage placed.",
-      "apparent_cause": "Lack of proper drainage and signage.",
-      "preventive_action": "Ensure better water drainage and install anti-slip mats in hazard-prone areas.",
-      "review_by_members": [
-        {
-          "name": "John Doe",
-          "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-        },
-        {
-          "name": "Emily White",
-          "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-        },
-        {
-          "name": "Chris Brown",
-          "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-        }
+  const {locationId} = useParams();
+  const skipQuery = !locationId || isNaN(parseInt(locationId));
+   const { data, isLoading, error, refetch } = useGetIncidentNearmissReportQuery(
+      parseInt(locationId), 
+      { skip: skipQuery }
+    );
+    const incidentReports = data?.data?.map((item) => ({
+      name_of_site: item.site_name,
+      location: item.location,
+      date_of_occurrence: item.date_of_occurrence?.split("T")[0],
+      date_of_report: item.date_of_report?.split("T")[0],
+      incident_near_miss_reported_by: item.reported_by,
+      designation: item.designation,
+      employee_code: item.employee_code,
+      vendor_name: item.vendor_name,
+      category: item.category,
+      description_of_incident_near_miss: item.description,
+      immediate_action_taken: item.immediate_action_taken,
+      apparent_cause: item.apparent_cause,
+      preventive_action: item.preventive_action,
+      review_by_members: [
+        { name: item.member_1, signature: item.member_1_sign },
+        { name: item.member_2, signature: item.member_2_sign },
+        { name: item.member_3, signature: item.member_3_sign },
       ],
-      "review_by_site_in_charge": {
-        "name": "David Wilson",
-        "designation": "Project Manager",
-        "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-      }
-    },
-    {
-      "name_of_site": "Construction Site E",
-      "location": "Zone 3, Sector B",
-      "date_of_occurrence": "2025-03-28",
-      "date_of_report": "2025-03-29",
-      "incident_near_miss_reported_by": "Michael Green",
-      "designation": "Site Supervisor",
-      "employee_code": "EMP1023",
-      "vendor_name": "ABC Contractors",
-      "category": "Incident",
-      "description_of_incident_near_miss": "Worker slipped on wet surface near excavation site.",
-      "immediate_action_taken": "Area cordoned off and signage placed.",
-      "apparent_cause": "Lack of proper drainage and signage.",
-      "preventive_action": "Ensure better water drainage and install anti-slip mats in hazard-prone areas.",
-      "review_by_members": [
-        {
-          "name": "John Doe",
-          "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-        },
-        {
-          "name": "Emily White",
-          "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-        },
-        {
-          "name": "Chris Brown",
-          "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-        }
-      ],
-      "review_by_site_in_charge": {
-        "name": "David Wilson",
-        "designation": "Project Manager",
-        "signature": "https://dummyimage.com/150x50/000/fff.png&text=Signature"
-      }
-    }              
-  ];
+      review_by_site_in_charge: {
+        name: item.site_incharge_name,
+        designation: item.site_incharge_designation,
+        signature: item.site_incharge_sign,
+      },
+    })) || [];
+    
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -110,12 +73,13 @@ function IncidentReport() {
   };
 
   // Filtering logic
-  const filteredIncidents = dummyIncidentReport.filter((incident) =>
-    incident.name_of_site.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    incident.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    incident.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    incident.incident_near_miss_reported_by.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredIncidents = incidentReports.filter((incident) =>
+    incident.name_of_site?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    incident.location?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+    incident.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    incident.incident_near_miss_reported_by?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
 
   const currentRows = filteredIncidents.slice(
     page * rowsPerPage,
@@ -126,7 +90,9 @@ function IncidentReport() {
     setSelectedIncident(incident);
     setOpenDetailsModal(true);
   };
-
+  if (isLoading) return <Typography>Loading incident reports...</Typography>;
+  if (error) return <Typography color="error">Error fetching data</Typography>;
+  
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
       <h2 className="text-3xl text-[#29346B] font-semibold text-center mb-6">Incident Reports</h2>
