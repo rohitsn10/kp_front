@@ -13,13 +13,17 @@ import {
   Avatar,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useCreateIncidentNearmissReportMutation } from "../../../../api/hse/incidentReport/incidentReportApi";
 
 export default function IncidentNearMissReportDialog({ open, setOpen }) {
   const [nameOfSite, setNameOfSite] = useState("");
+  const [createIncidentNearmissReport] =
+    useCreateIncidentNearmissReportMutation();
   const [location, setLocation] = useState("");
   const [dateOfOccurrence, setDateOfOccurrence] = useState("");
   const [dateOfReport, setDateOfReport] = useState("");
-  const [incidentNearMissReportedBy, setIncidentNearMissReportedBy] = useState("");
+  const [incidentNearMissReportedBy, setIncidentNearMissReportedBy] =
+    useState("");
   const [designation, setDesignation] = useState("");
   const [employeeCode, setEmployeeCode] = useState("");
   const [vendorName, setVendorName] = useState("");
@@ -34,6 +38,7 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
     { name: "", signature: null },
     { name: "", signature: null },
   ]);
+
   const [reviewBySiteInCharge, setReviewBySiteInCharge] = useState({
     name: "",
     designation: "",
@@ -43,7 +48,8 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
   const validateForm = () => {
     if (!nameOfSite.trim()) return toast.error("Name of Site is required!");
     if (!location.trim()) return toast.error("Location is required!");
-    if (!dateOfOccurrence.trim()) return toast.error("Date of Occurrence is required!");
+    if (!dateOfOccurrence.trim())
+      return toast.error("Date of Occurrence is required!");
     if (!dateOfReport.trim()) return toast.error("Date of Report is required!");
     if (!incidentNearMissReportedBy.trim())
       return toast.error("Incident/Near Miss Reported By is required!");
@@ -55,8 +61,10 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
       return toast.error("Description of Incident/Near Miss is required!");
     if (!immediateActionTaken.trim())
       return toast.error("Immediate Action Taken is required!");
-    if (!apparentCause.trim()) return toast.error("Apparent Cause is required!");
-    if (!preventiveAction.trim()) return toast.error("Preventive Action is required!");
+    if (!apparentCause.trim())
+      return toast.error("Apparent Cause is required!");
+    if (!preventiveAction.trim())
+      return toast.error("Preventive Action is required!");
 
     for (let i = 0; i < reviewByMembers.length; i++) {
       if (!reviewByMembers[i].name.trim())
@@ -102,8 +110,7 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        const newMembers = [...reviewByMembers];
-        newMembers[index].signature = reader.result;
+        newMembers[index].signature = file;
         setReviewByMembers(newMembers);
       };
       reader.readAsDataURL(file);
@@ -117,39 +124,64 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
       reader.onload = () => {
         setReviewBySiteInCharge({
           ...reviewBySiteInCharge,
-          signature: reader.result,
+          signature: file,
         });
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const formData = {
-      name_of_site: nameOfSite,
-      location: location,
-      date_of_occurrence: dateOfOccurrence,
-      date_of_report: dateOfReport,
-      incident_near_miss_reported_by: incidentNearMissReportedBy,
-      designation: designation,
-      employee_code: employeeCode,
-      vendor_name: vendorName,
-      category: category,
-      description_of_incident_near_miss: descriptionOfIncidentNearMiss,
-      immediate_action_taken: immediateActionTaken,
-      apparent_cause: apparentCause,
-      preventive_action: preventiveAction,
-      review_by_members: reviewByMembers,
-      review_by_site_in_charge: reviewBySiteInCharge,
-    };
+    const formData = new FormData();
+    formData.append("site_name", nameOfSite);
+    formData.append("location", location); // location should be ID
+    formData.append("date_of_occurrence", dateOfOccurrence);
+    formData.append("date_of_report", dateOfReport);
+    formData.append("reported_by", incidentNearMissReportedBy);
+    formData.append("designation", designation);
+    formData.append("employee_code", employeeCode);
+    formData.append("vendor_name", vendorName);
+    formData.append("category", category);
+    formData.append("description", descriptionOfIncidentNearMiss);
+    formData.append("immediate_action_taken", immediateActionTaken);
+    formData.append("apparent_cause", apparentCause);
+    formData.append("preventive_action", preventiveAction);
 
-    console.log(formData);
-    toast.success("Incident/Near Miss report submitted successfully!");
-    setOpen(false);
+    formData.append("member_1", reviewByMembers[0]?.name || "");
+    formData.append("member_2", reviewByMembers[1]?.name || "");
+    formData.append("member_3", reviewByMembers[2]?.name || "");
+
+    if (reviewByMembers[0]?.signature) {
+      formData.append("member_1_sign", reviewByMembers[0].signature);
+    }
+    if (reviewByMembers[1]?.signature) {
+      formData.append("member_2_sign", reviewByMembers[1].signature);
+    }
+    if (reviewByMembers[2]?.signature) {
+      formData.append("member_3_sign", reviewByMembers[2].signature);
+    }
+
+    formData.append("site_incharge_name", reviewBySiteInCharge.name);
+    formData.append(
+      "site_incharge_designation",
+      reviewBySiteInCharge.designation
+    );
+
+    if (reviewBySiteInCharge.signature) {
+      formData.append("site_incharge_sign", reviewBySiteInCharge.signature);
+    }
+
+    try {
+      await createIncidentNearmissReport(formData).unwrap();
+      toast.success("Incident/Near Miss report submitted successfully!");
+      setOpen(false);
+    } catch (error) {
+      toast.error("Failed to submit report. Please try again.");
+      console.error("Submit Error:", error);
+    }
   };
-
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
       <DialogTitle className="text-[#29346B] text-2xl font-semibold">
@@ -226,7 +258,8 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
 
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Incident/Near Miss Reported By<span className="text-red-600"> *</span>
+              Incident/Near Miss Reported By
+              <span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
@@ -296,7 +329,8 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
 
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Description of Incident/Near Miss<span className="text-red-600"> *</span>
+              Description of Incident/Near Miss
+              <span className="text-red-600"> *</span>
             </label>
             <TextField
               fullWidth
@@ -371,7 +405,10 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
 
           {reviewByMembers.map((member, index) => (
             <Grid item xs={12} key={index}>
-              <Typography variant="subtitle1" className="text-[#29346B] font-semibold">
+              <Typography
+                variant="subtitle1"
+                className="text-[#29346B] font-semibold"
+              >
                 Review Member {index + 1}
               </Typography>
               <Grid container spacing={2}>
@@ -413,7 +450,7 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
                     </Button>
                     {member.signature && (
                       <Avatar
-                        src={member.signature}
+                        src={URL.createObjectURL(member.signature)}
                         alt={`Member ${index + 1} Signature`}
                         variant="rounded"
                         sx={{ width: 100, height: 56 }}
@@ -431,8 +468,8 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
               variant="h6"
               className="text-[#29346B] font-semibold mb-2"
             >
-              Review by Site In-charge / Project Manager 
-              (Root Cause Analysis is must in case of Incident.)
+              Review by Site In-charge / Project Manager (Root Cause Analysis is
+              must in case of Incident.)
             </Typography>
             <Divider />
           </Grid>
@@ -502,7 +539,7 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
               </Button>
               {reviewBySiteInCharge.signature && (
                 <Avatar
-                  src={reviewBySiteInCharge.signature}
+                  src={URL.createObjectURL(reviewBySiteInCharge.signature)}
                   alt="Site In-Charge Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
