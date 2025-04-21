@@ -9,17 +9,27 @@ export const safetyTrainingApi = createApi({
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
-      headers.set("Content-Type", "application/json");
       return headers;
     },
   }),
   endpoints: (builder) => ({
+    // GET endpoint
     getSafetyTrainingAttendance: builder.query({
-      query: () => "annexures_module/get_safety_training_attendance",
+      query: (locationId) => `annexures_module/get_safety_training_attendance/${locationId}`,
+    }),
+
+    // POST endpoint
+    createSafetyTrainingAttendance: builder.mutation({
+      query: (body) => ({
+        url: `annexures_module/create_safety_training_attendance`, // adjust if your API path differs
+        method: 'POST',
+        body,
+      }),
     }),
   }),
 });
 
 export const {
   useGetSafetyTrainingAttendanceQuery,
+  useCreateSafetyTrainingAttendanceMutation,
 } = safetyTrainingApi;

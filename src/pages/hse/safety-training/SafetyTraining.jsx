@@ -61,8 +61,10 @@ function SafetyTraining() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTraining, setSelectedTraining] = useState(null);
   const [openParticipantsModal, setOpenParticipantsModal] = useState(false);
-  const{locationId} = useParams();
-  const { data, isLoading, error } = useGetSafetyTrainingAttendanceQuery(locationId ? parseInt(locationId) : undefined);
+  const { locationId } = useParams();
+  const { data, isLoading, error } = useGetSafetyTrainingAttendanceQuery(
+    locationId ? parseInt(locationId) : undefined
+  );
   const [openCreateDialog, setCreateDialog] = useState(false);
   const dummySafetyData = [
     {
@@ -100,8 +102,8 @@ function SafetyTraining() {
     setPage(0);
   };
 
-  const filteredTrainings = data
-    ? [data].filter(
+  const filteredTrainings = data?.data
+    ? data.data.filter(
         (training) =>
           (training.site_name?.toLowerCase() || "").includes(
             searchTerm.toLowerCase()
@@ -166,18 +168,24 @@ function SafetyTraining() {
           </TableHead>
           <TableBody>
             {currentRows.map((training, index) => (
-              <TableRow key={index}>
+              <TableRow key={training.id || index}>
                 <TableCell align="center">{training.site_name}</TableCell>
                 <TableCell align="center">{training.training_topic}</TableCell>
                 <TableCell align="center">{training.date}</TableCell>
-                <TableCell align="center">{training.faculty_name}</TableCell>
                 <TableCell align="center">
-                  <ImageViewer
-                    src={`${import.meta.env.VITE_IMAGE_URL}/${
-                      training.faculty_signature
-                    }`}
-                    alt={`${training.faculty_name} Signature`}
-                  />
+                  {training.faculty_name || "N/A"}
+                </TableCell>
+                <TableCell align="center">
+                  {training.faculty_signature ? (
+                    <ImageViewer
+                      src={`${import.meta.env.VITE_IMAGE_URL}${
+                        training.faculty_signature
+                      }`}
+                      alt={`${training.faculty_name || "Faculty"} Signature`}
+                    />
+                  ) : (
+                    "No Signature"
+                  )}
                 </TableCell>
                 <TableCell align="center">
                   <Button

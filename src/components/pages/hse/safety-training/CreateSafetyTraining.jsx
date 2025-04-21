@@ -7,12 +7,14 @@ import {
   DialogTitle,
   TextField,
   Grid,
-  Typography,
+  Typography, 
   Divider,
   Box,
   Avatar,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useParams } from "react-router-dom";
+import { useCreateSafetyTrainingAttendanceMutation } from "../../../../api/hse/safetyTraining/safetyTrainingApi";
 
 export default function TrainingAttendanceDialog({ open, setOpen }) {
   const [site, setSite] = useState("");
@@ -23,7 +25,8 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
   const [facultySignature, setFacultySignature] = useState(null);
   const [participantDoc, setParticipantDoc] = useState(null);
   const [participantDocName, setParticipantDocName] = useState("");
-
+  const { locationId } = useParams();
+  const [createAttendance, { isLoading }] = useCreateSafetyTrainingAttendanceMutation();
   const validateForm = () => {
     if (!site.trim()) return toast.error("Site is required!");
     if (!date.trim()) return toast.error("Date is required!");
@@ -78,37 +81,30 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
-
-    // Create FormData object to handle file uploads
+  
     const formData = new FormData();
-    formData.append("site", site);
+    formData.append("site_name", site);
     formData.append("date", date);
     formData.append("faculty_name", facultyName);
-    formData.append("topic", topic);
+    formData.append("training_topic", topic);
     formData.append("remarks", remarks);
-    
-    // In a real implementation, you would handle the signature file differently
-    // Here we're just appending the dataURL, but in practice you'd upload the file
-    // and get a URL from the server
-    formData.append("faculty_signature", facultySignature);
-    
-    // Append the participant document
-    formData.append("participant_document", participantDoc);
-
-    // Log the FormData (for demonstration purposes)
-    console.log("Form data to be submitted:", {
-      site,
-      date,
-      faculty_name: facultyName,
-      topic,
-      remarks,
-      participant_document: participantDocName
-    });
-    
-    toast.success("Training attendance data submitted successfully!");
-    setOpen(false);
+    formData.append("location", locationId); // Ensure it's passed from URL params
+  
+    // Faculty signature as base64 or file upload depending on backend expectations
+    const signatureBlob = await fetch(facultySignature).then(res => res.blob());
+    formData.append("trainer_signature", signatureBlob, "signature.png");
+  
+    formData.append("file_upload", participantDoc);
+  
+    try {
+      const response = await createAttendance(formData).unwrap();
+      toast.success(response.message || "Training attendance submitted successfully!");
+      setOpen(false);
+    } catch (error) {
+      toast.error(error?.data?.message || "Something went wrong while submitting the form.");
+    }
   };
 
   return (
