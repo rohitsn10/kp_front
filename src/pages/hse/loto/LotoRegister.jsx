@@ -89,13 +89,14 @@ console.log(data)
     setPage(0);
   };
 
-  // Filtering logic
-  const filteredLotoRecords = dummyLogout.filter((loto) =>
-    loto.Site.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    loto["applied-lock-tag-number"].toLowerCase().includes(searchTerm.toLowerCase()) ||
-    loto["applied-by-name"].toLowerCase().includes(searchTerm.toLowerCase()) ||
-    loto.status.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const lotoRecords = data?.data || [];
+
+const filteredLotoRecords = lotoRecords.filter((loto) =>
+  loto.site_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  loto.applied_lock_tag_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  loto.applied_by_name?.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
 
   const currentRows = filteredLotoRecords.slice(
     page * rowsPerPage,
@@ -160,42 +161,43 @@ console.log(data)
             </TableRow>
           </TableHead>
           <TableBody>
-            {currentRows.map((loto, index) => (
-              <TableRow key={index}>
-                <TableCell align="center">{loto.Site}</TableCell>
-                <TableCell align="center">{loto["applied-lock-tag-number"]}</TableCell>
-                <TableCell align="center">{formatDateTime(loto["applied-date-time"])}</TableCell>
-                <TableCell align="center">{loto["applied-by-name"]}</TableCell>
-                <TableCell align="center">
-                  <span className={`px-2 py-1 rounded-full text-white ${loto.status === 'Completed' ? 'bg-green-500' : 'bg-yellow-500'}`}>
-                    {loto.status}
-                  </span>
-                </TableCell>
-                <TableCell align="center">
-                  <Stack direction="row" spacing={1} justifyContent="center">
-                    <Button 
-                      variant="contained" 
-                      color="primary"
-                      size="small"
-                      onClick={() => openDetailsModalHandler(loto)}
-                    >
-                      View Details
-                    </Button>
-                    
-                    {loto.status === 'Pending' && (
-                      <Button 
-                        variant="contained" 
-                        color="error"
-                        size="small"
-                        onClick={() => openRemoveDialogHandler(loto)}
-                      >
-                        Remove LOTO
-                      </Button>
-                    )}
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
+          {filteredLotoRecords
+  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  .map((loto, index) => (
+    <TableRow key={index}>
+      <TableCell align="center">{loto.site_name}</TableCell>
+      <TableCell align="center">{loto.applied_lock_tag_number}</TableCell>
+      <TableCell align="center">{formatDateTime(loto.applied_datetime)}</TableCell>
+      <TableCell align="center">{loto.applied_by_name}</TableCell>
+      <TableCell align="center">
+        <span className="px-2 py-1 rounded-full text-white bg-yellow-500">
+          Pending
+        </span>
+      </TableCell>
+      <TableCell align="center">
+        <Stack direction="row" spacing={1} justifyContent="center">
+          <Button 
+            variant="contained" 
+            color="primary"
+            size="small"
+            onClick={() => openDetailsModalHandler(dummyLogout[0])} // always open dummy
+          >
+            View Details
+          </Button>
+
+          <Button 
+            variant="contained" 
+            color="error"
+            size="small"
+            onClick={() => openRemoveDialogHandler(dummyLogout[0])} // always use dummy
+          >
+            Remove LOTO
+          </Button>
+        </Stack>
+      </TableCell>
+    </TableRow>
+))}
+
           </TableBody>
         </Table>
       </TableContainer>
