@@ -235,6 +235,7 @@ function IncidentReport() {
       <IncidentNearMissReportDialog
                 open={openCreateDialog}
                 setOpen={setCreateDialog}
+                onSuccess={refetch}
       />
       {/* <CreateIncidentReport
         open={openCreateDialog}

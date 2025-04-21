@@ -21,6 +21,13 @@ import { useGetMockDrillReportQuery } from "../../../api/hse/mockdrill/mockDrill
 
 function MockDrillReport() {
   const { locationId } = useParams();
+  const skipQuery = !locationId || isNaN(parseInt(locationId));
+  // const { data, isLoading, isError, error,refetch } =
+  //   useGetMockDrillReportQuery(locationId);
+     const { data, isLoading, error, refetch } = useGetMockDrillReportQuery(
+        parseInt(locationId), 
+        { skip: skipQuery }
+      );
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selectedDrill, setSelectedDrill] = useState(null);
@@ -30,9 +37,8 @@ function MockDrillReport() {
   const [openHeadCountModal, setOpenHeadCountModal] = useState(false);
   const [openDetailsModal, setOpenDetailsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const { data, isLoading, isError, error } =
-    useGetMockDrillReportQuery(locationId);
-  console.log(data);
+
+  // console.log(data);
   const [createMockDrill, setCreateMockDrill] = useState(false);
   const drills = data?.data || [];
   const filteredDrills = drills.filter((drill) =>
@@ -381,6 +387,7 @@ function MockDrillReport() {
       <MockDrillReportDialog
         open={createMockDrill}
         setOpen={setCreateMockDrill}
+        onSuccess={refetch}
       />
     </div>
   );

@@ -25,7 +25,7 @@ import { useCreateIncidentNearMissInvestigationMutation } from "../../../../api/
 import { useParams } from "react-router-dom";
 // import { useCreateIncidentNearMissInvestigationMutation } from "../services/api"; // Adjust the import path as needed
 
-export default function CreateIncidentNearMiss({ open, setOpen }) {
+export default function CreateIncidentNearMiss({ open, setOpen,onSuccess }) {
   const [createIncidentNearMiss, { isLoading }] = useCreateIncidentNearMissInvestigationMutation();
   const {locationId}=useParams();
   // State for all fields based on the curl request
@@ -267,7 +267,7 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
       });
       
       // Debug: Log the FormData entries to verify files are included
-      console.log("FormData entries:");
+      // console.log("FormData entries:");
       for (let pair of formData.entries()) {
         if (pair[1] instanceof File) {
           console.log(`Found file: ${pair[0]}`, pair[1].name, pair[1].type, pair[1].size);
@@ -282,6 +282,7 @@ export default function CreateIncidentNearMiss({ open, setOpen }) {
       if (response && response.status) {
         toast.success("Investigation report created successfully!");
         setOpen(false);
+        onSuccess();
       } else {
         const errorMessage = response?.message || "Failed to create report. Please try again.";
         toast.error(errorMessage);

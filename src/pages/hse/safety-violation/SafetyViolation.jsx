@@ -28,8 +28,12 @@ const SafetyViolation = () => {
   const [dialogContent, setDialogContent] = useState(null);
   const [createDialog, setCreateDialog] = useState(false);
   const { locationId } = useParams();
-  const { data, isLoading, error } = useGetSafetyViolationReportQuery(locationId ? parseInt(locationId) : undefined);
-
+  // const { data, isLoading, error,refetch } = useGetSafetyViolationReportQuery(locationId ? parseInt(locationId) : undefined);
+  const skipQuery = !locationId || isNaN(parseInt(locationId));
+   const { data, isLoading, error, refetch } = useGetSafetyViolationReportQuery(
+      parseInt(locationId), 
+      { skip: skipQuery }
+    );
   const safetyViolations = data?.data || [];
 
   const handleChangePage = (event, newPage) => setPage(newPage);
@@ -184,7 +188,7 @@ const SafetyViolation = () => {
         <DialogContent>{dialogContent}</DialogContent>
       </Dialog>
 
-      <CreateSafetyViolation open={createDialog} setOpen={setCreateDialog} />
+      <CreateSafetyViolation open={createDialog} setOpen={setCreateDialog} onSuccess={refetch}/>
     </div>
   );
 };

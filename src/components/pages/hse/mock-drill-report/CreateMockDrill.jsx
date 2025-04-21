@@ -22,7 +22,7 @@ import { toast } from "react-toastify";
 import { useCreateMockDrillReportMutation } from "../../../../api/hse/mockdrill/mockDrillApi";
 import { useParams } from "react-router-dom";
 
-export default function MockDrillDialog({ open, setOpen }) {
+export default function MockDrillDialog({ open, setOpen,onSuccess }) {
   const { locationId } = useParams();
   const [createMockDrillReport, { isLoading }] = useCreateMockDrillReportMutation();
   
@@ -199,7 +199,7 @@ export default function MockDrillDialog({ open, setOpen }) {
   // Validation function
   const validateForm = () => {
     if (!sitePlantName.trim()) return toast.error("Site plant name is required!");
-    if (!location.trim()) return toast.error("Location is required!");
+    // if (!location.trim()) return toast.error("Location is required!");
     if (!emergencyScenario.trim()) return toast.error("Emergency scenario is required!");
     if (!typeOfMockDrill) return toast.error("Mock drill type is required!");
     if (!mockDrillDate) return toast.error("Drill date is required!");
@@ -296,6 +296,7 @@ export default function MockDrillDialog({ open, setOpen }) {
       
       if (response.status) {
         toast.success(response.message || "Mock drill report created successfully!");
+        onSuccess();
         setOpen(false);
       } else {
         toast.error(response.message || "Failed to create mock drill report");
@@ -334,7 +335,7 @@ export default function MockDrillDialog({ open, setOpen }) {
               onChange={(e) => setSitePlantName(e.target.value)}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          {/* <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Location ID<span className="text-red-600"> *</span>
             </label>
@@ -346,7 +347,7 @@ export default function MockDrillDialog({ open, setOpen }) {
               sx={commonInputStyles}
               onChange={(e) => setLocation(e.target.value)}
             />
-          </Grid>
+          </Grid> */}
 
           {/* Emergency Scenario */}
           <Grid item xs={12}>

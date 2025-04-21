@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 import { useCreateIncidentNearmissReportMutation } from "../../../../api/hse/incidentReport/incidentReportApi";
 import { useParams } from "react-router-dom";
 
-export default function IncidentNearMissReportDialog({ open, setOpen }) {
+export default function IncidentNearMissReportDialog({ open, setOpen,onSuccess }) {
     const { locationId } = useParams();
   
   const [nameOfSite, setNameOfSite] = useState("");
@@ -184,6 +184,7 @@ export default function IncidentNearMissReportDialog({ open, setOpen }) {
     try {
       await createIncidentNearmissReport(formData).unwrap();
       toast.success("Incident/Near Miss report submitted successfully!");
+      onSuccess();
       setOpen(false);
     } catch (error) {
       toast.error("Failed to submit report. Please try again.");

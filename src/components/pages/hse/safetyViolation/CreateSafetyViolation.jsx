@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import { useCreateSafetyViolationReportMutation } from "../../../../api/hse/safetyViolation/safetyViolatioApi";
 import { useParams } from "react-router-dom";
 
-export default function CreateSafetyViolation({ open, setOpen }) {
+export default function CreateSafetyViolation({ open, setOpen, onSuccess }) {
   // RTK mutation hook
   const [createSafetyViolationReport, { isLoading }] =
     useCreateSafetyViolationReportMutation();
@@ -104,28 +104,47 @@ export default function CreateSafetyViolation({ open, setOpen }) {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const formData = {
-      site_name: siteName,
-      site_date: siteDate,
-      issued_to_violator_name: issuedToViolatorName,
-      issued_to_designation: issuedToDesignation,
-      issued_to_department: issuedToDepartment,
-      issued_to_sign: issuedToSignature, // Now it's the signature data URL
-      issued_by_name: issuedByName,
-      issued_by_designation: issuedByDesignation,
-      issued_by_department: issuedByDepartment,
-      issued_by_sign: issuedBySignature, // Now it's the signature data URL
-      contractors_name: contractorsName,
-      description_safety_violation: descriptionSafetyViolation,
-      action_taken: actionTaken,
-      hseo_name: siteHseoName,
-      hseo_sign: siteHseoSignature, // Now it's the signature data URL
-      site_incharge_name: siteInChargeName,
-      site_incharge_sign: siteInChargeSignature, // Now it's the signature data URL
-      manager_name: projectManagerName,
-      manager_sign: projectManagerSignature, // Now it's the signature data URL
-      location: locationId,
-    };
+    // Create FormData object
+    const formData = new FormData();
+    
+    // Add text fields to FormData
+    formData.append("site_name", siteName);
+    formData.append("site_date", siteDate);
+    formData.append("issued_to_violator_name", issuedToViolatorName);
+    formData.append("issued_to_designation", issuedToDesignation);
+    formData.append("issued_to_department", issuedToDepartment);
+    formData.append("issued_by_name", issuedByName);
+    formData.append("issued_by_designation", issuedByDesignation);
+    formData.append("issued_by_department", issuedByDepartment);
+    formData.append("contractors_name", contractorsName);
+    formData.append("description_safety_violation", descriptionSafetyViolation);
+    formData.append("action_taken", actionTaken);
+    formData.append("hseo_name", siteHseoName);
+    formData.append("site_incharge_name", siteInChargeName);
+    formData.append("manager_name", projectManagerName);
+    formData.append("location", locationId);
+
+    // Add signature files to FormData
+    // Since we're now storing the actual File objects
+    if (issuedToSignature) {
+      formData.append("issued_to_sign", issuedToSignature);
+    }
+    
+    if (issuedBySignature) {
+      formData.append("issued_by_sign", issuedBySignature);
+    }
+    
+    if (siteHseoSignature) {
+      formData.append("hseo_sign", siteHseoSignature);
+    }
+    
+    if (siteInChargeSignature) {
+      formData.append("site_incharge_sign", siteInChargeSignature);
+    }
+    
+    if (projectManagerSignature) {
+      formData.append("manager_sign", projectManagerSignature);
+    }
 
     try {
       const response = await createSafetyViolationReport(formData).unwrap();
@@ -133,6 +152,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
       if (response.status) {
         toast.success(response.message || "Report submitted successfully!");
         setOpen(false);
+        onSuccess();
         resetForm(); // Optional: Reset form fields
       } else {
         toast.error(response.message || "Failed to submit the report.");
@@ -186,16 +206,23 @@ export default function CreateSafetyViolation({ open, setOpen }) {
     },
   };
 
-  // Signature upload handlers
+  // Signature upload handlers - Updated to store actual file objects
   const handleSignatureUpload = (setter) => (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setter(reader.result);
-      };
-      reader.readAsDataURL(file);
+      // Store the actual file object for FormData
+      setter(file);
+
+      // Optionally, you can keep the preview functionality
+      // by setting a separate state variable for the preview URL
+      // For simplicity, we'll just use the file directly
     }
+  };
+
+  // Preview URL generation for displaying signatures
+  const getPreviewUrl = (file) => {
+    if (!file) return null;
+    return file instanceof File ? URL.createObjectURL(file) : file;
   };
 
   return (
@@ -304,7 +331,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
               </Button>
               {issuedToSignature && (
                 <Avatar
-                  src={issuedToSignature}
+                  src={getPreviewUrl(issuedToSignature)}
                   alt="Violator Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -384,7 +411,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
               </Button>
               {issuedBySignature && (
                 <Avatar
-                  src={issuedBySignature}
+                  src={getPreviewUrl(issuedBySignature)}
                   alt="Issuer Signature"
                   variant="rounded"
                   sx={{ width: 100, height: 56 }}
@@ -488,7 +515,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
                 </Button>
                 {siteHseoSignature && (
                   <Avatar
-                    src={siteHseoSignature}
+                    src={getPreviewUrl(siteHseoSignature)}
                     alt="Site HSEO Signature"
                     variant="rounded"
                     sx={{ width: 100, height: 56 }}
@@ -541,7 +568,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
                 </Button>
                 {siteInChargeSignature && (
                   <Avatar
-                    src={siteInChargeSignature}
+                    src={getPreviewUrl(siteInChargeSignature)}
                     alt="Site In Charge Signature"
                     variant="rounded"
                     sx={{ width: 100, height: 56 }}
@@ -594,7 +621,7 @@ export default function CreateSafetyViolation({ open, setOpen }) {
                 </Button>
                 {projectManagerSignature && (
                   <Avatar
-                    src={projectManagerSignature}
+                    src={getPreviewUrl(projectManagerSignature)}
                     alt="Project Manager Signature"
                     variant="rounded"
                     sx={{ width: 100, height: 56 }}
