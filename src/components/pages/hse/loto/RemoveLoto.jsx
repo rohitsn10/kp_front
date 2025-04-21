@@ -14,10 +14,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
-import { useUpdateLotoRegisterMutation } from "../../../../api/hse/loto/lotoRegisterApi";
+import { useRemoveLotoRegisterMutation, useUpdateLotoRegisterMutation } from "../../../../api/hse/loto/lotoRegisterApi";
 // import { useUpdateLotoRegisterMutation } from "../api/lotoRegisterApi"; // Update this path to your actual API file path
 
-export default function RemoveLogoutForm({ open, setOpen, lotoId=1 }) {
+export default function RemoveLogoutForm({ open, setOpen, lotoId=1,lotoData }) {
   const [removedDateTime, setRemovedDateTime] = useState("");
   const [removedLockTagNumber, setRemovedLockTagNumber] = useState("");
   const [removedPermitNumber, setRemovedPermitNumber] = useState("");
@@ -25,12 +25,12 @@ export default function RemoveLogoutForm({ open, setOpen, lotoId=1 }) {
   const [removedBySignature, setRemovedBySignature] = useState(null);
   const [removedSiteInChargeName, setRemovedSiteInChargeName] = useState("");
   const [removedApprovedBySiteInChargeSignature, setRemovedApprovedBySiteInChargeSignature] = useState(null);
-
+  console.log(">>>>>>>>>>>",lotoData)
   // Initialize the mutation hook
-  const [updateLotoRegister, { isLoading }] = useUpdateLotoRegisterMutation();
+  const [removeLotoRegister, { isLoading }] = useRemoveLotoRegisterMutation();
 
   const validateForm = () => {
-    if (!lotoId) return toast.error("No LOTO record selected!");
+    if (!lotoData.id) return toast.error("No LOTO record selected!");
     if (!removedDateTime.trim()) return toast.error("Removed Date/Time is required!");
     if (!removedLockTagNumber.trim())
       return toast.error("Removed Lock/Tag Number is required!");
@@ -81,6 +81,7 @@ export default function RemoveLogoutForm({ open, setOpen, lotoId=1 }) {
     const formData = new FormData();
     
     // Add removal fields
+    formData.append('loto_id',lotoData.id)
     formData.append('removed_datetime', removedDateTime);
     formData.append('removed_lock_tag_number', removedLockTagNumber);
     formData.append('removed_permit_number', removedPermitNumber);
@@ -91,10 +92,7 @@ export default function RemoveLogoutForm({ open, setOpen, lotoId=1 }) {
     
     try {
       // Call the mutation with the FormData
-      const response = await updateLotoRegister({ 
-        id: lotoId, 
-        formData 
-      }).unwrap();
+      const response = await removeLotoRegister(formData).unwrap();
       
       if (response.status) {
         toast.success("Lockout/Tagout removal form submitted successfully!");

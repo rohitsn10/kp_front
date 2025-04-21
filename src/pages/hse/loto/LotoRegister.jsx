@@ -16,15 +16,50 @@ import {
   TextField,
   Stack
 } from '@mui/material';
-import ImageViewer from '../../../utils/signatureViewer';
-// import CreateLotoRegister from '../../../components/pages/hse/loto-register/CreateLotoRegister';
 import RemoveLogoutForm from '../../../components/pages/hse/loto/RemoveLoto.jsx';
 import CreateLotoRegister from '../../../components/pages/hse/loto/CreateLotoRegister';
 import { useParams } from 'react-router-dom';
 import { useGetLotoRegistersQuery } from '../../../api/hse/loto/lotoRegisterApi.js';
 
+const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
+  const [open, setOpen] = useState(false);
+ 
+  return (
+    <>
+      <img
+        src={`${import.meta.env.VITE_API_KEY}${src}`}
+        alt={alt}
+        onClick={() => setOpen(true)}
+        style={{
+          width: `${width}px`,
+          height: `${height}px`,
+          cursor: 'pointer'
+        }}
+      />
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogContent>
+          <img
+            src={`${import.meta.env.VITE_API_KEY}${src}`}
+            alt={alt}
+            style={{
+              width: '100%',
+              maxHeight: '500px',
+              objectFit: 'contain'
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
 function LotoRegister() {
-    const { locationId } = useParams();
+  const { locationId } = useParams();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,51 +69,13 @@ function LotoRegister() {
   const [openRemoveDialog, setOpenRemoveDialog] = useState(false);
   const [lotoToRemove, setLotoToRemove] = useState(null);
 
-  const dummyLogout = [
-    {
-      "Site": "Unit 4 - Maintenance Bay",
-      "applied-date-time": "2025-04-02T08:15:00",
-      "applied-lock-tag-number": "TAG-LOCK-456",
-      "applied-permit-number": "PERMIT-9921",
-      "applied-by-name": "Anil Mehta",
-      "applied-by-signature": "https://dummyimage.com/150x50/000/fff.png&text=Anil+Sign",
-      "applied-approvedBy-name": "Sandeep Rathi",
-      "applied-approvedBy-signature": "https://dummyimage.com/150x50/000/fff.png&text=Sandeep+Sign",
-      "removed-date-time": "2025-04-02T16:50:00",
-      "removed-lock-tag-number": "TAG-LOCK-456",
-      "removed-permit-number": "PERMIT-9921",
-      "removed-by-name": "Anil Mehta",
-      "removed-by-signature": "https://dummyimage.com/150x50/000/fff.png&text=Anil+Sign",
-      "removed-siteInCharge-name": "Naveen Joshi",
-      "removed-approvedBySiteInCharge-signature": "https://dummyimage.com/150x50/000/fff.png&text=Naveen+Sign",
-      "status": "Completed"
-    },
-    {
-      "Site": "Unit 4 - Maintenance Bay",
-      "applied-date-time": "2025-04-02T08:15:00",
-      "applied-lock-tag-number": "TAG-LOCK-456",
-      "applied-permit-number": "PERMIT-9921",
-      "applied-by-name": "Anil Mehta",
-      "applied-by-signature": "https://dummyimage.com/150x50/000/fff.png&text=Anil+Sign",
-      "applied-approvedBy-name": "Sandeep Rathi",
-      "applied-approvedBy-signature": "https://dummyimage.com/150x50/000/fff.png&text=Sandeep+Sign",
-      "removed-date-time": "",
-      "removed-lock-tag-number": "",
-      "removed-permit-number": "",
-      "removed-by-name": "",
-      "removed-by-signature": "",
-      "removed-siteInCharge-name": "",
-      "removed-approvedBySiteInCharge-signature": "",
-      "status": "Pending"
-    }
-  ];
   const { 
     data, 
     isLoading, 
     isError, 
     error 
   } = useGetLotoRegistersQuery(locationId);
-console.log(data)
+  console.log(data);
   
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -91,16 +88,10 @@ console.log(data)
 
   const lotoRecords = data?.data || [];
 
-const filteredLotoRecords = lotoRecords.filter((loto) =>
-  loto.site_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  loto.applied_lock_tag_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  loto.applied_by_name?.toLowerCase().includes(searchTerm.toLowerCase())
-);
-
-
-  const currentRows = filteredLotoRecords.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
+  const filteredLotoRecords = lotoRecords.filter((loto) =>
+    loto.site_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    loto.applied_lock_tag_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    loto.applied_by_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const openDetailsModalHandler = (loto) => {
@@ -148,70 +139,77 @@ const filteredLotoRecords = lotoRecords.filter((loto) =>
         </Button>
       </div>
 
-      <TableContainer component={Paper} style={{ borderRadius: '8px' }}>
-        <Table>
-          <TableHead>
-            <TableRow style={{ backgroundColor: '#F2EDED' }}>
-              <TableCell align="center">Site</TableCell>
-              <TableCell align="center">Lock/Tag Number</TableCell>
-              <TableCell align="center">Applied Date</TableCell>
-              <TableCell align="center">Applied By</TableCell>
-              <TableCell align="center">Status</TableCell>
-              <TableCell align="center">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-          {filteredLotoRecords
-  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-  .map((loto, index) => (
-    <TableRow key={index}>
-      <TableCell align="center">{loto.site_name}</TableCell>
-      <TableCell align="center">{loto.applied_lock_tag_number}</TableCell>
-      <TableCell align="center">{formatDateTime(loto.applied_datetime)}</TableCell>
-      <TableCell align="center">{loto.applied_by_name}</TableCell>
-      <TableCell align="center">
-        <span className="px-2 py-1 rounded-full text-white bg-yellow-500">
-          Pending
-        </span>
-      </TableCell>
-      <TableCell align="center">
-        <Stack direction="row" spacing={1} justifyContent="center">
-          <Button 
-            variant="contained" 
-            color="primary"
-            size="small"
-            onClick={() => openDetailsModalHandler(dummyLogout[0])} // always open dummy
-          >
-            View Details
-          </Button>
+      {isLoading ? (
+        <Typography align="center" variant="h6">Loading...</Typography>
+      ) : isError ? (
+        <Typography align="center" variant="h6" color="error">Error: {error?.message || "Failed to load data"}</Typography>
+      ) : (
+        <>
+          <TableContainer component={Paper} style={{ borderRadius: '8px' }}>
+            <Table>
+              <TableHead>
+                <TableRow style={{ backgroundColor: '#F2EDED' }}>
+                  <TableCell align="center">Site</TableCell>
+                  <TableCell align="center">Lock/Tag Number</TableCell>
+                  <TableCell align="center">Applied Date</TableCell>
+                  <TableCell align="center">Applied By</TableCell>
+                  <TableCell align="center">Status</TableCell>
+                  <TableCell align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredLotoRecords
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((loto, index) => (
+                    <TableRow key={loto.id || index}>
+                      <TableCell align="center">{loto.site_name}</TableCell>
+                      <TableCell align="center">{loto.applied_lock_tag_number}</TableCell>
+                      <TableCell align="center">{formatDateTime(loto.applied_datetime)}</TableCell>
+                      <TableCell align="center">{loto.applied_by_name}</TableCell>
+                      <TableCell align="center">
+                        <span className="px-2 py-1 rounded-full text-white bg-yellow-500">
+                          Pending
+                        </span>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Stack direction="row" spacing={1} justifyContent="center">
+                          <Button 
+                            variant="contained" 
+                            color="primary"
+                            size="small"
+                            onClick={() => openDetailsModalHandler(loto)}
+                          >
+                            View Details
+                          </Button>
 
-          <Button 
-            variant="contained" 
-            color="error"
-            size="small"
-            onClick={() => openRemoveDialogHandler(dummyLogout[0])} // always use dummy
-          >
-            Remove LOTO
-          </Button>
-        </Stack>
-      </TableCell>
-    </TableRow>
-))}
+                          <Button 
+                            variant="contained" 
+                            color="error"
+                            size="small"
+                            onClick={() => openRemoveDialogHandler(loto)}
+                          >
+                            Remove LOTO
+                          </Button>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <TablePagination
-        component="div"
-        count={filteredLotoRecords.length}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        rowsPerPageOptions={[5, 10, 25]}
-        style={{ borderTop: '1px solid #e0e0e0' }}
-      />
+          <TablePagination
+            component="div"
+            count={filteredLotoRecords.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[5, 10, 25]}
+            style={{ borderTop: '1px solid #e0e0e0' }}
+          />
+        </>
+      )}
 
       {/* LOTO Details Modal */}
       <Dialog 
@@ -228,81 +226,89 @@ const filteredLotoRecords = lotoRecords.filter((loto) =>
                 Site Information
               </Typography>
               <Typography variant="body1">
-                <strong>Site:</strong> {selectedLoto.Site}
+                <strong>Site:</strong> {selectedLoto.site_name}
               </Typography>
               <Typography variant="body1">
-                <strong>Status:</strong> {selectedLoto.status}
+                <strong>Status:</strong> Pending
               </Typography>
 
               <Typography variant="h6" gutterBottom className="mt-4">
                 LOTO Application Details
               </Typography>
               <Typography variant="body1">
-                <strong>Applied Date/Time:</strong> {formatDateTime(selectedLoto["applied-date-time"])}
+                <strong>Applied Date/Time:</strong> {formatDateTime(selectedLoto.applied_datetime)}
               </Typography>
               <Typography variant="body1">
-                <strong>Lock/Tag Number:</strong> {selectedLoto["applied-lock-tag-number"]}
+                <strong>Lock/Tag Number:</strong> {selectedLoto.applied_lock_tag_number}
               </Typography>
               <Typography variant="body1">
-                <strong>Permit Number:</strong> {selectedLoto["applied-permit-number"]}
+                <strong>Permit Number:</strong> {selectedLoto.applied_permit_number}
               </Typography>
               <Typography variant="body1">
-                <strong>Applied By:</strong> {selectedLoto["applied-by-name"]}
+                <strong>Applied By:</strong> {selectedLoto.applied_by_name}
               </Typography>
               <Typography variant="body1">
                 <strong>Applied By Signature:</strong>
               </Typography>
-              <ImageViewer 
-                src={selectedLoto["applied-by-signature"]} 
-                alt={`${selectedLoto["applied-by-name"]} Signature`} 
-              />
+              {selectedLoto.applied_by_signature && (
+                <ImageViewer 
+                  src={selectedLoto.applied_by_signature} 
+                  alt={`${selectedLoto.applied_by_name} Signature`} 
+                />
+              )}
               
               <Typography variant="body1" className="mt-2">
-                <strong>Approved By:</strong> {selectedLoto["applied-approvedBy-name"]}
+                <strong>Approved By:</strong> {selectedLoto.applied_approved_by_name}
               </Typography>
               <Typography variant="body1">
                 <strong>Approved By Signature:</strong>
               </Typography>
-              <ImageViewer 
-                src={selectedLoto["applied-approvedBy-signature"]} 
-                alt={`${selectedLoto["applied-approvedBy-name"]} Signature`} 
-              />
+              {selectedLoto.applied_approved_by_signature && (
+                <ImageViewer 
+                  src={selectedLoto.applied_approved_by_signature} 
+                  alt={`${selectedLoto.applied_approved_by_name} Signature`} 
+                />
+              )}
 
               <Typography variant="h6" gutterBottom className="mt-4">
                 LOTO Removal Details
               </Typography>
-              {selectedLoto.status === "Completed" ? (
+              {selectedLoto.removed_datetime ? (
                 <>
                   <Typography variant="body1">
-                    <strong>Removed Date/Time:</strong> {formatDateTime(selectedLoto["removed-date-time"])}
+                    <strong>Removed Date/Time:</strong> {formatDateTime(selectedLoto.removed_datetime)}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Lock/Tag Number:</strong> {selectedLoto["removed-lock-tag-number"]}
+                    <strong>Lock/Tag Number:</strong> {selectedLoto.removed_lock_tag_number}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Permit Number:</strong> {selectedLoto["removed-permit-number"]}
+                    <strong>Permit Number:</strong> {selectedLoto.removed_permit_number}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Removed By:</strong> {selectedLoto["removed-by-name"]}
+                    <strong>Removed By:</strong> {selectedLoto.removed_by_name}
                   </Typography>
                   <Typography variant="body1">
                     <strong>Removed By Signature:</strong>
                   </Typography>
-                  <ImageViewer 
-                    src={selectedLoto["removed-by-signature"]} 
-                    alt={`${selectedLoto["removed-by-name"]} Signature`} 
-                  />
+                  {selectedLoto.removed_by_signature && (
+                    <ImageViewer 
+                      src={selectedLoto.removed_by_signature} 
+                      alt={`${selectedLoto.removed_by_name} Signature`} 
+                    />
+                  )}
                   
                   <Typography variant="body1" className="mt-2">
-                    <strong>Site In Charge:</strong> {selectedLoto["removed-siteInCharge-name"]}
+                    <strong>Site In Charge:</strong> {selectedLoto.removed_site_in_charge_name}
                   </Typography>
                   <Typography variant="body1">
                     <strong>Site In Charge Signature:</strong>
                   </Typography>
-                  <ImageViewer 
-                    src={selectedLoto["removed-approvedBySiteInCharge-signature"]} 
-                    alt={`${selectedLoto["removed-siteInCharge-name"]} Signature`} 
-                  />
+                  {selectedLoto.removed_approved_by_site_in_charge_signature && (
+                    <ImageViewer 
+                      src={selectedLoto.removed_approved_by_site_in_charge_signature} 
+                      alt={`${selectedLoto.removed_site_in_charge_name} Signature`} 
+                    />
+                  )}
                 </>
               ) : (
                 <Typography variant="body1" color="warning.main">
