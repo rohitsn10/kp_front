@@ -22,6 +22,43 @@ import { useGetAllHarnessInspectionsQuery } from '../../../api/hse/harness/harne
 import { useParams } from 'react-router-dom';
 // import { useGetAllHarnessInspectionsQuery } from '../../../path/to/your/api'; // Adjust the import path as needed
 
+const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
+  const [open, setOpen] = useState(false);
+ 
+  return (
+    <>
+      <img
+        src={`${import.meta.env.VITE_API_KEY}${src}`}
+        alt={alt}
+        onClick={() => setOpen(true)}
+        style={{
+          width: `${width}px`,
+          height: `${height}px`,
+          cursor: 'pointer'
+        }}
+      />
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogContent>
+          <img
+            src={`${import.meta.env.VITE_API_KEY}${src}`}
+            alt={alt}
+            style={{
+              width: '100%',
+              maxHeight: '500px',
+              objectFit: 'contain'
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
 function FullBodyHarnessChecklist() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -318,11 +355,17 @@ function FullBodyHarnessChecklist() {
                 {selectedHarness.inspector_signature && (
                   <div className="mt-4">
                     <Typography><strong>Inspector Signature:</strong></Typography>
-                    <img 
+                    {/* <img 
                       src={selectedHarness.inspector_signature} 
                       alt="Inspector Signature" 
                       style={{ maxWidth: '200px', marginTop: '8px' }}
-                    />
+                    /> */}
+                    <ImageViewer
+                  src={selectedHarness.inspector_signature} 
+                  alt="Signature"
+                  width={200} 
+                  height={70}
+                />
                   </div>
                 )}
               </div>

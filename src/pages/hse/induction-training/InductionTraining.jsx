@@ -35,7 +35,7 @@ function InductionTraining() {
   const { locationId } = useParams();
   
   // Use the updated query hook with locationId parameter
-  const { data: inductionTrainingsResponse, isLoading, error } = useGetInductionTrainingsQuery(
+  const { data: inductionTrainingsResponse, isLoading, error,refetch } = useGetInductionTrainingsQuery(
     locationId ? parseInt(locationId) : undefined
   );
   const inductionTrainings = inductionTrainingsResponse?.data || [];
@@ -260,6 +260,7 @@ function InductionTraining() {
       <TrainingInductionDialog
         open={openCreateDialog}
         setOpen={setCreateDialog}
+        onSuccess={refetch}
       />
     </div>
   );

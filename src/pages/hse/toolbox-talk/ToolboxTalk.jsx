@@ -308,6 +308,7 @@ function ToolboxTalk() {
       <ToolboxAttendanceDialog
         open={openCreateDialog}
         setOpen={setCreateDialog}
+        onSuccess={refetch}
       />
     </div>
   );

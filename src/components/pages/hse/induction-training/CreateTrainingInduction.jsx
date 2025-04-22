@@ -30,7 +30,7 @@ import { useParams } from "react-router-dom";
 // Import the mutation hook from our RTK API file
 // import { useCreateInductionTrainingMutation } from "../services/inductionTrainingApi";
 
-export default function TrainingInductionDialog({ open, setOpen }) {
+export default function TrainingInductionDialog({ open, setOpen,onSuccess }) {
   // Initialize the RTK mutation hook
   const [createInductionTraining, { isLoading }] = useCreateInductionTrainingMutation();
   // const { refetch} = useGetAllInductionTrainingsQuery();
@@ -221,7 +221,7 @@ export default function TrainingInductionDialog({ open, setOpen }) {
         // refetch();
         // Close the dialog and reset form if needed
         setOpen(false);
-        
+        onSuccess();
         // You might want to trigger a refetch of data if displaying a list
         // refreshData();
       } else {

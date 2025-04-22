@@ -75,7 +75,8 @@ function SafetyMeeting() {
     data, 
     isLoading, 
     isError, 
-    error 
+    error,
+    refetch 
   } = useGetMinutesOfSafetyTrainingQuery(locationId);
 
   const handleChangePage = (event, newPage) => {
@@ -346,6 +347,7 @@ function SafetyMeeting() {
       <CreateHSEMeetingMinutes
         open={openCreateDialog}
         setOpen={setCreateDialog}
+        onSuccess={refetch}
       />
     </div>
   );

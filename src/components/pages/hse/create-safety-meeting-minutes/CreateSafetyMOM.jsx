@@ -34,7 +34,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useCreateMinutesOfSafetyTrainingMutation } from "../../../../api/hse/safetyTrainingMinutes/safetyTrainingMinutes";
 import { useParams } from "react-router-dom";
 
-export default function CreateHSEMeetingMinutes({ open, setOpen }) {
+export default function CreateHSEMeetingMinutes({ open, setOpen,onSuccess }) {
   // Basic Information
   const { locationId } = useParams();
   const [site, setSite] = useState("");
@@ -249,6 +249,7 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
       if (response.status) {
         toast.success("HSE Meeting Minutes submitted successfully!");
         setOpen(false);
+        onSuccess();
       } else {
         toast.error(response.message || "Failed to submit HSE Meeting Minutes");
       }
@@ -257,7 +258,7 @@ export default function CreateHSEMeetingMinutes({ open, setOpen }) {
       console.error("Error submitting HSE Meeting Minutes:", error);
     }
 
-    toast.success("HSE Meeting Minutes submitted successfully!");
+    // toast.success("HSE Meeting Minutes submitted successfully!");
     setOpen(false);
   };
 

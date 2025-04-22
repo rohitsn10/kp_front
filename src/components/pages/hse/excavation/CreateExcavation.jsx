@@ -22,7 +22,7 @@ import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
 import { useCreateExcavationPermitMutation } from "../../../../api/hse/excavation/excavationPermitApi";
 // import { useCreateExcavationPermitMutation } from "../services/excavationPermitApi"; // Import the mutation hook
-export default function ExcavationPermitDialog({ open, setOpen }) {
+export default function ExcavationPermitDialog({ open, setOpen, onSuccess }) {
   const [site, setSite] = useState("");
   const [permitNo, setPermitNo] = useState("");
   const { locationId } = useParams();
@@ -257,9 +257,10 @@ export default function ExcavationPermitDialog({ open, setOpen }) {
     try {
       // Use the RTK mutation to send the data
       const response = await createExcavationPermit(formData).unwrap();
+      if (response && response.status === true) {
       toast.success("Excavation permit submitted successfully!");
       setOpen(false);
-      
+      onSuccess();}
       // Optional: Reset form fields after successful submission
       resetForm();
     } catch (error) {

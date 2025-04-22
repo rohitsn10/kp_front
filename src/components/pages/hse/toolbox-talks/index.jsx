@@ -15,9 +15,8 @@ import {
 import { toast } from "react-toastify";
 import { useCreateToolTalkAttendanceMutation, useGetToolTalkAttendanceQuery } from "../../../../api/hse/toolbox/toolBoxApi";
 import { useParams } from "react-router-dom";
-// import { useCreateToolTalkAttendanceMutation } from "../path/to/toolTalkAttendanceApi"; // Update with your actual path
 
-export default function ToolboxAttendanceDialog({ open, setOpen }) {
+export default function ToolboxAttendanceDialog({ open, setOpen, onSuccess }) {
   const [createToolTalkAttendance, { isLoading }] = useCreateToolTalkAttendanceMutation();
   const { refetch } = useGetToolTalkAttendanceQuery();
   const { locationId } = useParams();
@@ -67,7 +66,36 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
     return true;
   };
 
-  const handleClose = () => setOpen(false);
+  const handleClose = () => {
+    // Clear all state fields
+    setSite("");
+    setLocation(locationId); // Reset to initial locationId
+    setDate("");
+    setTime("");
+    setPermitNo("");
+    setPermitDate("");
+    setConductorName("");
+    setConductorSignature(null);
+    setConductorSignatureFile(null);
+    setContractorName("");
+    setJobActivity("");
+    setParticipantAttachments(null);
+    setParticipantAttachmentsFile(null);
+    
+    // Clear topic fields
+    setPpesTopic("");
+    setToolsTopic("");
+    setHazardTopic("");
+    setEmergencyTopic("");
+    setHealthTopic("");
+    setOthersTopic("");
+    
+    // Clear remarks
+    setRemarks("");
+    
+    // Close the modal
+    setOpen(false);
+  };
 
   const commonInputStyles = {
     "& .MuiOutlinedInput-root": {
@@ -149,10 +177,20 @@ export default function ToolboxAttendanceDialog({ open, setOpen }) {
       formData.append("remarks", remarks);
 
       // Call the mutation
-      await createToolTalkAttendance(formData).unwrap();
-      refetch();
-      toast.success("Toolbox talk attendance data submitted successfully!");
-      setOpen(false);
+      const response = await createToolTalkAttendance(formData).unwrap();
+      
+      // Check for response status
+      if (response && response.status === true) {
+        // If status is true, show success message
+        toast.success(response.message || "Toolbox talk attendance data submitted successfully!");
+        refetch();
+        onSuccess();
+        // Clear all form fields
+        handleClose();
+      } else {
+        // If status is false, show error message
+        toast.error(response.message || "Failed to submit toolbox talk attendance data");
+      }
     } catch (error) {
       console.error("Error submitting form:", error);
       toast.error(error.data?.message || "Failed to submit toolbox talk attendance data");

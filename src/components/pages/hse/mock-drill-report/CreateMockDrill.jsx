@@ -77,10 +77,11 @@ export default function MockDrillDialog({ open, setOpen,onSuccess }) {
   const [notParticipatedRemarks, setNotParticipatedRemarks] = useState("");
   
   // Table Top Records
-  const [tableTopRecords, setTableTopRecords] = useState({});
-  
+  // const [tableTopRecords, setTableTopRecords] = useState({});
+  const [tableTopRecords, setTableTopRecords] = useState("");
   // Ratings
-  const [ratingOfEmergencyTeamMembers, setRatingOfEmergencyTeamMembers] = useState([]);
+  const [ratingOfEmergencyTeamMembers, setRatingOfEmergencyTeamMembers] = useState("");
+  // const [ratingOfEmergencyTeamMembers, setRatingOfEmergencyTeamMembers] = useState([]);
   const [overallRating, setOverallRating] = useState("");
   
   // Observations and Recommendations
@@ -257,8 +258,13 @@ export default function MockDrillDialog({ open, setOpen,onSuccess }) {
     });
     
     // Append table top records as JSON
-    formData.append("table_top_records", JSON.stringify(tableTopRecords));
-    
+    // formData.append("table_top_records", JSON.stringify(tableTopRecords));
+    try {
+      const parsedTableTopRecords = tableTopRecords ? JSON.parse(tableTopRecords) : {};
+      formData.append("table_top_records", JSON.stringify(parsedTableTopRecords));
+    } catch (error) {
+      formData.append("table_top_records", JSON.stringify({}));
+    }
     // Append description of control
     formData.append("description_of_control", descriptionOfControl);
     
@@ -281,7 +287,14 @@ export default function MockDrillDialog({ open, setOpen,onSuccess }) {
     formData.append("not_participated_remarks", notParticipatedRemarks);
     
     // Append ratings as JSON
-    formData.append("rating_of_emergency_team_members", JSON.stringify(ratingOfEmergencyTeamMembers));
+    // formData.append("rating_of_emergency_team_members", JSON.stringify(ratingOfEmergencyTeamMembers));
+    try {
+      const parsedRatings = ratingOfEmergencyTeamMembers ? JSON.parse(ratingOfEmergencyTeamMembers) : [];
+      formData.append("rating_of_emergency_team_members", JSON.stringify(parsedRatings));
+    } catch (error) {
+      formData.append("rating_of_emergency_team_members", JSON.stringify([]));
+    }
+    formData.append("overall_rating", overallRating);
     formData.append("overall_rating", overallRating);
     
     // Append observation
@@ -766,17 +779,10 @@ export default function MockDrillDialog({ open, setOpen,onSuccess }) {
               rows={4}
               variant="outlined"
               label="Table Top Records (JSON)"
-              placeholder='{"step1":"First alert raised","step2":"Evacuation initiated","step3":"Assembly point check"}'
-              value={JSON.stringify(tableTopRecords)}
+              placeholder=''
+              value={tableTopRecords}
               sx={commonInputStyles}
-              onChange={(e) => {
-                try {
-                  setTableTopRecords(JSON.parse(e.target.value));
-                } catch (error) {
-                  // Allow typing without parsing until valid JSON is entered
-                  setTableTopRecords(e.target.value);
-                }
-              }}
+              onChange={(e) => setTableTopRecords(e.target.value)}
             />
           </Grid>
 
@@ -975,16 +981,9 @@ export default function MockDrillDialog({ open, setOpen,onSuccess }) {
               variant="outlined"
               label="Rating of Emergency Team Members (JSON array)"
               placeholder='[{"member":"John Doe","rating":4.5},{"member":"Jane Smith","rating":4.2}]'
-              value={JSON.stringify(ratingOfEmergencyTeamMembers)}
+              value={ratingOfEmergencyTeamMembers}
               sx={commonInputStyles}
-              onChange={(e) => {
-                try {
-                  setRatingOfEmergencyTeamMembers(JSON.parse(e.target.value));
-                } catch (error) {
-                  // Allow typing without parsing until valid JSON is entered
-                  setRatingOfEmergencyTeamMembers(e.target.value);
-                }
-              }}
+              onChange={(e) => setRatingOfEmergencyTeamMembers(e.target.value)}
             />
           </Grid>
 
