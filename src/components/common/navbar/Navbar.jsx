@@ -10,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 function Navbar({ toggleSidebar }) {
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  useNavigate
   const handleLogout = () => {
     // Add your logout logic here
     logout();

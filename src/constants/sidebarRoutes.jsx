@@ -2,6 +2,7 @@ import { TbMapPlus } from "react-icons/tb";
 import { FaHelmetSafety } from "react-icons/fa6";
 import DesignServicesIcon from '@mui/icons-material/DesignServices';
 import { Link, useLocation, useNavigation } from 'react-router-dom';
+import { AiOutlineSafety } from "react-icons/ai";
   const sidebarConstant=[
     {
       name:'Home',
@@ -75,6 +76,12 @@ import { Link, useLocation, useNavigation } from 'react-router-dom';
       </svg>
       ,
       links:"/tracking"
+    },
+    {
+      name:'Quality Assurance',
+      icons:<AiOutlineSafety/>
+      ,
+      links:"/quality-main"
     },
     {
       name:'Design & Documents',

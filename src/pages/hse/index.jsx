@@ -9,7 +9,7 @@ function HseMainPage() {
   const [locationID, setLocationID] = useState(null);
   const [locationOptions, setLocationOptions] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
-console.log(">>>>>>>>>>>",locationID)
+// console.log(">>>>>>>>>>>",locationID)
   const handleProjectChange = (event, newValue) => {
     setSelectedProject(newValue);
     setLocationID(null);

@@ -64,12 +64,23 @@ import RiskAssessment from "./pages/hse/risk-assessment/RiskAssessment .jsx";
 import MonthlyFireExtinguisher from "./pages/hse/monthy-fireextinguiser/MonthlyFireExtinguisher .jsx";
 import IncidentReport from "./pages/hse/incident-report/IncidentReport.jsx";
 import QualityInspectionPage from "./pages/qa/QualityInspectionPage.jsx";
-
+import QualityMainPage from "./pages/quality/index.jsx";
+import FieldInspections from "./pages/quality/field-inspections/FieldInspections.jsx";
+import SupplyInspections from "./pages/quality/supply/SupplyInspections.jsx";
+// console.log(SupplyInspections)
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 const HseLayout = () => {
   return (
     <div>
       {/* Optional: You can add HSE-specific navigation here */}
+      <Outlet /> {/* This will render child routes */}
+    </div>
+  );
+};
+const QualityLayout = () => {
+  return (
+    <div>
+      {/* Optional: You can add Quality-specific navigation here */}
       <Outlet /> {/* This will render child routes */}
     </div>
   );
@@ -539,6 +550,41 @@ function App() {
           />
           {/* Add more HSE sections as needed */}
         </Route>
+        {/* Quality Module */}
+
+<Route
+  path="/quality-main"
+  element={
+    <ProtectedRoute>
+      <MainLayout>
+        <QualityLayout />
+      </MainLayout>
+    </ProtectedRoute>
+  }
+>
+  {/* Default Quality route */}
+  <Route index element={<QualityMainPage />} />
+  
+  {/* Nested Quality section routes */}
+  <Route
+    path="supply-activities/:projectId?"
+    element={<SupplyInspections />}
+  />
+  <Route
+    path="field-inspections/:projectId?"
+    element={<FieldInspections />}
+  />
+  {/* <Route
+    path="quality-metrics/:projectId?"
+    element={<QualityMetrics />}
+  />
+  <Route
+    path="test-reports/:projectId?"
+    element={<TestReports />}
+  /> */}
+
+  {/* Add more Quality sections as needed */}
+</Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <ToastContainer />
