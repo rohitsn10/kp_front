@@ -291,7 +291,9 @@ function ProjectCreate({ open, handleClose, refetch }) {
       electricity_line_id: electricityLine.id,
       spoc_user: spoc,
       project_predication_date: new Date(committedDate).toISOString(),
-      location_name:Array.isArray(locations)?locations.join(', '):locations,
+      location_name: Array.isArray(locations)
+        ? locations.join(", ")
+        : locations,
       project_sub_activity_ids: subActivities.map(Number),
       project_sub_sub_activity_ids: selectedMultipleActivities.map(
         (item) => item.id

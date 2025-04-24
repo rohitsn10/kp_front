@@ -29,7 +29,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
     land_address: "",
     client_consultant: "",
     palnt_capacity: "",
-    land_owner: "",
+    // land_owner: "",
     sfa_available_area_acres: "",
     distance_from_main_road: "",
     road_highway_details: "",
@@ -106,32 +106,25 @@ const AssessmentFormModal = ({ open, handleClose }) => {
 
   // Validate form with comprehensive checks
   const validateForm = () => {
-    const requiredFields = [
-      'sfa_name',
-      'timeline',
-       'solar_or_winds', 
-      'date_of_assessment',
-       'site_visit_date'
-    ];
-
-    // Check required fields
-    for (let field of requiredFields) {
-      if (!formData[field]) {
-        toast.error(`Please fill in the ${field.replace(/_/g, ' ')} field.`);
+    for (let [key, value] of Object.entries(formData)) {
+      if (
+        key !== "land_sfa_file" &&
+        key !== "sfa_for_transmission_line_gss_files" &&
+        (!value || value.toString().toLowerCase() === "none")
+      ) {
+        toast.error(`Please fill in the ${key.replace(/_/g, ' ')} field.`);
         return false;
       }
     }
-
-    // Check file uploads
-    if (formData.land_sfa_file.length === 0 || 
-        formData.sfa_for_transmission_line_gss_files.length === 0) {
+  
+    if (formData.land_sfa_file.length === 0 || formData.sfa_for_transmission_line_gss_files.length === 0) {
       toast.error("Please upload files for both land SFA and transmission line GSS.");
       return false;
     }
-
+  
     return true;
   };
-
+  
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
