@@ -67,6 +67,9 @@ import QualityInspectionPage from "./pages/qa/QualityInspectionPage.jsx";
 import QualityMainPage from "./pages/quality/index.jsx";
 import FieldInspections from "./pages/quality/field-inspections/FieldInspections.jsx";
 import SupplyInspections from "./pages/quality/supply/SupplyInspections.jsx";
+import CivilInspections from "./pages/quality/field-inspections/CivilInspections.jsx";
+import ElectricalInspections from "./pages/quality/field-inspections/ElectricalInspections.jsx";
+import MechanicalInspections from "./pages/quality/field-inspections/MechanicalInspections.jsx";
 // console.log(SupplyInspections)
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 const HseLayout = () => {
@@ -573,6 +576,18 @@ function App() {
   <Route
     path="field-inspections/:projectId?"
     element={<FieldInspections />}
+  />
+    <Route
+    path="field-inspections/mechanical/:projectId?"
+    element={<MechanicalInspections />}
+  />
+    <Route
+    path="field-inspections/electical/:projectId?"
+    element={<ElectricalInspections />}
+  />
+    <Route
+    path="field-inspections/civil/:projectId?"
+    element={<CivilInspections />}
   />
   {/* <Route
     path="quality-metrics/:projectId?"
