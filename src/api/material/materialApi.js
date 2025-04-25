@@ -28,6 +28,7 @@ export const materialApi = createApi({
         url: "material_management/material_management_create", // Make sure this is the correct endpoint
         method: "GET",
       }),
+      transformResponse: (response) => response.data,
     }),
 
     // Update Material (assuming you have an endpoint for updating materials)

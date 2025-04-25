@@ -28,6 +28,7 @@ import { useDeleteLandBankLocationMutation } from "../../api/users/landbankApi";
 // useDeleteLandBankLocationMutation
 function LandListing() {
   const { data, error, isLoading, refetch } = useGetLandBankMasterQuery();
+  console.log(data)
   const [deleteLandBankLocation] = useDeleteLandBankLocationMutation(); // Hook to delete land location
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -93,9 +94,10 @@ function LandListing() {
   if (error) return <div>Error occurred!</div>;
 
   const filteredRows = data?.data?.filter((row) =>
-    row?.land_name?.toLowerCase().includes(searchQuery?.toLowerCase())
+    (row?.land_name || "").toLowerCase().includes(searchQuery?.toLowerCase())
   ) || [];
-
+  
+ 
   const currentRows = filteredRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (

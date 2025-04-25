@@ -42,13 +42,14 @@ function MaterialManagementListing() {
   const [materialToDelete, setMaterialToDelete] = useState(null);
 
 
-  const { data: materialsData, isLoading, isError, refetch } = useGetMaterialsQuery();
+  const { data: materialsData,refetch,isLoading,isError } = useGetMaterialsQuery();
+  console.log("gggggggggggg",materialsData)
   const [deleteMaterial] = useDeleteMaterialMutation();
 
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error fetching materials data</div>;
 
-  const rows = materialsData?.data?.map((item, index) => ({
+  const rows = materialsData?.map((item, index) => ({
     sr: index + 1,
     id: item.id,
     materialName: item.material_name,
@@ -60,12 +61,21 @@ function MaterialManagementListing() {
     poNumber: item.PO_number,
     quantity: item.quantity,
     status: item.status,
+    materialRequiredDate: item.material_required_date,
+    prDate: item.pr_date,
+    poDate: item.po_date,
+    paymentStatus: item.payment_status,
   })) || [];
+  
 
-  const filteredRows = rows.filter((row) =>
-    row.materialName && row.materialName.toLowerCase().includes(materialFilter.toLowerCase())
-  );
-
+  const filteredRows = rows.filter((row) => {
+    const searchText = materialFilter.toLowerCase();
+    return Object.values(row).some(val =>
+      typeof val === 'string' && val.toLowerCase().includes(searchText)
+    );
+  });
+  
+  
   const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
