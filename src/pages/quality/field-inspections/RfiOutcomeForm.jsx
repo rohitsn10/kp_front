@@ -17,12 +17,18 @@ import {
   FormLabel,
   IconButton,
   Typography,
-  Paper
+  Paper,
+  CircularProgress
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useCreateRfiInspectionOutcomeMutation } from '../../../api/quality/qualityApi';
+// import { useCreateRfiInspectionOutcomeMutation } from '../path/to/qualityApi'; // Update path accordingly
 
 function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
+  // RTK mutation hook
+  const [createRfiInspectionOutcome, { isLoading }] = useCreateRfiInspectionOutcomeMutation();
+
   // Form state
   const [formData, setFormData] = useState({
     categorization: 'IPP',
@@ -30,12 +36,12 @@ function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
     siteReachingTime: '',
     inspectionStartTime: '',
     inspectionEndTime: '',
+    disposition: '',
     observations: [{ text: '' }], // Array to store multiple observations
-    epcName: '',
-    epcSignature: '',
-    supervisedByName: '',
-    supervisedBySignature: '',
-    disposition: ''
+    actions: '',
+    responsibility: '',
+    timelines: '',
+    remarks: ''
   });
 
   // Handle input changes
@@ -78,14 +84,39 @@ function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
   };
 
   // Handle form submission
-  const handleSubmit = () => {
-    console.log('Outcome form submitted with data:', {
-      ...formData,
-      rfiNumber: rfiData?.rfi_number,
-      projectId
-    });
-    // Here you would typically make an API call to save the data
-    handleClose();
+  const handleSubmit = async () => {
+    try {
+      // Extract observation texts into an array format as requested
+      const observationArray = formData.observations.map(obs => obs.text).filter(text => text.trim() !== '');
+      
+      // Prepare data for API
+      const inspectionData = {
+        project_id: projectId,
+        rfi_id: rfiData?.id,
+        offered_time: formData.offeredTime,
+        reaching_time: formData.siteReachingTime,
+        inspection_start_time: formData.inspectionStartTime,
+        inspection_end_time: formData.inspectionEndTime,
+        observation: observationArray,
+        disposition_status: formData.disposition,
+        actions: formData.actions,
+        responsibility: formData.responsibility,
+        timelines: formData.timelines,
+        remarks: formData.remarks
+      };
+      
+      console.log('Sending inspection outcome data:', inspectionData);
+      
+      // Call RTK mutation hook
+      const response = await createRfiInspectionOutcome(inspectionData).unwrap();
+      console.log('Inspection outcome created successfully:', response);
+      
+      // Close dialog
+      handleClose();
+    } catch (error) {
+      console.error('Failed to create inspection outcome:', error);
+      // You might want to add error handling UI here
+    }
   };
 
   if (!rfiData) return null;
@@ -112,7 +143,13 @@ function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
               <Typography variant="body2">EPC: {rfiData?.epc_name}</Typography>
             </Grid>
             <Grid item xs={12}>
-              <Typography variant="body2">Location: {rfiData?.project_location}</Typography>
+              <Typography variant="body2">Location: {rfiData?.location_name}</Typography>
+            </Grid>
+            <Grid item xs={6}>
+              <Typography variant="body2">Activity: {rfiData?.rfi_activity}</Typography>
+            </Grid>
+            <Grid item xs={6}>
+              <Typography variant="body2">Classification: {rfiData?.rfi_classification}</Typography>
             </Grid>
           </Grid>
         </Paper>
@@ -207,6 +244,28 @@ function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
             />
           </Grid>
           
+          {/* Disposition - MOVED BEFORE OBSERVATIONS */}
+          <Grid item xs={12}>
+            <FormControl fullWidth>
+              <InputLabel id="disposition-label">Disposition/Status</InputLabel>
+              <Select
+                labelId="disposition-label"
+                name="disposition"
+                value={formData.disposition}
+                label="Disposition"
+                onChange={handleInputChange}
+              >
+                <MenuItem value="Released">Released</MenuItem>
+                <MenuItem value="Sort">Sort</MenuItem>
+                <MenuItem value="Rework">Rework</MenuItem>
+                <MenuItem value="Use-As-Is/Deviate">Use-As-Is/Deviate</MenuItem>
+                <MenuItem value="Reject">Reject</MenuItem>
+                <MenuItem value="Hold">Hold</MenuItem>
+                <MenuItem value="Approved with comments">Approved with comments</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          
           {/* Observations Section */}
           <Grid item xs={12}>
             <Typography variant="subtitle1" sx={{ mb: 1 }}>Observations</Typography>
@@ -240,79 +299,63 @@ function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
               startIcon={<AddIcon />} 
               onClick={addObservation}
               variant="outlined"
-              sx={{ mt: 1 }}
+              sx={{ mt: 1, mb: 2 }}
             >
               Add Observation
             </Button>
           </Grid>
           
-          {/* EPC Information */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="EPC Name"
-              name="epcName"
-              value={formData.epcName}
-              onChange={handleInputChange}
-              variant="outlined"
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="EPC Signature"
-              name="epcSignature"
-              value={formData.epcSignature}
-              onChange={handleInputChange}
-              variant="outlined"
-              placeholder="Signature reference"
-            />
-          </Grid>
-          
-          {/* Supervision Information */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Supervised By Name"
-              name="supervisedByName"
-              value={formData.supervisedByName}
-              onChange={handleInputChange}
-              variant="outlined"
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Supervised By Signature"
-              name="supervisedBySignature"
-              value={formData.supervisedBySignature}
-              onChange={handleInputChange}
-              variant="outlined"
-              placeholder="Signature reference"
-            />
-          </Grid>
-          
-          {/* Disposition */}
+          {/* Modified Fields with Increased Text Space */}
           <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel id="disposition-label">Disposition</InputLabel>
-              <Select
-                labelId="disposition-label"
-                name="disposition"
-                value={formData.disposition}
-                label="Disposition"
-                onChange={handleInputChange}
-              >
-                <MenuItem value="Released">Released</MenuItem>
-                <MenuItem value="Sort">Sort</MenuItem>
-                <MenuItem value="Rework">Rework</MenuItem>
-                <MenuItem value="Use-As-Is/Deviate">Use-As-Is/Deviate</MenuItem>
-                <MenuItem value="Reject">Reject</MenuItem>
-                <MenuItem value="Hold">Hold</MenuItem>
-              </Select>
-            </FormControl>
+            <TextField
+              fullWidth
+              label="Actions"
+              name="actions"
+              value={formData.actions}
+              onChange={handleInputChange}
+              multiline
+              rows={3}
+              variant="outlined"
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Responsibility"
+              name="responsibility"
+              value={formData.responsibility}
+              onChange={handleInputChange}
+              multiline
+              rows={3}
+              variant="outlined"
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Timelines"
+              name="timelines"
+              value={formData.timelines}
+              onChange={handleInputChange}
+              multiline
+              rows={3}
+              variant="outlined"
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Remarks"
+              name="remarks"
+              value={formData.remarks}
+              onChange={handleInputChange}
+              multiline
+              rows={4}
+              variant="outlined"
+            />
           </Grid>
         </Grid>
       </DialogContent>
@@ -326,12 +369,14 @@ function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
         <Button 
           onClick={handleSubmit}
           variant="contained"
+          disabled={isLoading}
           sx={{
             bgcolor: "#10B981", // Green
             "&:hover": { bgcolor: "#059669" }
           }}
+          startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
         >
-          Submit Outcome
+          {isLoading ? 'Submitting...' : 'Submit Outcome'}
         </Button>
       </DialogActions>
     </Dialog>

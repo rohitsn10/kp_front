@@ -7,12 +7,19 @@ import {
   Select,
   MenuItem,
   InputAdornment,
-  CircularProgress
+  CircularProgress,
+  Tooltip
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import PrintIcon from "@mui/icons-material/Print";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import DescriptionIcon from "@mui/icons-material/Description";
 import { useParams } from 'react-router-dom';
 import CreateRfiForm from '../../../components/pages/quality/field-inspection/CreateRfiForm';
 import RfiOutcomeForm from './RfiOutcomeForm';
+// import FileUploadModal from './FileUploadModal'; // Import the new component
+import { useGetMechanicalRfiQuery } from '../../../api/quality/qualityApi';
+import FileUploadModal from '../../../components/pages/quality/field-inspection/FileUploadModal';
 
 function MechanicalInspections() {
   const { projectId } = useParams();
@@ -22,84 +29,46 @@ function MechanicalInspections() {
   const [isLoading, setIsLoading] = useState(false);
   const [openRfiForm, setOpenRfiForm] = useState(false); // State for RFI form dialog
   const [openOutcomeForm, setOpenOutcomeForm] = useState(false);
+  const [openFileUploadModal, setOpenFileUploadModal] = useState(false); // New state for file upload modal
   const [selectedRfi, setSelectedRfi] = useState(null);
-  // Dummy data for mechanical inspections
-  const mechanicalInspectionsData = {
-    data: [
-      {
-        id: "1",
-        rfi_number: "RFI-MECH-001",
-        date: "2025-05-10",
-        epc_name: "PowerGen Engineering",
-        offered_date: "2025-04-28",
-        project_location: "Block A, Level 2, Room 201"
-      },
-      {
-        id: "2",
-        rfi_number: "RFI-MECH-002",
-        date: "2025-05-15",
-        epc_name: "Industrial Systems Ltd",
-        offered_date: "2025-05-05",
-        project_location: "Block B, Pump House"
-      },
-      {
-        id: "3",
-        rfi_number: "RFI-MECH-003",
-        date: "2025-05-20",
-        epc_name: "PowerGen Engineering",
-        offered_date: "2025-05-12",
-        project_location: "Turbine Hall, Section 3"
-      },
-      {
-        id: "4",
-        rfi_number: "RFI-MECH-004",
-        date: "2025-06-01",
-        epc_name: "MechWorks Solutions",
-        offered_date: "2025-05-20",
-        project_location: "Cooling Tower Area"
-      },
-      {
-        id: "5",
-        rfi_number: "RFI-MECH-005",
-        date: "2025-06-10",
-        epc_name: "Industrial Systems Ltd",
-        offered_date: "2025-05-30",
-        project_location: "Block C, Boiler Room"
-      }
-    ]
-  };
+  
+  // Fetch mechanical RFI data from API
+  const { data: mechanicalRfiResponse, isLoading: isLoadingRfi, error } = useGetMechanicalRfiQuery(projectId);
 
   // Apply filters, search, and sort whenever relevant state changes
   useEffect(() => {
+    if (!mechanicalRfiResponse) return;
+    
     setIsLoading(true);
     
-    // Simulate API call delay
+    // Short delay for better UX
     setTimeout(() => {
-      let result = [...mechanicalInspectionsData.data];
+      let result = [...mechanicalRfiResponse.data];
 
       // Apply search filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         result = result.filter(item =>
-          item.rfi_number.toLowerCase().includes(searchLower) ||
-          item.epc_name.toLowerCase().includes(searchLower) ||
-          item.project_location.toLowerCase().includes(searchLower)
+          (item.rfi_number && item.rfi_number.toLowerCase().includes(searchLower)) ||
+          (item.epc_name && item.epc_name.toLowerCase().includes(searchLower)) ||
+          (item.block_number && item.block_number.toLowerCase().includes(searchLower)) ||
+          (item.location_name && item.location_name.toLowerCase().includes(searchLower))
         );
       }
 
       // Apply sort option
       if (sortOption === "date_asc") {
-        result.sort((a, b) => new Date(a.date) - new Date(b.date));
+        result.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
       } else if (sortOption === "date_desc") {
-        result.sort((a, b) => new Date(b.date) - new Date(a.date));
+        result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       } else if (sortOption === "epc_name") {
         result.sort((a, b) => a.epc_name.localeCompare(b.epc_name));
       }
 
       setFilteredItems(result);
       setIsLoading(false);
-    }, 500);
-  }, [searchTerm, sortOption]);
+    }, 300);
+  }, [searchTerm, sortOption, mechanicalRfiResponse]);
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -122,6 +91,7 @@ function MechanicalInspections() {
   const handleCloseRfiForm = () => {
     setOpenRfiForm(false);
   };
+  
   const handleOpenOutcomeForm = (rfi) => {
     setSelectedRfi(rfi);
     setOpenOutcomeForm(true);
@@ -132,11 +102,30 @@ function MechanicalInspections() {
     setSelectedRfi(null);
   };
 
+  // Updated file upload handler
+  const handleFileUpload = (rfi) => {
+    setSelectedRfi(rfi);
+    setOpenFileUploadModal(true);
+  };
+
+  // Handler for closing file upload modal
+  const handleCloseFileUploadModal = () => {
+    setOpenFileUploadModal(false);
+    setSelectedRfi(null);
+  };
+
+  // Handler for generating physical form
+  const handleGeneratePhysicalForm = (rfi) => {
+    console.log("Generating physical form for RFI:", rfi);
+    // Implementation for generating physical form would go here
+  };
+
   // Clear filters
   const clearFilters = () => {
     setSearchTerm("");
     setSortOption("all");
   };
+  
 
   return (
     <div className="min-h-screen p-4 bg-white m-1 md:m-8 rounded-md">
@@ -144,19 +133,7 @@ function MechanicalInspections() {
       <h3 className="text-lg font-semibold text-[#29346B] mb-4 text-center">
         {projectId ? `Project ID: ${projectId}` : 'No Project Selected'}
       </h3>
-      <div>
-        {/* <Button
-          variant="contained"
-          onClick={handleOpenRfiForm}
-          sx={{
-            bgcolor: "#FACC15",
-            color: "#29346B",
-            "&:hover": { bgcolor: "#e5b812" }
-          }}
-        >
-          Create RFI
-        </Button> */}
-      </div>
+      
       {/* Table Section */}
       <div className="mx-auto mt-6">
         <h3 className="text-lg font-semibold text-[#29346B] mb-2">RFI Records:</h3>
@@ -217,8 +194,19 @@ function MechanicalInspections() {
             </Button>
           </div>
           
-          {/* Add RFI button */}
-          <div>
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            {/* <Button
+              variant="contained"
+              startIcon={<PrintIcon />}
+              onClick={handlePrint}
+              sx={{
+                bgcolor: "#3B82F6", // Blue color
+                "&:hover": { bgcolor: "#2563EB" }
+              }}
+            >
+              Print
+            </Button> */}
             <Button
               variant="contained"
               onClick={handleOpenRfiForm}
@@ -233,21 +221,25 @@ function MechanicalInspections() {
           </div>
         </div>
 
-        {isLoading ? (
+        {isLoadingRfi || isLoading ? (
           <div className="flex justify-center my-8">
             <CircularProgress />
           </div>
-        ) : filteredItems.length ? (
+        ) : error ? (
+          <p className="text-center p-4 bg-red-50 border rounded text-red-600">
+            Error loading RFI data. Please try again later.
+          </p>
+        ) : mechanicalRfiResponse && filteredItems.length ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-300">
+            <table id="mechanical-rfi-table" className="min-w-full bg-white border border-gray-300">
               <thead>
                 <tr className="bg-gray-100">
                   <th className="py-2 px-3 text-[#29346B] border text-left">Sr</th>
                   <th className="py-2 px-3 text-[#29346B] border text-left">RFI Number</th>
-                  <th className="py-2 px-3 text-[#29346B] border text-left">Date</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Date Created</th>
                   <th className="py-2 px-3 text-[#29346B] border text-left">EPC Name</th>
                   <th className="py-2 px-3 text-[#29346B] border text-left">Offered Date</th>
-                  <th className="py-2 px-3 text-[#29346B] border text-left">Project Location</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Location</th>
                   <th className="py-2 px-3 text-[#29346B] border text-left">Actions</th>
                 </tr>
               </thead>
@@ -255,13 +247,13 @@ function MechanicalInspections() {
                 {filteredItems.map((item, index) => (
                   <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                     <td className="py-2 px-3 border">{index + 1}</td>
-                    <td className="py-2 px-3 border">{item.rfi_number}</td>
-                    <td className="py-2 px-3 border">{formatDate(item.date)}</td>
+                    <td className="py-2 px-3 border">{item.rfi_number || 'N/A'}</td>
+                    <td className="py-2 px-3 border">{formatDate(item.created_at)}</td>
                     <td className="py-2 px-3 border">{item.epc_name}</td>
                     <td className="py-2 px-3 border">{formatDate(item.offered_date)}</td>
-                    <td className="py-2 px-3 border">{item.project_location}</td>
+                    <td className="py-2 px-3 border">{`${item.block_number || ''} ${item.location_name || ''}`}</td>
                     <td className="py-2 px-3 border">
-                      <div className="flex space-x-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           variant="contained"
                           size="small"
@@ -286,17 +278,49 @@ function MechanicalInspections() {
                           Edit
                         </Button>
                         <Button
-                  variant="contained"
-                  size="small"
-                  onClick={() => handleOpenOutcomeForm(item)}
-                  sx={{
-                    bgcolor: "#10B981", // Green color
-                    "&:hover": { bgcolor: "#059669" },
-                    padding: "2px 8px"
-                  }}
-                >
-                  Add Outcome
-                </Button>
+                          variant="contained"
+                          size="small"
+                          onClick={() => handleOpenOutcomeForm(item)}
+                          sx={{
+                            bgcolor: "#10B981", // Green color
+                            "&:hover": { bgcolor: "#059669" },
+                            padding: "2px 8px"
+                          }}
+                        >
+                          Add Outcome
+                        </Button>
+                        {/* Generate Physical Form button */}
+                        <Tooltip title="Generate Physical Form">
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleGeneratePhysicalForm(item)}
+                            startIcon={<DescriptionIcon />}
+                            sx={{
+                              bgcolor: "#8B5CF6", // Purple color
+                              "&:hover": { bgcolor: "#7C3AED" },
+                              padding: "2px 8px"
+                            }}
+                          >
+                            Physical Form
+                          </Button>
+                        </Tooltip>
+                        {/* File Upload button - now properly connected */}
+                        <Tooltip title="Upload Files">
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleFileUpload(item)}
+                            startIcon={<UploadFileIcon />}
+                            sx={{
+                              bgcolor: "#EC4899", // Pink color
+                              "&:hover": { bgcolor: "#DB2777" },
+                              padding: "2px 8px"
+                            }}
+                          >
+                            Upload
+                          </Button>
+                        </Tooltip>
                       </div>
                     </td>
                   </tr>
@@ -312,17 +336,25 @@ function MechanicalInspections() {
           </p>
         )}
       </div>
+      
+      {/* All modal components */}
       <CreateRfiForm 
         open={openRfiForm} 
         handleClose={handleCloseRfiForm} 
         projectId={projectId || ''}
         category="mechanical"
       />
-            <RfiOutcomeForm 
+      <RfiOutcomeForm 
         open={openOutcomeForm} 
         handleClose={handleCloseOutcomeForm} 
         rfiData={selectedRfi}
         projectId={projectId || ''}
+      />
+      {/* File Upload Modal */}
+      <FileUploadModal 
+        open={openFileUploadModal}
+        handleClose={handleCloseFileUploadModal}
+        rfiData={selectedRfi}
       />
     </div>
   );
