@@ -29,16 +29,7 @@ function FieldInspections() {
   }
   
   const cards = [
-    {
-      id: 'mechanical',
-      title: 'MECHANICAL INSPECTION',
-      description: 'Inspect mechanical equipment, systems, and installations',
-      icon: <FaCogs className="w-12 h-12 text-blue-600" />,
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-300',
-      textColor: 'text-blue-800',
-      path: `/quality-main/field-inspections/mechanical/${projectId}` 
-    },
+
     {
       id: 'electrical',
       title: 'ELECTRICAL INSPECTION',
@@ -48,6 +39,16 @@ function FieldInspections() {
       borderColor: 'border-yellow-300',
       textColor: 'text-yellow-800',
       path: `/quality-main/field-inspections/electical/${projectId}` // Using your route spelling
+    },
+    {
+      id: 'mechanical',
+      title: 'MECHANICAL INSPECTION',
+      description: 'Inspect mechanical equipment, systems, and installations',
+      icon: <FaCogs className="w-12 h-12 text-blue-600" />,
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-300',
+      textColor: 'text-blue-800',
+      path: `/quality-main/field-inspections/mechanical/${projectId}` 
     },
     {
       id: 'civil',

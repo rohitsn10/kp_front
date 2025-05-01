@@ -70,6 +70,9 @@ import SupplyInspections from "./pages/quality/supply/SupplyInspections.jsx";
 import CivilInspections from "./pages/quality/field-inspections/CivilInspections.jsx";
 import ElectricalInspections from "./pages/quality/field-inspections/ElectricalInspections.jsx";
 import MechanicalInspections from "./pages/quality/field-inspections/MechanicalInspections.jsx";
+import HOTOModule from "./pages/hoto/HotoDocuments.jsx";
+import HOTOMainPage from "./pages/hoto/HotoMainPage.jsx";
+import HotoDocuments from "./pages/hoto/HotoDocuments.jsx";
 // console.log(SupplyInspections)
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 const HseLayout = () => {
@@ -81,6 +84,14 @@ const HseLayout = () => {
   );
 };
 const QualityLayout = () => {
+  return (
+    <div>
+      {/* Optional: You can add Quality-specific navigation here */}
+      <Outlet /> {/* This will render child routes */}
+    </div>
+  );
+};
+const HotoLayout = () => {
   return (
     <div>
       {/* Optional: You can add Quality-specific navigation here */}
@@ -445,6 +456,35 @@ function App() {
             </ProtectedRoute>
           }
         />
+      {/* <Route
+          path="/hoto-page"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <HOTOMainPage/>
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        /> */}
+        
+
+        <Route
+          path="/hoto-page"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <HotoLayout />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<HOTOMainPage />} />
+          <Route
+            path="add-document/:projectId?"
+            element={<HotoDocuments />}
+          />          
+        </Route>
+
         <Route
           path="/quality-assurance"
           element={

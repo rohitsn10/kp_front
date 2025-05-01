@@ -62,9 +62,27 @@ export const qualityApi = createApi({
           url: "quality_inspection/create_files_upload_inspection_outcome",
           method: "POST",
           body: formData,
-          formData: true, // This tells RTK Query not to JSON stringify the body
+          formData: true,
         }),
       }),
+    getRfiInspectionOutcome: builder.query({
+      query: (id) => ({
+        url: `quality_inspection/get_rfi_inspection_outcome/${id}`,
+        method: "GET",
+      }),
+    }),
+    getFilesUploadInspectionOutcome: builder.query({
+      query: (id) => ({
+        url: `quality_inspection/get_files_upload_inspection_outcome/${id}`,
+        method: "GET",
+      }),
+    }),
+    getCreatePhysicalFormRfi:builder.query({
+      query:(id)=>({
+        url:`quality_inspection/rfi_report_pdf/${id}`,
+        method:'GET'
+      })
+    })
   }),
 });
 
@@ -75,5 +93,8 @@ export const {
   useGetElectricalRfiQuery,
   useGetMechanicalRfiQuery,
   useGetCivilRfiQuery,
-  useUploadFilesInspectionOutcomeMutation
+  useUploadFilesInspectionOutcomeMutation,
+  useGetRfiInspectionOutcomeQuery,
+  useGetFilesUploadInspectionOutcomeQuery,
+  useGetCreatePhysicalFormRfiQuery
 } = qualityApi;

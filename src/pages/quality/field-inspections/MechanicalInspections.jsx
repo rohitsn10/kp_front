@@ -17,9 +17,13 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import { useParams } from 'react-router-dom';
 import CreateRfiForm from '../../../components/pages/quality/field-inspection/CreateRfiForm';
 import RfiOutcomeForm from './RfiOutcomeForm';
-// import FileUploadModal from './FileUploadModal'; // Import the new component
-import { useGetMechanicalRfiQuery } from '../../../api/quality/qualityApi';
+import { 
+  useGetMechanicalRfiQuery,
+  useGetCreatePhysicalFormRfiQuery
+} from '../../../api/quality/qualityApi';
 import FileUploadModal from '../../../components/pages/quality/field-inspection/FileUploadModal';
+import InspectionViewModal from '../../../components/pages/quality/field-inspection/InspectionViewModal';
+// import InspectionViewModal from './InspectionViewModal';
 
 function MechanicalInspections() {
   const { projectId } = useParams();
@@ -29,11 +33,25 @@ function MechanicalInspections() {
   const [isLoading, setIsLoading] = useState(false);
   const [openRfiForm, setOpenRfiForm] = useState(false); // State for RFI form dialog
   const [openOutcomeForm, setOpenOutcomeForm] = useState(false);
-  const [openFileUploadModal, setOpenFileUploadModal] = useState(false); // New state for file upload modal
+  const [openFileUploadModal, setOpenFileUploadModal] = useState(false); // State for file upload modal
+  const [openViewModal, setOpenViewModal] = useState(false); // New state for view modal
   const [selectedRfi, setSelectedRfi] = useState(null);
+  const [generating, setGenerating] = useState(false);
+  const [currentRfiForPhysicalForm, setCurrentRfiForPhysicalForm] = useState(null);
   
   // Fetch mechanical RFI data from API
   const { data: mechanicalRfiResponse, isLoading: isLoadingRfi, error } = useGetMechanicalRfiQuery(projectId);
+  
+  // Physical form PDF generation query
+  const {
+    data: physicalFormData,
+    isLoading: isLoadingPhysicalForm,
+    error: physicalFormError, 
+    refetch: refetchPhysicalForm
+  } = useGetCreatePhysicalFormRfiQuery(currentRfiForPhysicalForm?.id, {
+    skip: !currentRfiForPhysicalForm,
+    refetchOnMountOrArgChange: true
+  });
 
   // Apply filters, search, and sort whenever relevant state changes
   useEffect(() => {
@@ -70,6 +88,17 @@ function MechanicalInspections() {
     }, 300);
   }, [searchTerm, sortOption, mechanicalRfiResponse]);
 
+  // Effect to handle download when physical form data is available
+  useEffect(() => {
+    if (physicalFormData && physicalFormData.data && generating) {
+      // Download the PDF
+      window.open(physicalFormData.data, '_blank');
+      // Reset states
+      setGenerating(false);
+      setCurrentRfiForPhysicalForm(null);
+    }
+  }, [physicalFormData, generating]);
+
   // Format date for display
   const formatDate = (dateString) => {
     try {
@@ -102,6 +131,18 @@ function MechanicalInspections() {
     setSelectedRfi(null);
   };
 
+  // Handler for viewing inspection details
+  const handleViewInspection = (rfi) => {
+    setSelectedRfi(rfi);
+    setOpenViewModal(true);
+  };
+
+  // Handler for closing view modal
+  const handleCloseViewModal = () => {
+    setOpenViewModal(false);
+    setSelectedRfi(null);
+  };
+
   // Updated file upload handler
   const handleFileUpload = (rfi) => {
     setSelectedRfi(rfi);
@@ -116,8 +157,13 @@ function MechanicalInspections() {
 
   // Handler for generating physical form
   const handleGeneratePhysicalForm = (rfi) => {
-    console.log("Generating physical form for RFI:", rfi);
-    // Implementation for generating physical form would go here
+    setGenerating(true);
+    setCurrentRfiForPhysicalForm(rfi);
+    
+    // If we already have the RFI loaded previously, we need to refetch
+    if (currentRfiForPhysicalForm?.id === rfi.id) {
+      refetchPhysicalForm();
+    }
   };
 
   // Clear filters
@@ -257,6 +303,7 @@ function MechanicalInspections() {
                         <Button
                           variant="contained"
                           size="small"
+                          onClick={() => handleViewInspection(item)}
                           sx={{
                             bgcolor: "#29346B",
                             "&:hover": { bgcolor: "#1e2756" },
@@ -265,7 +312,7 @@ function MechanicalInspections() {
                         >
                           View
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="contained"
                           size="small"
                           sx={{
@@ -276,7 +323,7 @@ function MechanicalInspections() {
                           }}
                         >
                           Edit
-                        </Button>
+                        </Button> */}
                         <Button
                           variant="contained"
                           size="small"
@@ -296,13 +343,21 @@ function MechanicalInspections() {
                             size="small"
                             onClick={() => handleGeneratePhysicalForm(item)}
                             startIcon={<DescriptionIcon />}
+                            disabled={isLoadingPhysicalForm && currentRfiForPhysicalForm?.id === item.id}
                             sx={{
                               bgcolor: "#8B5CF6", // Purple color
                               "&:hover": { bgcolor: "#7C3AED" },
                               padding: "2px 8px"
                             }}
                           >
-                            Physical Form
+                            {isLoadingPhysicalForm && currentRfiForPhysicalForm?.id === item.id ? (
+                              <>
+                                <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} />
+                                Generating...
+                              </>
+                            ) : (
+                              "Physical Form"
+                            )}
                           </Button>
                         </Tooltip>
                         {/* File Upload button - now properly connected */}
@@ -354,6 +409,12 @@ function MechanicalInspections() {
       <FileUploadModal 
         open={openFileUploadModal}
         handleClose={handleCloseFileUploadModal}
+        rfiData={selectedRfi}
+      />
+      {/* New Inspection View Modal */}
+      <InspectionViewModal
+        open={openViewModal}
+        handleClose={handleCloseViewModal}
         rfiData={selectedRfi}
       />
     </div>

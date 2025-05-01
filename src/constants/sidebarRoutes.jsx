@@ -3,6 +3,7 @@ import { FaHelmetSafety } from "react-icons/fa6";
 import DesignServicesIcon from '@mui/icons-material/DesignServices';
 import { Link, useLocation, useNavigation } from 'react-router-dom';
 import { AiOutlineSafety } from "react-icons/ai";
+import { HiClipboardDocumentCheck } from "react-icons/hi2";
   const sidebarConstant=[
     {
       name:'Home',
@@ -110,6 +111,11 @@ import { AiOutlineSafety } from "react-icons/ai";
       </svg>
       ,
       links:"/master"
+    },
+    {
+      name:"Hoto",
+      icons:<HiClipboardDocumentCheck/>,
+      links:'/hoto-page'
     }
   ]
   export default sidebarConstant
