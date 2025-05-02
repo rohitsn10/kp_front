@@ -1,3 +1,5 @@
+//dummyy only ui not in use
+
 import React, { useState, useEffect } from "react";
 import {
   Autocomplete,
@@ -14,7 +16,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogContentText,
-  DialogActions
+  DialogActions,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
@@ -26,21 +28,25 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HistoryIcon from "@mui/icons-material/History";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import AssessmentIcon from "@mui/icons-material/Assessment";
-import { UploadDocumentsModal, ViewDocumentsModal } from "../../components/pages/quality/ViewDocumentsModal";
+import {
+  UploadDocumentsModal,
+  ViewDocumentsModal,
+} from "../../components/pages/quality/ViewDocumentsModal";
 import ComplianceReportsModal from "../../components/pages/quality/ComplianceReportsModal";
+import InspectionCallForm from "../../components/pages/quality/InspectionCallform/InspectionCall";
 
 // Mock data for projects
 const mockProjects = {
   data: [
     { id: "1", project_name: "Power Plant Expansion" },
     { id: "2", project_name: "Oil Refinery Modernization" },
-    { id: "3", project_name: "Chemical Plant Construction" }
-  ]
+    { id: "3", project_name: "Chemical Plant Construction" },
+  ],
 };
 
 // Mock data for items
 const mockItems = {
-  "1": {
+  1: {
     data: [
       {
         id: "1",
@@ -55,7 +61,7 @@ const mockItems = {
         has_mqap: true,
         has_quality_dossier: false,
         has_mdcc: false,
-        updated_at: "2025-04-01T10:30:00Z"
+        updated_at: "2025-04-01T10:30:00Z",
       },
       {
         id: "2",
@@ -70,7 +76,7 @@ const mockItems = {
         has_mqap: true,
         has_quality_dossier: true,
         has_mdcc: false,
-        updated_at: "2025-04-02T14:45:00Z"
+        updated_at: "2025-04-02T14:45:00Z",
       },
       {
         id: "3",
@@ -85,7 +91,7 @@ const mockItems = {
         has_mqap: true,
         has_quality_dossier: true,
         has_mdcc: true,
-        updated_at: "2025-04-03T09:15:00Z"
+        updated_at: "2025-04-03T09:15:00Z",
       },
       {
         id: "4",
@@ -100,7 +106,7 @@ const mockItems = {
         has_mqap: false,
         has_quality_dossier: false,
         has_mdcc: false,
-        updated_at: "2025-04-04T11:20:00Z"
+        updated_at: "2025-04-04T11:20:00Z",
       },
       {
         id: "5",
@@ -115,12 +121,11 @@ const mockItems = {
         has_mqap: true,
         has_quality_dossier: false,
         has_mdcc: false,
-        updated_at: "2025-04-05T16:30:00Z"
+        updated_at: "2025-04-05T16:30:00Z",
       },
-      
-    ]
+    ],
   },
-  "2": {
+  2: {
     data: [
       {
         id: "6",
@@ -135,7 +140,7 @@ const mockItems = {
         has_mqap: true,
         has_quality_dossier: false,
         has_mdcc: false,
-        updated_at: "2025-04-01T13:45:00Z"
+        updated_at: "2025-04-01T13:45:00Z",
       },
       {
         id: "7",
@@ -150,11 +155,11 @@ const mockItems = {
         has_mqap: true,
         has_quality_dossier: true,
         has_mdcc: false,
-        updated_at: "2025-04-02T10:20:00Z"
-      }
-    ]
+        updated_at: "2025-04-02T10:20:00Z",
+      },
+    ],
   },
-  "3": {
+  3: {
     data: [
       {
         id: "8",
@@ -169,10 +174,10 @@ const mockItems = {
         has_mqap: true,
         has_quality_dossier: true,
         has_mdcc: true,
-        updated_at: "2025-04-03T15:10:00Z"
-      }
-    ]
-  }
+        updated_at: "2025-04-03T15:10:00Z",
+      },
+    ],
+  },
 };
 
 function QualityInspectionPage() {
@@ -181,20 +186,21 @@ function QualityInspectionPage() {
   const [sortOption, setSortOption] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState([]);
-  
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedcellItem, setSelectedcellItem] = useState(null);
   // Modal states
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  
+
   // Add Item Modal state
   const [addItemModalOpen, setAddItemModalOpen] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [newItemCategory, setNewItemCategory] = useState("1");
-  
+
   // Simulate API loading state for items
   const [isLoadingItems, setIsLoadingItems] = useState(false);
-  
+
   // Use default project ID "1"
   const selectedProjectId = "1";
   const items = mockItems[selectedProjectId];
@@ -211,36 +217,55 @@ function QualityInspectionPage() {
     // Apply search filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      result = result.filter(item =>
-        item.item_number.toLowerCase().includes(searchLower) ||
-        item.item_name.toLowerCase().includes(searchLower) ||
-        item.vendor.toLowerCase().includes(searchLower)
+      result = result.filter(
+        (item) =>
+          item.item_number.toLowerCase().includes(searchLower) ||
+          item.item_name.toLowerCase().includes(searchLower) ||
+          item.vendor.toLowerCase().includes(searchLower)
       );
     }
 
     // Apply category filter
     if (filterCategory !== "all") {
-      result = result.filter(item => item.category === filterCategory);
+      result = result.filter((item) => item.category === filterCategory);
     }
 
     // Apply sort option
     if (sortOption === "pending") {
       // Sort by status - pending first
       result.sort((a, b) => {
-        if (a.status === "pending_inspection" && b.status !== "pending_inspection") return -1;
-        if (b.status === "pending_inspection" && a.status !== "pending_inspection") return 1;
+        if (
+          a.status === "pending_inspection" &&
+          b.status !== "pending_inspection"
+        )
+          return -1;
+        if (
+          b.status === "pending_inspection" &&
+          a.status !== "pending_inspection"
+        )
+          return 1;
         return 0;
       });
     } else if (sortOption === "scheduled") {
       // Sort by scheduled inspections first
       result.sort((a, b) => {
-        if (a.status === "inspection_scheduled" && b.status !== "inspection_scheduled") return -1;
-        if (b.status === "inspection_scheduled" && a.status !== "inspection_scheduled") return 1;
+        if (
+          a.status === "inspection_scheduled" &&
+          b.status !== "inspection_scheduled"
+        )
+          return -1;
+        if (
+          b.status === "inspection_scheduled" &&
+          a.status !== "inspection_scheduled"
+        )
+          return 1;
         return 0;
       });
     } else if (sortOption === "date") {
       // Sort by inspection date (ascending)
-      result.sort((a, b) => new Date(a.inspection_date) - new Date(b.inspection_date));
+      result.sort(
+        (a, b) => new Date(a.inspection_date) - new Date(b.inspection_date)
+      );
     }
 
     setFilteredItems(result);
@@ -259,7 +284,10 @@ function QualityInspectionPage() {
 
   const handleAddItem = () => {
     // This would actually add the item in a real implementation
-    console.log("Adding new item:", { name: newItemName, category: newItemCategory });
+    console.log("Adding new item:", {
+      name: newItemName,
+      category: newItemCategory,
+    });
     handleCloseAddItemModal();
   };
 
@@ -275,7 +303,7 @@ function QualityInspectionPage() {
     setSelectedItem(item);
     setViewModalOpen(true);
   };
-  
+
   const handleCloseUploadModal = () => {
     setUploadModalOpen(false);
     setSelectedItem(null);
@@ -285,16 +313,16 @@ function QualityInspectionPage() {
     setViewModalOpen(false);
     setSelectedItem(null);
   };
-  
+
   // Compliance Report modal state
   const [complianceModalOpen, setComplianceModalOpen] = useState(false);
-  
+
   const handleObservations = (item) => {
     console.log("Manage observations for:", item);
     setSelectedItem(item);
     setComplianceModalOpen(true);
   };
-  
+
   const handleCloseComplianceModal = () => {
     setComplianceModalOpen(false);
     setSelectedItem(null);
@@ -331,18 +359,22 @@ function QualityInspectionPage() {
   };
 
   const handleGenerateInspection = (item) => {
-    console.log("Generate inspection for:", item);
-    // This would handle inspection generation in a real implementation
+    // console.log("Generate inspection for:::::", item);
+    setSelectedcellItem(item);
+    setIsDialogOpen(true);
   };
-
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedItem(null);
+  };
   // Format date for display
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
-      return new Intl.DateTimeFormat('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
+      return new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric", 
       }).format(date);
     } catch (error) {
       return dateString;
@@ -353,11 +385,20 @@ function QualityInspectionPage() {
   const getStatusDisplay = (status) => {
     switch (status) {
       case "pending_inspection":
-        return { label: "Pending Inspection", color: "bg-yellow-100 text-yellow-800" };
+        return {
+          label: "Pending Inspection",
+          color: "bg-yellow-100 text-yellow-800",
+        };
       case "inspection_scheduled":
-        return { label: "Inspection Scheduled", color: "bg-blue-100 text-blue-800" };
+        return {
+          label: "Inspection Scheduled",
+          color: "bg-blue-100 text-blue-800",
+        };
       case "observations_pending":
-        return { label: "Observations Pending", color: "bg-orange-100 text-orange-800" };
+        return {
+          label: "Observations Pending",
+          color: "bg-orange-100 text-orange-800",
+        };
       case "approved":
         return { label: "Approved", color: "bg-green-100 text-green-800" };
       default:
@@ -369,9 +410,15 @@ function QualityInspectionPage() {
   const getCategoryDisplay = (category) => {
     switch (category) {
       case "1":
-        return { label: "Category 1", description: "Customer/Owner/EPC witness" };
+        return {
+          label: "Category 1",
+          description: "Customer/Owner/EPC witness",
+        };
       case "2":
-        return { label: "Category 2", description: "Customer/Owner/EPC review" };
+        return {
+          label: "Category 2",
+          description: "Customer/Owner/EPC review",
+        };
       case "3":
         return { label: "Category 3", description: "EPC inspection" };
       default:
@@ -388,13 +435,19 @@ function QualityInspectionPage() {
 
   return (
     <div className="min-h-screen p-4 bg-white m-1 md:m-8 rounded-md">
-      <h2 className="text-2xl font-semibold text-[#29346B] text-center mb-4">Quality Inspection Management</h2>
-      <h3 className="text-lg font-semibold text-[#29346B] mb-4 text-center">Power Plant Expansion Project</h3>
+      <h2 className="text-2xl font-semibold text-[#29346B] text-center mb-4">
+        Quality Inspection Management
+      </h2>
+      <h3 className="text-lg font-semibold text-[#29346B] mb-4 text-center">
+        Power Plant Expansion Project
+      </h3>
 
       {/* Items Table */}
-      {(
+      {
         <div className="mx-auto mt-6">
-          <h3 className="text-lg font-semibold text-[#29346B] mb-2">List of Items:</h3>
+          <h3 className="text-lg font-semibold text-[#29346B] mb-2">
+            List of Items:
+          </h3>
 
           {/* Search and Filter Controls with Additional Buttons */}
           <div className="flex flex-wrap gap-4 mb-4 justify-between">
@@ -433,14 +486,18 @@ function QualityInspectionPage() {
                 >
                   <MenuItem value="all">All Items</MenuItem>
                   <MenuItem value="pending">Pending Inspection First</MenuItem>
-                  <MenuItem value="scheduled">Scheduled Inspections First</MenuItem>
+                  <MenuItem value="scheduled">
+                    Scheduled Inspections First
+                  </MenuItem>
                   <MenuItem value="date">Inspection Date (Earliest)</MenuItem>
                 </Select>
               </FormControl>
 
               {/* Filter by Category */}
               <FormControl sx={{ minWidth: 200 }}>
-                <InputLabel id="category-filter-label">Filter Category</InputLabel>
+                <InputLabel id="category-filter-label">
+                  Filter Category
+                </InputLabel>
                 <Select
                   labelId="category-filter-label"
                   value={filterCategory}
@@ -461,13 +518,16 @@ function QualityInspectionPage() {
                 sx={{
                   borderColor: "#29346B",
                   color: "#29346B",
-                  "&:hover": { borderColor: "#1e2756", backgroundColor: "#f0f0f0" }
+                  "&:hover": {
+                    borderColor: "#1e2756",
+                    backgroundColor: "#f0f0f0",
+                  },
                 }}
               >
                 Clear Filters
               </Button>
             </div>
-            
+
             {/* Add Item and Generate Categorization Document buttons */}
             <div className="flex gap-2">
               <Button
@@ -476,7 +536,7 @@ function QualityInspectionPage() {
                 sx={{
                   bgcolor: "#FACC15",
                   color: "#29346B",
-                  "&:hover": { bgcolor: "#e5b812" }
+                  "&:hover": { bgcolor: "#e5b812" },
                 }}
               >
                 Add Item
@@ -485,7 +545,7 @@ function QualityInspectionPage() {
                 variant="contained"
                 sx={{
                   bgcolor: "#29346B",
-                  "&:hover": { bgcolor: "#1e2756" }
+                  "&:hover": { bgcolor: "#1e2756" },
                 }}
               >
                 Generate Categorization Document
@@ -504,41 +564,76 @@ function QualityInspectionPage() {
               <table className="min-w-full bg-white border border-gray-300">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Sr</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Item Number</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Item Name</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Category</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Discipline</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Vendor</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Inspection Date</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Status</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Documents</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Inspection</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">MDCC</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Vendor Approval</th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">
+                      Sr
+                    </th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">
+                      Item Number
+                    </th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">
+                      Item Name
+                    </th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">
+                      Category
+                    </th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">
+                      Discipline
+                    </th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">
+                      Vendor
+                    </th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">
+                      Inspection Date
+                    </th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">
+                      Status
+                    </th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">
+                      Documents
+                    </th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">
+                      Inspection
+                    </th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">
+                      MDCC
+                    </th>
+                    <th className="py-2 px-3 text-[#29346B] border text-left">
+                      Vendor Approval
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredItems?.map((item, index) => {
                     const statusInfo = getStatusDisplay(item.status);
                     const categoryInfo = getCategoryDisplay(item.category);
-                    
+
                     return (
-                      <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                      <tr
+                        key={item.id}
+                        className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                      >
                         <td className="py-2 px-3 border">{index + 1}</td>
                         <td className="py-2 px-3 border">{item.item_number}</td>
                         <td className="py-2 px-3 border">{item.item_name}</td>
                         <td className="py-2 px-3 border">
                           <div>
-                            <span className="font-semibold">{categoryInfo.label}</span>
-                            <p className="text-xs text-gray-600">{categoryInfo.description}</p>
+                            <span className="font-semibold">
+                              {categoryInfo.label}
+                            </span>
+                            <p className="text-xs text-gray-600">
+                              {categoryInfo.description}
+                            </p>
                           </div>
                         </td>
                         <td className="py-2 px-3 border">{item.discipline}</td>
                         <td className="py-2 px-3 border">{item.vendor}</td>
-                        <td className="py-2 px-3 border">{formatDate(item.inspection_date)}</td>
                         <td className="py-2 px-3 border">
-                          <span className={`px-2 py-1 rounded text-xs font-semibold ${statusInfo.color}`}>
+                          {formatDate(item.inspection_date)}
+                        </td>
+                        <td className="py-2 px-3 border">
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-semibold ${statusInfo.color}`}
+                          >
                             {statusInfo.label}
                           </span>
                         </td>
@@ -554,7 +649,7 @@ function QualityInspectionPage() {
                                   color: "#29346B",
                                   "&:hover": { bgcolor: "#e5b812" },
                                   marginRight: "6px",
-                                  padding: "2px 8px"
+                                  padding: "2px 8px",
                                 }}
                                 startIcon={<UploadFileIcon />}
                               >
@@ -567,7 +662,7 @@ function QualityInspectionPage() {
                                 sx={{
                                   bgcolor: "#29346B",
                                   "&:hover": { bgcolor: "#1e2756" },
-                                  padding: "2px 8px"
+                                  padding: "2px 8px",
                                 }}
                                 startIcon={<VisibilityIcon />}
                               >
@@ -575,9 +670,30 @@ function QualityInspectionPage() {
                               </Button>
                             </div>
                             <div className="flex flex-wrap gap-1">
-                              {item.has_mqap && <Chip size="small" label="MQAP" color="primary" variant="outlined" />}
-                              {item.has_quality_dossier && <Chip size="small" label="Dossier" color="success" variant="outlined" />}
-                              {item.has_mdcc && <Chip size="small" label="MDCC" color="secondary" variant="outlined" />}
+                              {item.has_mqap && (
+                                <Chip
+                                  size="small"
+                                  label="MQAP"
+                                  color="primary"
+                                  variant="outlined"
+                                />
+                              )}
+                              {item.has_quality_dossier && (
+                                <Chip
+                                  size="small"
+                                  label="Dossier"
+                                  color="success"
+                                  variant="outlined"
+                                />
+                              )}
+                              {item.has_mdcc && (
+                                <Chip
+                                  size="small"
+                                  label="MDCC"
+                                  color="secondary"
+                                  variant="outlined"
+                                />
+                              )}
                             </div>
                           </div>
                         </td>
@@ -591,7 +707,7 @@ function QualityInspectionPage() {
                                 bgcolor: "#A855F7",
                                 "&:hover": { bgcolor: "#9333EA" },
                                 padding: "2px 8px",
-                                marginBottom: "4px"
+                                marginBottom: "4px",
                               }}
                               startIcon={<AssignmentIcon />}
                             >
@@ -604,7 +720,7 @@ function QualityInspectionPage() {
                               sx={{
                                 bgcolor: "#3B82F6",
                                 "&:hover": { bgcolor: "#2563EB" },
-                                padding: "2px 8px"
+                                padding: "2px 8px",
                               }}
                               startIcon={<AssessmentIcon />}
                             >
@@ -622,7 +738,7 @@ function QualityInspectionPage() {
                                 bgcolor: "#10B981",
                                 "&:hover": { bgcolor: "#0ea271" },
                                 marginBottom: "4px",
-                                padding: "2px 8px"
+                                padding: "2px 8px",
                               }}
                               startIcon={<CheckCircleOutlineIcon />}
                             >
@@ -638,7 +754,7 @@ function QualityInspectionPage() {
                             sx={{
                               bgcolor: "#F59E0B",
                               "&:hover": { bgcolor: "#D97706" },
-                              padding: "2px 8px"
+                              padding: "2px 8px",
                             }}
                             startIcon={<VerifiedUserIcon />}
                           >
@@ -653,14 +769,14 @@ function QualityInspectionPage() {
             </div>
           ) : (
             <p className="text-center p-4 bg-gray-50 border rounded">
-              {searchTerm || filterCategory !== "all" || sortOption !== "all" ?
-                "No matching items found. Try adjusting your filters." :
-                "No items available for this project."}
+              {searchTerm || filterCategory !== "all" || sortOption !== "all"
+                ? "No matching items found. Try adjusting your filters."
+                : "No items available for this project."}
             </p>
           )}
         </div>
-      )}
-      
+      }
+
       {/* Document Modals */}
       <UploadDocumentsModal
         open={uploadModalOpen}
@@ -677,10 +793,18 @@ function QualityInspectionPage() {
         handleClose={handleCloseComplianceModal}
         itemDetails={selectedItem}
       />
-
+      {isDialogOpen && (
+        <InspectionCallForm
+          open={isDialogOpen}
+          handleClose={handleCloseDialog}
+          selectedItem={selectedItem}
+        />
+      )}
       {/* Add Item Modal */}
       <Dialog open={addItemModalOpen} onClose={handleCloseAddItemModal}>
-        <DialogTitle sx={{ bgcolor: "#29346B", color: "white" }}>Add New Item</DialogTitle>
+        <DialogTitle sx={{ bgcolor: "#29346B", color: "white" }}>
+          Add New Item
+        </DialogTitle>
         <DialogContent sx={{ pt: 2, minWidth: "400px" }}>
           <DialogContentText sx={{ mb: 2 }}>
             Please enter the details for the new item.
@@ -713,19 +837,16 @@ function QualityInspectionPage() {
           </FormControl>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button 
-            onClick={handleCloseAddItemModal}
-            sx={{ color: "#29346B" }}
-          >
+          <Button onClick={handleCloseAddItemModal} sx={{ color: "#29346B" }}>
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleAddItem}
             variant="contained"
             sx={{
               bgcolor: "#FACC15",
               color: "#29346B",
-              "&:hover": { bgcolor: "#e5b812" }
+              "&:hover": { bgcolor: "#e5b812" },
             }}
           >
             Add Item

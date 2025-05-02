@@ -32,7 +32,7 @@ import ComplianceReportsModal from "../../../components/pages/quality/Compliance
 import { UploadDocumentsModal, ViewDocumentsModal } from "../../../components/pages/quality/ViewDocumentsModal";
 // import { UploadDocumentsModal, ViewDocumentsModal } from "../../components/pages/quality/ViewDocumentsModal";
 // import ComplianceReportsModal from "../../components/pages/quality/ComplianceReportsModal";
-
+import InspectionCallForm from "../../../components/pages/quality/InspectionCallform/InspectionCall";
 const mockProjects = {
   data: [
     { id: "1", project_name: "Power Plant Expansion" },
@@ -184,7 +184,7 @@ function SupplyInspections() {
   const [sortOption, setSortOption] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState([]);
-  
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   // Modal states
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -335,9 +335,13 @@ function SupplyInspections() {
 
   const handleGenerateInspection = (item) => {
     console.log("Generate inspection for:", item);
-    // This would handle inspection generation in a real implementation
+    setSelectedItem(item);
+    setIsDialogOpen(true);
   };
-
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedItem(null);
+  };
   // Format date for display
   const formatDate = (dateString) => {
     try {
@@ -680,7 +684,13 @@ function SupplyInspections() {
         handleClose={handleCloseComplianceModal}
         itemDetails={selectedItem}
       />
-
+ {isDialogOpen && (
+        <InspectionCallForm
+          open={isDialogOpen}
+          handleClose={handleCloseDialog}
+          selectedItem={selectedItem}
+        />
+      )}
       {/* Add Item Modal */}
       <Dialog open={addItemModalOpen} onClose={handleCloseAddItemModal}>
         <DialogTitle sx={{ bgcolor: "#29346B", color: "white" }}>Add New Item</DialogTitle>
