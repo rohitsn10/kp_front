@@ -28,11 +28,25 @@ export const qualitySupplyApi = createApi({
         method: "GET",
       }),
     }),
-    
+    setProjectItems: builder.mutation({
+      query: (itemData) => ({
+        url: "quality_inspection/active_items",
+        method: "PUT",
+        body: itemData,
+      }),
+    }),
+    getItemsByProject:builder.query({
+      query:(id)=>({
+        url:`quality_inspection/list_items/${id}`,
+        method:'GET'
+      })
+    })
   }),
 });
 
 export const {
   useCreateQualityItemsMutation,
-  useListAllItemsQuery
+  useListAllItemsQuery,
+  useSetProjectItemsMutation,
+  useGetItemsByProjectQuery
 } = qualitySupplyApi;

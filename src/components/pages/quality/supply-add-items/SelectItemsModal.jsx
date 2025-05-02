@@ -21,7 +21,8 @@ import {
   Box
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { useListAllItemsQuery } from "../../../../api/quality/qualitySupplyApi";
+import { useListAllItemsQuery, useSetProjectItemsMutation } from "../../../../api/quality/qualitySupplyApi";
+import { useParams } from "react-router-dom";
 // import { useListAllItemsQuery } from "../../../api/quality/qualitySupplyApi";
 
 const SelectItemsModal = ({ open, handleClose, onItemsSelected }) => {
@@ -29,7 +30,10 @@ const SelectItemsModal = ({ open, handleClose, onItemsSelected }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState([]);
-
+   const [setProjectItems, {isLoading:ItemLoading}]=useSetProjectItemsMutation();
+   const {projectId} = useParams();
+//    console.log(projectId)
+//    console.log(">>>",onItemsSelected)
   // Fetch all items using RTK Query
   const {
     data: itemsResponse,
@@ -74,10 +78,33 @@ const SelectItemsModal = ({ open, handleClose, onItemsSelected }) => {
     });
   };
 
-  const handleConfirm = () => {
-    // Call the callback with the selected item IDs
-    onItemsSelected(selectedItems);
-    handleClose();
+//   const handleConfirm = async() => {
+//     // Call the callback with the selected item IDs
+//     const SubmitData = {
+//         "project_id": projectId,
+//         "item_id": selectedItems,
+//         "is_active": true
+//       }
+//    let response =await setProjectItems(SubmitData).unwrap();
+//     // onItemsSelected(selectedItems);
+
+//     handleClose();
+//   };
+const handleConfirm = async () => {
+    try {
+      const SubmitData = {
+        project_id: projectId,
+        item_id: selectedItems,
+        is_active: true
+      };
+      await setProjectItems(SubmitData).unwrap();
+      if (onItemsSelected) {
+        onItemsSelected(selectedItems);
+      }
+      handleClose();
+    } catch (err) {
+      console.error("Error submitting items:", err);
+    }
   };
 
   // Get category display

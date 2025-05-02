@@ -29,10 +29,10 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import ComplianceReportsModal from "../../../components/pages/quality/ComplianceReportsModal";
 import { UploadDocumentsModal, ViewDocumentsModal } from "../../../components/pages/quality/ViewDocumentsModal";
 import InspectionCallForm from "../../../components/pages/quality/InspectionCallform/InspectionCall";
-import { useListAllItemsQuery } from "../../../api/quality/qualitySupplyApi";
+// Change the import to use the new hook
+import { useGetItemsByProjectQuery } from "../../../api/quality/qualitySupplyApi";
 import SelectItemsModal from "../../../components/pages/quality/supply-add-items/SelectItemsModal";
-// Import the new SelectItemsModal component
-// import SelectItemsModal from "../../../components/pages/quality/SelectItemsModal";
+import { useParams } from "react-router-dom";
 
 function SupplyInspections() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,6 +40,9 @@ function SupplyInspections() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { projectId } = useParams();
+  console.log("ProjectID>>>.", projectId);
+  
   // Modal states
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -49,14 +52,14 @@ function SupplyInspections() {
   const [selectItemsModalOpen, setSelectItemsModalOpen] = useState(false);
   const [selectedItemIds, setSelectedItemIds] = useState([]);
   
-  // Use RTK Query hook to fetch items
+  // Use the new RTK Query hook with projectId
   const { 
     data: itemsResponse, 
     isLoading: isLoadingItems, 
     isError: isErrorItems,
     error: itemsError,
     refetch: refetchItems
-  } = useListAllItemsQuery();
+  } = useGetItemsByProjectQuery(projectId);
 
   // Apply filters, search, and sort whenever relevant state changes
   useEffect(() => {
@@ -569,6 +572,8 @@ function SupplyInspections() {
         open={selectItemsModalOpen}
         handleClose={handleCloseSelectItemsModal}
         onItemsSelected={handleItemsSelected}
+        selectedItem={selectedItem}
+        projectId={projectId} // Pass the projectId to the modal if needed
       />
     </div>
   );
