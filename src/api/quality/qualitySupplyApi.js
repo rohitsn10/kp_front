@@ -35,12 +35,20 @@ export const qualitySupplyApi = createApi({
         body: itemData,
       }),
     }),
-    getItemsByProject:builder.query({
-      query:(id)=>({
-        url:`quality_inspection/list_items/${id}`,
-        method:'GET'
-      })
-    })
+    getItemsByProject: builder.query({
+      query: (id) => ({
+        url: `quality_inspection/list_items/${id}`,
+        method: "GET",
+      }),
+    }),
+    generateInspectionCallReport: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `quality_inspection/inspection_call_report_pdf/${id}`,
+        method: "POST",
+        body: data,
+      }),
+    }),
+    
   }),
 });
 
@@ -48,5 +56,6 @@ export const {
   useCreateQualityItemsMutation,
   useListAllItemsQuery,
   useSetProjectItemsMutation,
-  useGetItemsByProjectQuery
+  useGetItemsByProjectQuery,
+  useGenerateInspectionCallReportMutation,
 } = qualitySupplyApi;
