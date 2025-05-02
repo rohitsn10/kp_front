@@ -226,7 +226,7 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
       // Map form data to API expected format
       const apiData = {
         project_id: parseInt(projectId),
-        rfi_activity: category.charAt(0).toUpperCase() + category.slice(1),
+        rfi_activity: category,
         rfi_number: generatedRfiNumber, // Use the generated RFI number
         rfi_classification: formData.classification === 'other' ? 'Other' : 
                            formData.classification === 'table_work' ? 'Civil' : 'Buildings',

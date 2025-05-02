@@ -1,5 +1,3 @@
-SupplyInspections 
-
 import React, { useState, useEffect } from "react";
 import {
   Autocomplete,
@@ -30,156 +28,13 @@ import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import ComplianceReportsModal from "../../../components/pages/quality/ComplianceReportsModal";
 import { UploadDocumentsModal, ViewDocumentsModal } from "../../../components/pages/quality/ViewDocumentsModal";
-// import { UploadDocumentsModal, ViewDocumentsModal } from "../../components/pages/quality/ViewDocumentsModal";
-// import ComplianceReportsModal from "../../components/pages/quality/ComplianceReportsModal";
 import InspectionCallForm from "../../../components/pages/quality/InspectionCallform/InspectionCall";
-const mockProjects = {
-  data: [
-    { id: "1", project_name: "Power Plant Expansion" },
-    { id: "2", project_name: "Oil Refinery Modernization" },
-    { id: "3", project_name: "Chemical Plant Construction" }
-  ]
-};
-
-// Mock data for items
-const mockItems = {
-  "1": {
-    data: [
-      {
-        id: "1",
-        item_number: "PPE-TRB-001",
-        item_name: "Steam Turbine Generator",
-        category: "1", // Category 1: Customer/Owner/EPC witness at OEM facilities
-        discipline: "Mechanical",
-        vendor: "Vendor 1",
-        inspection_date: "2025-05-15",
-        inspector: "John Smith",
-        status: "pending_inspection",
-        has_mqap: true,
-        has_quality_dossier: false,
-        has_mdcc: false,
-        updated_at: "2025-04-01T10:30:00Z"
-      },
-      {
-        id: "2",
-        item_number: "PPE-HEX-002",
-        item_name: "Heat Exchanger",
-        category: "2", // Category 2: Customer/Owner/EPC review quality dossier
-        discipline: "Mechanical",
-        vendor: "Vendor 2",
-        inspection_date: "2025-05-20",
-        inspector: "Maria Rodriguez",
-        status: "inspection_scheduled",
-        has_mqap: true,
-        has_quality_dossier: true,
-        has_mdcc: false,
-        updated_at: "2025-04-02T14:45:00Z"
-      },
-      {
-        id: "3",
-        item_number: "PPE-PMP-003",
-        item_name: "Cooling Water Pump",
-        category: "3", // Category 3: EPC conducts inspection and clears material
-        discipline: "Mechanical",
-        vendor: "Vendor 3",
-        inspection_date: "2025-05-10",
-        inspector: "Robert Johnson",
-        status: "approved",
-        has_mqap: true,
-        has_quality_dossier: true,
-        has_mdcc: true,
-        updated_at: "2025-04-03T09:15:00Z"
-      },
-      {
-        id: "4",
-        item_number: "PPE-VLV-004",
-        item_name: "Control Valves",
-        category: "1",
-        discipline: "Instrumentation",
-        vendor: "Vendor 4",
-        inspection_date: "2025-05-25",
-        inspector: "Patricia Lee",
-        status: "pending_inspection",
-        has_mqap: false,
-        has_quality_dossier: false,
-        has_mdcc: false,
-        updated_at: "2025-04-04T11:20:00Z"
-      },
-      {
-        id: "5",
-        item_number: "PPE-TRF-005",
-        item_name: "Power Transformer",
-        category: "2",
-        discipline: "Electrical",
-        vendor: "Vendor 5",
-        inspection_date: "2025-06-05",
-        inspector: "David Kim",
-        status: "inspection_scheduled",
-        has_mqap: true,
-        has_quality_dossier: false,
-        has_mdcc: false,
-        updated_at: "2025-04-05T16:30:00Z"
-      },
-      
-    ]
-  },
-  "2": {
-    data: [
-      {
-        id: "6",
-        item_number: "ORM-RCT-001",
-        item_name: "Reactor Vessel",
-        category: "1",
-        discipline: "Process",
-        vendor: "ThyssenKrupp",
-        inspection_date: "2025-06-10",
-        inspector: "Sarah Chen",
-        status: "pending_inspection",
-        has_mqap: true,
-        has_quality_dossier: false,
-        has_mdcc: false,
-        updated_at: "2025-04-01T13:45:00Z"
-      },
-      {
-        id: "7",
-        item_number: "ORM-COL-002",
-        item_name: "Distillation Column",
-        category: "1",
-        discipline: "Process",
-        vendor: "Koch-Glitsch",
-        inspection_date: "2025-06-15",
-        inspector: "Michael Brown",
-        status: "observations_pending",
-        has_mqap: true,
-        has_quality_dossier: true,
-        has_mdcc: false,
-        updated_at: "2025-04-02T10:20:00Z"
-      }
-    ]
-  },
-  "3": {
-    data: [
-      {
-        id: "8",
-        item_number: "CPC-TNK-001",
-        item_name: "Storage Tank",
-        category: "3",
-        discipline: "Civil",
-        vendor: "McDermott",
-        inspection_date: "2025-05-30",
-        inspector: "Jessica Wilson",
-        status: "approved",
-        has_mqap: true,
-        has_quality_dossier: true,
-        has_mdcc: true,
-        updated_at: "2025-04-03T15:10:00Z"
-      }
-    ]
-  }
-};
+import { useListAllItemsQuery } from "../../../api/quality/qualitySupplyApi";
+import SelectItemsModal from "../../../components/pages/quality/supply-add-items/SelectItemsModal";
+// Import the new SelectItemsModal component
+// import SelectItemsModal from "../../../components/pages/quality/SelectItemsModal";
 
 function SupplyInspections() {
-  // Set default project ID to "1" (Power Plant Expansion)
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -190,40 +45,41 @@ function SupplyInspections() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   
-  // Add Item Modal state
-  const [addItemModalOpen, setAddItemModalOpen] = useState(false);
-  const [newItemName, setNewItemName] = useState("");
-  const [newItemCategory, setNewItemCategory] = useState("1");
+  // Replace Add Item Modal state with Select Items Modal state
+  const [selectItemsModalOpen, setSelectItemsModalOpen] = useState(false);
+  const [selectedItemIds, setSelectedItemIds] = useState([]);
   
-  // Simulate API loading state for items
-  const [isLoadingItems, setIsLoadingItems] = useState(false);
-  
-  // Use default project ID "1"
-  const selectedProjectId = "1";
-  const items = mockItems[selectedProjectId];
+  // Use RTK Query hook to fetch items
+  const { 
+    data: itemsResponse, 
+    isLoading: isLoadingItems, 
+    isError: isErrorItems,
+    error: itemsError,
+    refetch: refetchItems
+  } = useListAllItemsQuery();
 
   // Apply filters, search, and sort whenever relevant state changes
   useEffect(() => {
-    if (!items?.data) {
+    if (!itemsResponse?.data || itemsResponse.data.length === 0) {
       setFilteredItems([]);
       return;
     }
 
-    let result = [...items.data];
+    let result = [...itemsResponse.data];
 
     // Apply search filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(item =>
-        item.item_number.toLowerCase().includes(searchLower) ||
-        item.item_name.toLowerCase().includes(searchLower) ||
-        item.vendor.toLowerCase().includes(searchLower)
+        (item.item_number && item.item_number.toLowerCase().includes(searchLower)) ||
+        (item.item_name && item.item_name.toLowerCase().includes(searchLower)) ||
+        (item.dicipline && item.dicipline.toLowerCase().includes(searchLower))
       );
     }
 
     // Apply category filter
     if (filterCategory !== "all") {
-      result = result.filter(item => item.category === filterCategory);
+      result = result.filter(item => item.item_category === filterCategory);
     }
 
     // Apply sort option
@@ -243,38 +99,47 @@ function SupplyInspections() {
       });
     } else if (sortOption === "date") {
       // Sort by inspection date (ascending)
-      result.sort((a, b) => new Date(a.inspection_date) - new Date(b.inspection_date));
+      result.sort((a, b) => new Date(a.inspection_date || '') - new Date(b.inspection_date || ''));
     }
 
     setFilteredItems(result);
-  }, [items, searchTerm, sortOption, filterCategory]);
+  }, [itemsResponse, searchTerm, sortOption, filterCategory]);
 
-  // Handler for Add Item modal
-  const handleOpenAddItemModal = () => {
-    setAddItemModalOpen(true);
+  // Handler for Select Items modal
+  const handleOpenSelectItemsModal = () => {
+    setSelectItemsModalOpen(true);
   };
 
-  const handleCloseAddItemModal = () => {
-    setAddItemModalOpen(false);
-    setNewItemName("");
-    setNewItemCategory("1");
+  const handleCloseSelectItemsModal = () => {
+    setSelectItemsModalOpen(false);
   };
 
-  const handleAddItem = () => {
-    // This would actually add the item in a real implementation
-    console.log("Adding new item:", { name: newItemName, category: newItemCategory });
-    handleCloseAddItemModal();
+  const handleItemsSelected = async (itemIds) => {
+    try {
+      // Store the selected item IDs
+      setSelectedItemIds(itemIds);
+      
+      // Here you could make an API call to send these IDs to the backend
+      console.log("Selected item IDs:", itemIds);
+      
+      // You can add your API call here like:
+      // await addSelectedItems({ itemIds });
+      
+      // After successful addition, refetch the items list
+      refetchItems();
+    } catch (err) {
+      console.error("Error handling selected items:", err);
+      // Handle error (show notification, etc.)
+    }
   };
 
   // Handlers for various button actions
   const handleUploadDocuments = (item) => {
-    console.log("Upload documents for:", item);
     setSelectedItem(item);
     setUploadModalOpen(true);
   };
 
   const handleViewDetails = (item) => {
-    console.log("View details for:", item);
     setSelectedItem(item);
     setViewModalOpen(true);
   };
@@ -293,7 +158,6 @@ function SupplyInspections() {
   const [complianceModalOpen, setComplianceModalOpen] = useState(false);
   
   const handleObservations = (item) => {
-    console.log("Manage observations for:", item);
     setSelectedItem(item);
     setComplianceModalOpen(true);
   };
@@ -303,47 +167,44 @@ function SupplyInspections() {
     setSelectedItem(null);
   };
 
-  const handleScheduleInspection = (item) => {
-    console.log("Schedule inspection for:", item);
-    // This would open a scheduling modal in a real implementation
+  const handleScheduleInspection = async (item) => {
+    // Implement your API call
   };
 
-  const handleRaiseInspectionCall = (item) => {
-    console.log("Raise inspection call for:", item);
-    // This would trigger a notification process in a real implementation
+  const handleRaiseInspectionCall = async (item) => {
+    // Implement your API call
   };
 
-  const handleRecordObservations = (item) => {
-    console.log("Record observations for:", item);
-    // This would open an observations form in a real implementation
+  const handleRecordObservations = async (item) => {
+    // Implement your API call
   };
 
-  const handleUploadMDCC = (item) => {
-    console.log("Upload MDCC for:", item);
-    // This would open an MDCC upload modal in a real implementation
+  const handleUploadMDCC = async (item) => {
+    // Implement your API call
   };
 
-  const handleViewHistory = (item) => {
-    console.log("View history for:", item);
-    // This would open a history view in a real implementation
+  const handleViewHistory = async (item) => {
+    // Implement your API call
   };
 
-  const handleVerifyVendor = (item) => {
-    console.log("Verify vendor for:", item);
-    // This would handle vendor verification in a real implementation
+  const handleVerifyVendor = async (item) => {
+    // Implement your API call
   };
 
   const handleGenerateInspection = (item) => {
-    console.log("Generate inspection for:", item);
     setSelectedItem(item);
     setIsDialogOpen(true);
   };
+
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedItem(null);
   };
+
   // Format date for display
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    
     try {
       const date = new Date(dateString);
       return new Intl.DateTimeFormat('en-GB', {
@@ -358,6 +219,8 @@ function SupplyInspections() {
 
   // Get status display
   const getStatusDisplay = (status) => {
+    if (!status) return { label: "Not Set", color: "bg-gray-100 text-gray-800" };
+    
     switch (status) {
       case "pending_inspection":
         return { label: "Pending Inspection", color: "bg-yellow-100 text-yellow-800" };
@@ -374,15 +237,17 @@ function SupplyInspections() {
 
   // Get category display
   const getCategoryDisplay = (category) => {
+    if (!category) return { label: "Not Set", description: "" };
+    
     switch (category) {
-      case "1":
+      case "category_1":
         return { label: "Category 1", description: "Customer/Owner/EPC witness" };
-      case "2":
+      case "category_2":
         return { label: "Category 2", description: "Customer/Owner/EPC review" };
-      case "3":
+      case "category_3":
         return { label: "Category 3", description: "EPC inspection" };
       default:
-        return { label: `Category ${category}`, description: "" };
+        return { label: category, description: "" };
     }
   };
 
@@ -396,277 +261,284 @@ function SupplyInspections() {
   return (
     <div className="min-h-screen p-4 bg-white m-1 md:m-8 rounded-md">
       <h2 className="text-2xl font-semibold text-[#29346B] text-center mb-4">Quality Inspection Management</h2>
-      <h3 className="text-lg font-semibold text-[#29346B] mb-4 text-center">Power Plant Expansion Project</h3>
+      <h3 className="text-lg font-semibold text-[#29346B] mb-4 text-center">Project Management</h3>
 
       {/* Items Table */}
-      {(
-        <div className="mx-auto mt-6">
-          <h3 className="text-lg font-semibold text-[#29346B] mb-2">List of Items:</h3>
+      <div className="mx-auto mt-6">
+        <h3 className="text-lg font-semibold text-[#29346B] mb-2">List of Items:</h3>
 
-          {/* Search and Filter Controls with Additional Buttons */}
-          <div className="flex flex-wrap gap-4 mb-4 justify-between">
-            <div className="flex flex-wrap gap-4">
-              {/* Search */}
-              <div className="flex-grow max-w-md">
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  placeholder="Search by item number, name or vendor"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: "6px",
-                    },
-                  }}
-                />
-              </div>
-
-              {/* Sort Option */}
-              <FormControl sx={{ minWidth: 200 }}>
-                <InputLabel id="sort-label">Sort By</InputLabel>
-                <Select
-                  labelId="sort-label"
-                  value={sortOption}
-                  label="Sort By"
-                  onChange={(e) => setSortOption(e.target.value)}
-                >
-                  <MenuItem value="all">All Items</MenuItem>
-                  <MenuItem value="pending">Pending Inspection First</MenuItem>
-                  <MenuItem value="scheduled">Scheduled Inspections First</MenuItem>
-                  <MenuItem value="date">Inspection Date (Earliest)</MenuItem>
-                </Select>
-              </FormControl>
-
-              {/* Filter by Category */}
-              <FormControl sx={{ minWidth: 200 }}>
-                <InputLabel id="category-filter-label">Filter Category</InputLabel>
-                <Select
-                  labelId="category-filter-label"
-                  value={filterCategory}
-                  label="Filter Category"
-                  onChange={(e) => setFilterCategory(e.target.value)}
-                >
-                  <MenuItem value="all">All Categories</MenuItem>
-                  <MenuItem value="1">Category 1</MenuItem>
-                  <MenuItem value="2">Category 2</MenuItem>
-                  <MenuItem value="3">Category 3</MenuItem>
-                </Select>
-              </FormControl>
-
-              {/* Clear Filters Button */}
-              <Button
+        {/* Search and Filter Controls with Additional Buttons */}
+        <div className="flex flex-wrap gap-4 mb-4 justify-between">
+          <div className="flex flex-wrap gap-4">
+            {/* Search */}
+            <div className="flex-grow max-w-md">
+              <TextField
+                fullWidth
                 variant="outlined"
-                onClick={clearFilters}
-                sx={{
-                  borderColor: "#29346B",
-                  color: "#29346B",
-                  "&:hover": { borderColor: "#1e2756", backgroundColor: "#f0f0f0" }
+                placeholder="Search by item number, name or vendor"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
                 }}
-              >
-                Clear Filters
-              </Button>
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "6px",
+                  },
+                }}
+              />
             </div>
-            
-            {/* Add Item and Generate Categorization Document buttons */}
-            <div className="flex gap-2">
-              <Button
-                variant="contained"
-                onClick={handleOpenAddItemModal}
-                sx={{
-                  bgcolor: "#FACC15",
-                  color: "#29346B",
-                  "&:hover": { bgcolor: "#e5b812" }
-                }}
-              >
-                Add Item
-              </Button>
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "#29346B",
-                  "&:hover": { bgcolor: "#1e2756" }
-                }}
-              >
-                Generate Categorization Document
-              </Button>
-            </div>
-          </div>
 
-          {isLoadingItems ? (
-            <div className="flex justify-center">
-              <CircularProgress />
-            </div>
-          ) : !items?.data ? (
-            <p className="text-red-600">Error fetching items</p>
-          ) : filteredItems.length ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Sr</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Item Number</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Item Name</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Category</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Discipline</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Vendor</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Inspection Date</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Status</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Documents</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Inspection</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">MDCC</th>
-                    <th className="py-2 px-3 text-[#29346B] border text-left">Vendor Approval</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredItems?.map((item, index) => {
-                    const statusInfo = getStatusDisplay(item.status);
-                    const categoryInfo = getCategoryDisplay(item.category);
-                    
-                    return (
-                      <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                        <td className="py-2 px-3 border">{index + 1}</td>
-                        <td className="py-2 px-3 border">{item.item_number}</td>
-                        <td className="py-2 px-3 border">{item.item_name}</td>
-                        <td className="py-2 px-3 border">
-                          <div>
-                            <span className="font-semibold">{categoryInfo.label}</span>
-                            <p className="text-xs text-gray-600">{categoryInfo.description}</p>
-                          </div>
-                        </td>
-                        <td className="py-2 px-3 border">{item.discipline}</td>
-                        <td className="py-2 px-3 border">{item.vendor}</td>
-                        <td className="py-2 px-3 border">{formatDate(item.inspection_date)}</td>
-                        <td className="py-2 px-3 border">
-                          <span className={`px-2 py-1 rounded text-xs font-semibold ${statusInfo.color}`}>
-                            {statusInfo.label}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 border">
-                          <div className="flex flex-col space-y-1">
-                            <div className="flex items-center">
-                              <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => handleUploadDocuments(item)}
-                                sx={{
-                                  bgcolor: "#FACC15",
-                                  color: "#29346B",
-                                  "&:hover": { bgcolor: "#e5b812" },
-                                  marginRight: "6px",
-                                  padding: "2px 8px"
-                                }}
-                                startIcon={<UploadFileIcon />}
-                              >
-                                Upload
-                              </Button>
-                              <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => handleViewDetails(item)}
-                                sx={{
-                                  bgcolor: "#29346B",
-                                  "&:hover": { bgcolor: "#1e2756" },
-                                  padding: "2px 8px"
-                                }}
-                                startIcon={<VisibilityIcon />}
-                              >
-                                View
-                              </Button>
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              {item.has_mqap && <Chip size="small" label="MQAP" color="primary" variant="outlined" />}
-                              {item.has_quality_dossier && <Chip size="small" label="Dossier" color="success" variant="outlined" />}
-                              {item.has_mdcc && <Chip size="small" label="MDCC" color="secondary" variant="outlined" />}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2 px-3 border">
-                          <div className="flex flex-col space-y-1">
+            {/* Sort Option */}
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel id="sort-label">Sort By</InputLabel>
+              <Select
+                labelId="sort-label"
+                value={sortOption}
+                label="Sort By"
+                onChange={(e) => setSortOption(e.target.value)}
+              >
+                <MenuItem value="all">All Items</MenuItem>
+                <MenuItem value="pending">Pending Inspection First</MenuItem>
+                <MenuItem value="scheduled">Scheduled Inspections First</MenuItem>
+                <MenuItem value="date">Inspection Date (Earliest)</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Filter by Category */}
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel id="category-filter-label">Filter Category</InputLabel>
+              <Select
+                labelId="category-filter-label"
+                value={filterCategory}
+                label="Filter Category"
+                onChange={(e) => setFilterCategory(e.target.value)}
+              >
+                <MenuItem value="all">All Categories</MenuItem>
+                <MenuItem value="category_1">Category 1</MenuItem>
+                <MenuItem value="category_2">Category 2</MenuItem>
+                <MenuItem value="category_3">Category 3</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Clear Filters Button */}
+            <Button
+              variant="outlined"
+              onClick={clearFilters}
+              sx={{
+                borderColor: "#29346B",
+                color: "#29346B",
+                "&:hover": { borderColor: "#1e2756", backgroundColor: "#f0f0f0" }
+              }}
+            >
+              Clear Filters
+            </Button>
+          </div>
+          
+          {/* Replace Add Item button with Select Items button */}
+          <div className="flex gap-2">
+            <Button
+              variant="contained"
+              onClick={handleOpenSelectItemsModal}
+              sx={{
+                bgcolor: "#FACC15",
+                color: "#29346B",
+                "&:hover": { bgcolor: "#e5b812" }
+              }}
+            >
+              Select Items
+            </Button>
+            <Button
+              variant="contained"
+              sx={{
+                bgcolor: "#29346B",
+                "&:hover": { bgcolor: "#1e2756" }
+              }}
+            >
+              Generate Categorization Document
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={refetchItems}
+              sx={{
+                borderColor: "#29346B",
+                color: "#29346B",
+                "&:hover": { borderColor: "#1e2756", backgroundColor: "#f0f0f0" }
+              }}
+            >
+              Refresh Data
+            </Button>
+          </div>
+        </div>
+
+        {isLoadingItems ? (
+          <div className="flex justify-center">
+            <CircularProgress />
+          </div>
+        ) : isErrorItems ? (
+          <p className="text-red-600">{itemsError?.data?.message || "Error loading items"}</p>
+        ) : filteredItems.length ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-300">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Sr</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Item Number</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Item Name</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Category</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Discipline</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Inspection Date</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Status</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Documents</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Inspection</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">MDCC</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Vendor Approval</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems?.map((item, index) => {
+                  const statusInfo = getStatusDisplay(item.status);
+                  const categoryInfo = getCategoryDisplay(item.item_category);
+                  
+                  return (
+                    <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                      <td className="py-2 px-3 border">{index + 1}</td>
+                      <td className="py-2 px-3 border">{item.item_number || 'N/A'}</td>
+                      <td className="py-2 px-3 border">{item.item_name || 'N/A'}</td>
+                      <td className="py-2 px-3 border">
+                        <div>
+                          <span className="font-semibold">{categoryInfo.label}</span>
+                          <p className="text-xs text-gray-600">{categoryInfo.description}</p>
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 border">{item.dicipline || 'N/A'}</td>
+                      <td className="py-2 px-3 border">{item.inspection_date ? formatDate(item.inspection_date) : 'Not Scheduled'}</td>
+                      <td className="py-2 px-3 border">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${statusInfo.color}`}>
+                          {statusInfo.label}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 border">
+                        <div className="flex flex-col space-y-1">
+                          <div className="flex items-center">
                             <Button
                               variant="contained"
                               size="small"
-                              onClick={() => handleObservations(item)}
+                              onClick={() => handleUploadDocuments(item)}
                               sx={{
-                                bgcolor: "#A855F7",
-                                "&:hover": { bgcolor: "#9333EA" },
-                                padding: "2px 8px",
-                                marginBottom: "4px"
-                              }}
-                              startIcon={<AssignmentIcon />}
-                            >
-                              Observations
-                            </Button>
-                            <Button
-                              variant="contained"
-                              size="small"
-                              onClick={() => handleGenerateInspection(item)}
-                              sx={{
-                                bgcolor: "#3B82F6",
-                                "&:hover": { bgcolor: "#2563EB" },
+                                bgcolor: "#FACC15",
+                                color: "#29346B",
+                                "&:hover": { bgcolor: "#e5b812" },
+                                marginRight: "6px",
                                 padding: "2px 8px"
                               }}
-                              startIcon={<AssessmentIcon />}
+                              startIcon={<UploadFileIcon />}
                             >
-                              Generate Inspection Call
+                              Upload
                             </Button>
-                          </div>
-                        </td>
-                        <td className="py-2 px-3 border">
-                          <div className="flex flex-col space-y-1">
                             <Button
                               variant="contained"
                               size="small"
-                              onClick={() => handleUploadMDCC(item)}
+                              onClick={() => handleViewDetails(item)}
                               sx={{
-                                bgcolor: "#10B981",
-                                "&:hover": { bgcolor: "#0ea271" },
-                                marginBottom: "4px",
+                                bgcolor: "#29346B",
+                                "&:hover": { bgcolor: "#1e2756" },
                                 padding: "2px 8px"
                               }}
-                              startIcon={<CheckCircleOutlineIcon />}
+                              startIcon={<VisibilityIcon />}
                             >
-                              Generate MDCC
+                              View
                             </Button>
                           </div>
-                        </td>
-                        <td className="py-2 px-3 border">
+                          <div className="flex flex-wrap gap-1">
+                            {item.has_mqap && <Chip size="small" label="MQAP" color="primary" variant="outlined" />}
+                            {item.has_quality_dossier && <Chip size="small" label="Dossier" color="success" variant="outlined" />}
+                            {item.has_mdcc && <Chip size="small" label="MDCC" color="secondary" variant="outlined" />}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 border">
+                        <div className="flex flex-col space-y-1">
                           <Button
                             variant="contained"
                             size="small"
-                            onClick={() => handleVerifyVendor(item)}
+                            onClick={() => handleObservations(item)}
                             sx={{
-                              bgcolor: "#F59E0B",
-                              "&:hover": { bgcolor: "#D97706" },
+                              bgcolor: "#A855F7",
+                              "&:hover": { bgcolor: "#9333EA" },
+                              padding: "2px 8px",
+                              marginBottom: "4px"
+                            }}
+                            startIcon={<AssignmentIcon />}
+                          >
+                            Observations
+                          </Button>
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleGenerateInspection(item)}
+                            sx={{
+                              bgcolor: "#3B82F6",
+                              "&:hover": { bgcolor: "#2563EB" },
                               padding: "2px 8px"
                             }}
-                            startIcon={<VerifiedUserIcon />}
+                            startIcon={<AssessmentIcon />}
                           >
-                            Verify Vendor
+                            Generate Inspection Call
                           </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-center p-4 bg-gray-50 border rounded">
-              {searchTerm || filterCategory !== "all" || sortOption !== "all" ?
-                "No matching items found. Try adjusting your filters." :
-                "No items available for this project."}
-            </p>
-          )}
-        </div>
-      )}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 border">
+                        <div className="flex flex-col space-y-1">
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleUploadMDCC(item)}
+                            sx={{
+                              bgcolor: "#10B981",
+                              "&:hover": { bgcolor: "#0ea271" },
+                              marginBottom: "4px",
+                              padding: "2px 8px"
+                            }}
+                            startIcon={<CheckCircleOutlineIcon />}
+                          >
+                            Generate MDCC
+                          </Button>
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 border">
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={() => handleVerifyVendor(item)}
+                          sx={{
+                            bgcolor: "#F59E0B",
+                            "&:hover": { bgcolor: "#D97706" },
+                            padding: "2px 8px"
+                          }}
+                          startIcon={<VerifiedUserIcon />}
+                        >
+                          Verify Vendor
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-center p-4 bg-gray-50 border rounded">
+            {searchTerm || filterCategory !== "all" || sortOption !== "all" ?
+              "No matching items found. Try adjusting your filters." :
+              "No items available for this project."}
+          </p>
+        )}
+      </div>
       
       {/* Document Modals */}
       <UploadDocumentsModal
@@ -684,67 +556,20 @@ function SupplyInspections() {
         handleClose={handleCloseComplianceModal}
         itemDetails={selectedItem}
       />
- {isDialogOpen && (
+      {isDialogOpen && (
         <InspectionCallForm
           open={isDialogOpen}
           handleClose={handleCloseDialog}
           selectedItem={selectedItem}
         />
       )}
-      {/* Add Item Modal */}
-      <Dialog open={addItemModalOpen} onClose={handleCloseAddItemModal}>
-        <DialogTitle sx={{ bgcolor: "#29346B", color: "white" }}>Add New Item</DialogTitle>
-        <DialogContent sx={{ pt: 2, minWidth: "400px" }}>
-          <DialogContentText sx={{ mb: 2 }}>
-            Please enter the details for the new item.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="item-name"
-            label="Item Name"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={newItemName}
-            onChange={(e) => setNewItemName(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel id="category-select-label">Category</InputLabel>
-            <Select
-              labelId="category-select-label"
-              id="category-select"
-              value={newItemCategory}
-              label="Category"
-              onChange={(e) => setNewItemCategory(e.target.value)}
-            >
-              <MenuItem value="1">Category 1</MenuItem>
-              <MenuItem value="2">Category 2</MenuItem>
-              <MenuItem value="3">Category 3</MenuItem>
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button 
-            onClick={handleCloseAddItemModal}
-            sx={{ color: "#29346B" }}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleAddItem}
-            variant="contained"
-            sx={{
-              bgcolor: "#FACC15",
-              color: "#29346B",
-              "&:hover": { bgcolor: "#e5b812" }
-            }}
-          >
-            Add Item
-          </Button>
-        </DialogActions>
-      </Dialog>
+      
+      {/* Replace Add Item Modal with Select Items Modal */}
+      <SelectItemsModal
+        open={selectItemsModalOpen}
+        handleClose={handleCloseSelectItemsModal}
+        onItemsSelected={handleItemsSelected}
+      />
     </div>
   );
 }
