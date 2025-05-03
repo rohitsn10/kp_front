@@ -35,8 +35,13 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import DownloadIcon from '@mui/icons-material/Download';
+import { useParams } from 'react-router-dom';
 
-// Upload Documents Modal
+
+import { useGetQualityInspectionDocumentListQuery, useUploadQualityInspectionDocumentsMutation } from '../../../api/quality/qualitySupplyApi';
+// import { useUploadQualityInspectionDocumentMutation } from 'path/to/your/api'; // Make sure this path is correct
+
 export function UploadDocumentsModal({ open, handleClose, itemDetails }) {
   const [activeTab, setActiveTab] = useState(0);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -44,8 +49,14 @@ export function UploadDocumentsModal({ open, handleClose, itemDetails }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [documentType, setDocumentType] = useState('mqap');
   const [revisionNumber, setRevisionNumber] = useState('');
-  const [revisionStatus, setRevisionStatus] = useState('submit'); // New state for revision status
+  const [revisionStatus, setRevisionStatus] = useState('submit');
   const [remarks, setRemarks] = useState('');
+  const [uploadError, setUploadError] = useState(null);
+
+  // Make sure this hook is correctly named based on your API export
+  const [uploadDocument, { isLoading: isUploadLoading }] = useUploadQualityInspectionDocumentsMutation();
+
+  const { projectId } = useParams();
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -61,34 +72,95 @@ export function UploadDocumentsModal({ open, handleClose, itemDetails }) {
     setDocumentType(event.target.value);
   };
   
-  // Handler for revision status change
   const handleRevisionStatusChange = (event) => {
     setRevisionStatus(event.target.value);
   };
 
-  const simulateUpload = () => {
-    if (!selectedFile) return;
+  const handleUpload = async () => {
+    if (!selectedFile || !itemDetails) return;
 
     setIsUploading(true);
     setUploadProgress(0);
+    setUploadError(null);
 
-    const interval = setInterval(() => {
+    // Create FormData object
+    const formData = new FormData();
+    
+    // Add common fields
+    formData.append("project_id", projectId);
+    formData.append("item_id", itemDetails.id);
+    formData.append("vendor_id", itemDetails.vendor_id || "3");
+    formData.append("remarks", remarks);
+
+    // Map the selected document type to the API's expected fields
+    switch (documentType) {
+      case 'mqap':
+        formData.append("mqap_upload", selectedFile);
+        formData.append("mqap_revision_number", revisionNumber);
+        formData.append("mqap_revision_status", revisionStatus);
+        break;
+      case 'quality_dossier':
+        formData.append("quality_dossier_upload", selectedFile);
+        formData.append("quality_dossier_revision_number", revisionNumber);
+        formData.append("quality_dossier_revision_status", revisionStatus);
+        break;
+      case 'drawings':
+        formData.append("drawing_upload", selectedFile);
+        formData.append("drawing_revision_number", revisionNumber);
+        formData.append("drawing_revision_status", revisionStatus);
+        break;
+      case 'datasheet':
+        formData.append("data_sheet_upload", selectedFile);
+        formData.append("data_sheet_revision_number", revisionNumber);
+        formData.append("data_sheet_revision_status", revisionStatus);
+        break;
+      case 'specifications':
+        formData.append("specification_upload", selectedFile);
+        formData.append("specification_revision_number", revisionNumber);
+        formData.append("specification_revision_status", revisionStatus);
+        break;
+      case 'mdcc':
+        formData.append("mdcc_upload", selectedFile);
+        formData.append("mdcc_revision_number", revisionNumber);
+        formData.append("mdcc_revision_status", revisionStatus);
+        break;
+      default:
+        setIsUploading(false);
+        setUploadError("Invalid document type selected");
+        return;
+    }
+
+    const progressInterval = setInterval(() => {
       setUploadProgress((prevProgress) => {
-        const newProgress = prevProgress + 10;
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsUploading(false);
-            setSelectedFile(null);
-            setRevisionNumber('');
-            setRevisionStatus('submit');
-            setRemarks('');
-          }, 500);
-          return 100;
+        if (prevProgress >= 90) {
+          clearInterval(progressInterval);
+          return 90;
         }
-        return newProgress;
+        return prevProgress + 10;
       });
     }, 300);
+
+    try {
+      const response = await uploadDocument(formData).unwrap();
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      
+      setTimeout(() => {
+        setIsUploading(false);
+        setSelectedFile(null);
+        setRevisionNumber('');
+        setRevisionStatus('submit');
+        setRemarks('');
+        setActiveTab(1);
+      }, 1000);
+      
+    } catch (error) {
+      clearInterval(progressInterval);
+      setIsUploading(false);
+      setUploadError(error.message || "Failed to upload document. Please try again.");
+      console.error("Upload error:", error);
+    }
   };
 
   const getDocumentTypeName = () => {
@@ -129,6 +201,7 @@ export function UploadDocumentsModal({ open, handleClose, itemDetails }) {
           <CloseIcon />
         </IconButton>
       </DialogTitle>
+      
       <DialogContent dividers>
         {itemDetails && (
           <div className="mb-4 p-3 bg-gray-50 rounded-md">
@@ -222,6 +295,10 @@ export function UploadDocumentsModal({ open, handleClose, itemDetails }) {
                 </div>
               )}
             </Box>
+            
+            {uploadError && (
+              <Alert severity="error" className="mb-4">{uploadError}</Alert>
+            )}
 
             {isUploading && (
               <div className="mb-4">
@@ -247,7 +324,6 @@ export function UploadDocumentsModal({ open, handleClose, itemDetails }) {
               disabled={isUploading}
             />
             
-            {/* New Revision Status Field */}
             <FormControl fullWidth margin="normal" disabled={isUploading}>
               <InputLabel id="revision-status-label">Revision Status</InputLabel>
               <Select
@@ -284,7 +360,6 @@ export function UploadDocumentsModal({ open, handleClose, itemDetails }) {
               Previous Document Uploads
             </Typography>
             <List>
-              {/* Dummy upload history */}
               <ListItem divider>
                 <ListItemIcon>
                   <PictureAsPdfIcon color="error" />
@@ -322,6 +397,7 @@ export function UploadDocumentsModal({ open, handleClose, itemDetails }) {
           </Box>
         )}
       </DialogContent>
+      
       <DialogActions className="bg-gray-50">
         <Button 
           onClick={handleClose} 
@@ -335,7 +411,7 @@ export function UploadDocumentsModal({ open, handleClose, itemDetails }) {
           color="primary"
           disabled={!selectedFile || isUploading} 
           startIcon={isUploading ? <CircularProgress size={16} /> : <UploadFileIcon />}
-          onClick={simulateUpload}
+          onClick={handleUpload}
           sx={{ bgcolor: "#29346B", "&:hover": { bgcolor: "#1e2756" } }}
         >
           {isUploading ? 'Uploading...' : `Upload ${getDocumentTypeName()}`}
@@ -348,36 +424,40 @@ export function UploadDocumentsModal({ open, handleClose, itemDetails }) {
 // View Documents Modal
 export function ViewDocumentsModal({ open, handleClose, itemDetails }) {
   const [activeTab, setActiveTab] = useState(0);
+  const { projectId } = useParams();
+  const itemId = itemDetails?.id;
+  const apiBaseUrl = import.meta.env.VITE_API_KEY;
+
+  // Use the new hook to fetch documents
+  const { 
+    data: documentResponse, 
+    isLoading, 
+    error 
+  } = useGetQualityInspectionDocumentListQuery(
+    { itemId, projectId },
+    { skip: !itemId || !projectId } // Skip query if itemId or projectId is not available
+  );
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
 
-  // Dummy document data for different types
+  // Define document types structure
   const documentTypes = [
-    { id: 'mqap', label: 'MQAP', files: [
-      { name: 'MQAP_Rev2.pdf', date: '02/04/2025', user: 'John Davis', revision: '2', status: 'Under Review' },
-    ]},
-    { id: 'quality_dossier', label: 'Quality Dossier', files: [
-      { name: 'QualityDossier_Initial.docx', date: '20/03/2025', user: 'Robert Chen', revision: '0', status: 'Approved' },
-    ]},
-    { id: 'drawings', label: 'Drawings', files: [
-      { name: 'Assembly_Drawing_Rev1.pdf', date: '10/03/2025', user: 'Sarah Jones', revision: '1', status: 'Submit' },
-      { name: 'Component_Detail.pdf', date: '08/03/2025', user: 'Sarah Jones', revision: '0', status: 'Commented' },
-    ]},
-    { id: 'datasheet', label: 'Data Sheets', files: [
-      { name: 'Datasheet_SteamTurbine.xlsx', date: '28/03/2025', user: 'Maria Garcia', revision: '1', status: 'Submit' },
-    ]},
-    { id: 'specifications', label: 'Specifications', files: []},
-    { id: 'mdcc', label: 'MDCC', files: []},
+    { id: 'mqap', label: 'MQAP', filesKey: 'mqap_upload' },
+    { id: 'quality_dossier', label: 'Quality Dossier', filesKey: 'quality_dossier_upload' },
+    { id: 'drawings', label: 'Drawings', filesKey: 'drawing_upload' },
+    { id: 'datasheet', label: 'Data Sheets', filesKey: 'data_sheet_upload' },
+    { id: 'specifications', label: 'Specifications', filesKey: 'specification_upload' },
+    { id: 'mdcc', label: 'MDCC', filesKey: 'mdcc_upload' },
   ];
 
   const getFileIcon = (fileName) => {
-    if (fileName.endsWith('.pdf')) {
+    if (fileName && fileName.endsWith('.pdf')) {
       return <PictureAsPdfIcon color="error" />;
-    } else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
+    } else if (fileName && (fileName.endsWith('.docx') || fileName.endsWith('.doc'))) {
       return <DescriptionIcon color="primary" />;
-    } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+    } else if (fileName && (fileName.endsWith('.xlsx') || fileName.endsWith('.xls'))) {
       return <InsertDriveFileIcon color="success" />;
     }
     return <InsertDriveFileIcon />;
@@ -386,17 +466,58 @@ export function ViewDocumentsModal({ open, handleClose, itemDetails }) {
   // Get color for status chip
   const getStatusColor = (status) => {
     switch(status) {
-      case 'Approved':
+      case 'approved':
         return 'success';
-      case 'Under Review':
+      case 'under_review':
         return 'warning';
-      case 'Submit':
+      case 'submit':
         return 'info';
-      case 'Commented':
+      case 'commented':
         return 'error';
       default:
         return 'default';
     }
+  };
+
+  // Format the status text for display
+  const formatStatus = (status) => {
+    if (!status) return 'Unknown';
+    
+    return status
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Get file name from path
+  const getFileName = (filePath) => {
+    if (!filePath) return '';
+    return filePath.split('/').pop();
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+  };
+
+  // Handle file download
+  const handleFileDownload = (filePath) => {
+    if (!filePath) return;
+    
+    // Construct the full URL using the base URL from environment variables
+    const fullUrl = `${apiBaseUrl}${filePath}`;
+    
+    // Create a link element and trigger download
+    const link = document.createElement('a');
+    link.href = fullUrl;
+    link.setAttribute('download', getFileName(filePath));
+    
+    // Append to body, click and remove
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -456,75 +577,117 @@ export function ViewDocumentsModal({ open, handleClose, itemDetails }) {
           </div>
         )}
 
-        <Tabs value={activeTab} onChange={handleTabChange} className="mb-4" variant="scrollable" scrollButtons="auto">
-          {documentTypes.map((type) => (
-            <Tab key={type.id} label={`${type.label} (${type.files.length})`} />
-          ))}
-        </Tabs>
-
-        {documentTypes.map((type, index) => (
-          <div key={type.id} className={activeTab !== index ? 'hidden' : ''}>
-            {type.files.length > 0 ? (
-              <List>
-                {type.files.map((file, fileIndex) => (
-                  <ListItem 
-                    key={fileIndex}
-                    divider={fileIndex < type.files.length - 1}
-                    secondaryAction={
-                      <div className="flex items-center space-x-2">
-                        <Chip 
-                          label={file.status} 
-                          size="small" 
-                          color={getStatusColor(file.status)} 
-                          variant="outlined" 
-                        />
-                        <Button 
-                          variant="outlined" 
-                          size="small"
-                          startIcon={<VisibilityIcon />}
-                        >
-                          View
-                        </Button>
-                      </div>
-                    }
-                  >
-                    <ListItemIcon>
-                      {getFileIcon(file.name)}
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={
-                        <span className="font-medium">{file.name}</span>
-                      } 
-                      secondary={
-                        <React.Fragment>
-                          <span>Revision: {file.revision}</span>
-                          <br />
-                          <span>Uploaded on {file.date} by {file.user}</span>
-                        </React.Fragment>
-                      } 
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            ) : (
-              <div className="p-8 text-center bg-gray-50 rounded-md">
-                <InsertDriveFileIcon color="disabled" style={{ fontSize: 48 }} className="mb-2" />
-                <Typography variant="body1" color="textSecondary">
-                  No {type.label} documents have been uploaded yet.
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  color="primary" 
-                  startIcon={<UploadFileIcon />}
-                  className="mt-3"
-                  sx={{ bgcolor: "#29346B", "&:hover": { bgcolor: "#1e2756" } }}
-                >
-                  Upload {type.label}
-                </Button>
-              </div>
-            )}
+        {isLoading ? (
+          <div className="p-8 text-center">
+            <Typography variant="body1">Loading documents...</Typography>
           </div>
-        ))}
+        ) : error ? (
+          <div className="p-8 text-center bg-red-50 rounded-md">
+            <Typography variant="body1" color="error">
+              Error loading documents. Please try again.
+            </Typography>
+          </div>
+        ) : (
+          <>
+            <Tabs value={activeTab} onChange={handleTabChange} className="mb-4" variant="scrollable" scrollButtons="auto">
+              {documentTypes.map((type, index) => {
+                const files = documentResponse?.data?.[0]?.[type.filesKey] || [];
+                return (
+                  <Tab key={type.id} label={`${type.label} (${files.length})`} />
+                );
+              })}
+            </Tabs>
+
+            {documentTypes.map((type, index) => {
+              const files = documentResponse?.data?.[0]?.[type.filesKey] || [];
+              return (
+                <div key={type.id} className={activeTab !== index ? 'hidden' : ''}>
+                  {files.length > 0 ? (
+                    <List>
+                      {files.map((file, fileIndex) => {
+                        const fileName = getFileName(file.file);
+                        const revisionNumber = file[`${type.id === 'drawings' ? 'drawing' : type.id}_revision_number`];
+                        const revisionStatus = file[`${type.id === 'drawings' ? 'drawing' : type.id}_revision_status`];
+                        const uploadDate = formatDate(file.created_at);
+                        
+                        return (
+                          <ListItem 
+                            key={file.id}
+                            divider={fileIndex < files.length - 1}
+                            secondaryAction={
+                              <div className="flex items-center space-x-2">
+                                <Chip 
+                                  label={formatStatus(revisionStatus)} 
+                                  size="small" 
+                                  color={getStatusColor(revisionStatus)} 
+                                  variant="outlined" 
+                                />
+                                <Button 
+                                  variant="outlined" 
+                                  size="small"
+                                  startIcon={<VisibilityIcon />}
+                                  onClick={() => window.open(`${apiBaseUrl}${file.file}`, '_blank')}
+                                >
+                                  View
+                                </Button>
+                                <Button 
+                                  variant="outlined" 
+                                  size="small"
+                                  startIcon={<DownloadIcon />}
+                                  onClick={() => handleFileDownload(file.file)}
+                                >
+                                  Download
+                                </Button>
+                              </div>
+                            }
+                          >
+                            <ListItemIcon>
+                              {getFileIcon(fileName)}
+                            </ListItemIcon>
+                            <ListItemText 
+                              primary={
+                                <span className="font-medium">{fileName}</span>
+                              } 
+                              secondary={
+                                <React.Fragment>
+                                  <span>Revision: {revisionNumber}</span>
+                                  <br />
+                                  <span>Uploaded on {uploadDate}</span>
+                                  {file.remarks && (
+                                    <>
+                                      <br />
+                                      <span>Remarks: {file.remarks}</span>
+                                    </>
+                                  )}
+                                </React.Fragment>
+                              } 
+                            />
+                          </ListItem>
+                        );
+                      })}
+                    </List>
+                  ) : (
+                    <div className="p-8 text-center bg-gray-50 rounded-md">
+                      <InsertDriveFileIcon color="disabled" style={{ fontSize: 48 }} className="mb-2" />
+                      <Typography variant="body1" color="textSecondary">
+                        No {type.label} documents have been uploaded yet.
+                      </Typography>
+                      <Button 
+                        variant="contained" 
+                        color="primary" 
+                        startIcon={<UploadFileIcon />}
+                        className="mt-3"
+                        sx={{ bgcolor: "#29346B", "&:hover": { bgcolor: "#1e2756" } }}
+                      >
+                        Upload {type.label}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
       </DialogContent>
       <DialogActions className="bg-gray-50">
         <Button onClick={handleClose} color="primary">

@@ -9,7 +9,7 @@ export const qualitySupplyApi = createApi({
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
-      headers.set("Content-Type", "application/json");
+      // headers.set("Content-Type", "application/json");
       return headers;
     },
   }),
@@ -48,7 +48,34 @@ export const qualitySupplyApi = createApi({
         body: data,
       }),
     }),
-    
+    uploadQualityInspectionDocuments: builder.mutation({
+      query: (formData) => ({
+        url: "quality_inspection/quality_inspection_document_upload",
+        method: "POST",
+        body: formData,
+        formData: true,
+      }),
+    }),
+    createQualityInspectionObservationReport: builder.mutation({
+      query: (formData) => ({
+        url: "quality_inspection/create_quality_inspection_observation_report",
+        method: "POST",
+        body: formData,
+        formData: true,
+      }),
+    }),
+    getQualityInspectionDocumentList: builder.query({
+      query: ({ itemId, projectId }) => ({
+        url: `quality_inspection/quality_inspection_document_list/${itemId}/${projectId}`,
+        method: "GET",
+      }),
+    }),
+    getQualityInspectionObservationReport: builder.query({
+      query: ({ itemId, projectId }) => ({
+        url: `quality_inspection/get_quality_inspection_observation_report/${itemId}/${projectId}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -58,4 +85,8 @@ export const {
   useSetProjectItemsMutation,
   useGetItemsByProjectQuery,
   useGenerateInspectionCallReportMutation,
+  useUploadQualityInspectionDocumentsMutation,
+  useCreateQualityInspectionObservationReportMutation,
+  useGetQualityInspectionDocumentListQuery,
+  useGetQualityInspectionObservationReportQuery
 } = qualitySupplyApi;
