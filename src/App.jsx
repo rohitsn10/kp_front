@@ -467,7 +467,6 @@ function App() {
           }
         /> */}
         
-
         <Route
           path="/hoto-page"
           element={

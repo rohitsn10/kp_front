@@ -41,6 +41,7 @@ import { lotoRegisterApi } from "../api/hse/loto/lotoRegisterApi.js";
 import { incidentNearmissApi } from "../api/hse/incidentReport/incidentReportApi.js";
 import { qualityApi } from "../api/quality/qualityApi.js";
 import { qualitySupplyApi } from "../api/quality/qualitySupplyApi.js";
+import { hotoApi } from "../api/hoto/hotoApi.js";
  
 const store = configureStore({
   reducer: {
@@ -85,7 +86,8 @@ const store = configureStore({
     [lotoRegisterApi.reducerPath]:lotoRegisterApi.reducer,
     [incidentNearmissApi.reducerPath]:incidentNearmissApi.reducer,
     [qualityApi.reducerPath]:qualityApi.reducer,
-    [qualitySupplyApi.reducerPath]:qualitySupplyApi.reducer
+    [qualitySupplyApi.reducerPath]:qualitySupplyApi.reducer,
+    [hotoApi.reducerPath]:hotoApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -131,6 +133,7 @@ const store = configureStore({
       .concat(incidentNearmissApi.middleware)
       .concat(qualityApi.middleware)
       .concat(qualitySupplyApi.middleware)
+      .concat(hotoApi.middleware)
 });
 
 export default store;
