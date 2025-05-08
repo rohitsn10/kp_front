@@ -26,8 +26,8 @@ const HOTOSectionCards = ({ selectedProject }) => {
       textColor: 'text-blue-800'
     },
     {
-      id: 'hoto-records',
-      title: 'HOTO Records',
+      id: 'punchpoints',
+      title: 'HOTO Punchpoints',
       description: 'View all handover takeover records',
       icon: <FaClipboardCheck className="w-12 h-12 text-green-600" />,
       bgColor: 'bg-green-50',

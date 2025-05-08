@@ -31,7 +31,7 @@ function HotoDocuments() {
   const [sortOption, setSortOption] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [filteredItems, setFilteredItems] = useState([]);
-  
+
   // State for dialogs
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [openFileUploadModal, setOpenFileUploadModal] = useState(false);
@@ -141,14 +141,10 @@ function HotoDocuments() {
 
   // Update functions
   const handleSaveRemarks = (documentId, remarks) => {
-    // Here you would typically call a mutation to update the remarks on the server
-    // After successful update, refetch the documents
     refetch();
   };
 
   const handleVerifyDocument = (documentId, status, comment) => {
-    // Here you would typically call a mutation to update the verification status on the server
-    // After successful update, refetch the documents
     refetch();
   };
 
@@ -198,13 +194,6 @@ function HotoDocuments() {
   };
 
   // Calculate HOTO process completion percentage
-  const calculateCompletionPercentage = () => {
-    if (documents.length === 0) return 0;
-    const approvedCount = documents.filter(doc => doc.status.toLowerCase() === 'approved').length;
-    return Math.round((approvedCount / documents.length) * 100);
-  };
-
-  const completionPercentage = calculateCompletionPercentage();
 
   // Format date string from ISO to local date format
   const formatDate = (isoDate) => {
@@ -219,46 +208,6 @@ function HotoDocuments() {
       <h3 className="text-lg font-semibold text-[#29346B] mb-4 text-center">
         {projectId ? `Project ID: ${projectId}` : 'No Project Selected'}
       </h3>
-      
-      {/* Progress Status Card - Uncomment if needed */}
-      {/* <div className="bg-gray-50 border rounded-md p-4 mb-6">
-        <div className="flex flex-wrap justify-between items-center">
-          <div>
-            <h4 className="text-lg font-medium text-[#29346B]">HOTO Process Status</h4>
-            <p className="text-gray-600">
-              {completionPercentage < 100 ? 
-                `${completionPercentage}% of documents approved - Handover in progress` : 
-                'All documents approved - Handover complete'}
-            </p>
-          </div>
-          <div className="mt-2 sm:mt-0">
-            <div className="w-full sm:w-64 bg-gray-200 rounded-full h-4">
-              <div 
-                className="bg-green-600 h-4 rounded-full" 
-                style={{ width: `${completionPercentage}%` }}
-              ></div>
-            </div>
-            <div className="flex justify-between text-xs text-gray-600 mt-1">
-              <span>0%</span>
-              <span>50%</span>
-              <span>100%</span>
-            </div>
-          </div>
-          {completionPercentage === 100 && (
-            <Button
-              variant="contained"
-              sx={{
-                mt: 2,
-                sm: { mt: 0 },
-                bgcolor: "#10B981",
-                "&:hover": { bgcolor: "#059669" }
-              }}
-            >
-              Generate HOTO Certificate
-            </Button>
-          )}
-        </div>
-      </div> */}
       
       {/* Table Section */}
       <div className="mx-auto mt-6">

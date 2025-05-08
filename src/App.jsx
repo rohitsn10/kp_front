@@ -73,6 +73,7 @@ import MechanicalInspections from "./pages/quality/field-inspections/MechanicalI
 import HOTOModule from "./pages/hoto/HotoDocuments.jsx";
 import HOTOMainPage from "./pages/hoto/HotoMainPage.jsx";
 import HotoDocuments from "./pages/hoto/HotoDocuments.jsx";
+import HotoPunchPoints from "./pages/hoto/HotoPunchpoints.jsx";
 // console.log(SupplyInspections)
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 const HseLayout = () => {
@@ -481,7 +482,11 @@ function App() {
           <Route
             path="add-document/:projectId?"
             element={<HotoDocuments />}
-          />          
+          />    
+                    <Route
+            path="punchpoints/:projectId?"
+            element={<HotoPunchPoints />}
+          />        
         </Route>
 
         <Route
