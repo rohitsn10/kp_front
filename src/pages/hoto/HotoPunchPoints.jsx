@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TextField,
   Button,
@@ -8,295 +8,111 @@ import {
   MenuItem,
   InputAdornment,
   Tooltip,
+  CircularProgress,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import PrintIcon from "@mui/icons-material/Print";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import VerifiedIcon from "@mui/icons-material/Verified";
-import CommentIcon from "@mui/icons-material/Comment";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import HistoryIcon from "@mui/icons-material/History";
+import AddIcon from "@mui/icons-material/Add";
 import { useParams } from 'react-router-dom';
 
+// Import the RTK Query hook
+// import { useGetAllPunchPointDetailsQuery } from '../../services/api'; // Adjust the path based on your project structure
+
 // Import the modals
-// import ClosePointsModal from '../../components/pages/hoto/punchpoints-page/ClosePointsModal';
 import CompletedPointsModal from '../../components/pages/hoto/punchpoints/CompletedPointsModal';
 import ClosePointsModal from '../../components/pages/hoto/punchpoints/ClosePointsModal';
+import AddPunchPointForm from '../../components/pages/hoto/punchpoints/AddPunchPointForm';
+import { useGetAllPunchPointDetailsQuery } from '../../api/hoto/punchPointApi';
 
 function HotoPunchPoints() {
-  const { projectId } = useParams();
+  const { projectId, documentId: hotoId } = useParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [filteredItems, setFilteredItems] = useState([]);
+  const [transformedData, setTransformedData] = useState([]);
   
-  // State for ClosePointsModal
+  // Modal states
   const [openClosePointsModal, setOpenClosePointsModal] = useState(false);
-  const [selectedPunchPoint, setSelectedPunchPoint] = useState(null);
-  
-  // State for CompletedPointsModal
   const [openCompletedPointsModal, setOpenCompletedPointsModal] = useState(false);
+  const [openAddPunchPointModal, setOpenAddPunchPointModal] = useState(false);
+  const [selectedPunchPoint, setSelectedPunchPoint] = useState(null);
 
-  // Update dummy data to include completed points
-  const dummyData = {
-    "status": true,
-    "message": "Punch points fetched successfully",
-    "data": [
-      {
-        "id": 1,
-        "hoto": 1,
-        "punch_file_name": "File Name",
-        "punch_title": "Cable not terminated properly",
-        "punch_description": "The termination of the power cable in panel A is loose and not properly labeled.",
-        "punch_point_raised": "100",
-        "punch_point_balance": "20",
-        "status": "In Progress",
-        "closure_date": "2025-06-15",
-        "punch_report_file": [
-          {
-            "id": 5,
-            "file_url": "https://yourdomain.com/media/punch_files/initial_image.jpg",
-            "uploaded_at": "2025-05-08T10:00:00Z"
-          }
-        ],
-        "completed_points": [
-          {
-            "id": 101,
-            "punch_point_completed": "40",
-            "punch_description": "Tightened and labeled power cable in panel A.",
-            "status": "Completed",
-            "completion_files": [
-              {
-                "id": 201,
-                "file_url": "https://yourdomain.com/media/punch_files/fix_image1.jpg",
-                "uploaded_at": "2025-05-08T11:00:00Z"
-              }
-            ],
-            "created_by": 4,
-            "created_by_name": "Alice Smith",
-            "created_at": "2025-05-08T11:10:00Z",
-            "verification": {
-              "verification_status": "Accepted",
-              "rejection_reason": null,
-              "verified_by": 2,
-              "verified_by_name": "John Doe",
-              "verified_at": "2025-05-08T12:00:00Z"
-            }
-          },
-          {
-            "id": 102,
-            "punch_point_completed": "40",
-            "punch_description": "Reinforced cable terminals with additional supports.",
-            "status": "Completed",
-            "completion_files": [
-              {
-                "id": 202,
-                "file_url": "https://yourdomain.com/media/punch_files/fix_image2.jpg",
-                "uploaded_at": "2025-05-09T09:00:00Z"
-              },
-              {
-                "id": 203,
-                "file_url": "https://yourdomain.com/media/punch_files/fix_report.pdf",
-                "uploaded_at": "2025-05-09T09:05:00Z"
-              }
-            ],
-            "created_by": 5,
-            "created_by_name": "Bob Johnson",
-            "created_at": "2025-05-09T09:10:00Z",
-            "verification": {
-              "verification_status": "Accepted",
-              "rejection_reason": null,
-              "verified_by": 2,
-              "verified_by_name": "John Doe",
-              "verified_at": "2025-05-09T10:30:00Z"
-            }
-          }
-        ],
-        "created_by": 2,
-        "created_by_name": "John Doe",
-        "created_at": "2025-05-08T10:00:00Z",
-        "updated_by": 2,
-        "updated_by_name": "John Doe",
-        "updated_at": "2025-05-08T10:00:00Z"
-      },
-      {
-        "id": 2,
-        "hoto": 1,
-        "punch_file_name": "File Name 2",
-        "punch_title": "Punch point issue not 2",
-        "punch_description": "The termination of the power cable in panel A is loose and not properly labeled.",
-        "punch_point_raised": "100",
-        "punch_point_balance": "60",
-        "status": "Completed",
-        "closure_date": "2025-05-20",
-        "punch_file": [
-          {
-            "id": 5,
-            "file_url": "https://yourdomain.com/media/punch_files/initial_image.jpg",
-            "uploaded_at": "2025-05-08T10:00:00Z"
-          },
-          {
-            "id": 6,
-            "file_url": "https://yourdomain.com/media/punch_files/initial_image.jpg",
-            "uploaded_at": "2025-05-08T10:00:00Z"
-          }
-        ],
-        "completed_points": [
-          {
-            "id": 103,
-            "punch_point_completed": "40",
-            "punch_description": "Fixed the issue with proper cable termination.",
-            "status": "Completed",
-            "completion_files": [
-              {
-                "id": 204,
-                "file_url": "https://yourdomain.com/media/punch_files/completion_image.jpg",
-                "uploaded_at": "2025-05-10T14:00:00Z"
-              }
-            ],
-            "created_by": 3,
-            "created_by_name": "Maria Garcia",
-            "created_at": "2025-05-10T14:10:00Z",
-            "verification": {
-              "verification_status": "Rejected",
-              "rejection_reason": "Insufficient documentation. Please provide close-up photos of the termination.",
-              "verified_by": 2,
-              "verified_by_name": "John Doe",
-              "verified_at": "2025-05-10T16:00:00Z"
-            }
-          }
-        ],
-        "created_by": 2,
-        "created_by_name": "John Doe",
-        "created_at": "2025-05-08T10:00:00Z",
-        "updated_by": 2,
-        "updated_by_name": "John Doe",
-        "updated_at": "2025-05-08T10:00:00Z"
-      },
-      {
-        "id": 3,
-        "hoto": 1,
-        "punch_file_name": "Panel B-23",
-        "punch_title": "Missing safety label",
-        "punch_description": "Safety warning label is missing from the panel front.",
-        "punch_point_raised": "50",
-        "punch_point_balance": "0",
-        "status": "Completed",
-        "closure_date": "2025-05-01",
-        "punch_file": [
-          {
-            "id": 7,
-            "file_url": "https://yourdomain.com/media/punch_files/panel_image.jpg",
-            "uploaded_at": "2025-05-03T14:30:00Z"
-          }
-        ],
-        "completed_points": [
-          {
-            "id": 104,
-            "punch_point_completed": "50",
-            "punch_description": "Safety label installed and verified",
-            "status": "Completed",
-            "completion_files": [
-              {
-                "id": 205,
-                "file_url": "https://yourdomain.com/media/punch_files/label_installed.jpg",
-                "uploaded_at": "2025-05-01T09:00:00Z"
-              }
-            ],
-            "created_by": 4,
-            "created_by_name": "Jane Smith",
-            "created_at": "2025-05-01T09:15:00Z",
-            "verification": {
-              "verification_status": "Accepted",
-              "rejection_reason": null,
-              "verified_by": 2,
-              "verified_by_name": "John Doe",
-              "verified_at": "2025-05-01T10:30:00Z"
-            }
-          }
-        ],
-        "created_by": 3,
-        "created_by_name": "Robert Johnson",
-        "created_at": "2025-05-03T14:30:00Z",
-        "updated_by": 4,
-        "updated_by_name": "Jane Smith",
-        "updated_at": "2025-05-01T09:15:00Z"
-      },
-      {
-        "id": 4,
-        "hoto": 1,
-        "punch_file_name": "Duct System 4A",
-        "punch_title": "Ventilation not meeting specs",
-        "punch_description": "Air flow measurements below specified requirements by 15%",
-        "punch_point_raised": "75",
-        "punch_point_balance": "30",
-        "status": "In Progress",
-        "closure_date": "2025-06-30",
-        "punch_file": [
-          {
-            "id": 8,
-            "file_url": "https://yourdomain.com/media/punch_files/ventilation_test.pdf",
-            "uploaded_at": "2025-04-28T11:20:00Z"
-          }
-        ],
-        "completed_points": [
-          {
-            "id": 105,
-            "punch_point_completed": "35",
-            "punch_description": "Replaced damaged damper, flow improved by 10%",
-            "status": "Completed",
-            "completion_files": [
-              {
-                "id": 206,
-                "file_url": "https://yourdomain.com/media/punch_files/damper_replacement.jpg",
-                "uploaded_at": "2025-05-06T16:30:00Z"
-              }
-            ],
-            "created_by": 5,
-            "created_by_name": "Tech Team",
-            "created_at": "2025-05-06T16:45:00Z",
-            "verification": {
-              "verification_status": "Pending"
-            }
-          },
-          {
-            "id": 106,
-            "punch_point_completed": "10",
-            "punch_description": "Adjusted ventilation controls for optimal performance",
-            "status": "Completed",
-            "completion_files": [
-              {
-                "id": 207,
-                "file_url": "https://yourdomain.com/media/punch_files/controls_adjustment.pdf",
-                "uploaded_at": "2025-05-07T10:15:00Z"
-              }
-            ],
-            "created_by": 5,
-            "created_by_name": "Tech Team",
-            "created_at": "2025-05-07T10:30:00Z",
-            "verification": {
-              "verification_status": "Pending"
-            }
-          }
-        ],
-        "created_by": 5,
-        "created_by_name": "Maria Garcia",
-        "created_at": "2025-04-28T11:20:00Z",
-        "updated_by": 5,
-        "updated_by_name": "Maria Garcia",
-        "updated_at": "2025-05-06T16:45:00Z"
-      }
-    ]
-  };
-  // Extract punch points from the response or use dummy data
-  const punchPoints = dummyData.data;
+  // Fetch data using RTK Query hook
+  const { data: punchPointsData, error, isLoading } = useGetAllPunchPointDetailsQuery(hotoId);
 
-  // Apply filters, search, and sort whenever relevant state changes
+  // Transform data to connect completed points and verified points to their respective punch points
   useEffect(() => {
-    if (!punchPoints) return;
+    if (punchPointsData?.status && punchPointsData.data) {
+      const { punch_points, completed_punch_points, verified_punch_points } = punchPointsData.data;
+      
+      // Map and transform the data to connect related points
+      const transformed = punch_points.map(punchPoint => {
+        // Find all completed points related to this punch point
+        const relatedCompletedPoints = completed_punch_points.filter(
+          cp => cp.raise_punch === punchPoint.id
+        );
+        
+        // For each completed point, find its related verified points
+        const completedPointsWithVerification = relatedCompletedPoints.map(cp => {
+          const verifications = verified_punch_points.filter(
+            vp => vp.completed_punch === cp.id
+          );
+          
+          return {
+            ...cp,
+            verifications
+          };
+        });
+        
+        // Calculate the balance by subtracting the sum of completed points from the raised points
+        const completedPointsSum = completedPointsWithVerification.reduce(
+          (sum, cp) => sum + parseInt(cp.punch_point_completed || 0, 10), 
+          0
+        );
+        
+        const raisedPoints = parseInt(punchPoint.punch_point_raised || 0, 10);
+        const balance = raisedPoints - completedPointsSum;
+        
+        // Determine the overall status based on completed and verified points
+        let status = "Not Started";
+        if (completedPointsWithVerification.length > 0) {
+          if (completedPointsSum >= raisedPoints && 
+              completedPointsWithVerification.every(cp => cp.verifications.length > 0)) {
+            status = "Completed";
+          } else {
+            status = "In Progress";
+          }
+        }
+        
+        // Get the filename from the first file in the punch_file array if it exists
+        const punch_file_name = punchPoint.punch_file && punchPoint.punch_file.length > 0
+          ? punchPoint.punch_file[0].file.split('/').pop()
+          : 'N/A';
+        
+        return {
+          ...punchPoint,
+          punch_file_name,
+          punch_point_balance: balance.toString(),
+          completed_points: completedPointsWithVerification,
+          status,
+          // For the closure date, use the date of the latest verified point if any
+          closure_date: completedPointsWithVerification.flatMap(cp => cp.verifications)
+            .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0]?.updated_at
+        };
+      });
+      
+      setTransformedData(transformed);
+    }
+  }, [punchPointsData]);
+
+  // Filter and sort data
+  useEffect(() => {
+    if (!transformedData.length) return;
     
-    let result = [...punchPoints];
+    let result = [...transformedData];
 
     // Apply search filter
     if (searchTerm) {
@@ -327,7 +143,7 @@ function HotoPunchPoints() {
     }
 
     setFilteredItems(result);
-  }, [searchTerm, sortOption, statusFilter, punchPoints]);
+  }, [searchTerm, sortOption, statusFilter, transformedData]);
 
   // Clear filters
   const clearFilters = () => {
@@ -336,7 +152,7 @@ function HotoPunchPoints() {
     setStatusFilter("all");
   };
   
-  // Handlers for ClosePointsModal
+  // Modal handlers
   const handleOpenClosePointsModal = (punchPoint) => {
     setSelectedPunchPoint(punchPoint);
     setOpenClosePointsModal(true);
@@ -347,7 +163,6 @@ function HotoPunchPoints() {
     setSelectedPunchPoint(null);
   };
   
-  // Handlers for CompletedPointsModal
   const handleOpenCompletedPointsModal = (punchPoint) => {
     setSelectedPunchPoint(punchPoint);
     setOpenCompletedPointsModal(true);
@@ -358,18 +173,25 @@ function HotoPunchPoints() {
     setSelectedPunchPoint(null);
   };
   
-  // Handler for close points submission
+  // Add Punch Point modal handlers
+  const handleOpenAddPunchPointModal = () => {
+    setOpenAddPunchPointModal(true);
+  };
+  
+  const handleCloseAddPunchPointModal = () => {
+    setOpenAddPunchPointModal(false);
+  };
+  
+  // Form submission handlers
   const handleSubmitClosePoints = (closePointsData) => {
     console.log('Close points data submitted:', closePointsData);
-    // In a real app, this would call an API endpoint
-    // For now, we'll just log the data
+    handleCloseClosePointsModal();
   };
 
   // Status badge component
   const StatusBadge = ({ status }) => {
     let bgColor, textColor, label;
     
-    // Convert status to lowercase for consistent comparison
     const statusLower = status.toLowerCase();
     
     switch(statusLower) {
@@ -403,11 +225,11 @@ function HotoPunchPoints() {
     );
   };
 
-  // Format date string from ISO to local date format
+  // Format date
   const formatDate = (isoDate) => {
     if (!isoDate) return 'N/A';
     const date = new Date(isoDate);
-    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+    return date.toLocaleDateString('en-GB');
   };
   
   return (
@@ -415,11 +237,30 @@ function HotoPunchPoints() {
       <h2 className="text-2xl font-semibold text-[#29346B] text-center mb-4">HOTO Module (Handover and Takeover)</h2>
       <h3 className="text-lg font-semibold text-[#29346B] mb-4 text-center">
         {projectId ? `Project ID: ${projectId}` : 'No Project Selected'}
+        {hotoId ? ` | HOTO ID: ${hotoId}` : ''}
       </h3>
       
       {/* Table Section */}
       <div className="mx-auto mt-6">
-        <h3 className="text-lg font-semibold text-[#29346B] mb-2">Punch Points:</h3>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-lg font-semibold text-[#29346B]">Punch Points:</h3>
+          
+          {/* Add Punch Point Button */}
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleOpenAddPunchPointModal}
+            sx={{
+              bgcolor: "#29346B",
+              "&:hover": { bgcolor: "#1e2756" },
+              borderRadius: "6px",
+              textTransform: "none",
+              fontWeight: "500"
+            }}
+          >
+            Add Punch Point
+          </Button>
+        </div>
 
         {/* Search and Filter Controls */}
         <div className="flex flex-wrap gap-4 mb-4 justify-between">
@@ -494,35 +335,24 @@ function HotoPunchPoints() {
               Clear Filters
             </Button>
           </div>
-          
-          {/* Action Buttons */}
-          {/* <div className="flex gap-2">
-            <Button
-              variant="contained"
-              startIcon={<PrintIcon />}
-              sx={{
-                bgcolor: "#3B82F6", // Blue color
-                "&:hover": { bgcolor: "#2563EB" }
-              }}
-            >
-              Print List
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<UploadFileIcon />}
-              disabled={!projectId}
-              sx={{
-                bgcolor: "#FACC15",
-                color: "#29346B",
-                "&:hover": { bgcolor: "#e5b812" }
-              }}
-            >
-              Add New Punch Point
-            </Button>
-          </div> */}
         </div>
 
-        {punchPoints && filteredItems.length ? (
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex justify-center my-8">
+            <CircularProgress color="primary" />
+          </div>
+        )}
+
+        {/* Error state */}
+        {error && (
+          <div className="text-center p-4 bg-red-50 border border-red-200 rounded text-red-700 my-4">
+            Error loading punch points: {error.message || 'Unknown error occurred'}
+          </div>
+        )}
+
+        {/* Data display */}
+        {!isLoading && !error && filteredItems.length > 0 ? (
           <div className="overflow-x-auto">
             <table id="hoto-punchpoints-table" className="min-w-full bg-white border border-gray-300">
               <thead>
@@ -578,7 +408,7 @@ function HotoPunchPoints() {
                             onClick={() => handleOpenCompletedPointsModal(item)}
                             startIcon={<HistoryIcon />}
                             sx={{
-                              bgcolor: "#8B5CF6", // Purple color
+                              bgcolor: "#8B5CF6",
                               "&:hover": { bgcolor: "#7C3AED" },
                               padding: "2px 8px"
                             }}
@@ -591,57 +421,15 @@ function HotoPunchPoints() {
                             )}
                           </Button>
                         </Tooltip>
-                        {/* <Tooltip title="Upload Files">
-                          <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<UploadFileIcon />}
-                            sx={{
-                              bgcolor: "#EC4899", // Pink color
-                              "&:hover": { bgcolor: "#DB2777" },
-                              padding: "2px 8px"
-                            }}
-                          >
-                            Upload
-                          </Button>
-                        </Tooltip> */}
-                        {/* <Tooltip title="Add Remarks">
-                          <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<CommentIcon />}
-                            sx={{
-                              bgcolor: "#FACC15",
-                              color: "#29346B",
-                              "&:hover": { bgcolor: "#e5b812" },
-                              padding: "2px 8px"
-                            }}
-                          >
-                            Remarks
-                          </Button>
-                        </Tooltip> */}
-                        {/* <Tooltip title="Verify Punch Point">
-                          <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<VerifiedIcon />}
-                            sx={{
-                              bgcolor: "#10B981", // Green color
-                              "&:hover": { bgcolor: "#059669" },
-                              padding: "2px 8px"
-                            }}
-                          >
-                            Verify
-                          </Button>
-                        </Tooltip> */}
                         <Tooltip title="Close Points">
                           <Button
                             variant="contained"
                             size="small"
                             onClick={() => handleOpenClosePointsModal(item)}
                             startIcon={<DoneAllIcon />}
+                            disabled={item.status === "Completed" || parseInt(item.punch_point_balance) === 0}
                             sx={{
-                              bgcolor: "#6366F1", // Indigo color
+                              bgcolor: "#6366F1",
                               "&:hover": { bgcolor: "#4F46E5" },
                               padding: "2px 8px"
                             }}
@@ -657,27 +445,38 @@ function HotoPunchPoints() {
             </table>
           </div>
         ) : (
-          <p className="text-center p-4 bg-gray-50 border rounded">
-            {searchTerm || sortOption !== "all" || statusFilter !== "all" ?
-              "No matching punch points found. Try adjusting your filters." :
-              "No punch points available for this project."}
-          </p>
+          !isLoading && (
+            <p className="text-center p-4 bg-gray-50 border rounded">
+              {searchTerm || sortOption !== "all" || statusFilter !== "all" ?
+                "No matching punch points found. Try adjusting your filters." :
+                "No punch points available for this project."}
+            </p>
+          )
         )}
       </div>
       
-      {/* Close Points Modal */}
-      <ClosePointsModal 
-        open={openClosePointsModal}
-        handleClose={handleCloseClosePointsModal}
-        punchPointData={selectedPunchPoint}
-        onSubmitClosePoints={handleSubmitClosePoints}
-      />
+      {/* Modals */}
+      {selectedPunchPoint && (
+        <>
+          <ClosePointsModal 
+            open={openClosePointsModal}
+            handleClose={handleCloseClosePointsModal}
+            punchPointData={selectedPunchPoint}
+          />
+          
+          <CompletedPointsModal
+            open={openCompletedPointsModal}
+            handleClose={handleCloseCompletedPointsModal}
+            punchPointData={selectedPunchPoint}
+          />
+        </>
+      )}
       
-      {/* Completed Points History Modal */}
-      <CompletedPointsModal
-        open={openCompletedPointsModal}
-        handleClose={handleCloseCompletedPointsModal}
-        punchPointData={selectedPunchPoint}
+      {/* Add Punch Point Modal */}
+      <AddPunchPointForm
+        open={openAddPunchPointModal}
+        handleClose={handleCloseAddPunchPointModal}
+        hotoId={hotoId}
       />
     </div>
   );

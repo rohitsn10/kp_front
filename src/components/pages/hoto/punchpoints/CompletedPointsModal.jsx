@@ -24,6 +24,18 @@ import {
   ListItemText,
   Avatar,
   Link,
+  TextField,
+  CircularProgress,
+  Alert,
+  Dialog as NestedDialog,
+  DialogTitle as NestedDialogTitle,
+  DialogContent as NestedDialogContent,
+  DialogActions as NestedDialogActions,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -39,33 +51,86 @@ import PersonIcon from '@mui/icons-material/Person';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import { useVerifyCompletedPunchPointMutation } from '../../../../api/hoto/punchPointApi';
+
+// Import the RTK Query mutation hook
+// import { useVerifyCompletedPunchPointMutation } from '../../services/api'; // Adjust path based on your project structure
 
 const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [tabValue, setTabValue] = useState(0);
+  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
+  const [selectedCompletedPoint, setSelectedCompletedPoint] = useState(null);
+  const [verificationFormData, setVerificationFormData] = useState({
+    status: 'Completed', // Default to 'Completed' (Approved)
+    verify_description: ''
+  });
+  const [alertMessage, setAlertMessage] = useState(null);
+
+  // Initialize the verify mutation hook
+  const [verifyCompletedPunchPoint, { isLoading: isVerifying }] = useVerifyCompletedPunchPointMutation();
 
   if (!punchPointData) {
     return null;
   }
 
-  // Get completed points
+  // Get completed points from the punchPointData
   const completedPoints = punchPointData.completed_points || [];
+  
+  // Process completed points to connect with their verifications
+  const processedCompletedPoints = completedPoints.map(completedPoint => {
+    // Find verifications for this completed point
+    const verifications = punchPointData.verified_punch_points 
+      ? punchPointData.verified_punch_points.filter(vp => vp.completed_punch === completedPoint.id)
+      : [];
+    
+    // Take the latest verification if there are multiple
+    const latestVerification = verifications.length > 0 
+      ? verifications.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0]
+      : null;
+    
+    // Create a status from the verification
+    let verificationStatus = 'Pending';
+    if (latestVerification) {
+      verificationStatus = latestVerification.status === 'Completed' ? 'Accepted' : 'Rejected';
+    }
+    
+    return {
+      ...completedPoint,
+      verification: latestVerification ? {
+        id: latestVerification.id,
+        verification_status: verificationStatus,
+        verified_by: latestVerification.created_by,
+        verified_by_name: latestVerification.created_by_name || `User ID: ${latestVerification.created_by}`,
+        verified_at: latestVerification.created_at,
+        rejection_reason: latestVerification.verify_description
+      } : null,
+      // Process the punch_file array to match the completion_files structure
+      completion_files: completedPoint.punch_file ? completedPoint.punch_file.map(file => ({
+        id: file.id,
+        file_url: file.file,
+        uploaded_at: file.created_at
+      })) : []
+    };
+  });
   
   // Filter completed points based on selected tab
   const getFilteredPoints = () => {
     if (tabValue === 0) {
-      return completedPoints;
+      return processedCompletedPoints;
     } else if (tabValue === 1) {
-      return completedPoints.filter(point => 
+      return processedCompletedPoints.filter(point => 
         point.verification && point.verification.verification_status === 'Accepted'
       );
     } else if (tabValue === 2) {
-      return completedPoints.filter(point => 
+      return processedCompletedPoints.filter(point => 
         point.verification && point.verification.verification_status === 'Rejected'
       );
     } else {
-      return completedPoints.filter(point => 
-        !point.verification || !point.verification.verification_status
+      return processedCompletedPoints.filter(point => 
+        !point.verification || point.verification.verification_status === 'Pending'
       );
     }
   };
@@ -85,7 +150,7 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
     });
   };
 
-  // Get file icon based on file type
+  // Get file icon based on file extension
   const getFileIcon = (fileUrl) => {
     if (!fileUrl) return <InsertDriveFileIcon />;
     
@@ -104,9 +169,18 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
       case 'docx':
       case 'txt':
         return <DescriptionIcon />;
+      case 'xls':
+      case 'xlsx':
+        return <InsertDriveFileIcon color="success" />;
       default:
         return <InsertDriveFileIcon />;
     }
+  };
+
+  // Get file name from URL
+  const getFileName = (fileUrl) => {
+    if (!fileUrl) return 'Unknown File';
+    return fileUrl.split('/').pop();
   };
 
   // Get status chip
@@ -154,6 +228,90 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
     setTabValue(newValue);
   };
 
+  // Open verification dialog
+  const handleOpenVerifyDialog = (point) => {
+    setSelectedCompletedPoint(point);
+    setVerificationFormData({
+      status: 'Completed', // Default to 'Completed' (Approved)
+      verify_description: ''
+    });
+    setVerifyDialogOpen(true);
+  };
+
+  // Close verification dialog
+  const handleCloseVerifyDialog = () => {
+    setVerifyDialogOpen(false);
+    setSelectedCompletedPoint(null);
+  };
+
+  // Handle verification form change
+  const handleVerificationFormChange = (e) => {
+    const { name, value } = e.target;
+    setVerificationFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Submit verification
+  const handleSubmitVerification = async () => {
+    if (!selectedCompletedPoint) return;
+    
+    try {
+      // Create FormData object
+      const formData = new FormData();
+      formData.append('verify_description', verificationFormData.verify_description);
+      formData.append('status', verificationFormData.status);
+      
+      // Call the mutation
+      await verifyCompletedPunchPoint({
+        id: selectedCompletedPoint.id,
+        formData
+      }).unwrap();
+      
+      // Show success message
+      setAlertMessage({
+        type: 'success',
+        message: `Successfully ${verificationFormData.status === 'Completed' ? 'approved' : 'rejected'} the completion request`
+      });
+      
+      // Close the dialog
+      handleCloseVerifyDialog();
+      
+      // You might want to refetch the data here or handle optimistic updates
+      
+    } catch (error) {
+      // Show error message
+      setAlertMessage({
+        type: 'error',
+        message: error.data?.message || 'Failed to verify completion request'
+      });
+    }
+  };
+
+  // Calculate accepted points total
+  const acceptedPointsTotal = processedCompletedPoints
+    .filter(p => p.verification && p.verification.verification_status === 'Accepted')
+    .reduce((sum, point) => sum + parseInt(point.punch_point_completed || 0, 10), 0);
+
+  // Count points by status
+  const acceptedPointsCount = processedCompletedPoints.filter(p => 
+    p.verification && p.verification.verification_status === 'Accepted'
+  ).length;
+  
+  const rejectedPointsCount = processedCompletedPoints.filter(p => 
+    p.verification && p.verification.verification_status === 'Rejected'
+  ).length;
+  
+  const pendingPointsCount = processedCompletedPoints.filter(p => 
+    !p.verification || p.verification.verification_status === 'Pending'
+  ).length;
+
+  // Extract the punch file name
+  const punchFileName = punchPointData.punch_file && punchPointData.punch_file.length > 0
+    ? getFileName(punchPointData.punch_file[0].file)
+    : 'N/A';
+
   return (
     <Dialog 
       open={open} 
@@ -171,6 +329,17 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
       </DialogTitle>
 
       <DialogContent dividers>
+        {/* Alert Messages */}
+        {alertMessage && (
+          <Alert 
+            severity={alertMessage.type} 
+            sx={{ mb: 2 }}
+            onClose={() => setAlertMessage(null)}
+          >
+            {alertMessage.message}
+          </Alert>
+        )}
+
         {/* Punch Point Info */}
         <Box mb={3}>
           <Typography variant="subtitle1" gutterBottom fontWeight="medium">
@@ -187,7 +356,8 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
             </Grid>
             <Grid item xs={12} sm={4}>
               <Typography variant="body2">
-                <strong>Balance Points:</strong> {punchPointData.punch_point_balance}
+                <strong>Balance Points:</strong> {punchPointData.punch_point_balance || 
+                  (parseInt(punchPointData.punch_point_raised) - acceptedPointsTotal)}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={4}>
@@ -209,22 +379,10 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
             textColor="primary"
             variant="fullWidth"
           >
-            <Tab label={`All (${completedPoints.length})`} />
-            <Tab 
-              label={`Accepted (${completedPoints.filter(p => 
-                p.verification && p.verification.verification_status === 'Accepted'
-              ).length})`} 
-            />
-            <Tab 
-              label={`Rejected (${completedPoints.filter(p => 
-                p.verification && p.verification.verification_status === 'Rejected'
-              ).length})`} 
-            />
-            <Tab 
-              label={`Pending (${completedPoints.filter(p => 
-                !p.verification || !p.verification.verification_status
-              ).length})`} 
-            />
+            <Tab label={`All (${processedCompletedPoints.length})`} />
+            <Tab label={`Accepted (${acceptedPointsCount})`} />
+            <Tab label={`Rejected (${rejectedPointsCount})`} />
+            <Tab label={`Pending (${pendingPointsCount})`} />
           </Tabs>
         </Paper>
 
@@ -252,12 +410,28 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
                       </Typography>
                     </Grid>
                     <Grid item xs={12} sm={4} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                      {point.verification && (
-                        getStatusChip(point.verification.verification_status)
-                      )}
+                      {getStatusChip(point.verification ? point.verification.verification_status : 'Pending')}
                       <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
                         Created: {formatDate(point.created_at)}
                       </Typography>
+                      
+                      {/* Verify Action Button - Only show for pending items */}
+                      {(!point.verification || point.verification.verification_status === 'Pending') && (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<VerifiedUserIcon />}
+                          onClick={() => handleOpenVerifyDialog(point)}
+                          sx={{ 
+                            mt: 1,
+                            borderColor: '#29346B',
+                            color: '#29346B',
+                            '&:hover': { borderColor: '#1e2756', backgroundColor: '#f0f0f0' }
+                          }}
+                        >
+                          Verify
+                        </Button>
+                      )}
                     </Grid>
                   </Grid>
                 </CardContent>
@@ -272,10 +446,11 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
                         mr: 1
                       }}
                     >
-                      {point.created_by_name.charAt(0)}
+                      {point.created_by_name ? point.created_by_name.charAt(0) : 
+                       point.created_by ? point.created_by.toString().charAt(0) : '?'}
                     </Avatar>
                     <Typography variant="body2">
-                      {point.created_by_name}
+                      {point.created_by_name || `User ID: ${point.created_by}`}
                     </Typography>
                   </Box>
                   <Button
@@ -296,16 +471,16 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
                         <Typography variant="subtitle2" gutterBottom>
                           Attached Files
                         </Typography>
-                        {point.completion_files && point.completion_files.length > 0 ? (
+                        {point.punch_file && point.punch_file.length > 0 ? (
                           <List dense>
-                            {point.completion_files.map((file) => (
+                            {point.punch_file.map((file) => (
                               <ListItem 
                                 key={file.id}
                                 secondaryAction={
                                   <IconButton 
                                     edge="end" 
                                     component="a"
-                                    href={file.file_url}
+                                    href={file.file}
                                     target="_blank"
                                     download
                                   >
@@ -314,11 +489,11 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
                                 }
                               >
                                 <ListItemIcon>
-                                  {getFileIcon(file.file_url)}
+                                  {getFileIcon(file.file)}
                                 </ListItemIcon>
                                 <ListItemText
-                                  primary={`File #${file.id}`}
-                                  secondary={`Uploaded: ${formatDate(file.uploaded_at)}`}
+                                  primary={getFileName(file.file)}
+                                  secondary={`Uploaded: ${formatDate(file.created_at)}`}
                                 />
                               </ListItem>
                             ))}
@@ -349,10 +524,11 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
                             {point.verification.rejection_reason && (
                               <ListItem>
                                 <ListItemIcon>
-                                  <CancelIcon />
+                                  {point.verification.verification_status === 'Accepted' ? 
+                                    <CheckCircleIcon /> : <CancelIcon />}
                                 </ListItemIcon>
                                 <ListItemText
-                                  primary="Rejection Reason"
+                                  primary="Verification Comments"
                                   secondary={point.verification.rejection_reason}
                                 />
                               </ListItem>
@@ -408,16 +584,118 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
         >
           Close
         </Button>
-        {/* <Button 
-          variant="contained" 
-          sx={{ 
-            bgcolor: '#29346B', 
-            '&:hover': { bgcolor: '#1e2756' } 
-          }}
-        >
-          Print Report
-        </Button> */}
       </DialogActions>
+
+      {/* Verification Dialog */}
+      <NestedDialog open={verifyDialogOpen} onClose={!isVerifying ? handleCloseVerifyDialog : undefined} maxWidth="sm" fullWidth>
+        <NestedDialogTitle sx={{ bgcolor: '#f8fafc' }}>
+          <Typography variant="h6" component="div" color="#29346B">
+            Verify Completion
+          </Typography>
+        </NestedDialogTitle>
+        
+        <NestedDialogContent dividers>
+          {selectedCompletedPoint && (
+            <>
+              <Box mb={3}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Completion Details
+                </Typography>
+                <Typography variant="body2" gutterBottom>
+                  <strong>Points Completed:</strong> {selectedCompletedPoint.punch_point_completed}
+                </Typography>
+                <Typography variant="body2" gutterBottom>
+                  <strong>Description:</strong> {selectedCompletedPoint.punch_description}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Submitted By:</strong> {selectedCompletedPoint.created_by_name || `User ID: ${selectedCompletedPoint.created_by}`}
+                </Typography>
+              </Box>
+
+              <Divider sx={{ my: 2 }} />
+
+              <FormControl component="fieldset" sx={{ mb: 2 }}>
+                <FormLabel component="legend">Verification Status</FormLabel>
+                <RadioGroup
+                  name="status"
+                  value={verificationFormData.status}
+                  onChange={handleVerificationFormChange}
+                  row
+                >
+                  <FormControlLabel 
+                    value="Completed" 
+                    control={<Radio />} 
+                    label={
+                      <Box display="flex" alignItems="center">
+                        <ThumbUpIcon color="success" sx={{ mr: 0.5 }} fontSize="small" />
+                        Approve
+                      </Box>
+                    } 
+                  />
+                  <FormControlLabel 
+                    value="Rejected" 
+                    control={<Radio />} 
+                    label={
+                      <Box display="flex" alignItems="center">
+                        <ThumbDownIcon color="error" sx={{ mr: 0.5 }} fontSize="small" />
+                        Reject
+                      </Box>
+                    } 
+                  />
+                </RadioGroup>
+              </FormControl>
+
+              <TextField
+                fullWidth
+                name="verify_description"
+                label="Verification Comments"
+                value={verificationFormData.verify_description}
+                onChange={handleVerificationFormChange}
+                multiline
+                rows={3}
+                placeholder={
+                  verificationFormData.status === 'Completed' 
+                    ? "Add any comments about the approval" 
+                    : "Please provide a reason for rejection"
+                }
+                variant="outlined"
+                required={verificationFormData.status === 'Rejected'}
+                helperText={
+                  verificationFormData.status === 'Rejected' 
+                    ? "Reason is required when rejecting" 
+                    : "Optional comments"
+                }
+              />
+            </>
+          )}
+        </NestedDialogContent>
+        
+        <NestedDialogActions sx={{ px: 3, py: 2 }}>
+          <Button 
+            onClick={handleCloseVerifyDialog} 
+            variant="outlined"
+            disabled={isVerifying}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmitVerification}
+            variant="contained"
+            color={verificationFormData.status === 'Completed' ? 'success' : 'error'}
+            startIcon={verificationFormData.status === 'Completed' ? <CheckCircleIcon /> : <CancelIcon />}
+            disabled={
+              isVerifying || 
+              (verificationFormData.status === 'Rejected' && !verificationFormData.verify_description)
+            }
+          >
+            {isVerifying ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              verificationFormData.status === 'Completed' ? 'Approve' : 'Reject'
+            )}
+          </Button>
+        </NestedDialogActions>
+      </NestedDialog>
     </Dialog>
   );
 };

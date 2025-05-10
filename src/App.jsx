@@ -480,14 +480,17 @@ function App() {
         >
           <Route index element={<HOTOMainPage />} />
           <Route
-            path="add-document/:projectId?"
+            path="add-document/:projectId"
             element={<HotoDocuments />}
           />    
                     <Route
-            path="punchpoints/:projectId?"
+            path="punchpoints/:projectId/:documentId"
             element={<HotoPunchPoints />}
           />        
         </Route>
+        {/* <Route path="/hoto-page" element={<MainLayout><HOTOMainPage /></MainLayout>} />
+<Route path="/hoto-page/:projectId" element={<MainLayout><HotoDocuments /></MainLayout>} />
+<Route path="/hoto-page/punchpoints/:projectId/:documentId" element={<MainLayout><HotoPunchPoints /></MainLayout>} /> */}
 
         <Route
           path="/quality-assurance"

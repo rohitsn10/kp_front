@@ -16,7 +16,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import CommentIcon from "@mui/icons-material/Comment";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import DocumentDetailsDialog from '../../components/pages/hoto/documents-page/DocumentDetailsDialog';
 import RemarksDialog from '../../components/pages/hoto/documents-page/RemarksDialog';
 import FileUploadModal from '../../components/pages/hoto/documents-page/FileUploadModal';
@@ -31,7 +31,7 @@ function HotoDocuments() {
   const [sortOption, setSortOption] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [filteredItems, setFilteredItems] = useState([]);
-
+  const navigate = useNavigate();
   // State for dialogs
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [openFileUploadModal, setOpenFileUploadModal] = useState(false);
@@ -134,6 +134,10 @@ function HotoDocuments() {
     setOpenAddDocumentModal(false);
   };
   
+  const handleOpenPunchPoints = (item)=>{
+    // navigate(`/hoto-page/add-document/punchpoints/${projectId}/${item.id}`);
+    window.location.href = `/hoto-page/punchpoints/${projectId}/${item.id}`;
+  }
   // Add a handler for successful document upload
   const handleDocumentUploadSuccess = () => {
     refetch(); // Refresh the documents list
@@ -422,6 +426,21 @@ function HotoDocuments() {
                             }}
                           >
                             Verify
+                          </Button>
+                        </Tooltip>
+                        <Tooltip title="Punchpoints">
+                        <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleOpenPunchPoints(item)}
+                            startIcon={<VerifiedIcon />}
+                            sx={{
+                              bgcolor: "#10B981", // Green color
+                              "&:hover": { bgcolor: "#059669" },
+                              padding: "2px 8px"
+                            }}
+                          >
+                            Punchpoints
                           </Button>
                         </Tooltip>
                       </div>

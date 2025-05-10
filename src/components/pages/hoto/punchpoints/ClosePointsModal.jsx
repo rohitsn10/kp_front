@@ -13,24 +13,23 @@ import {
   LinearProgress,
   Divider,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  FormHelperText,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  ListItemSecondaryAction,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import ImageIcon from '@mui/icons-material/Image';
 import ArticleIcon from '@mui/icons-material/Article';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
+import { useSubmitCompletedPunchPointMutation } from '../../../../api/hoto/punchPointApi';
 
-const ClosePointsModal = ({ open, handleClose, punchPointData, onSubmitClosePoints }) => {
+// Import the RTK Query mutation hook
+// import { useSubmitCompletedPunchPointMutation } from '../../services/api'; // Adjust path based on your project structure
+
+const ClosePointsModal = ({ open, handleClose, punchPointData }) => {
   // State for form fields
   const [pointsToClose, setPointsToClose] = useState('');
   const [remarks, setRemarks] = useState('');
@@ -38,9 +37,10 @@ const ClosePointsModal = ({ open, handleClose, punchPointData, onSubmitClosePoin
   
   // State for validation and submission
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [alertMessage, setAlertMessage] = useState(null);
+
+  // Initialize the mutation hook
+  const [submitCompletedPunchPoint, { isLoading: isSubmitting }] = useSubmitCompletedPunchPointMutation();
 
   // Reset form when modal opens with new punch point data
   useEffect(() => {
@@ -50,7 +50,6 @@ const ClosePointsModal = ({ open, handleClose, punchPointData, onSubmitClosePoin
       setFiles([]);
       setErrors({});
       setAlertMessage(null);
-      setUploadProgress(0);
     }
   }, [open, punchPointData]);
 
@@ -64,18 +63,9 @@ const ClosePointsModal = ({ open, handleClose, punchPointData, onSubmitClosePoin
     
     const extension = fileName.split('.').pop().toLowerCase();
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(extension)) {
-      return <ImageIcon />;
+      return <ArticleIcon />;
     }
     return <ArticleIcon />;
-  };
-
-  // Format file size in human-readable format
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   // Handle file selection
@@ -102,11 +92,11 @@ const ClosePointsModal = ({ open, handleClose, punchPointData, onSubmitClosePoin
       newErrors.pointsToClose = `Cannot exceed remaining balance of ${punchPointData.punch_point_balance} points`;
     }
     
-    // Validate remarks
+    // Validate remarks 
     if (!remarks.trim()) {
       newErrors.remarks = 'Remarks are required';
-    } else if (remarks.trim().length < 10) {
-      newErrors.remarks = 'Remarks should be at least 10 characters';
+    } else if (remarks.trim().length < 5) {
+      newErrors.remarks = 'Remarks should be at least 5 characters';
     }
     
     setErrors(newErrors);
@@ -114,65 +104,44 @@ const ClosePointsModal = ({ open, handleClose, punchPointData, onSubmitClosePoin
   };
 
   // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
 
-    setIsSubmitting(true);
-    setUploadProgress(0);
-    
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress(prevProgress => {
-        if (prevProgress >= 100) {
-          clearInterval(interval);
-          
-          // Simulate API submission
-          setTimeout(() => {
-            try {
-              // Prepare submission data
-              const closePointsData = {
-                punchPointId: punchPointData.id,
-                pointsClosed: parseInt(pointsToClose),
-                remarks: remarks,
-                files: files.map(file => ({ 
-                  name: file.name, 
-                  size: file.size, 
-                  type: file.type 
-                }))
-              };
-              
-              // Call the handler function (would be API in real implementation)
-              if (onSubmitClosePoints) {
-                onSubmitClosePoints(closePointsData);
-              }
-              
-              setAlertMessage({
-                type: 'success',
-                message: `Successfully submitted request to close ${pointsToClose} points!`
-              });
-              
-              // Close modal after short delay on success
-              setTimeout(() => {
-                handleClose();
-              }, 2000);
-              
-            } catch (error) {
-              setAlertMessage({
-                type: 'error',
-                message: error.message || 'Failed to submit close points request'
-              });
-            } finally {
-              setIsSubmitting(false);
-            }
-          }, 500);
-          
-          return 100;
-        }
-        return prevProgress + 5;
+    try {
+      // Create FormData object for submission
+      const formData = new FormData();
+      formData.append('punch_id', punchPointData.id);
+      formData.append('punch_description', remarks);
+      formData.append('punch_point_completed', pointsToClose);
+      formData.append('status', 'submit');
+      
+      // Append all files to the form data
+      files.forEach(file => {
+        formData.append('punch_file', file);
       });
-    }, 200);
+      
+      // Submit using the RTK Query mutation
+      const response = await submitCompletedPunchPoint(formData).unwrap();
+      
+      // Show success message
+      setAlertMessage({
+        type: 'success',
+        message: `Successfully submitted request to close ${pointsToClose} points!`
+      });
+      
+      // Close modal after short delay on success
+      setTimeout(() => {
+        handleClose();
+      }, 2000);
+    } catch (error) {
+      // Show error message
+      setAlertMessage({
+        type: 'error',
+        message: error.data?.message || 'Failed to submit close points request'
+      });
+    }
   };
 
   return (
@@ -256,7 +225,7 @@ const ClosePointsModal = ({ open, handleClose, punchPointData, onSubmitClosePoin
           disabled={isSubmitting}
           error={!!errors.remarks}
           helperText={errors.remarks || "Provide details about how these points have been addressed"}
-          placeholder="Example: Replaced cable termination and applied proper labeling according to specifications..."
+          // placeholder="Example: Replaced cable termination and applied proper labeling according to specifications..."
         />
 
         <Box mt={3}>
@@ -307,50 +276,35 @@ const ClosePointsModal = ({ open, handleClose, punchPointData, onSubmitClosePoin
             </Typography>
           </Box>
 
-          {/* Selected Files List */}
+          {/* Selected Files List - Simplified to only show file names */}
           {files.length > 0 && (
             <Box mt={2}>
               <Typography variant="body2" gutterBottom>
                 Selected Files ({files.length})
               </Typography>
-              <TableContainer component={Paper} variant="outlined">
-                <Table size="small">
-                  <TableHead>
-                    <TableRow sx={{ backgroundColor: '#f1f5f9' }}>
-                      <TableCell>File Name</TableCell>
-                      <TableCell>Size</TableCell>
-                      <TableCell>Type</TableCell>
-                      <TableCell align="right">Action</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {files.map((file, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <Box display="flex" alignItems="center">
-                            {getFileIcon(file.name)}
-                            <Typography variant="body2" ml={1} sx={{ maxWidth: 250 }} noWrap>
-                              {file.name}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell>{formatFileSize(file.size)}</TableCell>
-                        <TableCell>{file.type || 'Unknown'}</TableCell>
-                        <TableCell align="right">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleRemoveFile(index)}
-                            disabled={isSubmitting}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <Paper variant="outlined" sx={{ p: 1 }}>
+                <List dense>
+                  {files.map((file, index) => (
+                    <ListItem key={index} sx={{ py: 0.5 }}>
+                      <ListItemIcon sx={{ minWidth: '40px' }}>
+                        {getFileIcon(file.name)}
+                      </ListItemIcon>
+                      <ListItemText primary={file.name} />
+                      <ListItemSecondaryAction>
+                        <IconButton
+                          edge="end"
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveFile(index)}
+                          disabled={isSubmitting}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
             </Box>
           )}
         </Box>
@@ -358,12 +312,9 @@ const ClosePointsModal = ({ open, handleClose, punchPointData, onSubmitClosePoin
         {/* Upload Progress */}
         {isSubmitting && (
           <Box sx={{ width: '100%', mt: 3 }}>
-            <LinearProgress variant="determinate" value={uploadProgress} />
+            <LinearProgress />
             <Typography variant="body2" color="text.secondary" align="center" mt={1}>
-              {uploadProgress < 100 ? 
-                `Uploading... ${uploadProgress}%` : 
-                'Processing submission...'
-              }
+              Processing submission...
             </Typography>
           </Box>
         )}
