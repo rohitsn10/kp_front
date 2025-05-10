@@ -20,6 +20,7 @@ import {
   InputLabel,
 } from '@mui/material';
 import { useCreateRfiMutation } from '../../../../api/quality/qualityApi';
+import { useGetMainProjectsQuery } from '../../../../api/users/projectApi';
 
 function CreateRfiForm({ open, handleClose, projectId, category }) {
   // RTK Query mutation hook
@@ -29,7 +30,21 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSeverity, setAlertSeverity] = useState('success');
+  const { data: projects } = useGetMainProjectsQuery();
   
+  // Check if project is IPP
+  const [isIppProject, setIsIppProject] = useState(false);
+  
+  // Find the current project based on projectId
+  useEffect(() => {
+    if (projects?.data && projectId) {
+      const currentProject = projects.data.find(project => project.id === parseInt(projectId));
+      if (currentProject) {
+        setIsIppProject(currentProject.cpp_or_ipp === 'ipp');
+      }
+    }
+  }, [projects, projectId]);
+
   // Validation state
   const [errors, setErrors] = useState({
     clientInitials: '',
@@ -44,15 +59,19 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
     tableNo: '',
     activityDescription: '',
     buildingLocationName: '',
-    constructionActivity: ''
+    constructionActivity: '',
+    offeredTime: '',
+    siteReachingTime: '',
+    inspectionStartTime: '',
+    inspectionEndTime: ''
   });
 
   // Form state
   const [formData, setFormData] = useState({
-    clientInitials: '', // Default value for client initials
-    companyInitials: 'KPGL', // Default value for company initials
-    department: 'ELE', // Default department
-    rfiSequence: '', // The sequence number (e.g., 01, 02)
+    clientInitials: '',
+    companyInitials: 'KPGL',
+    department: 'ELE',
+    rfiSequence: '',
     classification: 'table_work',
     otherClassification: '',
     epcName: '',
@@ -62,7 +81,11 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
     activityDescription: '',
     holdDetails: '',
     buildingLocationName: '',
-    constructionActivity: ''
+    constructionActivity: '',
+    offeredTime: '',
+    siteReachingTime: '',
+    inspectionStartTime: '',
+    inspectionEndTime: ''
   });
 
   // Computed RFI number from component parts
@@ -72,7 +95,6 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
   useEffect(() => {
     const { clientInitials, companyInitials, department, rfiSequence } = formData;
     if (clientInitials && companyInitials && department && rfiSequence) {
-      // Format: IOP/KPGL/ELE/RFI-01
       const rfiNumber = `${clientInitials}/${companyInitials}/${department}/RFI-${rfiSequence.padStart(2, '0')}`;
       setGeneratedRfiNumber(rfiNumber);
     } else {
@@ -147,6 +169,15 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
           errorMessage = 'Construction Activity is required';
         }
         break;
+      // Time fields validation for IPP projects
+      case 'offeredTime':
+      case 'siteReachingTime':
+      case 'inspectionStartTime':
+      case 'inspectionEndTime':
+        if (isIppProject && !value.trim()) {
+          errorMessage = 'This field is required';
+        }
+        break;
       default:
         break;
     }
@@ -171,8 +202,6 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
       [name]: errorMessage
     });
     
-    // Special case for classification - also clear otherClassification errors
-    // when classification is not 'other'
     if (name === 'classification' && value !== 'other') {
       setErrors({
         ...errors,
@@ -200,6 +229,9 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
       // Skip otherClassification if classification is not 'other'
       if (field === 'otherClassification' && formData.classification !== 'other') return;
       
+      // Skip time fields if not IPP project
+      if (!isIppProject && ['offeredTime', 'siteReachingTime', 'inspectionStartTime', 'inspectionEndTime'].includes(field)) return;
+      
       const errorMessage = validateField(field, formData[field]);
       newErrors[field] = errorMessage;
       
@@ -214,7 +246,6 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
 
   // Handle form submission
   const handleSubmit = async () => {
-    // Validate all fields before submission
     if (!validateForm()) {
       setAlertMessage('Please fix the errors in the form before submitting.');
       setAlertSeverity('error');
@@ -227,9 +258,9 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
       const apiData = {
         project_id: parseInt(projectId),
         rfi_activity: category,
-        rfi_number: generatedRfiNumber, // Use the generated RFI number
+        rfi_number: generatedRfiNumber,
         rfi_classification: formData.classification === 'other' ? 'Other' : 
-                           formData.classification === 'table_work' ? 'Civil' : 'Buildings',
+                         formData.classification === 'table_work' ? 'Civil' : 'Buildings',
         rfi_other: formData.otherClassification,
         epc_name: formData.epcName,
         offered_date: formData.offeredDate,
@@ -240,6 +271,14 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
         location_name: formData.buildingLocationName,
         construction_activity: formData.constructionActivity
       };
+
+      // Add time fields if IPP project
+      if (isIppProject) {
+        apiData.offered_time = formData.offeredTime;
+        apiData.reaching_time = formData.siteReachingTime;
+        apiData.inspection_start_time = formData.inspectionStartTime;
+        apiData.inspection_end_time = formData.inspectionEndTime;
+      }
 
       // Call the mutation
       const response = await createRfi(apiData).unwrap();
@@ -283,6 +322,17 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
                 fullWidth
                 label="Project ID"
                 value={projectId}
+                disabled
+                variant="outlined"
+              />
+            </Grid>
+            
+            {/* Project Type (disabled, just for display) */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Project Type"
+                value={isIppProject ? "IPP" : "CPP"}
                 disabled
                 variant="outlined"
               />
@@ -445,6 +495,95 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
                 helperText={errors.offeredDate}
               />
             </Grid>
+            
+            {/* Time fields for IPP projects */}
+            {isIppProject && (
+              <>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    required
+                    fullWidth
+                    label="Offered Time"
+                    type="time"
+                    name="offeredTime"
+                    value={formData.offeredTime}
+                    onChange={handleInputChange}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    inputProps={{
+                      step: 300, // 5 min
+                    }}
+                    variant="outlined"
+                    error={!!errors.offeredTime}
+                    helperText={errors.offeredTime}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    required
+                    fullWidth
+                    label="Site Reaching Time"
+                    type="time"
+                    name="siteReachingTime"
+                    value={formData.siteReachingTime}
+                    onChange={handleInputChange}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    inputProps={{
+                      step: 300, // 5 min
+                    }}
+                    variant="outlined"
+                    error={!!errors.siteReachingTime}
+                    helperText={errors.siteReachingTime}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    required
+                    fullWidth
+                    label="Inspection Start Time"
+                    type="time"
+                    name="inspectionStartTime"
+                    value={formData.inspectionStartTime}
+                    onChange={handleInputChange}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    inputProps={{
+                      step: 300, // 5 min
+                    }}
+                    variant="outlined"
+                    error={!!errors.inspectionStartTime}
+                    helperText={errors.inspectionStartTime}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    required
+                    fullWidth
+                    label="Inspection End Time"
+                    type="time"
+                    name="inspectionEndTime"
+                    value={formData.inspectionEndTime}
+                    onChange={handleInputChange}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    inputProps={{
+                      step: 300, // 5 min
+                    }}
+                    variant="outlined"
+                    error={!!errors.inspectionEndTime}
+                    helperText={errors.inspectionEndTime}
+                  />
+                </Grid>
+              </>
+            )}
             
             {/* Block Number */}
             <Grid item xs={12} md={6}>

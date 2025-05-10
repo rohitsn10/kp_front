@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -23,26 +23,39 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useCreateRfiInspectionOutcomeMutation } from '../../../api/quality/qualityApi';
-// import { useCreateRfiInspectionOutcomeMutation } from '../path/to/qualityApi'; // Update path accordingly
+import { useGetMainProjectsQuery } from '../../../api/users/projectApi';
 
 function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
   // RTK mutation hook
   const [createRfiInspectionOutcome, { isLoading }] = useCreateRfiInspectionOutcomeMutation();
+  const { data: projects } = useGetMainProjectsQuery();
+  
+  // State to track if project is IPP
+  const [isIppProject, setIsIppProject] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
-    categorization: 'IPP',
     offeredTime: '',
     siteReachingTime: '',
     inspectionStartTime: '',
     inspectionEndTime: '',
     disposition: '',
-    observations: [{ text: '' }], // Array to store multiple observations
+    observations: [{ text: '' }],
     actions: '',
     responsibility: '',
     timelines: '',
     remarks: ''
   });
+
+  // Check project type when project data loads
+  useEffect(() => {
+    if (projects?.data && projectId) {
+      const currentProject = projects.data.find(project => project.id === parseInt(projectId));
+      if (currentProject) {
+        setIsIppProject(currentProject.cpp_or_ipp === 'ipp');
+      }
+    }
+  }, [projects, projectId]);
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -93,10 +106,6 @@ function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
       const inspectionData = {
         project_id: projectId,
         rfi_id: rfiData?.id,
-        offered_time: formData.offeredTime,
-        reaching_time: formData.siteReachingTime,
-        inspection_start_time: formData.inspectionStartTime,
-        inspection_end_time: formData.inspectionEndTime,
         observation: observationArray,
         disposition_status: formData.disposition,
         actions: formData.actions,
@@ -104,6 +113,20 @@ function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
         timelines: formData.timelines,
         remarks: formData.remarks
       };
+
+      // Only add time fields if project is not IPP
+      if (!isIppProject) {
+        inspectionData.offered_time = formData.offeredTime;
+        inspectionData.reaching_time = formData.siteReachingTime;
+        inspectionData.inspection_start_time = formData.inspectionStartTime;
+        inspectionData.inspection_end_time = formData.inspectionEndTime;
+      } else {
+        // For IPP projects, explicitly set time fields to null
+        inspectionData.offered_time = null;
+        inspectionData.reaching_time = null;
+        inspectionData.inspection_start_time = null;
+        inspectionData.inspection_end_time = null;
+      }
       
       console.log('Sending inspection outcome data:', inspectionData);
       
@@ -138,6 +161,7 @@ function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
           <Grid container spacing={2}>
             <Grid item xs={6}>
               <Typography variant="body2">RFI Number: {rfiData?.rfi_number}</Typography>
+              <Typography variant="body2">Project Type: {isIppProject ? 'IPP' : 'CPP'}</Typography>
             </Grid>
             <Grid item xs={6}>
               <Typography variant="body2">EPC: {rfiData?.epc_name}</Typography>
@@ -155,104 +179,92 @@ function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
         </Paper>
         
         <Grid container spacing={2}>
-          {/* Categorization */}
-          <Grid item xs={12}>
-            <FormControl component="fieldset">
-              <FormLabel component="legend">Categorization</FormLabel>
-              <RadioGroup
-                row
-                name="categorization"
-                value={formData.categorization}
-                onChange={handleInputChange}
-              >
-                <FormControlLabel value="IPP" control={<Radio />} label="IPP" />
-                <FormControlLabel value="CPP" control={<Radio />} label="CPP" />
-              </RadioGroup>
-            </FormControl>
-          </Grid>
+          {/* Time fields - only show if not IPP project */}
+          {!isIppProject && (
+            <>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Offered Time"
+                  type="time"
+                  name="offeredTime"
+                  value={formData.offeredTime}
+                  onChange={handleInputChange}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  inputProps={{
+                    step: 300, // 5 min
+                  }}
+                  variant="outlined"
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Site Reaching Time"
+                  type="time"
+                  name="siteReachingTime"
+                  value={formData.siteReachingTime}
+                  onChange={handleInputChange}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  inputProps={{
+                    step: 300, // 5 min
+                  }}
+                  variant="outlined"
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Inspection Start Time"
+                  type="time"
+                  name="inspectionStartTime"
+                  value={formData.inspectionStartTime}
+                  onChange={handleInputChange}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  inputProps={{
+                    step: 300, // 5 min
+                  }}
+                  variant="outlined"
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Inspection End Time"
+                  type="time"
+                  name="inspectionEndTime"
+                  value={formData.inspectionEndTime}
+                  onChange={handleInputChange}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  inputProps={{
+                    step: 300, // 5 min
+                  }}
+                  variant="outlined"
+                />
+              </Grid>
+            </>
+          )}
           
-          {/* Time fields */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Offered Time"
-              type="time"
-              name="offeredTime"
-              value={formData.offeredTime}
-              onChange={handleInputChange}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              inputProps={{
-                step: 300, // 5 min
-              }}
-              variant="outlined"
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Site Reaching Time"
-              type="time"
-              name="siteReachingTime"
-              value={formData.siteReachingTime}
-              onChange={handleInputChange}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              inputProps={{
-                step: 300, // 5 min
-              }}
-              variant="outlined"
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Inspection Start Time"
-              type="time"
-              name="inspectionStartTime"
-              value={formData.inspectionStartTime}
-              onChange={handleInputChange}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              inputProps={{
-                step: 300, // 5 min
-              }}
-              variant="outlined"
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Inspection End Time"
-              type="time"
-              name="inspectionEndTime"
-              value={formData.inspectionEndTime}
-              onChange={handleInputChange}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              inputProps={{
-                step: 300, // 5 min
-              }}
-              variant="outlined"
-            />
-          </Grid>
-          
-          {/* Disposition - MOVED BEFORE OBSERVATIONS */}
+          {/* Disposition */}
           <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel id="disposition-label">Disposition/Status</InputLabel>
               <Select
                 labelId="disposition-label"
                 name="disposition"
-                value={formData.disposition}
-                label="Disposition"
+                value={formData.disposition}  
+                label="Disposition/Status"
                 onChange={handleInputChange}
               >
                 <MenuItem value="Released">Released</MenuItem>
