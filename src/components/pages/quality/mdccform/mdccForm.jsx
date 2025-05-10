@@ -15,8 +15,9 @@ import {
   FormControl,
   FormLabel,
 } from "@mui/material";
+import { useGenerateMdccReportPdfMutation } from "../../../../api/quality/qualitySupplyApi";
 
-const MDCCForm = ({ open, handleClose }) => {
+const MDCCForm = ({ open, handleClose,projectId,selectedItem  }) => {
   const [formData, setFormData] = useState({
     refNo: "",
     date: "",
@@ -51,7 +52,7 @@ const MDCCForm = ({ open, handleClose }) => {
   });
 
   const [alert, setAlert] = useState({ open: false, message: "", severity: "" });
-
+  const [generateMdccReportPdf] = useGenerateMdccReportPdfMutation();
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -67,10 +68,67 @@ const MDCCForm = ({ open, handleClose }) => {
     setFormData((prev) => ({ ...prev, reportReview: updatedReviews }));
   };
 
-  const handleSubmit = () => {
-    console.log("MDCC Form Submission:", formData);
-    setAlert({ open: true, severity: "success", message: "Form data captured successfully!" });
-    handleClose();
+  const handleSubmit = async () => {
+    const requestBody = {
+      project_id: projectId,
+      date: new Date().toISOString().split("T")[0], // Use current date if not set
+      refNo: formData.refNo,
+      to: formData.to,
+      supplierAddress: formData.supplierAddress,
+      inspectionPlace: formData.inspectionPlace,
+      materialDescription: formData.materialDescription,
+      qap: formData.qap,
+      drawingNo: formData.drawingNo,
+      standard: formData.standard,
+      tpiRequired: formData.tpiRequired,
+      tpiConducted: formData.tpiConducted,
+      tpiReportAttached: formData.tpiReportAttached,
+      tpiDetails: formData.tpiDetails,
+      tpiRecommendation: formData.tpiRecommendation,
+      internalRequired: formData.internalRequired,
+      internalConducted: formData.internalConducted,
+      internalReportAttached: formData.internalReportAttached,
+      internalInspectorDetails: formData.internalInspectorDetails,
+      internalRecommendation: formData.internalRecommendation,
+      quantityOffered: formData.quantityOffered,
+      unitOffered: formData.unitOffered,
+      quantityCleared: formData.quantityCleared,
+      unitCleared: formData.unitCleared,
+      conditions: formData.conditions,
+      comments: formData.comments,
+      annexures: formData.annexures,
+      reviewedBy: formData.reviewedBy,
+      approvedBy: formData.approvedBy,
+      reportReview: formData.reportReview,
+    };
+
+    try {
+      // Calling the mutation hook to generate the MDCC report
+      const { data, error } = await generateMdccReportPdf({
+        itemId: selectedItem.id,  // using the selected item ID
+        data: requestBody,  // sending the request data
+      });
+
+      if (error || !data?.data) {
+        throw new Error(error?.message || "Failed to generate report");
+      }
+
+      // Trigger file download
+      const link = document.createElement("a");
+      link.href = data.data;  // URL of the generated PDF
+      link.download = "mdcc_report.pdf";  // Set the name of the downloaded file
+      link.target = "_blank";
+      link.click();
+
+      setAlert({
+        open: true,
+        severity: "success",
+        message: "PDF generated successfully!",
+      });
+      handleClose();
+    } catch (err) {
+      setAlert({ open: true, severity: "error", message: err.message });
+    }
   };
 
   const radioGroup = (label, name) => (

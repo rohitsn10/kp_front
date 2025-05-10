@@ -76,6 +76,14 @@ export const qualitySupplyApi = createApi({
         method: "GET",
       }),
     }),
+    generateMdccReportPdf: builder.mutation({
+      query: ({ itemId, data }) => ({
+        url: `quality_inspection/mdcc_report_pdf/${itemId}`,
+        method: "POST",
+        body: data, // expected to contain project_id or similar
+      }),
+    }),
+    
   }),
 });
 
@@ -88,5 +96,6 @@ export const {
   useUploadQualityInspectionDocumentsMutation,
   useCreateQualityInspectionObservationReportMutation,
   useGetQualityInspectionDocumentListQuery,
-  useGetQualityInspectionObservationReportQuery
+  useGetQualityInspectionObservationReportQuery,
+  useGenerateMdccReportPdfMutation,
 } = qualitySupplyApi;
