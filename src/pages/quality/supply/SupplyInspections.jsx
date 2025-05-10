@@ -684,6 +684,7 @@ function SupplyInspections() {
         open={mdccOpen}
         handleClose={() => setMdccOpen(false)}
         selectedItem={selectedItem}
+        projectId={projectId}
       />
 
       {isDialogOpen && (

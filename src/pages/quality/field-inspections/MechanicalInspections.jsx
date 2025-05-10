@@ -397,7 +397,7 @@ function MechanicalInspections() {
         open={openRfiForm} 
         handleClose={handleCloseRfiForm} 
         projectId={projectId || ''}
-        category="mechanical"
+        category="mechanical" 
       />
       <RfiOutcomeForm 
         open={openOutcomeForm} 
