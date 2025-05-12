@@ -17,6 +17,7 @@ import {
   DialogActions,
   Pagination,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -38,6 +39,7 @@ import { useGetItemsByProjectQuery } from "../../../api/quality/qualitySupplyApi
 import SelectItemsModal from "../../../components/pages/quality/supply-add-items/SelectItemsModal";
 import { useParams } from "react-router-dom";
 import MDCCForm from "../../../components/pages/quality/mdccform/mdccForm";
+import EditCategoryModal from "../../../components/pages/quality/supply-components/EditCategoryModal";
 
 function SupplyInspections() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,6 +49,10 @@ function SupplyInspections() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { projectId } = useParams();
   const [mdccOpen, setMdccOpen] = useState(false);
+  // State for Edit
+  const [editCategoryModalOpen, setEditCategoryModalOpen] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState(null);
+
 
   // Pagination states
   const [page, setPage] = useState(1);
@@ -222,6 +228,21 @@ function SupplyInspections() {
     setComplianceModalOpen(false);
     setSelectedItem(null);
   };
+
+  const handleEditCategory = (item) => {
+      setItemToEdit(item);
+      setEditCategoryModalOpen(true);
+    };
+
+    const handleCloseEditCategoryModal = () => {
+      setEditCategoryModalOpen(false);
+      setItemToEdit(null);
+    };
+
+    const handleCategoryEditSuccess = () => {
+      // Refetch the updated data
+      refetchItems();
+    };
 
   const handleScheduleInspection = async (item) => {
     // Implement your API call
@@ -565,9 +586,9 @@ function SupplyInspections() {
                   <th className="py-2 px-3 text-[#29346B] border text-left">
                     Category
                   </th>
-                  <th className="py-2 px-3 text-[#29346B] border text-left">
+                  {/* <th className="py-2 px-3 text-[#29346B] border text-left">
                     Discipline
-                  </th>
+                  </th> */}
                   <th className="py-2 px-3 text-[#29346B] border text-left">
                     Inspection Date
                   </th>
@@ -607,19 +628,29 @@ function SupplyInspections() {
                       <td className="py-2 px-3 border">
                         {item.item_name || "N/A"}
                       </td>
-                      <td className="py-2 px-3 border">
-                        <div>
-                          <span className="font-semibold">
-                            {categoryInfo.label}
-                          </span>
-                          <p className="text-xs text-gray-600">
-                            {categoryInfo.description}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="py-2 px-3 border">
+<td className="py-2 px-3 border">
+  <div className="flex flex-col">
+    <div className="flex items-center justify-between">
+      <span className="font-semibold">{categoryInfo.label}</span>
+      <Button
+        variant="text"
+        size="small"
+        onClick={() => handleEditCategory(item)}
+        sx={{
+          minWidth: "32px",
+          padding: "2px",
+          color: "#29346B",
+        }}
+      >
+        <EditIcon fontSize="small" />
+      </Button>
+    </div>
+    <p className="text-xs text-gray-600">{categoryInfo.description}</p>
+  </div>
+</td>
+                      {/* <td className="py-2 px-3 border">
                         {item.dicipline || "N/A"}
-                      </td>
+                      </td> */}
                       <td className="py-2 px-3 border">
                         {item.inspection_date
                           ? formatDate(item.inspection_date)
@@ -829,7 +860,13 @@ function SupplyInspections() {
           projectId={projectId}
         />
       )}
-
+<EditCategoryModal
+  open={editCategoryModalOpen}
+  handleClose={handleCloseEditCategoryModal}
+  item={itemToEdit}
+  projectId={projectId}
+  onSuccess={handleCategoryEditSuccess}
+/>
       {/* Replace Add Item Modal with Select Items Modal */}
       <SelectItemsModal
         open={selectItemsModalOpen}
@@ -838,6 +875,7 @@ function SupplyInspections() {
         selectedItem={selectedItem}
         projectId={projectId} // Pass the projectId to the modal if needed
       />
+
     </div>
   );
 }

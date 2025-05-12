@@ -83,7 +83,14 @@ export const qualitySupplyApi = createApi({
         body: data, // expected to contain project_id or similar
       }),
     }),
-    
+    updateQualityItems: builder.mutation({
+      query: ({ id, formData }) => ({
+        url: `quality_inspection/update_items/${id}`,
+        method: "PUT",
+        body: formData,
+        formData: true,
+      }),
+    }),
   }),
 });
 
@@ -98,4 +105,5 @@ export const {
   useGetQualityInspectionDocumentListQuery,
   useGetQualityInspectionObservationReportQuery,
   useGenerateMdccReportPdfMutation,
+  useUpdateQualityItemsMutation
 } = qualitySupplyApi;
