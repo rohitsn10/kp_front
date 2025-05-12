@@ -9,7 +9,7 @@ import React, { useEffect, useState } from "react";
 import { useFetchUsersQuery } from "../../../../api/users/usersApi";
 import { useGetActivitiesQuery } from "../../../../api/users/projectActivityApi";
 import { useGetLandCategoriesQuery } from "../../../../api/users/categoryApi";
-import { useGetCompaniesQuery } from "../../../../api/company/companyApi";
+import { useGetCompaniesQuery } from "../../../../api/General/company/companyApi";
 import { useGetDropdownSubActivitiesQuery } from "../../../../api/users/subActivityApi";
 import { useGetMultipleSubSubActivitiesMutation } from "../../../../api/users/multipleActivityApi";
 import { useGetLandBankMasterQuery } from "../../../../api/users/landbankApi";
