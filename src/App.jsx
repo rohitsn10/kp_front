@@ -74,6 +74,9 @@ import HOTOModule from "./pages/hoto/HotoDocuments.jsx";
 import HOTOMainPage from "./pages/hoto/HotoMainPage.jsx";
 import HotoDocuments from "./pages/hoto/HotoDocuments.jsx";
 import HotoPunchPoints from "./pages/hoto/HotoPunchpoints.jsx";
+import CompanyPage from "./pages/General/Company/index.jsx";
+import ElectricityLinePage from "./pages/General/Electricity-line/index.jsx";
+
 // console.log(SupplyInspections)
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 const HseLayout = () => {
@@ -292,6 +295,26 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <MaterialManagementListing />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/general/company"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <CompanyPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/project/electricity-line"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ElectricityLinePage />
               </MainLayout>
             </ProtectedRoute>
           }

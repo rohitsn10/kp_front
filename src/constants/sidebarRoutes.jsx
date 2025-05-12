@@ -47,10 +47,11 @@ import { HiClipboardDocumentCheck } from "react-icons/hi2";
       </svg>          
       ,
       links:"/project",
-      subNavs:[{
-        subName:'Category',
-        links:'/project/categories'
-      },
+      subNavs:[
+      //   {
+      //   subName:'Category',
+      //   links:'/project/categories'
+      // },
       {
         subName:'Main activities',
         links:'/project/main-activities'
@@ -113,11 +114,11 @@ import { HiClipboardDocumentCheck } from "react-icons/hi2";
       // links:"/general",
       subNavs:[{
         subName:'Category',
-        links:'/general/categories'
+         links:'/project/categories'
       },
       {
         subName:'Companies',
-        links:'/general/main-activities'
+        links:'/general/company'
       },
       {
         subName:'Electricity Line',

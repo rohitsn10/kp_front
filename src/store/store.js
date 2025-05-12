@@ -10,7 +10,7 @@ import { sfaApi } from "../api/sfa/sfaApi.js";
 import { projectApi } from "../api/users/projectApi.js";
 import { documentApi } from "../api/users/documentApi.js";
 import { materialApi } from "../api/material/materialApi.js";
-import { companyApi } from "../api/company/companyApi.js";
+import { companyApi } from "../api/General/company/companyApi.js";
 import { expenseApi } from "../api/expense/expenseApi.js";
 import { clientDataApi } from "../api/client/clientApi.js";
 import { projectWpoApi } from "../api/wpo/wpoApi.js";
@@ -43,6 +43,7 @@ import { qualityApi } from "../api/quality/qualityApi.js";
 import { qualitySupplyApi } from "../api/quality/qualitySupplyApi.js";
 import { hotoApi } from "../api/hoto/hotoApi.js";
 import { punchPointApi } from "../api/hoto/punchPointApi.js";
+import { electricityApi } from "../api/General/Electricity-line/ElectricityLineApi.js";
  
 const store = configureStore({
   reducer: {
@@ -89,7 +90,8 @@ const store = configureStore({
     [qualityApi.reducerPath]:qualityApi.reducer,
     [qualitySupplyApi.reducerPath]:qualitySupplyApi.reducer,
     [hotoApi.reducerPath]:hotoApi.reducer,
-    [punchPointApi.reducerPath]:punchPointApi.reducer
+    [punchPointApi.reducerPath]:punchPointApi.reducer,
+    [electricityApi.reducerPath]:electricityApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -137,6 +139,7 @@ const store = configureStore({
       .concat(qualitySupplyApi.middleware)
       .concat(hotoApi.middleware)
       .concat(punchPointApi.middleware)
+      .concat(electricityApi.middleware),
 });
 
 export default store;
