@@ -18,22 +18,22 @@ import {
   Select,
   MenuItem,
   CircularProgress,
-  Box
+  Box,
+  Tooltip
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { useListAllItemsQuery, useSetProjectItemsMutation } from "../../../../api/quality/qualitySupplyApi";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { useListAllItemsQuery, useSetProjectItemsMutation, useGetItemsByProjectQuery } from "../../../../api/quality/qualitySupplyApi";
 import { useParams } from "react-router-dom";
-// import { useListAllItemsQuery } from "../../../api/quality/qualitySupplyApi";
 
 const SelectItemsModal = ({ open, handleClose, onItemsSelected }) => {
   const [selectedItems, setSelectedItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState([]);
-   const [setProjectItems, {isLoading:ItemLoading}]=useSetProjectItemsMutation();
-   const {projectId} = useParams();
-//    console.log(projectId)
-//    console.log(">>>",onItemsSelected)
+  const [setProjectItems, {isLoading: itemLoading}] = useSetProjectItemsMutation();
+  const { projectId } = useParams();
+  
   // Fetch all items using RTK Query
   const {
     data: itemsResponse,
@@ -41,6 +41,34 @@ const SelectItemsModal = ({ open, handleClose, onItemsSelected }) => {
     isError,
     error
   } = useListAllItemsQuery();
+  
+  // Fetch items that are already in the project
+  const {
+    data: projectItemsResponse,
+    isLoading: isLoadingProjectItems,
+    isError: isErrorProjectItems,
+    error: projectItemsError,
+    refetch: refetchProjectItems,
+  } = useGetItemsByProjectQuery(projectId);
+  
+  // Create a set of already added item IDs for quick lookup
+  const [alreadyAddedItemIds, setAlreadyAddedItemIds] = useState(new Set());
+  
+  // Extract already added item IDs when projectItemsResponse is loaded
+  useEffect(() => {
+    if (projectItemsResponse?.data) {
+      const itemIds = new Set(projectItemsResponse.data.map(item => item.id));
+      setAlreadyAddedItemIds(itemIds);
+      
+      // Pre-select the items that are already in the project
+      setSelectedItems(prevSelected => {
+        // Keep only the items that were manually selected but not in the project
+        const manuallySelected = prevSelected.filter(id => !itemIds.has(id));
+        // Add all items from the project
+        return [...manuallySelected, ...itemIds];
+      });
+    }
+  }, [projectItemsResponse]);
 
   // Apply filters and search
   useEffect(() => {
@@ -71,6 +99,10 @@ const SelectItemsModal = ({ open, handleClose, onItemsSelected }) => {
   const handleToggleItem = (itemId) => {
     setSelectedItems((prevSelected) => {
       if (prevSelected.includes(itemId)) {
+        // If item is already in the project, don't allow deselecting it
+        if (alreadyAddedItemIds.has(itemId)) {
+          return prevSelected;
+        }
         return prevSelected.filter((id) => id !== itemId);
       } else {
         return [...prevSelected, itemId];
@@ -78,29 +110,27 @@ const SelectItemsModal = ({ open, handleClose, onItemsSelected }) => {
     });
   };
 
-//   const handleConfirm = async() => {
-//     // Call the callback with the selected item IDs
-//     const SubmitData = {
-//         "project_id": projectId,
-//         "item_id": selectedItems,
-//         "is_active": true
-//       }
-//    let response =await setProjectItems(SubmitData).unwrap();
-//     // onItemsSelected(selectedItems);
-
-//     handleClose();
-//   };
-const handleConfirm = async () => {
+  const handleConfirm = async () => {
     try {
-      const SubmitData = {
-        project_id: projectId,
-        item_id: selectedItems,
-        is_active: true
-      };
-      await setProjectItems(SubmitData).unwrap();
+      // Only submit items that weren't already in the project
+      const itemsToAdd = selectedItems.filter(id => !alreadyAddedItemIds.has(id));
+      
+      if (itemsToAdd.length > 0) {
+        const submitData = {
+          project_id: projectId,
+          item_id: itemsToAdd,
+          is_active: true
+        };
+        await setProjectItems(submitData).unwrap();
+      }
+      
       if (onItemsSelected) {
         onItemsSelected(selectedItems);
       }
+      
+      // Refresh the project items
+      refetchProjectItems();
+      
       handleClose();
     } catch (err) {
       console.error("Error submitting items:", err);
@@ -124,8 +154,12 @@ const handleConfirm = async () => {
   };
 
   const handleReset = () => {
-    setSelectedItems([]);
+    // Only reset manually selected items, keep the ones already in the project
+    setSelectedItems([...alreadyAddedItemIds]);
   };
+
+  // Calculate newly selected items count
+  const newSelectedItemsCount = selectedItems.filter(id => !alreadyAddedItemIds.has(id)).length;
 
   return (
     <Dialog 
@@ -140,7 +174,12 @@ const handleConfirm = async () => {
       <DialogContent dividers>
         <Box mb={2}>
           <Typography variant="body2" color="textSecondary" paragraph>
-            Select items to add to your list. You've selected {selectedItems.length} items.
+            Select items to add to your list. You've selected {newSelectedItemsCount} new items.
+            {alreadyAddedItemIds.size > 0 && (
+              <Typography variant="body2" component="span" sx={{ ml: 1 }}>
+                ({alreadyAddedItemIds.size} items already in project)
+              </Typography>
+            )}
           </Typography>
         </Box>
 
@@ -193,13 +232,13 @@ const handleConfirm = async () => {
         </Box>
 
         {/* Items List with Checkboxes */}
-        {isLoading ? (
+        {isLoading || isLoadingProjectItems ? (
           <Box display="flex" justifyContent="center" p={3}>
             <CircularProgress />
           </Box>
-        ) : isError ? (
+        ) : isError || isErrorProjectItems ? (
           <Typography color="error">
-            {error?.data?.message || "Error loading items"}
+            {error?.data?.message || projectItemsError?.data?.message || "Error loading items"}
           </Typography>
         ) : filteredItems.length === 0 ? (
           <Typography align="center" color="textSecondary">
@@ -209,6 +248,8 @@ const handleConfirm = async () => {
           <List sx={{ maxHeight: "400px", overflow: "auto" }}>
             {filteredItems.map((item, index) => {
               const categoryInfo = getCategoryDisplay(item.item_category);
+              const isItemInProject = alreadyAddedItemIds.has(item.id);
+              
               return (
                 <React.Fragment key={item.id}>
                   <ListItem disablePadding>
@@ -217,30 +258,44 @@ const handleConfirm = async () => {
                         <Checkbox
                           checked={selectedItems.includes(item.id)}
                           onChange={() => handleToggleItem(item.id)}
+                          disabled={isItemInProject}
                           sx={{
                             color: "#29346B",
                             '&.Mui-checked': {
-                              color: "#FACC15",
+                              color: isItemInProject ? "#4CAF50" : "#FACC15",
                             },
                           }}
                         />
                       }
                       label={
-                        <Box>
-                          <Typography variant="subtitle1">{item.item_name || 'Unnamed Item'}</Typography>
-                          <Box display="flex" gap={2}>
-                            <Typography variant="body2" color="textSecondary">
-                              <b>Category:</b> {categoryInfo.label}
+                        <Box sx={{ display: "flex", alignItems: "flex-start", width: "100%" }}>
+                          <Box sx={{ flexGrow: 1 }}>
+                            <Typography variant="subtitle1">
+                              {item.item_name || 'Unnamed Item'} 
+                              {item.item_number && ` (${item.item_number})`}
                             </Typography>
-                            {item.dicipline && (
+                            <Box display="flex" gap={2}>
                               <Typography variant="body2" color="textSecondary">
-                                <b>Discipline:</b> {item.dicipline}
+                                <b>Category:</b> {categoryInfo.label}
                               </Typography>
-                            )}
+                              {item.dicipline && (
+                                <Typography variant="body2" color="textSecondary">
+                                  <b>Discipline:</b> {item.dicipline}
+                                </Typography>
+                              )}
+                            </Box>
+                            <Typography variant="caption" color="textSecondary">
+                              {categoryInfo.description}
+                            </Typography>
                           </Box>
-                          <Typography variant="caption" color="textSecondary">
-                            {categoryInfo.description}
-                          </Typography>
+                          {isItemInProject && (
+                            <Tooltip title="Already added to project">
+                              <CheckCircleIcon 
+                                color="success" 
+                                sx={{ ml: 1, mt: 1 }} 
+                              />
+                            </Tooltip>
+                          )}
                         </Box>
                       }
                       sx={{ py: 1, width: '100%' }}
@@ -270,7 +325,7 @@ const handleConfirm = async () => {
         <Button 
           onClick={handleConfirm}
           variant="contained"
-          disabled={selectedItems.length === 0}
+          disabled={newSelectedItemsCount === 0}
           sx={{
             bgcolor: "#FACC15",
             color: "#29346B",
@@ -281,7 +336,7 @@ const handleConfirm = async () => {
             }
           }}
         >
-          Select ({selectedItems.length})
+          Select ({newSelectedItemsCount})
         </Button>
       </DialogActions>
     </Dialog>

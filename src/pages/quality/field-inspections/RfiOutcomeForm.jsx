@@ -25,7 +25,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useCreateRfiInspectionOutcomeMutation } from '../../../api/quality/qualityApi';
 import { useGetMainProjectsQuery } from '../../../api/users/projectApi';
 
-function RfiOutcomeForm({ open, handleClose, rfiData, projectId }) {
+function RfiOutcomeForm({ open, handleClose, rfiData, projectId,onSuccess }) {
   // RTK mutation hook
   const [createRfiInspectionOutcome, { isLoading }] = useCreateRfiInspectionOutcomeMutation();
   const { data: projects } = useGetMainProjectsQuery();

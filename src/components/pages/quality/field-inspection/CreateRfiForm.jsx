@@ -22,7 +22,7 @@ import {
 import { useCreateRfiMutation } from '../../../../api/quality/qualityApi';
 import { useGetMainProjectsQuery } from '../../../../api/users/projectApi';
 
-function CreateRfiForm({ open, handleClose, projectId, category }) {
+function CreateRfiForm({ open, handleClose, projectId, category,onSuccess }) {
   // RTK Query mutation hook
   const [createRfi, { isLoading }] = useCreateRfiMutation();
   
@@ -260,7 +260,7 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
         rfi_activity: category,
         rfi_number: generatedRfiNumber,
         rfi_classification: formData.classification === 'other' ? 'Other' : 
-                         formData.classification === 'table_work' ? 'Civil' : 'Buildings',
+                         formData.classification === 'table_work' ? 'Table Work' : 'Buildings',
         rfi_other: formData.otherClassification,
         epc_name: formData.epcName,
         offered_date: formData.offeredDate,
@@ -287,7 +287,7 @@ function CreateRfiForm({ open, handleClose, projectId, category }) {
       setAlertMessage('RFI created successfully!');
       setAlertSeverity('success');
       setAlertOpen(true);
-      
+      onSuccess();
       // Reset form and close dialog
       setTimeout(() => {
         handleClose();

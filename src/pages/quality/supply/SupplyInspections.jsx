@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Pagination,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
@@ -37,6 +38,7 @@ import { useGetItemsByProjectQuery } from "../../../api/quality/qualitySupplyApi
 import SelectItemsModal from "../../../components/pages/quality/supply-add-items/SelectItemsModal";
 import { useParams } from "react-router-dom";
 import MDCCForm from "../../../components/pages/quality/mdccform/mdccForm";
+
 function SupplyInspections() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("all");
@@ -45,6 +47,12 @@ function SupplyInspections() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { projectId } = useParams();
   const [mdccOpen, setMdccOpen] = useState(false);
+
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [paginatedItems, setPaginatedItems] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
 
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -67,6 +75,8 @@ function SupplyInspections() {
   useEffect(() => {
     if (!itemsResponse?.data || itemsResponse.data.length === 0) {
       setFilteredItems([]);
+      setPaginatedItems([]);
+      setTotalPages(0);
       return;
     }
 
@@ -130,7 +140,26 @@ function SupplyInspections() {
     }
 
     setFilteredItems(result);
-  }, [itemsResponse, searchTerm, sortOption, filterCategory]);
+    setTotalPages(Math.ceil(result.length / itemsPerPage));
+    setPage(1); // Reset to first page when filters change
+  }, [itemsResponse, searchTerm, sortOption, filterCategory, itemsPerPage]);
+
+  // Handle pagination effect
+  useEffect(() => {
+    if (filteredItems.length === 0) {
+      setPaginatedItems([]);
+      return;
+    }
+
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    setPaginatedItems(filteredItems.slice(startIndex, endIndex));
+  }, [filteredItems, page, itemsPerPage]);
+
+  // Handler for page change
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
 
   // Handler for Select Items modal
   const handleOpenSelectItemsModal = () => {
@@ -302,6 +331,90 @@ function SupplyInspections() {
     setFilterCategory("all");
   };
 
+  // Render empty state
+  const renderEmptyState = () => {
+    if (searchTerm || filterCategory !== "all" || sortOption !== "all") {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 bg-gray-50 border rounded">
+          <div className="text-center mb-4">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h3 className="mt-2 text-lg font-medium text-gray-900">
+              No matching items found
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Try adjusting your search filters or clearing them to see all items.
+            </p>
+          </div>
+          <Button
+            variant="outlined"
+            onClick={clearFilters}
+            sx={{
+              borderColor: "#29346B",
+              color: "#29346B",
+              "&:hover": {
+                borderColor: "#1e2756",
+                backgroundColor: "#f0f0f0",
+              },
+            }}
+          >
+            Clear Filters
+          </Button>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 bg-gray-50 border rounded">
+          <div className="text-center mb-4">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+            <h3 className="mt-2 text-lg font-medium text-gray-900">
+              No items available
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Get started by selecting items for this project.
+            </p>
+          </div>
+          <Button
+            variant="contained"
+            onClick={handleOpenSelectItemsModal}
+            sx={{
+              bgcolor: "#FACC15",
+              color: "#29346B",
+              "&:hover": { bgcolor: "#e5b812" },
+            }}
+          >
+            Select Items
+          </Button>
+        </div>
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 bg-white m-1 md:m-8 rounded-md">
       <h2 className="text-2xl font-semibold text-[#29346B] text-center mb-4">
@@ -396,7 +509,7 @@ function SupplyInspections() {
             </Button>
           </div>
 
-          {/* Replace Add Item button with Select Items button */}
+          {/* Remove Refresh button and keep Select Items + Generate buttons */}
           <div className="flex gap-2">
             <Button
               variant="contained"
@@ -418,32 +531,24 @@ function SupplyInspections() {
             >
               Generate Categorization Document
             </Button>
-            <Button
-              variant="outlined"
-              onClick={refetchItems}
-              sx={{
-                borderColor: "#29346B",
-                color: "#29346B",
-                "&:hover": {
-                  borderColor: "#1e2756",
-                  backgroundColor: "#f0f0f0",
-                },
-              }}
-            >
-              Refresh Data
-            </Button>
           </div>
         </div>
 
         {isLoadingItems ? (
-          <div className="flex justify-center">
+          <div className="flex justify-center py-12">
             <CircularProgress />
+            <p className="ml-4 text-gray-500">Loading items...</p>
           </div>
         ) : isErrorItems ? (
-          <p className="text-red-600">
-            {itemsError?.data?.message || "Error loading items"}
-          </p>
-        ) : filteredItems.length ? (
+          <div className="p-6 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-600 font-medium">
+              {itemsError?.data?.message || "Error loading items"}
+            </p>
+            <p className="text-sm text-red-500 mt-1">
+              Please try again later or contact support if the problem persists.
+            </p>
+          </div>
+        ) : paginatedItems.length ? (
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-gray-300">
               <thead>
@@ -484,16 +589,18 @@ function SupplyInspections() {
                 </tr>
               </thead>
               <tbody>
-                {filteredItems?.map((item, index) => {
+                {paginatedItems?.map((item, index) => {
                   const statusInfo = getStatusDisplay(item.status);
                   const categoryInfo = getCategoryDisplay(item.item_category);
+                  // Calculate the actual index considering pagination
+                  const itemIndex = (page - 1) * itemsPerPage + index + 1;
 
                   return (
                     <tr
                       key={item.id}
                       className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
                     >
-                      <td className="py-2 px-3 border">{index + 1}</td>
+                      <td className="py-2 px-3 border">{itemIndex}</td>
                       <td className="py-2 px-3 border">
                         {item.item_number || "N/A"}
                       </td>
@@ -654,13 +761,40 @@ function SupplyInspections() {
                 })}
               </tbody>
             </table>
+
+            {/* Pagination component */}
+            {totalPages > 1 && (
+              <div className="flex justify-center my-4">
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                  size="large"
+                  showFirstButton
+                  showLastButton
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      color: '#29346B',
+                    },
+                    '& .Mui-selected': {
+                      backgroundColor: '#29346B !important',
+                      color: 'white !important',
+                    },
+                  }}
+                />
+              </div>
+            )}
+            
+            {/* Items count info */}
+            <div className="text-sm text-gray-600 mt-2 text-center">
+              Showing {paginatedItems.length} of {filteredItems.length} items
+              {filteredItems.length !== (itemsResponse?.data?.length || 0) && 
+                ` (filtered from ${itemsResponse?.data?.length || 0} total)`}
+            </div>
           </div>
         ) : (
-          <p className="text-center p-4 bg-gray-50 border rounded">
-            {searchTerm || filterCategory !== "all" || sortOption !== "all"
-              ? "No matching items found. Try adjusting your filters."
-              : "No items available for this project."}
-          </p>
+          renderEmptyState()
         )}
       </div>
 

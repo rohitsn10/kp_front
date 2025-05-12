@@ -8,7 +8,8 @@ import {
   MenuItem,
   InputAdornment,
   CircularProgress,
-  Tooltip
+  Tooltip,
+  Pagination
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PrintIcon from "@mui/icons-material/Print";
@@ -39,8 +40,14 @@ function MechanicalInspections() {
   const [generating, setGenerating] = useState(false);
   const [currentRfiForPhysicalForm, setCurrentRfiForPhysicalForm] = useState(null);
   
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [paginatedItems, setPaginatedItems] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
+  
   // Fetch mechanical RFI data from API
-  const { data: mechanicalRfiResponse, isLoading: isLoadingRfi, error } = useGetMechanicalRfiQuery(projectId);
+  const { data: mechanicalRfiResponse, isLoading: isLoadingRfi, error,refetch } = useGetMechanicalRfiQuery(projectId);
   
   // Physical form PDF generation query
   const {
@@ -84,9 +91,23 @@ function MechanicalInspections() {
       }
 
       setFilteredItems(result);
+      setTotalPages(Math.ceil(result.length / itemsPerPage));
+      setPage(1); // Reset to first page when filters change
       setIsLoading(false);
     }, 300);
-  }, [searchTerm, sortOption, mechanicalRfiResponse]);
+  }, [searchTerm, sortOption, mechanicalRfiResponse, itemsPerPage]);
+
+  // Handle pagination effect
+  useEffect(() => {
+    if (filteredItems.length === 0) {
+      setPaginatedItems([]);
+      return;
+    }
+
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    setPaginatedItems(filteredItems.slice(startIndex, endIndex));
+  }, [filteredItems, page, itemsPerPage]);
 
   // Effect to handle download when physical form data is available
   useEffect(() => {
@@ -172,6 +193,94 @@ function MechanicalInspections() {
     setSortOption("all");
   };
   
+  // Handler for page change
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Render empty state
+  const renderEmptyState = () => {
+    if (searchTerm || sortOption !== "all") {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 bg-gray-50 border rounded">
+          <div className="text-center mb-4">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h3 className="mt-2 text-lg font-medium text-gray-900">
+              No matching RFIs found
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Try adjusting your search filters or clearing them to see all RFIs.
+            </p>
+          </div>
+          <Button
+            variant="outlined"
+            onClick={clearFilters}
+            sx={{
+              borderColor: "#29346B",
+              color: "#29346B",
+              "&:hover": {
+                borderColor: "#1e2756",
+                backgroundColor: "#f0f0f0",
+              },
+            }}
+          >
+            Clear Filters
+          </Button>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 bg-gray-50 border rounded">
+          <div className="text-center mb-4">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+            <h3 className="mt-2 text-lg font-medium text-gray-900">
+              No RFIs available
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Get started by creating an RFI for this project.
+            </p>
+          </div>
+          <Button
+            variant="contained"
+            onClick={handleOpenRfiForm}
+            sx={{
+              bgcolor: "#FACC15",
+              color: "#29346B",
+              "&:hover": { bgcolor: "#e5b812" },
+            }}
+          >
+            Create RFI
+          </Button>
+        </div>
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen p-4 bg-white m-1 md:m-8 rounded-md">
@@ -242,17 +351,6 @@ function MechanicalInspections() {
           
           {/* Action Buttons */}
           <div className="flex gap-2">
-            {/* <Button
-              variant="contained"
-              startIcon={<PrintIcon />}
-              onClick={handlePrint}
-              sx={{
-                bgcolor: "#3B82F6", // Blue color
-                "&:hover": { bgcolor: "#2563EB" }
-              }}
-            >
-              Print
-            </Button> */}
             <Button
               variant="contained"
               onClick={handleOpenRfiForm}
@@ -268,14 +366,20 @@ function MechanicalInspections() {
         </div>
 
         {isLoadingRfi || isLoading ? (
-          <div className="flex justify-center my-8">
+          <div className="flex justify-center py-12">
             <CircularProgress />
+            <p className="ml-4 text-gray-500">Loading RFI data...</p>
           </div>
         ) : error ? (
-          <p className="text-center p-4 bg-red-50 border rounded text-red-600">
-            Error loading RFI data. Please try again later.
-          </p>
-        ) : mechanicalRfiResponse && filteredItems.length ? (
+          <div className="p-6 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-600 font-medium">
+              Error loading RFI data
+            </p>
+            <p className="text-sm text-red-500 mt-1">
+              Please try again later or contact support if the problem persists.
+            </p>
+          </div>
+        ) : mechanicalRfiResponse && paginatedItems.length ? (
           <div className="overflow-x-auto">
             <table id="mechanical-rfi-table" className="min-w-full bg-white border border-gray-300">
               <thead>
@@ -290,105 +394,125 @@ function MechanicalInspections() {
                 </tr>
               </thead>
               <tbody>
-                {filteredItems.map((item, index) => (
-                  <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                    <td className="py-2 px-3 border">{index + 1}</td>
-                    <td className="py-2 px-3 border">{item.rfi_number || 'N/A'}</td>
-                    <td className="py-2 px-3 border">{formatDate(item.created_at)}</td>
-                    <td className="py-2 px-3 border">{item.epc_name}</td>
-                    <td className="py-2 px-3 border">{formatDate(item.offered_date)}</td>
-                    <td className="py-2 px-3 border">{`${item.block_number || ''} ${item.location_name || ''}`}</td>
-                    <td className="py-2 px-3 border">
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          variant="contained"
-                          size="small"
-                          onClick={() => handleViewInspection(item)}
-                          sx={{
-                            bgcolor: "#29346B",
-                            "&:hover": { bgcolor: "#1e2756" },
-                            padding: "2px 8px"
-                          }}
-                        >
-                          View
-                        </Button>
-                        {/* <Button
-                          variant="contained"
-                          size="small"
-                          sx={{
-                            bgcolor: "#FACC15",
-                            color: "#29346B",
-                            "&:hover": { bgcolor: "#e5b812" },
-                            padding: "2px 8px"
-                          }}
-                        >
-                          Edit
-                        </Button> */}
-                        <Button
-                          variant="contained"
-                          size="small"
-                          onClick={() => handleOpenOutcomeForm(item)}
-                          sx={{
-                            bgcolor: "#10B981", // Green color
-                            "&:hover": { bgcolor: "#059669" },
-                            padding: "2px 8px"
-                          }}
-                        >
-                          Add Outcome
-                        </Button>
-                        {/* Generate Physical Form button */}
-                        <Tooltip title="Generate Physical Form">
+                {paginatedItems.map((item, index) => {
+                  // Calculate the actual index considering pagination
+                  const itemIndex = (page - 1) * itemsPerPage + index + 1;
+                  
+                  return (
+                    <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                      <td className="py-2 px-3 border">{itemIndex}</td>
+                      <td className="py-2 px-3 border">{item.rfi_number || 'N/A'}</td>
+                      <td className="py-2 px-3 border">{formatDate(item.created_at)}</td>
+                      <td className="py-2 px-3 border">{item.epc_name}</td>
+                      <td className="py-2 px-3 border">{formatDate(item.offered_date)}</td>
+                      <td className="py-2 px-3 border">{`${item.block_number || ''} ${item.location_name || ''}`}</td>
+                      <td className="py-2 px-3 border">
+                        <div className="flex flex-wrap gap-2">
                           <Button
                             variant="contained"
                             size="small"
-                            onClick={() => handleGeneratePhysicalForm(item)}
-                            startIcon={<DescriptionIcon />}
-                            disabled={isLoadingPhysicalForm && currentRfiForPhysicalForm?.id === item.id}
+                            onClick={() => handleViewInspection(item)}
                             sx={{
-                              bgcolor: "#8B5CF6", // Purple color
-                              "&:hover": { bgcolor: "#7C3AED" },
+                              bgcolor: "#29346B",
+                              "&:hover": { bgcolor: "#1e2756" },
                               padding: "2px 8px"
                             }}
                           >
-                            {isLoadingPhysicalForm && currentRfiForPhysicalForm?.id === item.id ? (
-                              <>
-                                <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} />
-                                Generating...
-                              </>
-                            ) : (
-                              "Physical Form"
-                            )}
+                            View
                           </Button>
-                        </Tooltip>
-                        {/* File Upload button - now properly connected */}
-                        <Tooltip title="Upload Files">
                           <Button
                             variant="contained"
                             size="small"
-                            onClick={() => handleFileUpload(item)}
-                            startIcon={<UploadFileIcon />}
+                            onClick={() => handleOpenOutcomeForm(item)}
                             sx={{
-                              bgcolor: "#EC4899", // Pink color
-                              "&:hover": { bgcolor: "#DB2777" },
+                              bgcolor: "#10B981", // Green color
+                              "&:hover": { bgcolor: "#059669" },
                               padding: "2px 8px"
                             }}
                           >
-                            Upload
+                            Add Outcome
                           </Button>
-                        </Tooltip>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {/* Generate Physical Form button */}
+                          <Tooltip title="Generate Physical Form">
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => handleGeneratePhysicalForm(item)}
+                              startIcon={<DescriptionIcon />}
+                              disabled={isLoadingPhysicalForm && currentRfiForPhysicalForm?.id === item.id}
+                              sx={{
+                                bgcolor: "#8B5CF6", // Purple color
+                                "&:hover": { bgcolor: "#7C3AED" },
+                                padding: "2px 8px"
+                              }}
+                            >
+                              {isLoadingPhysicalForm && currentRfiForPhysicalForm?.id === item.id ? (
+                                <>
+                                  <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} />
+                                  Generating...
+                                </>
+                              ) : (
+                                "Physical Form"
+                              )}
+                            </Button>
+                          </Tooltip>
+                          {/* File Upload button - now properly connected */}
+                          <Tooltip title="Upload Files">
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => handleFileUpload(item)}
+                              startIcon={<UploadFileIcon />}
+                              sx={{
+                                bgcolor: "#EC4899", // Pink color
+                                "&:hover": { bgcolor: "#DB2777" },
+                                padding: "2px 8px"
+                              }}
+                            >
+                              Upload
+                            </Button>
+                          </Tooltip>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+            
+            {/* Pagination component */}
+            {totalPages > 1 && (
+              <div className="flex justify-center my-4">
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                  size="large"
+                  showFirstButton
+                  showLastButton
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      color: '#29346B',
+                    },
+                    '& .Mui-selected': {
+                      backgroundColor: '#29346B !important',
+                      color: 'white !important',
+                    },
+                  }}
+                />
+              </div>
+            )}
+            
+            {/* Items count info */}
+            <div className="text-sm text-gray-600 mt-2 text-center">
+              Showing {paginatedItems.length} of {filteredItems.length} RFIs
+              {filteredItems.length !== (mechanicalRfiResponse?.data?.length || 0) && 
+                ` (filtered from ${mechanicalRfiResponse?.data?.length || 0} total)`}
+            </div>
           </div>
         ) : (
-          <p className="text-center p-4 bg-gray-50 border rounded">
-            {searchTerm || sortOption !== "all" ?
-              "No matching RFIs found. Try adjusting your filters." :
-              "No RFIs available for this project."}
-          </p>
+          renderEmptyState()
         )}
       </div>
       
@@ -398,6 +522,7 @@ function MechanicalInspections() {
         handleClose={handleCloseRfiForm} 
         projectId={projectId || ''}
         category="mechanical" 
+        onSuccess={()=>refetch()}
       />
       <RfiOutcomeForm 
         open={openOutcomeForm} 
