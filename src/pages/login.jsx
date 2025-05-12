@@ -63,27 +63,65 @@ function Login() {
     };
 
     return (
-        <div className="h-[100vh] w-[100vw] bg-white-500 flex flex-row">
-            <div className='h-[100vh] w-[70vw]'>
-                <img className='fit h-[100vh] w-[100%] object-cover' src={loginImg} />
+        <div className="min-h-screen w-full bg-white flex flex-col md:flex-row">
+            {/* Image Section - Hidden on mobile, visible on md and up */}
+            <div className="hidden md:block md:w-3/5 lg:w-2/3">
+                <img 
+                    className="h-full w-full object-cover" 
+                    src={loginImg} 
+                    alt="Login background"
+                />
             </div>
-            <div className='w-[30vw]'>
-                <div className='flex flex-col mt-20 items-center gap-1'>
+            
+            {/* Login Form Section */}
+            <div className="w-full md:w-2/5 lg:w-1/3 px-6 py-10 md:py-0 flex flex-col justify-center">
+                <div className="flex flex-col items-center gap-2 mb-8">
                     <div>
-                        <img className='h-[80px] w-[80px]' src={logoImg} />
+                        <img 
+                            className="h-16 w-16 md:h-20 md:w-20" 
+                            src={logoImg} 
+                            alt="Company logo"
+                        />
                     </div>
                     <div>
-                        <h2 className='text-3xl text-[#29346B] font-semibold'>Create an Account</h2>
+                        <h2 className="text-2xl md:text-3xl text-[#29346B] font-semibold text-center">
+                            Login in to you account
+                        </h2>
                     </div>
                     <div>
-                        <p className='text-[#29346B]'>Your energy, your control - sign up now.</p>
+                        <p className="text-sm md:text-base text-[#29346B] text-center">
+                            Your energy, your control - sign in now.
+                        </p>
                     </div>
                 </div>
-                <div>
-                    <form onSubmit={handleFormSubmit} className='flex flex-col w-[70%] mx-auto gap-4 my-8'>
-                        <input type='email' name='email' value={inputForm.email} className='border border-b-4 p-2 rounded-md outline-none' onChange={handleInput} placeholder='Email' />
-                        <input type='password' name='password' value={inputForm.password} className='border border-b-4 p-2 rounded-md outline-none' onChange={handleInput} placeholder='Password' />
-                        <button type='submit' className='bg-blue-500 hover:bg-blue-700 p-2 text-white rounded-md'>Login</button>
+                
+                <div className="w-full max-w-md mx-auto">
+                    <form 
+                        onSubmit={handleFormSubmit} 
+                        className="flex flex-col w-full gap-4"
+                    >
+                        <input 
+                            type="email" 
+                            name="email" 
+                            value={inputForm.email} 
+                            className="border border-b-4 p-3 rounded-md outline-none" 
+                            onChange={handleInput} 
+                            placeholder="Email" 
+                        />
+                        <input 
+                            type="password" 
+                            name="password" 
+                            value={inputForm.password} 
+                            className="border border-b-4 p-3 rounded-md outline-none" 
+                            onChange={handleInput} 
+                            placeholder="Password" 
+                        />
+                        <button 
+                            type="submit" 
+                            className="bg-blue-500 hover:bg-blue-700 p-3 text-white rounded-md transition-colors duration-200"
+                        >
+                            Login
+                        </button>
                     </form>
                 </div>
             </div>

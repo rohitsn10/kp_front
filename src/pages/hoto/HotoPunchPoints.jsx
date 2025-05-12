@@ -25,6 +25,7 @@ import CompletedPointsModal from '../../components/pages/hoto/punchpoints/Comple
 import ClosePointsModal from '../../components/pages/hoto/punchpoints/ClosePointsModal';
 import AddPunchPointForm from '../../components/pages/hoto/punchpoints/AddPunchPointForm';
 import { useGetAllPunchPointDetailsQuery } from '../../api/hoto/punchPointApi';
+import ViewPunchPointModal from '../../components/pages/hoto/punchpoints/ViewPunchPointModal';
 
 function HotoPunchPoints() {
   const { projectId, documentId: hotoId } = useParams();
@@ -39,6 +40,7 @@ function HotoPunchPoints() {
   const [openCompletedPointsModal, setOpenCompletedPointsModal] = useState(false);
   const [openAddPunchPointModal, setOpenAddPunchPointModal] = useState(false);
   const [selectedPunchPoint, setSelectedPunchPoint] = useState(null);
+const [openViewModal, setOpenViewModal] = useState(false);
 
   // Fetch data using RTK Query hook
   const { data: punchPointsData, error, isLoading } = useGetAllPunchPointDetailsQuery(hotoId);
@@ -46,7 +48,7 @@ function HotoPunchPoints() {
   // Transform data to connect completed points and verified points to their respective punch points
   useEffect(() => {
     if (punchPointsData?.status && punchPointsData.data) {
-      const { punch_points, completed_punch_points, verified_punch_points } = punchPointsData.data;
+      const { punch_points, completed_punch_points } = punchPointsData.data;
       
       // Map and transform the data to connect related points
       const transformed = punch_points.map(punchPoint => {
@@ -55,20 +57,8 @@ function HotoPunchPoints() {
           cp => cp.raise_punch === punchPoint.id
         );
         
-        // For each completed point, find its related verified points
-        const completedPointsWithVerification = relatedCompletedPoints.map(cp => {
-          const verifications = verified_punch_points.filter(
-            vp => vp.completed_punch === cp.id
-          );
-          
-          return {
-            ...cp,
-            verifications
-          };
-        });
-        
         // Calculate the balance by subtracting the sum of completed points from the raised points
-        const completedPointsSum = completedPointsWithVerification.reduce(
+        const completedPointsSum = relatedCompletedPoints.reduce(
           (sum, cp) => sum + parseInt(cp.punch_point_completed || 0, 10), 
           0
         );
@@ -77,12 +67,17 @@ function HotoPunchPoints() {
         const balance = raisedPoints - completedPointsSum;
         
         // Determine the overall status based on completed and verified points
-        let status = "Not Started";
-        if (completedPointsWithVerification.length > 0) {
-          if (completedPointsSum >= raisedPoints && 
-              completedPointsWithVerification.every(cp => cp.verifications.length > 0)) {
+        let status = punchPoint.status || "Pending";
+        
+        if (relatedCompletedPoints.length > 0) {
+          // Check if all completed points are verified and have "Completed" status
+          const allCompleted = relatedCompletedPoints.every(cp => 
+            cp.verified && cp.verified.status === "Completed"
+          );
+          
+          if (completedPointsSum >= raisedPoints && allCompleted) {
             status = "Completed";
-          } else {
+          } else if (completedPointsSum > 0) {
             status = "In Progress";
           }
         }
@@ -96,11 +91,12 @@ function HotoPunchPoints() {
           ...punchPoint,
           punch_file_name,
           punch_point_balance: balance.toString(),
-          completed_points: completedPointsWithVerification,
+          completed_points: relatedCompletedPoints,
           status,
           // For the closure date, use the date of the latest verified point if any
-          closure_date: completedPointsWithVerification.flatMap(cp => cp.verifications)
-            .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0]?.updated_at
+          closure_date: relatedCompletedPoints
+            .filter(cp => cp.verified && cp.verified.status === "Completed")
+            .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0]?.verified?.updated_at
         };
       });
       
@@ -188,6 +184,16 @@ function HotoPunchPoints() {
     handleCloseClosePointsModal();
   };
 
+  const handleOpenViewModal = (punchPoint) => {
+  setSelectedPunchPoint(punchPoint);
+  setOpenViewModal(true);
+};
+
+const handleCloseViewModal = () => {
+  setOpenViewModal(false);
+  setSelectedPunchPoint(null);
+};
+
   // Status badge component
   const StatusBadge = ({ status }) => {
     let bgColor, textColor, label;
@@ -200,17 +206,23 @@ function HotoPunchPoints() {
         textColor = 'text-green-800';
         label = 'Completed';
         break;
+      case 'pending':
       case 'not started':
       case 'not_started':
         bgColor = 'bg-red-100';
         textColor = 'text-red-800';
-        label = 'Not Started';
+        label = statusLower === 'pending' ? 'Pending' : 'Not Started';
         break;
       case 'in progress':
       case 'in_progress':
         bgColor = 'bg-yellow-100';
         textColor = 'text-yellow-800';
         label = 'In Progress';
+        break;
+      case 'rejected':
+        bgColor = 'bg-orange-100';
+        textColor = 'text-orange-800';
+        label = 'Rejected';
         break;
       default:
         bgColor = 'bg-gray-100';
@@ -316,9 +328,10 @@ function HotoPunchPoints() {
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
                 <MenuItem value="all">All Statuses</MenuItem>
-                <MenuItem value="not started">Not Started</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
                 <MenuItem value="in progress">In Progress</MenuItem>
                 <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="rejected">Rejected</MenuItem>
               </Select>
             </FormControl>
 
@@ -358,7 +371,7 @@ function HotoPunchPoints() {
               <thead>
                 <tr className="bg-gray-100">
                   <th className="py-2 px-3 text-[#29346B] border text-left">Sr</th>
-                  <th className="py-2 px-3 text-[#29346B] border text-left">File Name</th>
+                  {/* <th className="py-2 px-3 text-[#29346B] border text-left">File Name</th> */}
                   <th className="py-2 px-3 text-[#29346B] border text-left">Title</th>
                   <th className="py-2 px-3 text-[#29346B] border text-left">Points Raised</th>
                   <th className="py-2 px-3 text-[#29346B] border text-left">Balance</th>
@@ -372,7 +385,7 @@ function HotoPunchPoints() {
                 {filteredItems.map((item, index) => (
                   <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                     <td className="py-2 px-3 border">{index + 1}</td>
-                    <td className="py-2 px-3 border">{item.punch_file_name}</td>
+                    {/* <td className="py-2 px-3 border">{item.punch_file_name}</td> */}
                     <td className="py-2 px-3 border">
                       <div className="max-w-xs truncate" title={item.punch_title}>
                         {item.punch_title}
@@ -387,20 +400,21 @@ function HotoPunchPoints() {
                     <td className="py-2 px-3 border">{item.created_by_name || `User ID: ${item.created_by}`}</td>
                     <td className="py-2 px-3 border">
                       <div className="flex flex-wrap gap-2">
-                        <Tooltip title="View Details">
-                          <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<VisibilityIcon />}
-                            sx={{
-                              bgcolor: "#29346B",
-                              "&:hover": { bgcolor: "#1e2756" },
-                              padding: "2px 8px"
-                            }}
-                          >
-                            View
-                          </Button>
-                        </Tooltip>
+<Tooltip title="View Details">
+  <Button
+    variant="contained"
+    size="small"
+    startIcon={<VisibilityIcon />}
+    onClick={() => handleOpenViewModal(item)}
+    sx={{
+      bgcolor: "#29346B",
+      "&:hover": { bgcolor: "#1e2756" },
+      padding: "2px 8px"
+    }}
+  >
+    View
+  </Button>
+</Tooltip>
                         <Tooltip title="Completion History">
                           <Button
                             variant="contained"
@@ -469,7 +483,15 @@ function HotoPunchPoints() {
             handleClose={handleCloseCompletedPointsModal}
             punchPointData={selectedPunchPoint}
           />
+
+              <ViewPunchPointModal
+      open={openViewModal}
+      handleClose={handleCloseViewModal}
+      punchPointData={selectedPunchPoint}
+    />
+
         </>
+
       )}
       
       {/* Add Punch Point Modal */}

@@ -81,32 +81,20 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
   
   // Process completed points to connect with their verifications
   const processedCompletedPoints = completedPoints.map(completedPoint => {
-    // Find verifications for this completed point
-    const verifications = punchPointData.verified_punch_points 
-      ? punchPointData.verified_punch_points.filter(vp => vp.completed_punch === completedPoint.id)
-      : [];
+    // Check if the completedPoint already has a verified property from the API
+    const verification = completedPoint.verified ? {
+      id: completedPoint.verified.id,
+      verification_status: completedPoint.verified.status === "Completed" ? "Accepted" : completedPoint.verified.status,
+      verified_by: completedPoint.verified.created_by,
+      verified_by_name: completedPoint.verified.created_by_name || `User ID: ${completedPoint.verified.created_by}`,
+      verified_at: completedPoint.verified.created_at,
+      rejection_reason: completedPoint.verified.verify_description
+    } : null;
     
-    // Take the latest verification if there are multiple
-    const latestVerification = verifications.length > 0 
-      ? verifications.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0]
-      : null;
-    
-    // Create a status from the verification
-    let verificationStatus = 'Pending';
-    if (latestVerification) {
-      verificationStatus = latestVerification.status === 'Completed' ? 'Accepted' : 'Rejected';
-    }
-    
+    // Get the filename from the first file in the punch_file array if it exists
     return {
       ...completedPoint,
-      verification: latestVerification ? {
-        id: latestVerification.id,
-        verification_status: verificationStatus,
-        verified_by: latestVerification.created_by,
-        verified_by_name: latestVerification.created_by_name || `User ID: ${latestVerification.created_by}`,
-        verified_at: latestVerification.created_at,
-        rejection_reason: latestVerification.verify_description
-      } : null,
+      verification,
       // Process the punch_file array to match the completion_files structure
       completion_files: completedPoint.punch_file ? completedPoint.punch_file.map(file => ({
         id: file.id,
@@ -189,6 +177,7 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
     
     switch (status.toLowerCase()) {
       case 'accepted':
+      case 'completed':
         return (
           <Chip 
             icon={<CheckCircleIcon />} 
@@ -216,6 +205,16 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
           />
         );
     }
+  };
+
+  // Check if a point can be verified
+  const canVerifyPoint = (point) => {
+    // If no verification exists, it can be verified
+    if (!point.verification) return true;
+    
+    // If verification exists, check if it's not already in a final state
+    const status = point.verification.verification_status.toLowerCase();
+    return status !== 'accepted' && status !== 'rejected' && status !== 'completed';
   };
 
   // Handle expand/collapse
@@ -291,12 +290,14 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
 
   // Calculate accepted points total
   const acceptedPointsTotal = processedCompletedPoints
-    .filter(p => p.verification && p.verification.verification_status === 'Accepted')
+    .filter(p => p.verification && 
+      (p.verification.verification_status === 'Accepted' || p.verification.verification_status === 'Completed'))
     .reduce((sum, point) => sum + parseInt(point.punch_point_completed || 0, 10), 0);
 
   // Count points by status
   const acceptedPointsCount = processedCompletedPoints.filter(p => 
-    p.verification && p.verification.verification_status === 'Accepted'
+    p.verification && 
+    (p.verification.verification_status === 'Accepted' || p.verification.verification_status === 'Completed')
   ).length;
   
   const rejectedPointsCount = processedCompletedPoints.filter(p => 
@@ -304,7 +305,10 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
   ).length;
   
   const pendingPointsCount = processedCompletedPoints.filter(p => 
-    !p.verification || p.verification.verification_status === 'Pending'
+    !p.verification || 
+    (p.verification.verification_status !== 'Accepted' && 
+     p.verification.verification_status !== 'Rejected' && 
+     p.verification.verification_status !== 'Completed')
   ).length;
 
   // Extract the punch file name
@@ -394,7 +398,9 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
                 key={point.id} 
                 variant="outlined" 
                 sx={{ mb: 2, borderColor: 
-                  point.verification && point.verification.verification_status === 'Accepted' ? '#10B981' :
+                  point.verification && 
+                  (point.verification.verification_status === 'Accepted' || 
+                   point.verification.verification_status === 'Completed') ? '#10B981' :
                   point.verification && point.verification.verification_status === 'Rejected' ? '#EF4444' : 
                   '#F59E0B'
                 }}
@@ -415,8 +421,8 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
                         Created: {formatDate(point.created_at)}
                       </Typography>
                       
-                      {/* Verify Action Button - Only show for pending items */}
-                      {(!point.verification || point.verification.verification_status === 'Pending') && (
+                      {/* Verify Action Button - Only show for items that can be verified */}
+                      {canVerifyPoint(point) && (
                         <Button
                           variant="outlined"
                           size="small"
@@ -524,7 +530,8 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
                             {point.verification.rejection_reason && (
                               <ListItem>
                                 <ListItemIcon>
-                                  {point.verification.verification_status === 'Accepted' ? 
+                                  {point.verification.verification_status === 'Accepted' || 
+                                   point.verification.verification_status === 'Completed' ? 
                                     <CheckCircleIcon /> : <CancelIcon />}
                                 </ListItemIcon>
                                 <ListItemText
