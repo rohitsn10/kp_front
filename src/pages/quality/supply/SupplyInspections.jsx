@@ -40,6 +40,7 @@ import SelectItemsModal from "../../../components/pages/quality/supply-add-items
 import { useParams } from "react-router-dom";
 import MDCCForm from "../../../components/pages/quality/mdccform/mdccForm";
 import EditCategoryModal from "../../../components/pages/quality/supply-components/EditCategoryModal";
+import VendorVerificationModal from "../../../components/pages/quality/supply-components/VendorVerificationModal";
 
 function SupplyInspections() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,6 +48,8 @@ function SupplyInspections() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [filteredItems, setFilteredItems] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+   const [vendorVerificationModalOpen, setVendorVerificationModalOpen] = useState(false);
+
   const { projectId } = useParams();
   const [mdccOpen, setMdccOpen] = useState(false);
   // State for Edit
@@ -180,14 +183,7 @@ function SupplyInspections() {
     try {
       // Store the selected item IDs
       setSelectedItemIds(itemIds);
-
-      // Here you could make an API call to send these IDs to the backend
-      console.log("Selected item IDs:", itemIds);
-
-      // You can add your API call here like:
-      // await addSelectedItems({ itemIds });
-
-      // After successful addition, refetch the items list
+      // console.log("Selected item IDs:", itemIds);
       refetchItems();
     } catch (err) {
       console.error("Error handling selected items:", err);
@@ -261,12 +257,14 @@ function SupplyInspections() {
     setMdccOpen(true);
   };
 
-  const handleViewHistory = async (item) => {
-    // Implement your API call
+    const handleVerifyVendor = (item) => {
+    setSelectedItem(item);
+    setVendorVerificationModalOpen(true);
   };
 
-  const handleVerifyVendor = async (item) => {
-    // Implement your API call
+  const handleCloseVendorVerificationModal = () => {
+    setVendorVerificationModalOpen(false);
+    setSelectedItem(null);
   };
 
   const handleGenerateInspection = (item) => {
@@ -850,6 +848,12 @@ function SupplyInspections() {
         handleClose={() => setMdccOpen(false)}
         selectedItem={selectedItem}
         projectId={projectId}
+      />
+
+      <VendorVerificationModal
+        open={vendorVerificationModalOpen}
+        handleClose={handleCloseVendorVerificationModal}
+        itemDetails={selectedItem}
       />
 
       {isDialogOpen && (
