@@ -133,13 +133,14 @@ const SiteVisitTable = () => {
             <TableRow style={{ backgroundColor: "#F2EDED" }}>
               <TableCell align="center">SFA Name</TableCell>
               <TableCell align="center">Site Visit Date</TableCell>
-              {/* <TableCell align="center">Status of Site Visit</TableCell> */}
-              <TableCell align="center">Approval Status</TableCell>
-              <TableCell align="center">Category</TableCell>
-              <TableCell align="center">Action</TableCell>
+              <TableCell align="center">Site Visit Status</TableCell>
+              <TableCell align="center">Land Category</TableCell>
+              <TableCell align="center">Edit</TableCell>
+              <TableCell align="center">Approve</TableCell>
               <TableCell align="center">Create Land Bank</TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
             {currentRows.length > 0 ? (
               currentRows.map((row) => (
@@ -159,48 +160,39 @@ const SiteVisitTable = () => {
                   <TableCell align="center">
                     {row.land_category_name || "N/A"}
                   </TableCell>
-                  <TableCell
-                    align="center"
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: 10,
-                    }}
-                  >
-                    <RiEditFill
-                      onClick={() => {
-                        setActiveItem(row);
-                        setUpdateSfa(true);
-                      }}
-                      style={{
-                        cursor: "pointer",
-                        color: "#61D435",
-                        fontSize: "27px",
-                      }}
-                      title="Edit"
-                    />
-                    {/* <AiOutlineStop style={{ cursor: 'pointer', color: 'red', fontSize: '23px' }} title="Delete" /> */}
-                    <FactCheckIcon
-                      onClick={() => {
-                        setActiveItem(row);
-                        setOpenApproveSfa(true);
-                        console.log("set approve");
-                      }}
-                      style={{
-                        cursor: "pointer",
-                        color: "#f95406",
-                        fontSize: "27px",
-                      }}
-                    />
-                    {/* <LibraryAddIcon
-                    style={{ cursor: 'pointer', color: '#003bff', fontSize: '27px' }}
-                    onClick={()=>{
-                      setActiveItem(row);
-                      // setOpenApproveSfa(true);
-                      setCreateLandBank(true);
-                      console.log("Add Land bank")
-                  }}
-                  /> */}
+                  <TableCell align="center">
+                    <div style={{ display: "flex", justifyContent: "center" }}>
+                      <RiEditFill
+                        onClick={() => {
+                          setActiveItem(row);
+                          setUpdateSfa(true);
+                        }}
+                        style={{
+                          cursor: "pointer",
+                          color: "#61D435",
+                          fontSize: "27px",
+                        }}
+                        title="Edit"
+                      />
+                    </div>
+                  </TableCell>
+
+                  {/* ✅ Approve Icon */}
+                  <TableCell align="center">
+                    <div style={{ display: "flex", justifyContent: "center" }}>
+                      <FactCheckIcon
+                        onClick={() => {
+                          setActiveItem(row);
+                          setOpenApproveSfa(true);
+                          console.log("set approve");
+                        }}
+                        style={{
+                          cursor: "pointer",
+                          color: "#f95406",
+                          fontSize: "27px",
+                        }}
+                      />
+                    </div>
                   </TableCell>
                   <TableCell align="center">
                     <Button

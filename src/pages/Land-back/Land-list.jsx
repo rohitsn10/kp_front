@@ -12,6 +12,7 @@ import {
   TablePagination,
 } from "@mui/material";
 import { RiEditFill } from "react-icons/ri";
+import { GiConfirmed } from "react-icons/gi";
 import {
   AiOutlineStop,
   AiOutlineCheck,
@@ -23,12 +24,12 @@ import LandApproveModal from "../../components/pages/Land-back/approveLand";
 import EditLandModal from "../../components/pages/Land-back/edit-land";
 import { useNavigate } from "react-router-dom";
 // import AssessmentFormModal from "../../components/pages/Land-back/sfa-form";
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteIcon from "@mui/icons-material/Delete";
 import { useDeleteLandBankLocationMutation } from "../../api/users/landbankApi"; // Import delete mutation
 // useDeleteLandBankLocationMutation
 function LandListing() {
   const { data, error, isLoading, refetch } = useGetLandBankMasterQuery();
-  console.log(data)
+  console.log(data);
   const [deleteLandBankLocation] = useDeleteLandBankLocationMutation(); // Hook to delete land location
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -49,9 +50,9 @@ function LandListing() {
       refetch();
     }
   }, [open, refetch]);
-  const handleCloseModal = ()=>{
-    setOpenEditModal(false)
-  }
+  const handleCloseModal = () => {
+    setOpenEditModal(false);
+  };
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -93,12 +94,15 @@ function LandListing() {
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error occurred!</div>;
 
-  const filteredRows = data?.data?.filter((row) =>
-    (row?.land_name || "").toLowerCase().includes(searchQuery?.toLowerCase())
-  ) || [];
-  
- 
-  const currentRows = filteredRows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const filteredRows =
+    data?.data?.filter((row) =>
+      (row?.land_name || "").toLowerCase().includes(searchQuery?.toLowerCase())
+    ) || [];
+
+  const currentRows = filteredRows?.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
 
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[70%] mx-auto my-8 rounded-md">
@@ -115,7 +119,9 @@ function LandListing() {
         </div>
 
         <div className="flex-grow flex justify-center">
-          <h2 className="text-2xl text-[#29346B] font-semibold">Land Listing</h2>
+          <h2 className="text-2xl text-[#29346B] font-semibold">
+            Land Listing
+          </h2>
         </div>
 
         <div className="flex items-center">
@@ -132,11 +138,13 @@ function LandListing() {
           >
             Add Land
           </Button> */}
-            <h3 className="text-2xl">Filters</h3>           
+          <h3 className="text-2xl">Filters</h3>
         </div>
       </div>
 
-      <TableContainer style={{ borderRadius: "10px", overflow: "hidden", overflowX: "auto" }}>
+      <TableContainer
+        style={{ borderRadius: "10px", overflow: "hidden", overflowX: "auto" }}
+      >
         <Table>
           <TableHead>
             <TableRow style={{ backgroundColor: "#F2EDED" }}>
@@ -147,11 +155,11 @@ function LandListing() {
               <TableCell align="center">User Full Name</TableCell>
               <TableCell align="center">Status</TableCell>
               <TableCell align="center">Create Date</TableCell>
+              <TableCell align="center">Approve</TableCell>{" "}
               <TableCell align="center">Action</TableCell>
               <TableCell align="center">Attachments</TableCell>
               <TableCell align="center">Edit Attachments</TableCell>
               <TableCell align="center">View Attachments</TableCell>
-              {/* <TableCell align="center">SFA</TableCell> */}
             </TableRow>
           </TableHead>
 
@@ -162,25 +170,56 @@ function LandListing() {
                 <TableCell align="center">{row?.land_name}</TableCell>
                 <TableCell align="center">{row?.land_category_name}</TableCell>
                 <TableCell align="center">{row?.solar_or_winds}</TableCell>
-                <TableCell align="center">{row.user_full_name || "N/A"}</TableCell>
-                <TableCell align="center">{row?.land_bank_status}</TableCell>
-                <TableCell align="center">{new Date(row.created_at).toLocaleDateString()}</TableCell>
                 <TableCell align="center">
-                  <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-                    <AiOutlineCheck
-                      style={{ cursor: "pointer", color: "green" }}
-                      title="Approve"
+                  {row.user_full_name || "N/A"}
+                </TableCell>
+                <TableCell align="center">{row?.land_bank_status}</TableCell>
+                <TableCell align="center">
+                  {new Date(row.created_at).toLocaleDateString()}
+                </TableCell>
+                <TableCell align="center">
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "100%",
+                    }}
+                  >
+                    <GiConfirmed 
+                      style={{
+                        cursor: "pointer",
+                        color: "#4CAF50", // Green color for approval
+                        fontSize: "28px", // Bigger size
+                      }}
+                      title="Approve Land"
                       onClick={() => handleApproveClick(row)}
                     />
+                  </div>
+                </TableCell>
+
+                {/* ✅ Action column (Edit + Delete only) */}
+                <TableCell align="center">
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: "10px",
+                    }}
+                  >
                     <RiEditFill
-                      style={{ cursor: "pointer", color: "#61D435" }}
+                      style={{ cursor: "pointer", color: "#61D435",fontSize:"28px" }}
                       title="Edit"
-                      onClick={() => handleEditClick(row)} // Open EditLandModal on click
+                      onClick={() => handleEditClick(row)}
                     />
                     <DeleteIcon
-                      style={{ cursor: "pointer", color: "#df3d34", fontSize: "15px" }}
+                      style={{
+                        cursor: "pointer",
+                        color: "#df3d34",
+                        fontSize: "28px",
+                      }}
                       title="Delete"
-                      onClick={() => handleDeleteClick(row.id)} // Trigger delete on click
+                      onClick={() => handleDeleteClick(row.id)}
                     />
                   </div>
                 </TableCell>
@@ -197,7 +236,7 @@ function LandListing() {
                         navigate("/add-land-doc", { state: { landData: row } })
                       }
                     >
-                    Add Attachments
+                      Add Attachments
                     </span>
                   ) : (
                     <span
@@ -221,10 +260,12 @@ function LandListing() {
                         textDecoration: "underline",
                       }}
                       onClick={() =>
-                        navigate(`/edit-land-doc/${row.id}`, { state: { landData: row } })
+                        navigate(`/edit-land-doc/${row.id}`, {
+                          state: { landData: row },
+                        })
                       }
                     >
-                     Edit Attachments
+                      Edit Attachments
                     </span>
                   ) : (
                     <span
@@ -234,7 +275,7 @@ function LandListing() {
                         fontWeight: "bold",
                       }}
                     >
-                     Edit Attachments
+                      Edit Attachments
                     </span>
                   )}
                 </TableCell>
@@ -248,12 +289,16 @@ function LandListing() {
                         textDecoration: "underline",
                       }}
                       onClick={() =>
-                        navigate(`/view-landbank-docs/${row.id}`, { state: { landData: row } })
+                        navigate(`/view-landbank-docs/${row.id}`, {
+                          state: { landData: row },
+                        })
                       }
                     >
-                     View Attachments
+                      View Attachments
                     </span>
-                  ):<></> }
+                  ) : (
+                    <></>
+                  )}
                 </TableCell>
                 {/* <TableCell align="center">
                   <AiOutlineFileText
@@ -279,15 +324,26 @@ function LandListing() {
       </TableContainer>
 
       {/* Add Land Modal */}
-      <LandActivityModal open={openAddLandModal} setOpen={setOpenAddLandModal} />
+      <LandActivityModal
+        open={openAddLandModal}
+        setOpen={setOpenAddLandModal}
+      />
 
       {/* Approve Land Modal */}
-      <LandApproveModal open={openApproveModal} setOpen={setOpenApproveModal} selectedLand={selectedLand} />
+      <LandApproveModal
+        open={openApproveModal}
+        setOpen={setOpenApproveModal}
+        selectedLand={selectedLand}
+      />
 
       {/* Edit Land Modal */}
-      <EditLandModal open={openEditModal} setOpen={setOpenEditModal} activeItem={selectedLand} handleClose={handleCloseModal} 
+      <EditLandModal
+        open={openEditModal}
+        setOpen={setOpenEditModal}
+        activeItem={selectedLand}
+        handleClose={handleCloseModal}
       />
-      
+
       {/* SFA Modal */}
       {/* <AssessmentFormModal handleClose={handleSfaModalClose} open={openSfaModal} selectedLand={selectedLand} /> */}
     </div>
