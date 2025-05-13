@@ -12,14 +12,14 @@ import {
 } from "@mui/material";
 import { useGenerateInspectionCallReportMutation } from "../../../../api/quality/qualitySupplyApi";
 
-function InspectionCallForm({ open, handleClose, projectId,selectedItem }) {
+function InspectionCallForm({ open, handleClose, projectId, selectedItem }) {
   const [formData, setFormData] = useState({
-   
     itemDescription: "",
     supplierNameAndAddress: "",
     inspectionPlace: "",
     supplierContact: "",
-    proposedInspectionDateTime: "",
+    startDateTime: "",
+    endDateTime: "",
     purchaseOrderDetails: "",
     quantityOrdered: "",
     quantityReleased: "",
@@ -28,8 +28,12 @@ function InspectionCallForm({ open, handleClose, projectId,selectedItem }) {
     itemCategory: "",
     attachedDocuments: "",
     otherDetails: "",
-    ic_number:"",
+    ic_number: "",
+    raisedByName: "",
+    supplierName: "",
+    epccName: "",
   });
+
   const [alert, setAlert] = useState({
     open: false,
     severity: "",
@@ -64,7 +68,8 @@ function InspectionCallForm({ open, handleClose, projectId,selectedItem }) {
       name_address_supplier: formData.supplierNameAndAddress,
       place_inspection: formData.inspectionPlace,
       contact_person: formData.supplierContact,
-      date_time_inspection: formData.proposedInspectionDateTime,
+      date_time_inspection_start: formData.startDateTime,
+      date_time_inspection_end: formData.endDateTime,
       purchase_order_number_date: formData.purchaseOrderDetails,
       quantity_ordered: formData.quantityOrdered,
       quantity_released_till_date: formData.quantityReleased,
@@ -73,7 +78,10 @@ function InspectionCallForm({ open, handleClose, projectId,selectedItem }) {
       item_category: formData.itemCategory,
       details_num_of_approved_drawings: formData.attachedDocuments,
       any_others: formData.otherDetails,
-      ic_number:formData.ic_number
+      ic_number: formData.ic_number,
+      raised_by_name: formData.raisedByName,
+      supplier_name: formData.supplierName,
+      epcc_name: formData.epccName,
     };
 
     try {
@@ -86,7 +94,6 @@ function InspectionCallForm({ open, handleClose, projectId,selectedItem }) {
         throw new Error(error?.message || "Failed to generate report");
       }
 
-      // Trigger file download
       const link = document.createElement("a");
       link.href = data.data;
       link.download = "inspection_call_report.pdf";
@@ -125,8 +132,13 @@ function InspectionCallForm({ open, handleClose, projectId,selectedItem }) {
                 name: "supplierContact",
               },
               {
-                label: "Date and time of proposed inspection",
-                name: "proposedInspectionDateTime",
+                label: "Start Date and Time of Inspection",
+                name: "startDateTime",
+                type: "datetime-local",
+              },
+              {
+                label: "End Date and Time of Inspection",
+                name: "endDateTime",
                 type: "datetime-local",
               },
               {
@@ -155,6 +167,9 @@ function InspectionCallForm({ open, handleClose, projectId,selectedItem }) {
                 name: "otherDetails",
                 multiline: true,
               },
+              { label: "Raised by Name", name: "raisedByName" },
+              { label: "Supplier Name", name: "supplierName" },
+              { label: "EPCC Name", name: "epccName" },
             ].map(({ label, name, multiline = false, type = "text" }) => (
               <Grid item xs={12} key={name}>
                 <TextField
