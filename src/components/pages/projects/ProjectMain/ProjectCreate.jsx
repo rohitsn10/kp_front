@@ -15,6 +15,7 @@ import { useGetMultipleSubSubActivitiesMutation } from "../../../../api/users/mu
 import { useGetLandBankMasterQuery } from "../../../../api/users/landbankApi";
 import { toast } from "react-toastify";
 import { useCreateMainProjectMutation } from "../../../../api/users/projectApi";
+import { useGetElectricityLinesQuery } from "../../../../api/General/Electricity-line/ElectricityLineApi";
 // import { useFetchUsersQuery } from '../api/userApi';
 function ProjectCreate({ open, handleClose, refetch }) {
   const { data: usersData, isLoading } = useFetchUsersQuery();
@@ -34,7 +35,8 @@ function ProjectCreate({ open, handleClose, refetch }) {
   ] = useGetMultipleSubSubActivitiesMutation();
   const [createMainProject, { isError, isSuccess, error }] =
     useCreateMainProjectMutation();
-  // console.log("SUB SUB SUB:",subSubActivitiesData)
+  const { data } = useGetElectricityLinesQuery();
+  const electricityLineOptions = data?.data || [];
   const activitiesFetched = activitiesData?.data || []; // Ensure we get an array
   const companyOptions =
     companiesData?.data?.map((company) => ({
@@ -82,10 +84,6 @@ function ProjectCreate({ open, handleClose, refetch }) {
     { id: "ipp", label: "IPP" },
   ];
 
-  const electricityLineOptions = [
-    { id: "1", label: "11KV" },
-    { id: "2", label: "33KV" },
-  ];
   const { data: landBankData, isLoading: LandLoading } =
     useGetLandBankMasterQuery();
   // const [selectedLandId, setSelectedLandId] = useState(null);
@@ -111,7 +109,18 @@ function ProjectCreate({ open, handleClose, refetch }) {
       setAreaError("");
     }
   };
-
+  const getLineLabel = (option) => {
+    if (typeof option.electricity_line === "string") {
+      try {
+        // Try parsing if it's JSON-like
+        const parsed = JSON.parse(option.electricity_line.replace(/'/g, '"'));
+        return parsed?.name || option.electricity_line;
+      } catch {
+        return option.electricity_line;
+      }
+    }
+    return "";
+  };
   const handleTotalAreaChange = (e) => {
     const inputValue = e.target.value;
 
@@ -551,22 +560,29 @@ function ProjectCreate({ open, handleClose, refetch }) {
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Electricity Line
             </label>
-            <Autocomplete
-              options={electricityLineOptions}
-              getOptionLabel={(option) => option.label}
-              value={electricityLine}
-              onChange={(_, value) => setElectricityLine(value)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  placeholder="Select Electricity Line"
-                  sx={inputStyles}
-                />
-              )}
-            />
-          </div>
 
+            {electricityLineOptions.length === 0 && !isLoading ? (
+              <Typography sx={{ color: "red", fontStyle: "italic", mt: 1 }}>
+                No Electricity Line added, please add one first.
+              </Typography>
+            ) : (
+              <Autocomplete
+                options={electricityLineOptions}
+                getOptionLabel={getLineLabel}
+                value={electricityLine}
+                onChange={(_, value) => setElectricityLine(value)}
+                loading={isLoading}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    placeholder="Select Electricity Line"
+                    sx={inputStyles}
+                  />
+                )}
+              />
+            )}
+          </div>
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Project Category
