@@ -91,6 +91,39 @@ export const qualitySupplyApi = createApi({
         formData: true,
       }),
     }),
+
+    createVendor: builder.mutation({
+      query: (formData) => ({
+        url: "quality_inspection/create_vendor",
+        method: "POST",
+        body: formData,
+        formData: true,
+      }),
+    }),
+    
+    getVendorList: builder.query({
+      query: ({ itemId, projectId }) => ({
+        url: `quality_inspection/list_vendor/${itemId}/${projectId}`,
+        method: "GET",
+      }),
+    }),
+
+    verifyVendor: builder.mutation({
+      query: ({ vendorId, isVerified }) => ({
+        url: `quality_inspection/verify_vendor/${vendorId}`,
+        method: "PUT",
+        body: { is_verified: isVerified },
+        formData: true,
+      }),
+    }),
+    generateCategorizationPdf: builder.mutation({
+      query: (formData) => ({
+        url: "quality_inspection/categorywise_pdf",
+        method: "PUT",
+        body: formData,
+        formData: true,
+      }),
+    }),
   }),
 });
 
@@ -105,5 +138,9 @@ export const {
   useGetQualityInspectionDocumentListQuery,
   useGetQualityInspectionObservationReportQuery,
   useGenerateMdccReportPdfMutation,
-  useUpdateQualityItemsMutation
+  useUpdateQualityItemsMutation,
+  useCreateVendorMutation,
+  useGetVendorListQuery,
+  useVerifyVendorMutation,
+  useGenerateCategorizationPdfMutation
 } = qualitySupplyApi;

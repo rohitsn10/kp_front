@@ -13,6 +13,8 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import { useGenerateCategorizationPdfMutation } from "../../../../api/quality/qualitySupplyApi";
+// import { useGenerateCategorizationPdfMutation } from "../../../api/quality/qualitySupplyApi"; // Update this path as needed
 
 const CategorizationDocumentModal = ({ open, handleClose, projectId }) => {
   // Form state
@@ -23,11 +25,14 @@ const CategorizationDocumentModal = ({ open, handleClose, projectId }) => {
     loaRef: "",
     epcContractor: "",
     governmentBody: "",
-    submittedByName: ""
+    submittedByName: "",
+    date: ""
   });
 
+  // API mutation hook
+  const [generateCategorizationPdf, { isLoading: loading }] = useGenerateCategorizationPdfMutation();
+
   // UI states
-  const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -46,33 +51,74 @@ const CategorizationDocumentModal = ({ open, handleClose, projectId }) => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     
     try {
-      // Here you would add the API call to generate the document
-      // const response = await generateCategorizationDocument(projectId, formData);
+      // Create FormData for the API call
+      const apiFormData = new FormData();
+      apiFormData.append('project_name', formData.projectName);
+      apiFormData.append('doc_no', formData.docNumber);
+      apiFormData.append('customer', formData.customer);
+      apiFormData.append('loa_no', formData.loaRef);
+      apiFormData.append('epc_name', formData.epcContractor);
+      apiFormData.append('govern', formData.governmentBody);
+      apiFormData.append('submitted_by', formData.submittedByName);
+      apiFormData.append('date', formData.date);
       
-      // Simulating API response time
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call the API
+      const response = await generateCategorizationPdf(apiFormData).unwrap();
       
-      // Show success notification
-      setNotification({
-        open: true,
-        message: "Categorization document generated successfully!",
-        severity: "success"
-      });
+      // First check if the response indicates success
+      if (response.status === true && response.data) {
+        // Create a link to download the file
+        const link = document.createElement('a');
+        
+        // Use the URL from the response data
+        const fileUrl = response.data;
+        
+        // If URL is relative (starts with /media), prepend the base URL
+        link.href = fileUrl.startsWith('http') 
+          ? fileUrl 
+          : `${import.meta.env.VITE_API_KEY || 'http://localhost:8000'}${fileUrl}`;
+        
+        link.target = '_blank';
+        link.download = 'Categorization_Document.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success notification
+        setNotification({
+          open: true,
+          message: response.message || "Categorization document generated successfully!",
+          severity: "success"
+        });
+      } else {
+        // Handle case where API returned with status false
+        throw new Error(response.message || "Failed to generate document");
+      }
       
-      // Close modal after success (optional)
-      // handleClose();
     } catch (error) {
       console.error("Error generating document:", error);
+      
+      // Handle different error formats
+      let errorMessage = "Failed to generate document. Please try again.";
+      
+      if (error.data?.message) {
+        // Error from RTK Query with data property
+        errorMessage = error.data.message;
+      } else if (error.message) {
+        // Standard error or our custom error from status:false
+        errorMessage = error.message;
+      } else if (typeof error.data === 'string') {
+        // Direct error message in data
+        errorMessage = error.data;
+      }
+      
       setNotification({
         open: true,
-        message: "Failed to generate document. Please try again.",
+        message: errorMessage,
         severity: "error"
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -189,15 +235,30 @@ const CategorizationDocumentModal = ({ open, handleClose, projectId }) => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
+                  label="Date (dd.mm.yyyy)"
+                  name="date"
+                  variant="outlined"
+                  value={formData.date}
+                  onChange={handleInputChange}
+                  required
+                  disabled={loading}
+                  placeholder="12.05.2025"
+                  helperText="Enter date in format: dd.mm.yyyy"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
                   label="Government Body"
                   name="governmentBody"
                   variant="outlined"
                   value={formData.governmentBody}
                   onChange={handleInputChange}
+                  required
                   disabled={loading}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
                   label="Submitted By"

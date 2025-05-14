@@ -35,6 +35,7 @@ import MDCCForm from "../../../components/pages/quality/mdccform/mdccForm";
 import EditCategoryModal from "../../../components/pages/quality/supply-components/EditCategoryModal";
 import VendorVerificationModal from "../../../components/pages/quality/supply-components/VendorVerificationModal";
 import CategorizationDocumentModal from "../../../components/pages/quality/supply-components/CategorizationDocumentModal";
+import VendorManagementModal from "../../../components/pages/quality/supply-components/VendorVerificationModal";
 
 function SupplyInspections() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -237,10 +238,10 @@ function SupplyInspections() {
     setMdccOpen(true);
   };
 
-    const handleVerifyVendor = (item) => {
-    setSelectedItem(item);
-    setVendorVerificationModalOpen(true);
-  };
+const handleVendorManagement = (item) => {
+  setSelectedItem(item);
+  setVendorVerificationModalOpen(true);
+};
 
   const handleCloseVendorVerificationModal = () => {
     setVendorVerificationModalOpen(false);
@@ -592,7 +593,10 @@ function SupplyInspections() {
                     MDCC
                   </th>
                   <th className="py-2 px-3 text-[#29346B] border text-left">
-                    Vendor Approval
+                    Vendor Status
+                  </th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">
+                    Vendor 
                   </th>
                 </tr>
               </thead>
@@ -760,10 +764,21 @@ function SupplyInspections() {
                         </div>
                       </td>
                       <td className="py-2 px-3 border">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold ${
+                            item.is_vendor_done
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {item.is_vendor_done ? "Completed" : "Pending"}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 border">
                         <Button
                           variant="contained"
                           size="small"
-                          onClick={() => handleVerifyVendor(item)}
+                          onClick={() => handleVendorManagement(item)}
                           sx={{
                             bgcolor: "#F59E0B",
                             "&:hover": { bgcolor: "#D97706" },
@@ -771,7 +786,7 @@ function SupplyInspections() {
                           }}
                           startIcon={<VerifiedUserIcon />}
                         >
-                          Verify Vendor
+                           Vendor Management
                         </Button>
                       </td>
                     </tr>
@@ -839,10 +854,11 @@ function SupplyInspections() {
         projectId={projectId}
       />
 
-      <VendorVerificationModal
+      <VendorManagementModal
         open={vendorVerificationModalOpen}
         handleClose={handleCloseVendorVerificationModal}
         itemDetails={selectedItem}
+        projectId={projectId}
       />
 
       {isDialogOpen && (
