@@ -43,7 +43,7 @@ export const qualitySupplyApi = createApi({
     }),
     generateInspectionCallReport: builder.mutation({
       query: ({ id, data }) => ({
-        url: `quality_inspection/inspection_call_report_pdf/${id}`,
+        url: `quality_inspection/inspection_call_report_pdf`,
         method: "POST",
         body: data,
       }),

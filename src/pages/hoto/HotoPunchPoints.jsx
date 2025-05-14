@@ -40,10 +40,10 @@ function HotoPunchPoints() {
   const [openCompletedPointsModal, setOpenCompletedPointsModal] = useState(false);
   const [openAddPunchPointModal, setOpenAddPunchPointModal] = useState(false);
   const [selectedPunchPoint, setSelectedPunchPoint] = useState(null);
-const [openViewModal, setOpenViewModal] = useState(false);
+  const [openViewModal, setOpenViewModal] = useState(false);
 
   // Fetch data using RTK Query hook
-  const { data: punchPointsData, error, isLoading } = useGetAllPunchPointDetailsQuery(hotoId);
+  const { data: punchPointsData, error, isLoading,refetch } = useGetAllPunchPointDetailsQuery(hotoId);
 
   // Transform data to connect completed points and verified points to their respective punch points
   useEffect(() => {
@@ -57,14 +57,8 @@ const [openViewModal, setOpenViewModal] = useState(false);
           cp => cp.raise_punch === punchPoint.id
         );
         
-        // Calculate the balance by subtracting the sum of completed points from the raised points
-        const completedPointsSum = relatedCompletedPoints.reduce(
-          (sum, cp) => sum + parseInt(cp.punch_point_completed || 0, 10), 
-          0
-        );
-        
-        const raisedPoints = parseInt(punchPoint.punch_point_raised || 0, 10);
-        const balance = raisedPoints - completedPointsSum;
+        // Use punch_point_balance directly from the API instead of calculating
+        // No need to calculate the balance anymore since it's provided by the API
         
         // Determine the overall status based on completed and verified points
         let status = punchPoint.status || "Pending";
@@ -75,9 +69,10 @@ const [openViewModal, setOpenViewModal] = useState(false);
             cp.verified && cp.verified.status === "Completed"
           );
           
-          if (completedPointsSum >= raisedPoints && allCompleted) {
+          // Use the provided punch_point_balance to determine if all points are completed
+          if (parseInt(punchPoint.punch_point_balance) === 0 && allCompleted) {
             status = "Completed";
-          } else if (completedPointsSum > 0) {
+          } else if (parseInt(punchPoint.punch_point_raised) > parseInt(punchPoint.punch_point_balance)) {
             status = "In Progress";
           }
         }
@@ -90,7 +85,6 @@ const [openViewModal, setOpenViewModal] = useState(false);
         return {
           ...punchPoint,
           punch_file_name,
-          punch_point_balance: balance.toString(),
           completed_points: relatedCompletedPoints,
           status,
           // For the closure date, use the date of the latest verified point if any
@@ -185,14 +179,14 @@ const [openViewModal, setOpenViewModal] = useState(false);
   };
 
   const handleOpenViewModal = (punchPoint) => {
-  setSelectedPunchPoint(punchPoint);
-  setOpenViewModal(true);
-};
+    setSelectedPunchPoint(punchPoint);
+    setOpenViewModal(true);
+  };
 
-const handleCloseViewModal = () => {
-  setOpenViewModal(false);
-  setSelectedPunchPoint(null);
-};
+  const handleCloseViewModal = () => {
+    setOpenViewModal(false);
+    setSelectedPunchPoint(null);
+  };
 
   // Status badge component
   const StatusBadge = ({ status }) => {
@@ -400,21 +394,21 @@ const handleCloseViewModal = () => {
                     <td className="py-2 px-3 border">{item.created_by_name || `User ID: ${item.created_by}`}</td>
                     <td className="py-2 px-3 border">
                       <div className="flex flex-wrap gap-2">
-<Tooltip title="View Details">
-  <Button
-    variant="contained"
-    size="small"
-    startIcon={<VisibilityIcon />}
-    onClick={() => handleOpenViewModal(item)}
-    sx={{
-      bgcolor: "#29346B",
-      "&:hover": { bgcolor: "#1e2756" },
-      padding: "2px 8px"
-    }}
-  >
-    View
-  </Button>
-</Tooltip>
+                        <Tooltip title="View Details">
+                          <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<VisibilityIcon />}
+                            onClick={() => handleOpenViewModal(item)}
+                            sx={{
+                              bgcolor: "#29346B",
+                              "&:hover": { bgcolor: "#1e2756" },
+                              padding: "2px 8px"
+                            }}
+                          >
+                            View
+                          </Button>
+                        </Tooltip>
                         <Tooltip title="Completion History">
                           <Button
                             variant="contained"
@@ -476,22 +470,22 @@ const handleCloseViewModal = () => {
             open={openClosePointsModal}
             handleClose={handleCloseClosePointsModal}
             punchPointData={selectedPunchPoint}
+            onSuccess={()=>{refetch()}}
           />
           
           <CompletedPointsModal
             open={openCompletedPointsModal}
             handleClose={handleCloseCompletedPointsModal}
             punchPointData={selectedPunchPoint}
+            onSuccess={()=>{refetch()}}
           />
 
-              <ViewPunchPointModal
-      open={openViewModal}
-      handleClose={handleCloseViewModal}
-      punchPointData={selectedPunchPoint}
-    />
-
+          <ViewPunchPointModal
+            open={openViewModal}
+            handleClose={handleCloseViewModal}
+            punchPointData={selectedPunchPoint}
+          />
         </>
-
       )}
       
       {/* Add Punch Point Modal */}
@@ -499,6 +493,7 @@ const handleCloseViewModal = () => {
         open={openAddPunchPointModal}
         handleClose={handleCloseAddPunchPointModal}
         hotoId={hotoId}
+        onSuccess={()=>{refetch()}}
       />
     </div>
   );

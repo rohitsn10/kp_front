@@ -10,22 +10,15 @@ import {
   MenuItem,
   InputAdornment,
   Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
   Pagination,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import EventNoteIcon from "@mui/icons-material/EventNote";
-import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import HistoryIcon from "@mui/icons-material/History";
+// import HistoryIcon from "@mui/icons-material/History";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import ComplianceReportsModal from "../../../components/pages/quality/ComplianceReportsModal";
@@ -41,6 +34,7 @@ import { useParams } from "react-router-dom";
 import MDCCForm from "../../../components/pages/quality/mdccform/mdccForm";
 import EditCategoryModal from "../../../components/pages/quality/supply-components/EditCategoryModal";
 import VendorVerificationModal from "../../../components/pages/quality/supply-components/VendorVerificationModal";
+import CategorizationDocumentModal from "../../../components/pages/quality/supply-components/CategorizationDocumentModal";
 
 function SupplyInspections() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,7 +49,8 @@ function SupplyInspections() {
   // State for Edit
   const [editCategoryModalOpen, setEditCategoryModalOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState(null);
-
+  const [categorizationModalOpen, setCategorizationModalOpen] = useState(false);
+ 
 
   // Pagination states
   const [page, setPage] = useState(1);
@@ -70,8 +65,8 @@ function SupplyInspections() {
   // Replace Add Item Modal state with Select Items Modal state
   const [selectItemsModalOpen, setSelectItemsModalOpen] = useState(false);
   const [selectedItemIds, setSelectedItemIds] = useState([]);
-
-  // Use the new RTK Query hook with projectId
+  const [complianceModalOpen, setComplianceModalOpen] = useState(false);
+  // Use the new RTK Query hook with projectId  
   const {
     data: itemsResponse,
     isLoading: isLoadingItems,
@@ -212,9 +207,6 @@ function SupplyInspections() {
     setSelectedItem(null);
   };
 
-  // Compliance Report modal state
-  const [complianceModalOpen, setComplianceModalOpen] = useState(false);
-
   const handleObservations = (item) => {
     setSelectedItem(item);
     setComplianceModalOpen(true);
@@ -240,18 +232,6 @@ function SupplyInspections() {
       refetchItems();
     };
 
-  const handleScheduleInspection = async (item) => {
-    // Implement your API call
-  };
-
-  const handleRaiseInspectionCall = async (item) => {
-    // Implement your API call
-  };
-
-  const handleRecordObservations = async (item) => {
-    // Implement your API call
-  };
-
   const handleUploadMDCC = async (item) => {
     setSelectedItem(item);
     setMdccOpen(true);
@@ -275,6 +255,14 @@ function SupplyInspections() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedItem(null);
+  };
+
+    const handleOpenCategorizationModal = () => {
+    setCategorizationModalOpen(true);
+  };
+
+  const handleCloseCategorizationModal = () => {
+    setCategorizationModalOpen(false);
   };
 
   // Format date for display
@@ -541,15 +529,16 @@ function SupplyInspections() {
             >
               Select Items
             </Button>
-            <Button
-              variant="contained"
-              sx={{
-                bgcolor: "#29346B",
-                "&:hover": { bgcolor: "#1e2756" },
-              }}
-            >
-              Generate Categorization Document
-            </Button>
+  <Button
+    variant="contained"
+    onClick={handleOpenCategorizationModal}
+    sx={{
+      bgcolor: "#29346B",
+      "&:hover": { bgcolor: "#1e2756" },
+    }}
+  >
+    Generate Categorization Document
+  </Button>
           </div>
         </div>
 
@@ -880,6 +869,11 @@ function SupplyInspections() {
         projectId={projectId} // Pass the projectId to the modal if needed
       />
 
+  <CategorizationDocumentModal
+    open={categorizationModalOpen}
+    handleClose={handleCloseCategorizationModal}
+    projectId={projectId}
+  />
     </div>
   );
 }

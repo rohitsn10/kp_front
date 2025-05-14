@@ -29,7 +29,7 @@ import { useSubmitCompletedPunchPointMutation } from '../../../../api/hoto/punch
 // Import the RTK Query mutation hook
 // import { useSubmitCompletedPunchPointMutation } from '../../services/api'; // Adjust path based on your project structure
 
-const ClosePointsModal = ({ open, handleClose, punchPointData }) => {
+const ClosePointsModal = ({ open, handleClose, punchPointData ,onSuccess}) => {
   // State for form fields
   const [pointsToClose, setPointsToClose] = useState('');
   const [remarks, setRemarks] = useState('');
@@ -130,7 +130,7 @@ const ClosePointsModal = ({ open, handleClose, punchPointData }) => {
         type: 'success',
         message: `Successfully submitted request to close ${pointsToClose} points!`
       });
-      
+      onSuccess();
       // Close modal after short delay on success
       setTimeout(() => {
         handleClose();

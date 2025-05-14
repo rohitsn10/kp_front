@@ -23,7 +23,6 @@ import FileUploadModal from '../../components/pages/hoto/documents-page/FileUplo
 import VerifyDocumentDialog from '../../components/pages/hoto/documents-page/VerifyDocumentDialog';
 import { useGetDocumentsByProjectIdQuery } from '../../api/hoto/hotoApi';
 import AddDocumentModal from '../../components/pages/hoto/documents-page/AddDocumentModal';
-// import { useGetDocumentsByProjectIdQuery } from '../../path/to/your/api'; // Update with your actual API path
 
 function HotoDocuments() {
   const { projectId } = useParams();
@@ -197,7 +196,43 @@ function HotoDocuments() {
     );
   };
 
-  // Calculate HOTO process completion percentage
+  // Punch Status badge component
+  const PunchStatusBadge = ({ status }) => {
+    let bgColor, textColor, label;
+    
+    // Convert status to lowercase for consistent comparison
+    const statusLower = status?.toLowerCase() || 'pending';
+    
+    switch(statusLower) {
+      case 'completed':
+        bgColor = 'bg-green-100';
+        textColor = 'text-green-800';
+        label = 'Completed';
+        break;
+      case 'in progress':
+      case 'in_progress':
+        bgColor = 'bg-blue-100';
+        textColor = 'text-blue-800';
+        label = 'In Progress';
+        break;
+      case 'overdue':
+        bgColor = 'bg-red-100';
+        textColor = 'text-red-800';
+        label = 'Overdue';
+        break;
+      case 'pending':
+      default:
+        bgColor = 'bg-yellow-100';
+        textColor = 'text-yellow-800';
+        label = 'Pending';
+    }
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bgColor} ${textColor}`}>
+        {label}
+      </span>
+    );
+  };
 
   // Format date string from ISO to local date format
   const formatDate = (isoDate) => {
@@ -304,18 +339,18 @@ function HotoDocuments() {
               Print List
             </Button>
             <Button
-  variant="contained"
-  startIcon={<UploadFileIcon />}
-  onClick={handleOpenAddDocumentModal}
-  disabled={!projectId}
-  sx={{
-    bgcolor: "#FACC15",
-    color: "#29346B",
-    "&:hover": { bgcolor: "#e5b812" }
-  }}
->
-  Upload New Document
-</Button>
+              variant="contained"
+              startIcon={<UploadFileIcon />}
+              onClick={handleOpenAddDocumentModal}
+              disabled={!projectId}
+              sx={{
+                bgcolor: "#FACC15",
+                color: "#29346B",
+                "&:hover": { bgcolor: "#e5b812" }
+              }}
+            >
+              Upload New Document
+            </Button>
           </div>
         </div>
 
@@ -345,6 +380,8 @@ function HotoDocuments() {
                   <th className="py-2 px-3 text-[#29346B] border text-left">Date Created</th>
                   <th className="py-2 px-3 text-[#29346B] border text-left">Created By</th>
                   <th className="py-2 px-3 text-[#29346B] border text-left">Status</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Punch Status</th>
+                  <th className="py-2 px-3 text-[#29346B] border text-left">Punch Balance</th>
                   <th className="py-2 px-3 text-[#29346B] border text-left">Remarks</th>
                   <th className="py-2 px-3 text-[#29346B] border text-left">Actions</th>
                 </tr>
@@ -359,6 +396,14 @@ function HotoDocuments() {
                     <td className="py-2 px-3 border">{item.created_by_name || `User ID: ${item.created_by}`}</td>
                     <td className="py-2 px-3 border">
                       <StatusBadge status={item.status} />
+                    </td>
+                    <td className="py-2 px-3 border">
+                      <PunchStatusBadge status={item.punch_status} />
+                    </td>
+                    <td className="py-2 px-3 border">
+                      <div className="flex justify-center">
+                        <span className="font-medium">{item.punch_point_balance || 0}</span>
+                      </div>
                     </td>
                     <td className="py-2 px-3 border">
                       <div className="max-w-xs truncate">
@@ -483,11 +528,11 @@ function HotoDocuments() {
         documentData={selectedDocument}
       />
       <AddDocumentModal 
-  open={openAddDocumentModal}
-  handleClose={handleCloseAddDocumentModal}
-  projectId={projectId}
-  onSuccess={handleDocumentUploadSuccess}
-/>
+        open={openAddDocumentModal}
+        handleClose={handleCloseAddDocumentModal}
+        projectId={projectId}
+        onSuccess={handleDocumentUploadSuccess}
+      />
     </div>
   );
 }

@@ -26,7 +26,7 @@ import { useCreatePunchPointMutation } from '../../../../api/hoto/punchPointApi'
 // Import the RTK Query mutation hook
 // import { useCreatePunchPointMutation } from '../../services/api'; // Adjust the path based on your project structure
 
-const AddPunchPointForm = ({ open, handleClose, hotoId }) => {
+const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
   // Initialize the mutation hook
   const [createPunchPoint, { isLoading }] = useCreatePunchPointMutation();
 
@@ -147,7 +147,7 @@ const AddPunchPointForm = ({ open, handleClose, hotoId }) => {
         // Use the mutation hook to send the data
         const response = await createPunchPoint(submitData).unwrap();
         console.log('Punch point created successfully:', response);
-        
+        onSuccess();
         // Reset form and close modal on success
         resetForm();
         handleClose();

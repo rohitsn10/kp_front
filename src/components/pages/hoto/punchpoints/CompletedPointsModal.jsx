@@ -58,7 +58,7 @@ import { useVerifyCompletedPunchPointMutation } from '../../../../api/hoto/punch
 // Import the RTK Query mutation hook
 // import { useVerifyCompletedPunchPointMutation } from '../../services/api'; // Adjust path based on your project structure
 
-const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
+const CompletedPointsModal = ({ open, handleClose, punchPointData,onSuccess }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [tabValue, setTabValue] = useState(0);
   const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
@@ -241,6 +241,7 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
   const handleCloseVerifyDialog = () => {
     setVerifyDialogOpen(false);
     setSelectedCompletedPoint(null);
+    handleClose();
   };
 
   // Handle verification form change
@@ -267,7 +268,7 @@ const CompletedPointsModal = ({ open, handleClose, punchPointData }) => {
         id: selectedCompletedPoint.id,
         formData
       }).unwrap();
-      
+        onSuccess();
       // Show success message
       setAlertMessage({
         type: 'success',
