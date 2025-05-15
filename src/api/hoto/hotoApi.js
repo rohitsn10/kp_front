@@ -97,6 +97,16 @@ export const hotoApi = createApi({
         };
       },
     }),
+    generateHotoCertificate: builder.mutation({
+  query: (certificateData) => ({
+    url: "hoto_module/hoto_certificate",
+    method: "PUT",
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: certificateData,
+  }),
+}),
   }),
 });
 
@@ -106,4 +116,5 @@ export const {
   useAddRemarksToDocumentMutation,
   useUploadDocumentMutation,
   useVerifyDocumentMutation,
+  useGenerateHotoCertificateMutation
 } = hotoApi;

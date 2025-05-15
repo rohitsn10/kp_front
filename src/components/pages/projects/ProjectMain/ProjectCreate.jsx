@@ -4,6 +4,7 @@ import {
   Dialog,
   DialogContent,
   TextField,
+  Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useFetchUsersQuery } from "../../../../api/users/usersApi";
@@ -167,18 +168,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
     }
   }, [subActivities, getSubSubActivities]); // Make sure getSubSubActivities is memoized if needed
 
-  // useEffect(() => {
-  //     if (subSubActivitiesData?.data) {
-  //         console.log("Check:",subSubActivitiesData?.data)
-  //         const formattedActivities = subSubActivitiesData.data.map(activity => (
-  //             {
-  //                 id: activity.id,
-  //                 name: activity?.sub_sub_activity_name[0]
-  //             }));
-  //         setMultipleActivities(formattedActivities);
-  //         setSelectedMultipleActivities([]);
-  //     }
-  // }, [subSubActivitiesData]);
+ 
   useEffect(() => {
     if (subSubActivitiesData?.data) {
       const formattedActivities = subSubActivitiesData.data.map((activity) => ({
@@ -194,14 +184,21 @@ function ProjectCreate({ open, handleClose, refetch }) {
   // console.log("Select Checkeeer",selectedMultipleActivities)
   const inputStyles = {
     "& .MuiOutlinedInput-root": {
-      border: "1px solid #FACC15",
-      borderBottom: "4px solid #FACC15",
       borderRadius: "6px",
-      padding: "1px",
+      transition: "border 0.2s ease-in-out",
+      "&:hover .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#FACC15", // Ensures yellow border on hover
+        borderBottom: "4px solid #FACC15",
+      },
+      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#FACC15", // Ensures yellow border on focus
+        borderWidth: "2px",
+        borderBottom: "4px solid #FACC15",
+      },
     },
-    "& .MuiOutlinedInput-root.Mui-focused": {
-      outline: "none",
-      borderBottom: "4px solid #E6A015",
+    "& .MuiOutlinedInput-notchedOutline": {
+      border: "1px solid #FACC15", // Default border
+      borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
     },
   };
 

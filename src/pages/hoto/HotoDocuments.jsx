@@ -23,6 +23,7 @@ import FileUploadModal from '../../components/pages/hoto/documents-page/FileUplo
 import VerifyDocumentDialog from '../../components/pages/hoto/documents-page/VerifyDocumentDialog';
 import { useGetDocumentsByProjectIdQuery } from '../../api/hoto/hotoApi';
 import AddDocumentModal from '../../components/pages/hoto/documents-page/AddDocumentModal';
+import CertificateGenerationForm from '../../components/pages/hoto/hoto-certificate/CertificateGenerationForm';
 
 function HotoDocuments() {
   const { projectId } = useParams();
@@ -38,6 +39,7 @@ function HotoDocuments() {
   const [openVerifyDialog, setOpenVerifyDialog] = useState(false);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [openAddDocumentModal, setOpenAddDocumentModal] = useState(false);
+  const [openCertificateForm, setOpenCertificateForm] = useState(false);
   // Fetch documents using the RTK Query hook
   const { 
     data: documentsResponse, 
@@ -131,6 +133,18 @@ function HotoDocuments() {
   
   const handleCloseAddDocumentModal = () => {
     setOpenAddDocumentModal(false);
+  };
+
+    const handleOpenCertificateForm = () => {
+    setOpenCertificateForm(true);
+  };
+  
+    const handleCertificateSuccess = () => {
+    // You can add additional handling here if needed
+    // For example, showing a success notification
+  };
+  const handleCloseCertificateForm = () => {
+    setOpenCertificateForm(false);
   };
   
   const handleOpenPunchPoints = (item)=>{
@@ -331,12 +345,13 @@ function HotoDocuments() {
             <Button
               variant="contained"
               startIcon={<PrintIcon />}
+               onClick={handleOpenCertificateForm}
               sx={{
                 bgcolor: "#3B82F6", // Blue color
                 "&:hover": { bgcolor: "#2563EB" }
               }}
             >
-              Print List
+              Generate Certificate
             </Button>
             <Button
               variant="contained"
@@ -532,6 +547,12 @@ function HotoDocuments() {
         handleClose={handleCloseAddDocumentModal}
         projectId={projectId}
         onSuccess={handleDocumentUploadSuccess}
+      />
+            <CertificateGenerationForm
+        open={openCertificateForm}
+        handleClose={handleCloseCertificateForm}
+        projectId={projectId}
+        onSuccess={handleCertificateSuccess}
       />
     </div>
   );

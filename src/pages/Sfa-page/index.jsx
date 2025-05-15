@@ -177,22 +177,29 @@ const SiteVisitTable = () => {
                     </div>
                   </TableCell>
 
-                  {/* ✅ Approve Icon */}
+                  {/* Changed from icon to button */}
                   <TableCell align="center">
-                    <div style={{ display: "flex", justifyContent: "center" }}>
-                      <FactCheckIcon
-                        onClick={() => {
-                          setActiveItem(row);
-                          setOpenApproveSfa(true);
-                          console.log("set approve");
-                        }}
-                        style={{
-                          cursor: "pointer",
-                          color: "#f95406",
-                          fontSize: "27px",
-                        }}
-                      />
-                    </div>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => {
+                        setActiveItem(row);
+                        setOpenApproveSfa(true);
+                        console.log("set approve");
+                      }}
+                      style={{
+                        backgroundColor: "#f95406",
+                        color: "white",
+                        minWidth: "90px",
+                        padding: "6px 16px",
+                        fontSize: "13px",
+                        textTransform: "none",
+                        fontWeight: "500",
+                      }}
+                      startIcon={<FactCheckIcon style={{ fontSize: "18px" }} />}
+                    >
+                      Approve
+                    </Button>
                   </TableCell>
                   <TableCell align="center">
                     <Button

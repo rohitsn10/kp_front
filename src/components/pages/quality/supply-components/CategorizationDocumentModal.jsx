@@ -55,6 +55,7 @@ const CategorizationDocumentModal = ({ open, handleClose, projectId }) => {
     try {
       // Create FormData for the API call
       const apiFormData = new FormData();
+      apiFormData.append('project_id',projectId );
       apiFormData.append('project_name', formData.projectName);
       apiFormData.append('doc_no', formData.docNumber);
       apiFormData.append('customer', formData.customer);
