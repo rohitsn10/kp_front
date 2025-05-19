@@ -82,7 +82,13 @@ export const qualityApi = createApi({
         url:`quality_inspection/rfi_report_pdf/${id}`,
         method:'GET'
       })
-    })
+    }),
+        getAllRfiCount: builder.query({
+      query: (projectId) => ({
+        url: `quality_inspection/count_all_rfi/${projectId}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -96,5 +102,6 @@ export const {
   useUploadFilesInspectionOutcomeMutation,
   useGetRfiInspectionOutcomeQuery,
   useGetFilesUploadInspectionOutcomeQuery,
-  useGetCreatePhysicalFormRfiQuery
+  useGetCreatePhysicalFormRfiQuery,
+  useGetAllRfiCountQuery 
 } = qualityApi;
