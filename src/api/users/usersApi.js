@@ -47,11 +47,6 @@ export const userApi = createApi({
       })
     }),
     updateUserPassword:builder.mutation({
-      // query:({userId,password})=>({
-      //   url:`/user_profile/admin_can_reset_passowrd/${userId}`,
-      //   method:'PUT',
-      //   body:password
-      // })
       query: ({ userId, password }) => {
         const formData = new FormData();
         formData.append('password', password);  // Add password to FormData
@@ -71,7 +66,23 @@ export const userApi = createApi({
         params: { department_name: departmentName },
       }),
     }),
+    assignUserAllThings: builder.mutation({
+      query: (formData) => ({
+        url: 'user_profile/assign_user_all_things',
+        method: 'POST',
+        body: formData,
+      }),
+      invalidatesTags: ['Users'],
+    }),
+    getUserAllThings: builder.query({
+      query: (userId) => ({
+        url: 'user_profile/assign_user_all_things',
+        method: 'GET',
+        params: { user_id: userId },
+      }),
+      providesTags: (result, error, userId) => [{ type: 'Users', id: userId }],
+    }),
   }),
 });
 
-export const { useFetchUsersQuery, useCreateUserMutation,useUpdateUserMutation,useUpdateUserStatusMutation,useUpdateUserPasswordMutation,useFetchDepartmentQuery } = userApi;
+export const { useFetchUsersQuery, useCreateUserMutation,useUpdateUserMutation,useUpdateUserStatusMutation,useUpdateUserPasswordMutation,useFetchDepartmentQuery,useAssignUserAllThingsMutation,useGetUserAllThingsQuery  } = userApi;
