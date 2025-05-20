@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import HOTOSectionCards from '../../components/pages/hoto/HOTOSectionCards';
 import { useGetMainProjectsQuery } from '../../api/users/projectApi';
 
-function HOTOMainPage() {
+function HotoMainPage() {
   const { data, isLoading, isError } = useGetMainProjectsQuery();
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectID, setProjectID] = useState(null);
@@ -77,4 +77,4 @@ function HOTOMainPage() {
   );
 }
 
-export default HOTOMainPage;
+export default HotoMainPage;

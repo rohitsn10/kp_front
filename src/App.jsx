@@ -71,7 +71,7 @@ import CivilInspections from "./pages/quality/field-inspections/CivilInspections
 import ElectricalInspections from "./pages/quality/field-inspections/ElectricalInspections.jsx";
 import MechanicalInspections from "./pages/quality/field-inspections/MechanicalInspections.jsx";
 import HOTOModule from "./pages/hoto/HotoDocuments.jsx";
-import HOTOMainPage from "./pages/hoto/HotoMainPage.jsx";
+import HotoMainPage from "./pages/hoto/HotoMainPage.jsx";
 import HotoDocuments from "./pages/hoto/HotoDocuments.jsx";
 import HotoPunchPoints from "./pages/hoto/HotoPunchpoints.jsx";
 import CompanyPage from "./pages/General/Company/index.jsx";
