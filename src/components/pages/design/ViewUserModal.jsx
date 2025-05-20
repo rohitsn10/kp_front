@@ -19,7 +19,7 @@ function ViewUserModal({ open, handleClose, drawingDetails }) {
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [assignedUsers, setAssignedUsers] = useState([]);
-  console.log(drawingDetails)
+  // console.log(drawingDetails)
   // Fetch users data
 
   useEffect(() => {

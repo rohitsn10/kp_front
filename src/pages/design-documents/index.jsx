@@ -22,7 +22,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import AssignUserModal from "../../components/pages/design/AssignUserModal";
 import UserNotiModal from "../../components/pages/design/UserNotiModal";
-import ViewUserModal from "../../components/pages/design/viewUserModal";
+import ViewUserModal from "../../components/pages/design/ViewUserModal";
 
 function DesignDocumentsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState("");
