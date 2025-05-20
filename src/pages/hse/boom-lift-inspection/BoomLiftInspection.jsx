@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import BoomLiftInspectionDialog from "../../../components/pages/hse/boom-lift/CreateBoomLift";
-import { useGetBoomLiftInspectionQuery } from "../../../api/hse/boomLift/boomLiftApi";
+import { useGetBoomLiftInspectionQuery } from "../../../api/hse/boomLift/boomLiftApi.js";
 import { useParams } from "react-router-dom";
 import ImageViewer from "../../../utils/signatureViewer";
 // import ImageViewer from "../../../components/common/ImageViewer"; // Import the ImageViewer component

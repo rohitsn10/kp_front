@@ -19,7 +19,7 @@ import ProjectCategoryPage from "./pages/projects/projects-category/index.jsx";
 import ProjectMultipleListing from "./pages/projects/projects-multiple-activity/index.jsx";
 import AddLandDoc from "./components/pages/Land-back/add-land.jsx";
 import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
-import DocumentListing from "./pages/document/Document-list.jsx";
+import DocumentListing from "./pages/Document/Document-list.jsx";
 import UploadedDocumentListing from "./components/pages/Documents/uploaded-document.jsx";
 import MaterialManagementListing from "./pages/Material/MaterialManagement.jsx";
 import ProjectListingTable from "./pages/projects/index.jsx";
