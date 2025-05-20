@@ -512,7 +512,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<HOTOMainPage />} />
+          <Route index element={<HotoMainPage />} />
           <Route
             path="add-document/:projectId"
             element={<HotoDocuments />}
