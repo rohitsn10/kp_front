@@ -76,6 +76,7 @@ import HotoDocuments from "./pages/hoto/HotoDocuments.jsx";
 import HotoPunchPoints from "./pages/hoto/HotoPunchpoints.jsx";
 import CompanyPage from "./pages/General/Company/index.jsx";
 import ElectricityLinePage from "./pages/General/Electricity-line/index.jsx";
+import DepartmentPage from "./pages/department/DepartmentPage.jsx";
 
 // console.log(SupplyInspections)
 // import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
@@ -315,6 +316,16 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <ElectricityLinePage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+                 <Route
+          path="/general/departments"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <DepartmentPage />
               </MainLayout>
             </ProtectedRoute>
           }

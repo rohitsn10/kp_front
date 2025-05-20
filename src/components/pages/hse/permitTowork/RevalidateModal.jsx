@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -15,454 +15,705 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Divider,
   Grid,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  IconButton,
-  Chip
+  Chip,
+  CircularProgress,
+  Alert
 } from "@mui/material";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 
-// Sample data for demonstration
-const sampleRenewals = [
-  {
-    renewal_id: 1,
-    renewal_date: "2025-04-20",
-    day_number: 2,
-    valid_from: "08:00",
-    valid_to: "17:00",
-    issuer: {
-      name: "John Smith",
-      signature: "data:image/png;base64,jkl012...",
-      timestamp: "2025-04-20T08:15:00Z"
-    },
-    approver: {
-      name: "Sarah Johnson",
-      signature: "data:image/png;base64,mno345...",
-      timestamp: "2025-04-20T08:30:00Z"
-    },
-    receiver: {
-      name: "Mike Williams",
-      signature: "data:image/png;base64,pqr678...",
-      timestamp: "2025-04-20T08:45:00Z"
-    }
-  },
-  {
-    renewal_id: 2,
-    renewal_date: "2025-04-21",
-    day_number: 3,
-    valid_from: "08:00",
-    valid_to: "17:00",
-    issuer: {
-      name: "John Smith",
-      signature: "data:image/png;base64,stu901...",
-      timestamp: "2025-04-21T08:10:00Z"
-    },
-    approver: {
-      name: "Sarah Johnson",
-      signature: "data:image/png;base64,vwx234...",
-      timestamp: "2025-04-21T08:25:00Z"
-    },
-    receiver: {
-      name: "Mike Williams",
-      signature: "data:image/png;base64,yz0567...",
-      timestamp: "2025-04-21T08:40:00Z"
-    }
-  }
-];
+// Import the other modals
+import ApprovePermitModal from "./ApprovePermitModal";
+import ReceiverPermitModal from "./ReceiverPermitModal";
+import { useGetIssuerPermitQuery, useIssuerApprovePermitMutation } from "../../../../api/hse/permitTowork/permitToworkApi";
 
-// Component to view signatures
-const SignatureViewer = ({ name, signature, timestamp }) => {
-  const [viewSignature, setViewSignature] = useState(false);
-  
-  const formattedTimestamp = new Date(timestamp).toLocaleString();
-  
+// Reuse your existing ImageViewer component
+const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
+  const [open, setOpen] = useState(false);
+ 
   return (
-    <Box>
-      <Typography variant="body2" fontWeight="bold">{name}</Typography>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <IconButton 
-          size="small" 
-          onClick={() => setViewSignature(true)}
-          color="primary"
-        >
-          <VisibilityIcon fontSize="small" />
-        </IconButton>
-        <Typography variant="caption">{formattedTimestamp}</Typography>
-      </Stack>
-      
-      {/* Signature Dialog */}
-      <Dialog open={viewSignature} onClose={() => setViewSignature(false)}>
-        <DialogTitle>{name}'s Signature</DialogTitle>
+    <>
+      <img
+        src={`${import.meta.env.VITE_API_KEY}${src}`}
+        alt={alt}
+        onClick={() => setOpen(true)}
+        style={{
+          width: `${width}px`,
+          height: `${height}px`,
+          cursor: 'pointer'
+        }}
+      />
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
         <DialogContent>
-          <img 
-            src="#" // In real app, this would be the signature URL
-            alt="Signature Preview" 
-            style={{ width: '100%', height: 'auto' }}
+          <img
+            src={`${import.meta.env.VITE_API_KEY}${src}`}
+            alt={alt}
+            style={{
+              width: '100%',
+              maxHeight: '500px',
+              objectFit: 'contain'
+            }}
           />
-          <Typography variant="caption" display="block" mt={1}>
-            Signed on: {formattedTimestamp}
-          </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setViewSignature(false)}>Close</Button>
-        </DialogActions>
       </Dialog>
-    </Box>
+    </>
   );
 };
 
 const RevalidateModal = ({ open, onClose, permitId }) => {
-  const [renewals, setRenewals] = useState(sampleRenewals);
+  // Add state for controlling the nested modals
+  const [approveModalOpen, setApproveModalOpen] = useState(false);
+  const [receiverModalOpen, setReceiverModalOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(null);
+
+  // API hooks
+  const { data: permitData, isLoading: isLoadingGet, refetch } = useGetIssuerPermitQuery(
+    permitId, 
+    { skip: !open || !permitId }
+  );
+  const [issuerApprovePermit, { isLoading: isLoadingIssue }] = useIssuerApprovePermitMutation();
+  
+  // State management
+  const [organizedDays, setOrganizedDays] = useState([]);
+  const [nextDayNumber, setNextDayNumber] = useState(1);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [canAddNewPtw, setCanAddNewPtw] = useState(true);
+  const [pendingPtwExists, setPendingPtwExists] = useState(false);
   
-  // Form states
-  const [newRenewal, setNewRenewal] = useState({
+  // Form state
+  const [issuerForm, setIssuerForm] = useState({
     renewal_date: new Date().toISOString().split('T')[0],
-    day_number: renewals.length > 0 ? renewals[renewals.length - 1].day_number + 1 : 1,
-    valid_from: "08:00",
-    valid_to: "17:00",
+    day_number: "1",
+    start_time: "08:00",
+    end_time: "17:00",
     issuer_name: "",
-    issuer_signature: null,
-    issuer_signature_name: "No file chosen",
+    issuer_sign: null,
+    file_name: "No file chosen"
   });
-  
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewRenewal(prev => ({
-      ...prev,
-      [name]: value
-    }));
+
+  // Reset modal states when the main modal closes
+  useEffect(() => {
+    if (!open) {
+      setApproveModalOpen(false);
+      setReceiverModalOpen(false);
+      setSelectedDay(null);
+    }
+  }, [open]);
+
+  // Refetch when the modal opens
+  useEffect(() => {
+    if (open && permitId) {
+      refetch();
+    }
+  }, [open, permitId, refetch]);
+
+  // Organize data when it changes
+  useEffect(() => {
+    if (permitData) {
+      organizePermitData();
+    }
+  }, [permitData]);
+
+  // Organize the permit data into a structured format
+  const organizePermitData = () => {
+    if (!permitData || !permitData.data) return;
+    
+    const days = [];
+    let maxDayNumber = 0;
+    let lastDayStatus = null;
+    let hasPendingPtw = false;
+    
+    // Sort day keys for proper ordering
+    const dayKeys = Object.keys(permitData.data).sort((a, b) => {
+      const aMatch = a.match(/day(\d+)(?:\.(\d+))?/);
+      const bMatch = b.match(/day(\d+)(?:\.(\d+))?/);
+      
+      if (!aMatch || !bMatch) return 0;
+      
+      const aDay = parseInt(aMatch[1]);
+      const bDay = parseInt(bMatch[1]);
+      
+      if (aDay !== bDay) return aDay - bDay;
+      
+      const aSubDay = aMatch[2] ? parseInt(aMatch[2]) : 0;
+      const bSubDay = bMatch[2] ? parseInt(bMatch[2]) : 0;
+      
+      return aSubDay - bSubDay;
+    });
+    
+    dayKeys.forEach(dayKey => {
+      const dayData = permitData.data[dayKey];
+      
+      // Find entries for each role
+      const issuerEntry = dayData.find(item => item.type === "issuer");
+      const approverEntries = dayData.filter(item => item.type === "approver");
+      const receiverEntry = dayData.find(item => item.type === "receiver");
+      
+      // Get the most recent approver (in case there are multiple)
+      const approverEntry = approverEntries.length > 0 
+        ? approverEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+        : null;
+      
+      // Extract day number from the key
+      const dayMatch = dayKey.match(/day(\d+)(?:\.(\d+))?/);
+      if (dayMatch) {
+        const dayNumber = parseInt(dayMatch[1]);
+        if (dayNumber > maxDayNumber) {
+          maxDayNumber = dayNumber;
+        }
+        
+        // Determine status - FIX: Correct status determination logic
+        let status;
+        if (receiverEntry) {
+          status = "complete";
+        } else if (approverEntry) {
+          // Check approval status properly - convert to lowercase for case-insensitive comparison
+          status = approverEntry.approver_status.toLowerCase() === "approved" ? "approved" : "rejected";
+        } else if (issuerEntry) {
+          status = "issued";
+          hasPendingPtw = true; // There's a PTW that's issued but not fully processed
+        } else {
+          status = "pending";
+        }
+        
+        // If a PTW is approved but not received, it's still in progress
+        if (status === "approved" && !receiverEntry) {
+          hasPendingPtw = true;
+        }
+        
+        // Save status of the last day
+        if (dayNumber === maxDayNumber) {
+          lastDayStatus = status;
+        }
+        
+        days.push({
+          dayKey,
+          dayNumber: dayMatch[1] + (dayMatch[2] ? `.${dayMatch[2]}` : ""),
+          issuer: issuerEntry,
+          approver: approverEntry,
+          approverEntries, // Store all approver entries
+          receiver: receiverEntry,
+          status
+        });
+      }
+    });
+    
+    setOrganizedDays(days);
+    setPendingPtwExists(hasPendingPtw);
+    
+    // Determine if we can add a new PTW based on the pending state
+    // Can add new PTW if no pending PTWs exist or if the last PTW was rejected or complete
+    setCanAddNewPtw(!hasPendingPtw || lastDayStatus === "rejected" || lastDayStatus === "complete");
+    
+    // Determine next day number based on last day status
+    if (maxDayNumber > 0) {
+      if (lastDayStatus === "complete" || lastDayStatus === "approved") {
+        setNextDayNumber(maxDayNumber + 1);
+        setIssuerForm(prev => ({ ...prev, day_number: (maxDayNumber + 1).toString() }));
+      } else if (lastDayStatus === "rejected") {
+        // For rejected permits, use same day number with incremented decimal
+        const lastDayInfo = days[days.length - 1].dayKey.match(/day(\d+)(?:\.(\d+))?/);
+        if (lastDayInfo) {
+          const subDay = lastDayInfo[2] ? parseInt(lastDayInfo[2]) + 1 : 1;
+          const newDayNumberWithSubday = `${maxDayNumber}.${subDay}`;
+          setNextDayNumber(maxDayNumber);
+          setIssuerForm(prev => ({ ...prev, day_number: newDayNumberWithSubday }));
+        }
+      } else {
+        setNextDayNumber(maxDayNumber);
+        setIssuerForm(prev => ({ ...prev, day_number: maxDayNumber.toString() }));
+      }
+    } else {
+      setNextDayNumber(1);
+      setIssuerForm(prev => ({ ...prev, day_number: "1" }));
+    }
   };
-  
-  // Handle file upload for signature
-  const handleFileChange = (e) => {
+
+  // Form input handlers
+  const handleIssuerFormChange = (e) => {
+    const { name, value } = e.target;
+    setIssuerForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleIssuerFileChange = (e) => {
     if (e.target.files.length > 0) {
-      setNewRenewal(prev => ({
+      setIssuerForm(prev => ({
         ...prev,
-        issuer_signature: e.target.files[0],
-        issuer_signature_name: e.target.files[0].name
+        issuer_sign: e.target.files[0],
+        file_name: e.target.files[0].name
       }));
     }
   };
-  
-  // Add new renewal
-  const handleAddRenewal = () => {
-    if (!newRenewal.issuer_name || !newRenewal.issuer_signature) {
+
+  // Submit a new renewal
+  const handleSubmitIssuer = async () => {
+    if (!issuerForm.issuer_name || !issuerForm.issuer_sign) {
       alert("Please fill all required fields");
       return;
     }
-    
-    // In a real app, you would submit to API here
-    // For demo purposes, we'll just update the local state
-    const newRenewalObj = {
-      renewal_id: renewals.length > 0 ? Math.max(...renewals.map(r => r.renewal_id)) + 1 : 1,
-      renewal_date: newRenewal.renewal_date,
-      day_number: newRenewal.day_number,
-      valid_from: newRenewal.valid_from,
-      valid_to: newRenewal.valid_to,
-      issuer: {
-        name: newRenewal.issuer_name,
-        signature: "data:image/png;base64,dummy...", // Placeholder
-        timestamp: new Date().toISOString()
-      },
-      // Initially, no approver or receiver
-      approver: null,
-      receiver: null
-    };
-    
-    setRenewals([...renewals, newRenewalObj]);
-    
-    // Reset form and hide it
-    setNewRenewal({
-      renewal_date: new Date().toISOString().split('T')[0],
-      day_number: newRenewal.day_number + 1,
-      valid_from: "08:00",
-      valid_to: "17:00",
-      issuer_name: "",
-      issuer_signature: null,
-      issuer_signature_name: "No file chosen",
-    });
-    setShowAddForm(false);
+
+    try {
+      const formData = new FormData();
+      formData.append('renewal_date', new Date(issuerForm.renewal_date).toISOString());
+      formData.append('day_number', issuerForm.day_number);
+      formData.append('issuer_name', issuerForm.issuer_name);
+      formData.append('issuer_sign', issuerForm.issuer_sign);
+      formData.append('start_time', new Date(`2025-05-20T${issuerForm.start_time}:00`).toISOString());
+      formData.append('end_time', new Date(`2025-05-20T${issuerForm.end_time}:00`).toISOString());
+      
+      const response = await issuerApprovePermit({
+        permitId,
+        formData
+      });
+      
+      if (response.data && response.data.status) {
+        // Refresh data
+        refetch();
+        
+        // Reset form
+        setIssuerForm({
+          renewal_date: new Date().toISOString().split('T')[0],
+          day_number: (nextDayNumber + 1).toString(),
+          start_time: "08:00",
+          end_time: "17:00",
+          issuer_name: "",
+          issuer_sign: null,
+          file_name: "No file chosen"
+        });
+        
+        // Hide the form
+        setShowAddForm(false);
+      }
+    } catch (error) {
+      console.error("Error submitting issuer form:", error);
+    }
   };
-  
-  // Format date for display
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+
+  // Format time for display
+  const formatTime = (timeString) => {
+    if (!timeString) return "N/A";
+    
+    try {
+      const date = new Date(timeString);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      // Handle the case where timeString is already in HH:MM format
+      return timeString;
+    }
+  };
+
+  // Handle modal callbacks
+  const handleCloseApproveModal = () => {
+    setApproveModalOpen(false);
+    refetch(); // Refresh data after approval
+  };
+
+  const handleCloseReceiverModal = () => {
+    setReceiverModalOpen(false);
+    refetch(); // Refresh data after adding receiver
+  };
+
+  // Open Approve Modal with the selected day
+  const handleApproveClick = (day) => {
+    setSelectedDay(day);
+    setApproveModalOpen(true);
+  };
+
+  // Open Receiver Modal with the selected day
+  const handleReceiveClick = (day) => {
+    setSelectedDay(day);
+    setReceiverModalOpen(true);
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-    >
-      <DialogTitle>
-        <Typography variant="h6" style={{ fontWeight: "bold", color: "#29346B" }}>
-          Revalidate Permit
-        </Typography>
-        <Typography variant="subtitle2" color="text.secondary">
-          Permit ID: {permitId}
-        </Typography>
-      </DialogTitle>
-      
-      <DialogContent dividers>
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" color="primary" gutterBottom>
-            Renewal History
+    <>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Typography variant="h6" style={{ fontWeight: "bold", color: "#29346B" }}>
+            Revalidate Permit to Work
           </Typography>
-          
-          {renewals.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              No renewals have been added yet.
-            </Typography>
-          ) : (
-            <TableContainer component={Paper} variant="outlined">
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                    <TableCell>Day #</TableCell>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Valid Period</TableCell>
-                    <TableCell>Issuer</TableCell>
-                    <TableCell>Approver</TableCell>
-                    <TableCell>Receiver</TableCell>
-                    <TableCell>Status</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {renewals.map((renewal) => (
-                    <TableRow key={renewal.renewal_id}>
-                      <TableCell>{renewal.day_number}</TableCell>
-                      <TableCell>{formatDate(renewal.renewal_date)}</TableCell>
-                      <TableCell>{`${renewal.valid_from} - ${renewal.valid_to}`}</TableCell>
-                      <TableCell>
-                        <SignatureViewer 
-                          name={renewal.issuer.name}
-                          signature={renewal.issuer.signature}
-                          timestamp={renewal.issuer.timestamp}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {renewal.approver ? (
-                          <SignatureViewer 
-                            name={renewal.approver.name}
-                            signature={renewal.approver.signature}
-                            timestamp={renewal.approver.timestamp}
-                          />
-                        ) : (
-                          <Chip 
-                            label="Pending" 
-                            size="small" 
-                            color="warning" 
-                            variant="outlined" 
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {renewal.receiver ? (
-                          <SignatureViewer 
-                            name={renewal.receiver.name}
-                            signature={renewal.receiver.signature}
-                            timestamp={renewal.receiver.timestamp}
-                          />
-                        ) : (
-                          <Chip 
-                            label="Pending" 
-                            size="small" 
-                            color="warning" 
-                            variant="outlined" 
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {renewal.receiver ? (
-                          <Chip label="Complete" size="small" color="success" />
-                        ) : renewal.approver ? (
-                          <Chip label="Approved" size="small" color="info" />
-                        ) : (
-                          <Chip label="Issued" size="small" color="primary" />
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </Box>
+          <Typography variant="subtitle2" color="text.secondary">
+            Permit ID: {permitId}
+          </Typography>
+        </DialogTitle>
         
-        <Divider sx={{ my: 3 }} />
-        
-        {!showAddForm ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<AddCircleOutlineIcon />}
-              onClick={() => setShowAddForm(true)}
-              style={{
-                backgroundColor: "#4CAF50",
-                color: "white",
-              }}
-            >
-              Add New Renewal
-            </Button>
-          </Box>
-        ) : (
-          <Box>
-            <Typography variant="h6" color="primary" gutterBottom>
-              Add New Renewal
-            </Typography>
-            
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Renewal Date"
-                  type="date"
-                  name="renewal_date"
-                  value={newRenewal.renewal_date}
-                  onChange={handleInputChange}
-                  fullWidth
-                  required
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  margin="normal"
-                />
-              </Grid>
-              
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Day Number"
-                  type="number"
-                  name="day_number"
-                  value={newRenewal.day_number}
-                  onChange={handleInputChange}
-                  fullWidth
-                  required
-                  margin="normal"
-                  inputProps={{ min: 1 }}
-                />
-              </Grid>
-              
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Valid From"
-                  type="time"
-                  name="valid_from"
-                  value={newRenewal.valid_from}
-                  onChange={handleInputChange}
-                  fullWidth
-                  required
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  margin="normal"
-                />
-              </Grid>
-              
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Valid To"
-                  type="time"
-                  name="valid_to"
-                  value={newRenewal.valid_to}
-                  onChange={handleInputChange}
-                  fullWidth
-                  required
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  margin="normal"
-                />
-              </Grid>
-              
-              <Grid item xs={12}>
-                <TextField
-                  label="Issuer Name"
-                  name="issuer_name"
-                  value={newRenewal.issuer_name}
-                  onChange={handleInputChange}
-                  fullWidth
-                  required
-                  margin="normal"
-                />
-              </Grid>
-              
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Issuer Signature (File Upload)*
-                </Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <Button
-                    variant="contained"
-                    component="label"
-                    startIcon={<FileUploadIcon />}
-                    style={{
-                      backgroundColor: "#FF8C00",
-                      color: "white",
-                      textTransform: "none",
-                    }}
-                  >
-                    Choose File
-                    <input
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      onChange={handleFileChange}
-                      required
-                    />
-                  </Button>
-                  <Typography variant="body2">{newRenewal.issuer_signature_name}</Typography>
-                </Box>
-              </Grid>
-            </Grid>
-            
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}>
-              <Button
-                variant="outlined"
-                onClick={() => setShowAddForm(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                onClick={handleAddRenewal}
-                style={{
-                  backgroundColor: "#4CAF50",
-                  color: "white",
-                }}
-              >
-                Add Renewal
-              </Button>
+        <DialogContent dividers>
+          {isLoadingGet ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+              <CircularProgress />
             </Box>
-          </Box>
-        )}
-      </DialogContent>
-      
-      <DialogActions>
-        <Button 
-          onClick={onClose} 
-          variant="outlined"
-          color="primary"
-        >
-          Close
-        </Button>
-      </DialogActions>
-    </Dialog>
+          ) : (
+            <>
+              {/* Renewal History Table */}
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h6" color="primary" gutterBottom>
+                  Renewal History
+                </Typography>
+                
+                {!permitData || !permitData.data || Object.keys(permitData.data).length === 0 ? (
+                  <Typography variant="body2" color="text.secondary" sx={{ my: 2 }}>
+                    No renewals have been added yet.
+                  </Typography>
+                ) : (
+                  <TableContainer component={Paper} variant="outlined">
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                          <TableCell>Day #</TableCell>
+                          <TableCell>Valid Period</TableCell>
+                          <TableCell>Issuer</TableCell>
+                          <TableCell>Approver</TableCell>
+                          <TableCell>Receiver</TableCell>
+                          <TableCell>Status</TableCell>
+                          <TableCell>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {organizedDays.map((day) => (
+                          <TableRow key={day.dayKey}>
+                            <TableCell>{day.dayNumber}</TableCell>
+                            <TableCell>
+                              {day.issuer ? 
+                                `${formatTime(day.issuer.start_time)} - ${formatTime(day.issuer.end_time)}` : 
+                                "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {day.issuer ? (
+                                <Box>
+                                  <Typography variant="body2">{day.issuer.issuer_name}</Typography>
+                                  {day.issuer.issuer_sign && (
+                                    <ImageViewer 
+                                      src={day.issuer.issuer_sign} 
+                                      alt="Issuer Signature" 
+                                      width={80} 
+                                      height={30} 
+                                    />
+                                  )}
+                                </Box>
+                              ) : (
+                                <Chip 
+                                  label="Not Issued" 
+                                  size="small" 
+                                  color="default" 
+                                  variant="outlined" 
+                                />
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {day.approver ? (
+                                <Box>
+                                  <Typography variant="body2">{day.approver.approver_name}</Typography>
+                                  <Typography 
+                                    variant="caption" 
+                                    color={day.approver.approver_status.toLowerCase() === "approved" ? "success.main" : "error.main"}
+                                  >
+                                    {day.approver.approver_status}
+                                  </Typography>
+                                  {day.approver.approver_sign && (
+                                    <ImageViewer 
+                                      src={day.approver.approver_sign} 
+                                      alt="Approver Signature" 
+                                      width={80} 
+                                      height={30} 
+                                    />
+                                  )}
+                                </Box>
+                              ) : day.issuer ? (
+                                <Chip 
+                                  label="Pending" 
+                                  size="small" 
+                                  color="warning" 
+                                  variant="outlined" 
+                                />
+                              ) : (
+                                <Chip 
+                                  label="Not Available" 
+                                  size="small" 
+                                  color="default" 
+                                  variant="outlined" 
+                                />
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {day.receiver ? (
+                                <Box>
+                                  <Typography variant="body2">{day.receiver.receiver_name}</Typography>
+                                  {day.receiver.receiver_sign && (
+                                    <ImageViewer 
+                                      src={day.receiver.receiver_sign} 
+                                      alt="Receiver Signature" 
+                                      width={80} 
+                                      height={30} 
+                                    />
+                                  )}
+                                </Box>
+                              ) : day.approver && day.approver.approver_status.toLowerCase() === "approved" ? (
+                                <Chip 
+                                  label="Pending" 
+                                  size="small" 
+                                  color="warning" 
+                                  variant="outlined" 
+                                />
+                              ) : (
+                                <Chip 
+                                  label="Not Available" 
+                                  size="small" 
+                                  color="default" 
+                                  variant="outlined" 
+                                />
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {day.status === "complete" ? (
+                                <Chip label="Complete" size="small" color="success" />
+                              ) : day.status === "approved" ? (
+                                <Chip label="Approved" size="small" color="info" />
+                              ) : day.status === "rejected" ? (
+                                <Chip label="Rejected" size="small" color="error" />
+                              ) : day.status === "issued" ? (
+                                <Chip label="Issued" size="small" color="primary" />
+                              ) : (
+                                <Chip label="Pending" size="small" color="default" />
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {/* FIX: Button to trigger Approve Modal - fixed condition */}
+                              {day.issuer && !day.approver && (
+                                <Button 
+                                  size="small" 
+                                  variant="outlined" 
+                                  color="primary"
+                                  onClick={() => handleApproveClick(day)}
+                                >
+                                  Approve
+                                </Button>
+                              )}
+                              
+                              {/* FIX: Button to trigger Receive Modal - fixed condition */}
+                              {day.approver && 
+                               day.approver.approver_status.toLowerCase() === "approved" && 
+                               !day.receiver && (
+                                <Button 
+                                  size="small" 
+                                  variant="outlined" 
+                                  color="primary"
+                                  onClick={() => handleReceiveClick(day)}
+                                  sx={{ ml: 1 }}
+                                >
+                                  Receive
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+              </Box>
+              
+              {/* Display status message if there's a pending PTW */}
+              {pendingPtwExists && !canAddNewPtw && (
+                <Alert severity="info" sx={{ mb: 3 }}>
+                  A permit is currently in progress. Please complete the existing workflow before adding a new renewal.
+                </Alert>
+              )}
+              
+              {/* Toggle between button and form */}
+              {!showAddForm ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                  {canAddNewPtw ? (
+                    <Button
+                      variant="contained"
+                      startIcon={<AddCircleOutlineIcon />}
+                      onClick={() => setShowAddForm(true)}
+                      style={{
+                        backgroundColor: "#4CAF50",
+                        color: "white",
+                      }}
+                    >
+                      Add New Renewal
+                    </Button>
+                  ) : null}
+                </Box>
+              ) : (
+                <Box>
+                  <Typography variant="h6" color="primary" gutterBottom>
+                    Issue New Renewal - Day {issuerForm.day_number}
+                  </Typography>
+                  
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        label="Renewal Date"
+                        type="date"
+                        name="renewal_date"
+                        value={issuerForm.renewal_date}
+                        onChange={handleIssuerFormChange}
+                        fullWidth
+                        required
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        margin="normal"
+                      />
+                    </Grid>
+                    
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        label="Day Number"
+                        name="day_number"
+                        value={issuerForm.day_number}
+                        onChange={handleIssuerFormChange}
+                        fullWidth
+                        required
+                        margin="normal"
+                      />
+                    </Grid>
+                    
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        label="Valid From"
+                        type="time"
+                        name="start_time"
+                        value={issuerForm.start_time}
+                        onChange={handleIssuerFormChange}
+                        fullWidth
+                        required
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        margin="normal"
+                      />
+                    </Grid>
+                    
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        label="Valid To"
+                        type="time"
+                        name="end_time"
+                        value={issuerForm.end_time}
+                        onChange={handleIssuerFormChange}
+                        fullWidth
+                        required
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        margin="normal"
+                      />
+                    </Grid>
+                    
+                    <Grid item xs={12}>
+                      <TextField
+                        label="Issuer Name"
+                        name="issuer_name"
+                        value={issuerForm.issuer_name}
+                        onChange={handleIssuerFormChange}
+                        fullWidth
+                        required
+                        margin="normal"
+                      />
+                    </Grid>
+                    
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Issuer Signature (File Upload)*
+                      </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <Button
+                          variant="contained"
+                          component="label"
+                          startIcon={<FileUploadIcon />}
+                          style={{
+                            backgroundColor: "#FF8C00",
+                            color: "white",
+                            textTransform: "none",
+                          }}
+                        >
+                          Choose File
+                          <input
+                            type="file"
+                            accept="image/*"
+                            hidden
+                            onChange={handleIssuerFileChange}
+                            required
+                          />
+                        </Button>
+                        <Typography variant="body2">{issuerForm.file_name}</Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                  
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}>
+                    <Button
+                      variant="outlined"
+                      onClick={() => setShowAddForm(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="contained"
+                      onClick={handleSubmitIssuer}
+                      disabled={isLoadingIssue}
+                      style={{
+                        backgroundColor: "#4CAF50",
+                        color: "white",
+                      }}
+                    >
+                      {isLoadingIssue ? (
+                        <CircularProgress size={24} color="inherit" />
+                      ) : (
+                        "Submit Renewal"
+                      )}
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+            </>
+          )}
+        </DialogContent>
+        
+        <DialogActions>
+          <Button 
+            onClick={onClose} 
+            variant="outlined"
+            color="primary"
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Nested Modals - Now passing the selected day */}
+      {selectedDay && (
+        <>
+          <ApprovePermitModal
+            open={approveModalOpen}
+            onClose={handleCloseApproveModal}
+            permitId={permitId}
+            dayInfo={selectedDay}
+          />
+
+          <ReceiverPermitModal
+            open={receiverModalOpen}
+            onClose={handleCloseReceiverModal}
+            permitId={permitId}
+            dayInfo={selectedDay}
+          />
+        </>
+      )}
+    </>
   );
 };
 

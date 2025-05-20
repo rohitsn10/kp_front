@@ -23,8 +23,10 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { useListAllItemsQuery, useSetProjectItemsMutation, useGetItemsByProjectQuery } from "../../../../api/quality/qualitySupplyApi";
 import { useParams } from "react-router-dom";
+import AddItemForm from "./AddItemForm"; // Import the new component
 
 const SelectItemsModal = ({ open, handleClose, onItemsSelected }) => {
   const [selectedItems, setSelectedItems] = useState([]);
@@ -34,12 +36,16 @@ const SelectItemsModal = ({ open, handleClose, onItemsSelected }) => {
   const [setProjectItems, {isLoading: itemLoading}] = useSetProjectItemsMutation();
   const { projectId } = useParams();
   
+  // Add state for the AddItemForm modal
+  const [addItemModalOpen, setAddItemModalOpen] = useState(false);
+  
   // Fetch all items using RTK Query
   const {
     data: itemsResponse,
     isLoading,
     isError,
-    error
+    error,
+    refetch: refetchAllItems
   } = useListAllItemsQuery();
   
   // Fetch items that are already in the project
@@ -137,6 +143,27 @@ const SelectItemsModal = ({ open, handleClose, onItemsSelected }) => {
     }
   };
 
+  // Handle opening the add item form
+  const handleOpenAddItemForm = () => {
+    setAddItemModalOpen(true);
+  };
+
+  // Handle closing the add item form
+  const handleCloseAddItemForm = () => {
+    setAddItemModalOpen(false);
+  };
+
+  // Handle successful item addition
+  const handleItemAdded = (newItem) => {
+    // Refetch the items list to include the newly added item
+    refetchAllItems();
+    
+    // Optionally, you can select the newly added item automatically
+    if (newItem?.id) {
+      setSelectedItems(prev => [...prev, newItem.id]);
+    }
+  };
+
   // Get category display
   const getCategoryDisplay = (category) => {
     if (!category) return { label: "Not Set", description: "" };
@@ -162,184 +189,205 @@ const SelectItemsModal = ({ open, handleClose, onItemsSelected }) => {
   const newSelectedItemsCount = selectedItems.filter(id => !alreadyAddedItemIds.has(id)).length;
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose} 
-      maxWidth="md"
-      fullWidth
-    >
-      <DialogTitle sx={{ bgcolor: "#29346B", color: "white" }}>
-        Select Items
-      </DialogTitle>
-      <DialogContent dividers>
-        <Box mb={2}>
-          <Typography variant="body2" color="textSecondary" paragraph>
-            Select items to add to your list. You've selected {newSelectedItemsCount} new items.
-            {alreadyAddedItemIds.size > 0 && (
-              <Typography variant="body2" component="span" sx={{ ml: 1 }}>
-                ({alreadyAddedItemIds.size} items already in project)
-              </Typography>
-            )}
-          </Typography>
-        </Box>
-
-        {/* Search and Filter Controls */}
-        <Box display="flex" gap={2} mb={3} flexWrap="wrap">
-          <TextField
-            variant="outlined"
-            placeholder="Search by item name"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ flexGrow: 1, minWidth: "200px" }}
-          />
-
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel id="category-filter-label">Filter Category</InputLabel>
-            <Select
-              labelId="category-filter-label"
-              value={filterCategory}
-              label="Filter Category"
-              onChange={(e) => setFilterCategory(e.target.value)}
-            >
-              <MenuItem value="all">All Categories</MenuItem>
-              <MenuItem value="category_1">Category 1</MenuItem>
-              <MenuItem value="category_2">Category 2</MenuItem>
-              <MenuItem value="category_3">Category 3</MenuItem>
-            </Select>
-          </FormControl>
-
+    <>
+      <Dialog 
+        open={open} 
+        onClose={handleClose} 
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ bgcolor: "#29346B", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography variant="h6">Select Items</Typography>
           <Button
-            variant="outlined"
-            onClick={() => {
-              setSearchTerm("");
-              setFilterCategory("all");
-            }}
+            variant="contained"
+            startIcon={<AddCircleOutlineIcon />}
+            onClick={handleOpenAddItemForm}
             sx={{
-              borderColor: "#29346B",
+              bgcolor: "#FACC15",
               color: "#29346B",
-              "&:hover": { borderColor: "#1e2756", backgroundColor: "#f0f0f0" }
+              "&:hover": { bgcolor: "#e5b812" },
             }}
           >
-            Clear Filters
+            Add Item
           </Button>
-        </Box>
-
-        {/* Items List with Checkboxes */}
-        {isLoading || isLoadingProjectItems ? (
-          <Box display="flex" justifyContent="center" p={3}>
-            <CircularProgress />
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box mb={2}>
+            <Typography variant="body2" color="textSecondary" paragraph>
+              Select items to add to your list. You've selected {newSelectedItemsCount} new items.
+              {alreadyAddedItemIds.size > 0 && (
+                <Typography variant="body2" component="span" sx={{ ml: 1 }}>
+                  ({alreadyAddedItemIds.size} items already in project)
+                </Typography>
+              )}
+            </Typography>
           </Box>
-        ) : isError || isErrorProjectItems ? (
-          <Typography color="error">
-            {error?.data?.message || projectItemsError?.data?.message || "Error loading items"}
-          </Typography>
-        ) : filteredItems.length === 0 ? (
-          <Typography align="center" color="textSecondary">
-            No items found. Try adjusting your filters.
-          </Typography>
-        ) : (
-          <List sx={{ maxHeight: "400px", overflow: "auto" }}>
-            {filteredItems.map((item, index) => {
-              const categoryInfo = getCategoryDisplay(item.item_category);
-              const isItemInProject = alreadyAddedItemIds.has(item.id);
-              
-              return (
-                <React.Fragment key={item.id}>
-                  <ListItem disablePadding>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={selectedItems.includes(item.id)}
-                          onChange={() => handleToggleItem(item.id)}
-                          disabled={isItemInProject}
-                          sx={{
-                            color: "#29346B",
-                            '&.Mui-checked': {
-                              color: isItemInProject ? "#4CAF50" : "#FACC15",
-                            },
-                          }}
-                        />
-                      }
-                      label={
-                        <Box sx={{ display: "flex", alignItems: "flex-start", width: "100%" }}>
-                          <Box sx={{ flexGrow: 1 }}>
-                            <Typography variant="subtitle1">
-                              {item.item_name || 'Unnamed Item'} 
-                              {item.item_number && ` (${item.item_number})`}
-                            </Typography>
-                            <Box display="flex" gap={2}>
-                              <Typography variant="body2" color="textSecondary">
-                                <b>Category:</b> {categoryInfo.label}
+
+          {/* Search and Filter Controls */}
+          <Box display="flex" gap={2} mb={3} flexWrap="wrap">
+            <TextField
+              variant="outlined"
+              placeholder="Search by item name"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ flexGrow: 1, minWidth: "200px" }}
+            />
+
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel id="category-filter-label">Filter Category</InputLabel>
+              <Select
+                labelId="category-filter-label"
+                value={filterCategory}
+                label="Filter Category"
+                onChange={(e) => setFilterCategory(e.target.value)}
+              >
+                <MenuItem value="all">All Categories</MenuItem>
+                <MenuItem value="category_1">Category 1</MenuItem>
+                <MenuItem value="category_2">Category 2</MenuItem>
+                <MenuItem value="category_3">Category 3</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setSearchTerm("");
+                setFilterCategory("all");
+              }}
+              sx={{
+                borderColor: "#29346B",
+                color: "#29346B",
+                "&:hover": { borderColor: "#1e2756", backgroundColor: "#f0f0f0" }
+              }}
+            >
+              Clear Filters
+            </Button>
+          </Box>
+
+          {/* Items List with Checkboxes */}
+          {isLoading || isLoadingProjectItems ? (
+            <Box display="flex" justifyContent="center" p={3}>
+              <CircularProgress />
+            </Box>
+          ) : isError || isErrorProjectItems ? (
+            <Typography color="error">
+              {error?.data?.message || projectItemsError?.data?.message || "Error loading items"}
+            </Typography>
+          ) : filteredItems.length === 0 ? (
+            <Typography align="center" color="textSecondary">
+              No items found. Try adjusting your filters or adding a new item.
+            </Typography>
+          ) : (
+            <List sx={{ maxHeight: "400px", overflow: "auto" }}>
+              {filteredItems.map((item, index) => {
+                const categoryInfo = getCategoryDisplay(item.item_category);
+                const isItemInProject = alreadyAddedItemIds.has(item.id);
+                
+                return (
+                  <React.Fragment key={item.id}>
+                    <ListItem disablePadding>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={selectedItems.includes(item.id)}
+                            onChange={() => handleToggleItem(item.id)}
+                            disabled={isItemInProject}
+                            sx={{
+                              color: "#29346B",
+                              '&.Mui-checked': {
+                                color: isItemInProject ? "#4CAF50" : "#FACC15",
+                              },
+                            }}
+                          />
+                        }
+                        label={
+                          <Box sx={{ display: "flex", alignItems: "flex-start", width: "100%" }}>
+                            <Box sx={{ flexGrow: 1 }}>
+                              <Typography variant="subtitle1">
+                                {item.item_name || 'Unnamed Item'} 
+                                {item.item_number && ` (${item.item_number})`}
                               </Typography>
-                              {item.dicipline && (
+                              <Box display="flex" gap={2}>
                                 <Typography variant="body2" color="textSecondary">
-                                  <b>Discipline:</b> {item.dicipline}
+                                  <b>Category:</b> {categoryInfo.label}
                                 </Typography>
-                              )}
+                                {item.dicipline && (
+                                  <Typography variant="body2" color="textSecondary">
+                                    <b>Discipline:</b> {item.dicipline}
+                                  </Typography>
+                                )}
+                              </Box>
+                              <Typography variant="caption" color="textSecondary">
+                                {categoryInfo.description}
+                              </Typography>
                             </Box>
-                            <Typography variant="caption" color="textSecondary">
-                              {categoryInfo.description}
-                            </Typography>
+                            {isItemInProject && (
+                              <Tooltip title="Already added to project">
+                                <CheckCircleIcon 
+                                  color="success" 
+                                  sx={{ ml: 1, mt: 1 }} 
+                                />
+                              </Tooltip>
+                            )}
                           </Box>
-                          {isItemInProject && (
-                            <Tooltip title="Already added to project">
-                              <CheckCircleIcon 
-                                color="success" 
-                                sx={{ ml: 1, mt: 1 }} 
-                              />
-                            </Tooltip>
-                          )}
-                        </Box>
-                      }
-                      sx={{ py: 1, width: '100%' }}
-                    />
-                  </ListItem>
-                  {index < filteredItems.length - 1 && <Divider />}
-                </React.Fragment>
-              );
-            })}
-          </List>
-        )}
-      </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button 
-          onClick={handleReset}
-          sx={{ color: "#29346B" }}
-        >
-          Reset Selection
-        </Button>
-        <Box flexGrow={1} />
-        <Button 
-          onClick={handleClose}
-          sx={{ color: "#29346B" }}
-        >
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleConfirm}
-          variant="contained"
-          disabled={newSelectedItemsCount === 0}
-          sx={{
-            bgcolor: "#FACC15",
-            color: "#29346B",
-            "&:hover": { bgcolor: "#e5b812" },
-            "&.Mui-disabled": {
-              bgcolor: "#f5f5f5",
-              color: "#bdbdbd"
-            }
-          }}
-        >
-          Select ({newSelectedItemsCount})
-        </Button>
-      </DialogActions>
-    </Dialog>
+                        }
+                        sx={{ py: 1, width: '100%' }}
+                      />
+                    </ListItem>
+                    {index < filteredItems.length - 1 && <Divider />}
+                  </React.Fragment>
+                );
+              })}
+            </List>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button 
+            onClick={handleReset}
+            sx={{ color: "#29346B" }}
+          >
+            Reset Selection
+          </Button>
+          <Box flexGrow={1} />
+          <Button 
+            onClick={handleClose}
+            sx={{ color: "#29346B" }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirm}
+            variant="contained"
+            disabled={newSelectedItemsCount === 0}
+            sx={{
+              bgcolor: "#FACC15",
+              color: "#29346B",
+              "&:hover": { bgcolor: "#e5b812" },
+              "&.Mui-disabled": {
+                bgcolor: "#f5f5f5",
+                color: "#bdbdbd"
+              }
+            }}
+          >
+            Select ({newSelectedItemsCount})
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Item Form Modal */}
+      <AddItemForm 
+        open={addItemModalOpen}
+        handleClose={handleCloseAddItemForm}
+        onItemAdded={handleItemAdded}
+      />
+    </>
   );
 };
 

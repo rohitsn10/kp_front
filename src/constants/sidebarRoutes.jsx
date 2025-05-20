@@ -123,6 +123,10 @@ import { HiClipboardDocumentCheck } from "react-icons/hi2";
       {
         subName:'Electricity Line',
         links:'/project/electricity-line'
+      },
+      {
+        subName:'Departments',
+        links:'/general/departments'
       }
       ]
     },

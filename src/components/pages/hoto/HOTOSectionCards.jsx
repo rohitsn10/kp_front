@@ -25,24 +25,24 @@ const HOTOSectionCards = ({ selectedProject }) => {
       borderColor: 'border-blue-300',
       textColor: 'text-blue-800'
     },
-    {
-      id: 'punchpoints',
-      title: 'HOTO Punchpoints',
-      description: 'View all handover takeover records',
-      icon: <FaClipboardCheck className="w-12 h-12 text-green-600" />,
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-300',
-      textColor: 'text-green-800'
-    },
-    {
-      id: 'documentation',
-      title: 'Documentation',
-      description: 'Access HOTO procedures and manuals',
-      icon: <FaBookOpen className="w-12 h-12 text-purple-600" />,
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-300',
-      textColor: 'text-purple-800'
-    },
+    // {
+    //   id: 'punchpoints',
+    //   title: 'HOTO Punchpoints',
+    //   description: 'View all handover takeover records',
+    //   icon: <FaClipboardCheck className="w-12 h-12 text-green-600" />,
+    //   bgColor: 'bg-green-50',
+    //   borderColor: 'border-green-300',
+    //   textColor: 'text-green-800'
+    // },
+    // {
+    //   id: 'documentation',
+    //   title: 'Documentation',
+    //   description: 'Access HOTO procedures and manuals',
+    //   icon: <FaBookOpen className="w-12 h-12 text-purple-600" />,
+    //   bgColor: 'bg-purple-50',
+    //   borderColor: 'border-purple-300',
+    //   textColor: 'text-purple-800'
+    // },
   ];
 
   const handleCardClick = (card) => {

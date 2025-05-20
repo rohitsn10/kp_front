@@ -53,6 +53,20 @@ export const permitToWorkApi = createApi({
         formData: true, // Important for FormData handling
       }),
     }),
+getIssuerPermit: builder.query({
+  query: (permitId) => ({
+    url: `annexures_module/issuer_get_permit/${permitId}`,
+    method: "GET",
+  }),
+}),
+        issuerApprovePermit: builder.mutation({
+      query: ({ permitId, formData }) => ({
+        url: `annexures_module/issuer_approve_permit/${permitId}`,
+        method: "PUT",
+        body: formData,
+        formData: true, // Important for FormData handling
+      }),
+    }),
   }),
 });
 
@@ -62,4 +76,6 @@ export const {
   useApproverApprovePermitMutation,
   useReceiverApprovePermitMutation,
   useClosureOfPermitMutation,
+  useGetIssuerPermitQuery,
+  useIssuerApprovePermitMutation
 } = permitToWorkApi;

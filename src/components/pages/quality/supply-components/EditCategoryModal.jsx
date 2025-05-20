@@ -60,7 +60,7 @@ const EditCategoryModal = ({ open, handleClose, item, projectId, onSuccess }) =>
             <MenuItem value="category_1">Category 1 - Customer/Owner/EPC witness</MenuItem>
             <MenuItem value="category_2">Category 2 - Customer/Owner/EPC review</MenuItem>
             <MenuItem value="category_3">Category 3 - EPC inspection</MenuItem>
-            <MenuItem value="other_items">Other Items</MenuItem>
+            <MenuItem value="other">Other Items</MenuItem>
           </Select>
         </FormControl>
       </DialogContent>

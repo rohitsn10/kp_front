@@ -62,14 +62,24 @@ const AssignUserModal = ({
   const validateForm = () => {
     const errors = {};
     
+    // Department is always required
     if (!formData.department_id) {
       errors.department_id = 'Department is required';
     }
     
-    if (!formData.project_id) {
-      errors.project_id = 'Project is required';
+    // Project is optional, but if selected, all fields must be filled
+    if (formData.project_id) {
+      // If project is selected, ensure department and group are also selected
+      if (!formData.department_id) {
+        errors.department_id = 'Department is required when a project is selected';
+      }
+      
+      if (!formData.group_id) {
+        errors.group_id = 'Group is required when a project is selected';
+      }
     }
     
+    // Group is always required
     if (!formData.group_id) {
       errors.group_id = 'Group is required';
     }
@@ -90,7 +100,10 @@ const AssignUserModal = ({
       const submitData = new FormData();
       submitData.append('user_id', selectedUser.id.toString());
       submitData.append('department_id', formData.department_id.toString());
-      submitData.append('project_id', formData.project_id.toString());
+      
+      // Always send project_id - as a value if selected, or explicitly as null if not
+      submitData.append('project_id', formData.project_id ? formData.project_id.toString() : null);
+      
       submitData.append('group_id', formData.group_id.toString());
       
       const response = await assignUserAllThings(submitData).unwrap();
@@ -171,7 +184,7 @@ const AssignUserModal = ({
           {/* Project Selection */}
           <FormControl fullWidth error={Boolean(formErrors.project_id)}>
             <label htmlFor="project_id" className="block text-lg font-medium text-gray-700 mb-2">
-              Project <span className="text-red-600">*</span>
+              Project
             </label>
             <Select
               id="project_id"
@@ -187,8 +200,8 @@ const AssignUserModal = ({
                 }
               }}
             >
-              <MenuItem value="" disabled>
-                <em>Select Project</em>
+              <MenuItem value="">
+                <em>None</em>
               </MenuItem>
               {projectData?.data?.map((project) => (
                 <MenuItem key={project.id} value={project.id}>

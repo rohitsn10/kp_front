@@ -63,8 +63,8 @@ export const userApi = createApi({
       query: (departmentName) => ({
         url: 'user_profile/create_get_department',
         method: 'GET',
-        params: { department_name: departmentName },
-      }),
+        params: departmentName ? { department_name: departmentName } : undefined,
+          }),
     }),
     assignUserAllThings: builder.mutation({
       query: (formData) => ({
@@ -82,7 +82,20 @@ export const userApi = createApi({
       }),
       providesTags: (result, error, userId) => [{ type: 'Users', id: userId }],
     }),
+    createDepartment: builder.mutation({
+      query: (departmentName) => {
+        const formData = new FormData();
+        formData.append('department_name', departmentName);
+        
+        return {
+          url: 'user_profile/create_get_department',
+          method: 'POST',
+          body: formData,
+        };
+      },
+      invalidatesTags: ['Departments'],
+    }),
   }),
 });
 
-export const { useFetchUsersQuery, useCreateUserMutation,useUpdateUserMutation,useUpdateUserStatusMutation,useUpdateUserPasswordMutation,useFetchDepartmentQuery,useAssignUserAllThingsMutation,useGetUserAllThingsQuery  } = userApi;
+export const { useFetchUsersQuery, useCreateUserMutation,useUpdateUserMutation,useUpdateUserStatusMutation,useUpdateUserPasswordMutation,useFetchDepartmentQuery,useAssignUserAllThingsMutation,useGetUserAllThingsQuery,useCreateDepartmentMutation  } = userApi;

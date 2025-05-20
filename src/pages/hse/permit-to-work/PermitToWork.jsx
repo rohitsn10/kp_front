@@ -144,6 +144,16 @@ const PermitToWork = () => {
     refetch(); // Refresh data after closing permit
   };
 
+  const handleRevalidateApprove = (permitId) => {
+  setSelectedPermitId(permitId);
+  setApproveOpen(true);
+};
+
+const handleRevalidateReceive = (permitId) => {
+  setSelectedPermitId(permitId);
+  setReceiverOpen(true);
+};
+
   // Improved filtering to search across multiple fields
   const filteredPermits = (data?.data || []).filter((permit) => {
     const searchLower = searchTerm.toLowerCase();
@@ -634,6 +644,8 @@ const PermitToWork = () => {
         open={receiverOpen}
         onClose={handleCloseReceiver}
         permitId={selectedPermitId}
+        onApprove={handleApprovePermit}
+        onReceive={handleRevalidateReceive}
       />
 
       {/* Closure Permit Modal */}

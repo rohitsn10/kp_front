@@ -17,7 +17,7 @@ export const qualitySupplyApi = createApi({
     // Endpoint for creating quality inspection items
     createQualityItems: builder.mutation({
       query: (itemData) => ({
-        url: "quality_inspection/create_items/",
+        url: "quality_inspection/create_items",
         method: "POST",
         body: itemData,
       }),
