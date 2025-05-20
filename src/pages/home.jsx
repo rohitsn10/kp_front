@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import Sidebar from '../components/common/sidebar/Sidebar'
-import Statcards from '../components/pages/home-dashboard/statcards'
+import Statcards from '../components/pages/home-dashboard/StatCards'
 import RevenueGraph from '../components/pages/home-dashboard/RevenueGraph'
 import TurnoverGraph from '../components/pages/home-dashboard/TurnoverGraph'
 import UpcomingEvents from '../components/pages/home-dashboard/UpcomingEvents'
