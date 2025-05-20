@@ -16,7 +16,7 @@ import {
   Avatar,
 } from "@mui/material";
 import { toast } from "react-toastify";
-import { useCreateBoomLiftInspectionMutation } from "../../../../api/hse/boomLift/boomliftApi";
+import { useCreateBoomLiftInspectionMutation } from "../../../../api/hse/boomLift/boomLiftApi";
 import { useParams } from "react-router-dom";
 
 export default function BoomLiftInspectionDialog({ open, setOpen }) {

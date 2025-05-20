@@ -22,7 +22,7 @@ import { permissionsApi } from "../api/permission/permissionApi.js";
 import { permitToWorkApi } from "../api/hse/permitTowork/permitToworkApi.js";
 import { incidentNearMissApi } from "../api/hse/incidentNearmissInvestigation/incidentNearmissInvestigationApi.js";
 import { safetyViolationApi } from "../api/hse/safetyViolation/safetyViolatioApi.js";
-import { boomLiftInspectionApi } from "../api/hse/boomLift/boomliftApi.js";
+import { boomLiftInspectionApi } from "../api/hse/boomLift/boomLiftApi.js";
 import { trailerInspectionApi } from "../api/hse/trailerInspection/trailerInspectionApi.js";
 import { mockDrillApi } from "../api/hse/mockdrill/mockDrillApi.js";
 import { craneHydraApi } from "../api/hse/crane/craneHydraApi.js";
