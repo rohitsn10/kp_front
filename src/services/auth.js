@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const API_URL = "http://127.0.0.1:8000/user_profile/login";
+// const API_URL = "http://127.0.0.1:8000/user_profile/login";
+const API_URL = "http://13.53.78.89:8000/user_profile/login";
+
 
 export const login = async (loginData) => {
     try {
