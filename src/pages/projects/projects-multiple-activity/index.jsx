@@ -42,7 +42,7 @@ function ProjectMultipleActivity() {
   }
 
   return (
-    <div className="bg-white shadow-lg p-6 w-[90%] lg:w-[70%] mx-auto my-8 rounded-lg">
+    <div className="bg-white shadow-lg p-6 w-[97%] lg:w-[70%] mx-auto my-8 rounded-lg">
       {/* <h2 className="text-3xl border text-center text-[]">Project Multiple Activities</h2> */}
     <Typography variant="h4" fontWeight="bold" color="#29346B" align="center" gutterBottom>
             Project Multiple Activities

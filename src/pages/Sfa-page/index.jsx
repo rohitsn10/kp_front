@@ -21,7 +21,6 @@ import AssessmentFormUpdateModal from "../../components/pages/sfa-form/sfaUpdate
 import AssessmentFormApproval from "../../components/pages/sfa-form/sfa-approval";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import LibraryAddIcon from "@mui/icons-material/LibraryAdd";
-// import CreateLandBank from '../../components/pages/Land-bank/createLandBank';
 import CreateLandBankModal from "../../components/pages/Land-bank/createLandBank";
 
 const SiteVisitTable = () => {
@@ -55,22 +54,23 @@ const SiteVisitTable = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center mt-5">
-        <CircularProgress />
+      <div className="flex justify-center items-center h-64">
+        <CircularProgress size={50} />
       </div>
     );
   }
 
   if (isError) {
     return (
-      <Alert severity="error">
-        Failed to load data. <Button onClick={refetch}>Retry</Button>
-      </Alert>
+      <div className="flex justify-center items-center h-64">
+        <Alert severity="error" className="max-w-md">
+          Failed to load data. <Button onClick={refetch}>Retry</Button>
+        </Alert>
+      </div>
     );
   }
 
   const siteData = data?.data || [];
-  console.log(siteData);
   const filteredRows = siteData?.filter((row) =>
     row.sfa_name?.toLowerCase().includes(filter?.toLowerCase())
   );
@@ -90,147 +90,296 @@ const SiteVisitTable = () => {
   };
 
   return (
-    <div className="bg-white p-4 w-[95%] mx-auto my-4 rounded-md">
-      <div className="grid grid-cols-3 items-center p-4 mb-5">
-        <TextField
-          value={filter}
-          placeholder="Search by Land Name"
-          onChange={(e) => setFilter(e.target.value)}
-          variant="outlined"
-          size="small"
-          style={{
-            backgroundColor: "#f9f9f9",
-            borderRadius: "8px",
-            maxWidth: "200px",
-          }}
-        />
-        <h2 className="text-3xl text-[#29346B] font-semibold text-center">
-          SFA Listing
-        </h2>
-        <div className="flex justify-end">
-          <Button
-            onClick={() => {
-              setOpenCreateSpa(true);
-            }}
-            variant="contained"
-            style={{
-              backgroundColor: "#FF8C00",
-              maxWidth: "200px",
-              color: "white",
-              fontWeight: "bold",
-              fontSize: "16px",
-              textTransform: "none",
-            }}
-          >
-            Add SFA
-          </Button>
+    <div className="bg-white p-3 sm:p-4 md:p-6 w-full max-w-7xl mx-auto my-4 sm:my-6 md:my-8 rounded-lg shadow-sm">
+      {/* Responsive Header */}
+      <div className="mb-6">
+        {/* Title - Always on top on mobile */}
+        <div className="text-center mb-4 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl md:text-3xl text-[#29346B] font-semibold">
+            SFA Listing
+          </h2>
+        </div>
+        
+        {/* Search and Button Container */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
+          {/* Search Input */}
+          <div className="w-full sm:w-auto sm:flex-1 sm:max-w-xs">
+            <TextField
+              value={filter}
+              placeholder="Search by SFA name..."
+              onChange={(e) => setFilter(e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              style={{
+                backgroundColor: "#f9f9f9",
+                borderRadius: "8px",
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  fontSize: { xs: '14px', sm: '16px' }
+                }
+              }}
+            />
+          </div>
+
+          {/* Add Button */}
+          <div className="w-full sm:w-auto">
+            <Button
+              onClick={() => {
+                setOpenCreateSpa(true);
+              }}
+              variant="contained"
+              fullWidth
+              sx={{
+                backgroundColor: "#FF8C00",
+                color: "white",
+                fontWeight: "bold",
+                fontSize: { xs: '14px', sm: '16px' },
+                textTransform: "none",
+                padding: { xs: '10px 16px', sm: '8px 24px' },
+                '&:hover': {
+                  backgroundColor: '#e67c00'
+                }
+              }}
+            >
+              Add SFA
+            </Button>
+          </div>
         </div>
       </div>
 
-      <TableContainer component={Paper} style={{ borderRadius: "8px" }}>
-        <Table>
-          <TableHead>
-            <TableRow style={{ backgroundColor: "#F2EDED" }}>
-              <TableCell align="center">SFA Name</TableCell>
-              <TableCell align="center">Site Visit Date</TableCell>
-              <TableCell align="center">Site Visit Status</TableCell>
-              <TableCell align="center">Land Category</TableCell>
-              <TableCell align="center">Edit</TableCell>
-              <TableCell align="center">Approve</TableCell>
-              <TableCell align="center">Create Land Bank</TableCell>
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            {currentRows.length > 0 ? (
-              currentRows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell align="center">{row.sfa_name || "N/A"}</TableCell>
-                  {/* <TableCell align="center">{row.site_visit_date || 'N/A'}</TableCell> */}
-                  {/* new Date(row.created_at).toLocaleDateString() */}
-                  <TableCell align="center">
-                    {new Date(row.site_visit_date).toLocaleDateString() ||
-                      "N/A"}
-                  </TableCell>
-
-                  <TableCell align="center">
-                    {row.status_of_site_visit || "N/A"}
-                  </TableCell>
-                  {/* <TableCell align="center">{row.land_bank_status || 'Pending'}</TableCell> */}
-                  <TableCell align="center">
-                    {row.land_category_name || "N/A"}
-                  </TableCell>
-                  <TableCell align="center">
-                    <div style={{ display: "flex", justifyContent: "center" }}>
-                      <RiEditFill
-                        onClick={() => {
-                          setActiveItem(row);
-                          setUpdateSfa(true);
-                        }}
-                        style={{
-                          cursor: "pointer",
-                          color: "#61D435",
-                          fontSize: "27px",
-                        }}
-                        title="Edit"
-                      />
-                    </div>
-                  </TableCell>
-
-                  {/* Changed from icon to button */}
-                  <TableCell align="center">
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => {
-                        setActiveItem(row);
-                        setOpenApproveSfa(true);
-                        console.log("set approve");
-                      }}
-                      style={{
-                        backgroundColor: "#f95406",
-                        color: "white",
-                        minWidth: "90px",
-                        padding: "6px 16px",
-                        fontSize: "13px",
-                        textTransform: "none",
-                        fontWeight: "500",
-                      }}
-                      startIcon={<FactCheckIcon style={{ fontSize: "18px" }} />}
-                    >
-                      Approve
-                    </Button>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => {
-                        setActiveItem(row);
-                        setCreateLandBank(true);
-                      }}
-                    >
-                      Create
-                    </Button>
-                  </TableCell>
-                  {/* <TableCell align="center">
-                  <button onClick={()=>{
-                    setActiveItem(row);
-                    setApproveSfa(true)
-                  }}>Edit</button>
-                </TableCell> */}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  No records found
+      {/* Responsive Table Container */}
+      <div className="overflow-x-auto">
+        <TableContainer 
+          component={Paper} 
+          style={{ 
+            borderRadius: "8px",
+            minWidth: "800px" // Ensure minimum width for wide table
+          }}
+        >
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow style={{ backgroundColor: "#F2EDED" }}>
+                <TableCell 
+                  align="center"
+                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                  sx={{
+                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                  }}
+                >
+                  SFA Name
+                </TableCell>
+                <TableCell 
+                  align="center"
+                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                  sx={{
+                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                  }}
+                >
+                  Site Visit Date
+                </TableCell>
+                <TableCell 
+                  align="center"
+                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                  sx={{
+                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                  }}
+                >
+                  Site Visit Status
+                </TableCell>
+                <TableCell 
+                  align="center"
+                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                  sx={{
+                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                  }}
+                >
+                  Land Category
+                </TableCell>
+                <TableCell 
+                  align="center"
+                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                  sx={{
+                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                  }}
+                >
+                  Edit
+                </TableCell>
+                <TableCell 
+                  align="center"
+                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                  sx={{
+                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                  }}
+                >
+                  Approve
+                </TableCell>
+                <TableCell 
+                  align="center"
+                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                  sx={{
+                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                  }}
+                >
+                  Create Land Bank
                 </TableCell>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+
+            <TableBody>
+              {currentRows.length > 0 ? (
+                currentRows.map((row) => (
+                  <TableRow 
+                    key={row.id}
+                    sx={{
+                      '&:hover': {
+                        backgroundColor: '#f5f5f5'
+                      }
+                    }}
+                  >
+                    <TableCell 
+                      align="center"
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' },
+                        wordBreak: 'break-word'
+                      }}
+                    >
+                      {row.sfa_name || "N/A"}
+                    </TableCell>
+                    <TableCell 
+                      align="center"
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      {new Date(row.site_visit_date).toLocaleDateString() || "N/A"}
+                    </TableCell>
+                    <TableCell 
+                      align="center"
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      {row.status_of_site_visit || "N/A"}
+                    </TableCell>
+                    <TableCell 
+                      align="center"
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      {row.land_category_name || "N/A"}
+                    </TableCell>
+                    <TableCell 
+                      align="center"
+                      sx={{
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "center" }}>
+                        <RiEditFill
+                          onClick={() => {
+                            setActiveItem(row);
+                            setUpdateSfa(true);
+                          }}
+                          style={{
+                            cursor: "pointer",
+                            color: "#61D435",
+                            fontSize: "20px",
+                          }}
+                          title="Edit"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell 
+                      align="center"
+                      sx={{
+                        padding: { xs: '4px', sm: '8px', md: '12px' }
+                      }}
+                    >
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => {
+                          setActiveItem(row);
+                          setOpenApproveSfa(true);
+                        }}
+                        startIcon={<FactCheckIcon style={{ fontSize: "16px" }} />}
+                        sx={{
+                          backgroundColor: "#f95406",
+                          color: "white",
+                          minWidth: { xs: "80px", sm: "90px" },
+                          padding: { xs: "4px 8px", sm: "6px 16px" },
+                          fontSize: { xs: "11px", sm: "13px" },
+                          textTransform: "none",
+                          fontWeight: "500",
+                          '&:hover': {
+                            backgroundColor: '#e04905'
+                          },
+                          '& .MuiButton-startIcon': {
+                            marginRight: { xs: '2px', sm: '8px' }
+                          }
+                        }}
+                      >
+                        Approve
+                      </Button>
+                    </TableCell>
+                    <TableCell 
+                      align="center"
+                      sx={{
+                        padding: { xs: '4px', sm: '8px', md: '12px' }
+                      }}
+                    >
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          setActiveItem(row);
+                          setCreateLandBank(true);
+                        }}
+                        sx={{
+                          minWidth: { xs: "70px", sm: "80px" },
+                          padding: { xs: "4px 8px", sm: "6px 12px" },
+                          fontSize: { xs: "11px", sm: "13px" },
+                          textTransform: "none"
+                        }}
+                      >
+                        Create
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell 
+                    colSpan={7} 
+                    align="center"
+                    sx={{
+                      padding: { xs: '16px 8px', sm: '24px 16px' },
+                      fontSize: { xs: '14px', sm: '16px' },
+                      color: '#666'
+                    }}
+                  >
+                    No records found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
 
       <TablePagination
         component="div"
@@ -241,7 +390,17 @@ const SiteVisitTable = () => {
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={[5, 10, 25]}
         style={{ borderTop: "1px solid #e0e0e0" }}
+        sx={{
+          '& .MuiTablePagination-toolbar': {
+            fontSize: { xs: '12px', sm: '14px' },
+            padding: { xs: '8px', sm: '16px' }
+          },
+          '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+            fontSize: { xs: '12px', sm: '14px' }
+          }
+        }}
       />
+
       <AssessmentFormModal open={openCreateSfa} handleClose={handleCloseSpa} />
       <AssessmentFormUpdateModal
         open={openUpdateSfa}

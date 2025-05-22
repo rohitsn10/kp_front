@@ -67,7 +67,7 @@ const handleFormSubmit = async (e) => {
 };
 
     return (
-        <div className="min-h-screen w-full bg-white flex flex-col md:flex-row">
+        <div className="min-h-screen  w-full bg-white flex flex-col md:flex-row">
             {/* Image Section - Hidden on mobile, visible on md and up */}
             <div className="hidden md:block md:w-3/5 lg:w-2/3">
                 <img 
