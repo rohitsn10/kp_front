@@ -18,49 +18,53 @@ function Login() {
         setInputForm({ ...inputForm, [e.target.name]: e.target.value });
     };
 
-    const handleFormSubmit = async (e) => {
-        e.preventDefault();
+const handleFormSubmit = async (e) => {
+    e.preventDefault();
 
-        if (inputForm.email.trim() === '') {
-            toast.error("Please add an email");
-            return;
+    if (inputForm.email.trim() === '') {
+        toast.error("Please add an email");
+        return;
+    }
+    if (inputForm.password.trim() === '') {
+        toast.error("Please add a password");
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append("email", inputForm.email);
+        formData.append("password", inputForm.password);
+        formData.append("login_type", inputForm.login_type);
+
+        const response = await login(formData);
+        console.log("Login API Response:", response);
+
+        if (response.status) {
+            toast.success(response.message);
+            sessionStorage.setItem("token", response.data.token);
+
+            // Update AuthContext with email included
+            contextLogin(
+                {
+                    id: response.data.id,
+                    name: response.data.full_name,
+                    email: inputForm.email, // Add the email here
+                    group: { id: response.data.group_id, name: response.data.group_name },
+                    groups: response.data.groups,
+                    department: response.data.department,
+                    assignments: response.data.assignments
+                },
+                response.data.token,
+                response.data.user_permissions || [] // Use permissions from response
+            );
+            window.location.href = '/';
+        } else {
+            toast.error(response.message);
         }
-        if (inputForm.password.trim() === '') {
-            toast.error("Please add a password");
-            return;
-        }
-
-        try {
-            const formData = new FormData();
-            formData.append("email", inputForm.email);
-            formData.append("password", inputForm.password);
-            formData.append("login_type", inputForm.login_type);
-
-            const response = await login(formData);
-            console.log("Login API Response:", response);
-
-            if (response.status) {
-                toast.success(response.message);
-                sessionStorage.setItem("token", response.data.token);
-
-                // Update AuthContext
-                contextLogin(
-                    {
-                        id: response.data.id,
-                        name: response.data.full_name,
-                        group: { id: response.data.group_id, name: response.data.group_name }
-                    },
-                    response.data.token,
-                    [] // Permissions will be updated when backend supports them
-                );
-                window.location.href = '/';
-            } else {
-                toast.error(response.message);
-            }
-        } catch (error) {
-            toast.error(error.message || 'Login failed. Please try again.');
-        }
-    };
+    } catch (error) {
+        toast.error(error.message || 'Login failed. Please try again.');
+    }
+};
 
     return (
         <div className="min-h-screen w-full bg-white flex flex-col md:flex-row">

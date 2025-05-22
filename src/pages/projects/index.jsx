@@ -22,29 +22,27 @@ import ProjectWpo from '../../components/pages/projects/ProjectWPO/ProjectWpo';
 import ProjectWpoViewModal from '../../components/pages/projects/ProjectWPO/ProjectWpoView';
 import ProjectDrawingUploadDialog from '../design-documents/DesignUploadModal';
 
-
-
 const ProjectListingTable = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [projectFilter,setProjectFilter] = useState("");
-  const [createModal,setCreateModal] = useState(false);
-  const [updateModal,setUpdateModal] = useState(false);
-  const [openWpoModal,setOpenWpoModal]=useState(false);
-  const [activeProject,setActiveProject]=useState();
-  const {data:projectData,isLoading:ProjectLoading,error:ProjectError,refetch} = useGetMainProjectsQuery()
-  const [openWpoViewModal,setOpenWpoView]=useState(false);
+  const [projectFilter, setProjectFilter] = useState("");
+  const [createModal, setCreateModal] = useState(false);
+  const [updateModal, setUpdateModal] = useState(false);
+  const [openWpoModal, setOpenWpoModal] = useState(false);
+  const [activeProject, setActiveProject] = useState();
+  const { data: projectData, isLoading: ProjectLoading, error: ProjectError, refetch } = useGetMainProjectsQuery()
+  const [openWpoViewModal, setOpenWpoView] = useState(false);
   const [openDrawingModal, setOpenDrawingModal] = useState(false);
- 
-  // console.log(projectData?.data)
-const navigate = useNavigate();
-  const handleCloseCreateModal = ()=>{
+
+  const navigate = useNavigate();
+
+  const handleCloseCreateModal = () => {
     setCreateModal(false)
   }
-  const handleCloseUpdateModal = ()=>{
+  const handleCloseUpdateModal = () => {
     setCreateModal(false)
   }
-  const handleCloseWpoModal = ()=>{
+  const handleCloseWpoModal = () => {
     setOpenWpoModal(false)
     setActiveProject(null)
   }
@@ -53,12 +51,12 @@ const navigate = useNavigate();
     setPage(newPage);
   };
 
-
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-  const handleCloseWpoViewModal = ()=>{
+
+  const handleCloseWpoViewModal = () => {
     setOpenWpoView(false)
     setActiveProject(null)
   }
@@ -67,254 +65,565 @@ const navigate = useNavigate();
     setOpenDrawingModal(false);
     setActiveProject(null);
   };
-  
-  const currentRows = projectData?.data?.slice(
+
+  // Filter projects based on search
+  const filteredProjects = projectData?.data?.filter(project =>
+    project.project_name.toLowerCase().includes(projectFilter.toLowerCase())
+  ) || [];
+
+  const currentRows = filteredProjects.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
 
   return (
-    <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
-      <div className="grid grid-cols-3 items-center p-4 mb-5">
-      <TextField
-        value={projectFilter}
-        placeholder="Search"
-        onChange={(e) => setProjectFilter(e.target.value?.toLowerCase())}  // Ensure lowercase search
-        variant="outlined"
-        size="small"
-        style={{ backgroundColor: '#f9f9f9', borderRadius: '8px', maxWidth: '200px' }}
-      />
+    <div className="bg-white p-3 sm:p-4 md:p-6 w-full max-w-none mx-auto my-4 sm:my-6 md:my-8 rounded-lg shadow-sm">
+      {/* Responsive Header */}
+      <div className="mb-6">
+        {/* Title - Always on top on mobile */}
+        <div className="text-center mb-4 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl md:text-3xl text-[#29346B] font-semibold">
+            Project Listing
+          </h2>
+        </div>
+        
+        {/* Search and Button Container */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
+          {/* Search Input */}
+          <div className="w-full sm:w-auto sm:flex-1 sm:max-w-xs">
+            <TextField
+              value={projectFilter}
+              placeholder="Search projects..."
+              onChange={(e) => setProjectFilter(e.target.value?.toLowerCase())}
+              variant="outlined"
+              size="small"
+              fullWidth
+              style={{ 
+                backgroundColor: '#f9f9f9', 
+                borderRadius: '8px'
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  fontSize: { xs: '14px', sm: '16px' }
+                }
+              }}
+            />
+          </div>
 
-        <h2 className="text-3xl text-[#29346B] font-semibold text-center">Project Listing</h2>
-        <div className="flex justify-end">
-          <Button
-            variant="contained"
-            style={{ backgroundColor: '#FF8C00', maxWidth: '200px', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
-            onClick={() => setCreateModal(!createModal)}
-          >
-            Add Project
-          </Button>
+          {/* Add Button */}
+          <div className="w-full sm:w-auto">
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={() => setCreateModal(!createModal)}
+              sx={{
+                backgroundColor: '#FF8C00',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: { xs: '14px', sm: '16px' },
+                textTransform: 'none',
+                padding: { xs: '10px 16px', sm: '8px 24px' },
+                '&:hover': {
+                  backgroundColor: '#e67c00'
+                }
+              }}
+            >
+              Add Project
+            </Button>
+          </div>
         </div>
       </div>
-  
+
       {/* Show loading state */}
       {ProjectLoading && (
-        <div className="flex justify-center my-10">
-          <CircularProgress />
+        <div className="flex justify-center items-center h-64">
+          <CircularProgress size={50} />
         </div>
       )}
-  
+
       {/* Show error state */}
       {ProjectError && (
-        <div className="text-red-500 text-center my-5">
-          <p>Failed to load projects. Please try again later.</p>
+        <div className="flex justify-center items-center h-64">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            Failed to load projects. Please try again later.
+          </div>
         </div>
       )}
-  
+
       {/* Show table only when data is available */}
-      {!ProjectLoading && !ProjectError && projectData?.data?.length > 0 && (
+      {!ProjectLoading && !ProjectError && filteredProjects.length > 0 && (
         <>
-          <TableContainer component={Paper} style={{ borderRadius: '8px' }}>
-            <Table>
-              <TableHead>
-                <TableRow style={{ backgroundColor: '#F2EDED' }}>
-                <TableCell align="center" width={50}>Sr No.</TableCell>
-        <TableCell align="center" width={180}>Project Name</TableCell>
-        <TableCell align="center" width={150}>Activity</TableCell>
-        {/* <TableCell align="center" width={130}>Deadline</TableCell> */}
-        <TableCell align="center" width={150}>Alloted Land Area</TableCell>
-        <TableCell align="center" width={180}>LandBank Name</TableCell>
-        <TableCell align="center" width={180}>Project Created At:</TableCell>
-        <TableCell align="center" width={180}>Project End Date:</TableCell>
-        {/* <TableCell align="center" width={120}>Action</TableCell> */}
-        <TableCell align="center" width={220}>Expense</TableCell>
-        <TableCell align="center" width={220}>View Details</TableCell>
-        <TableCell align="center" width={220}>Project Milestone</TableCell>
-        <TableCell align="center" width={220}>Add Client Details</TableCell>
-        <TableCell align="center" width={220}>View Client Details</TableCell>
-        <TableCell align="center" width={220}>Add WO PO</TableCell>
-        <TableCell align="center" width={220}>View WO PO</TableCell>
-        <TableCell align="center" width={220}>Manage Drawings</TableCell>
-
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {currentRows?.map((project, index) => (
-                  <TableRow key={project.id}>
-                    <TableCell align="center">{index + 1 + page * rowsPerPage}</TableCell>
-                    <TableCell align="center">{project.project_name}</TableCell>
-                    <TableCell align="center" sx={{minWidth: '100px'}}>{project.project_activity_name}</TableCell>
-                    {/* <TableCell align="center">{project.end_date}</TableCell> */}
-                    <TableCell align="center" sx={{minWidth: '100px'}}>{project.alloted_land_area}</TableCell>
-                    <TableCell align="center">{project.landbank_name}</TableCell>
-                    {/* <TableCell align="center">{project?.start_date}</TableCell> */}
-                    <TableCell align="center">{new Date(project?.start_date).toLocaleDateString() || 'N/A'}</TableCell>
-                    <TableCell align="center">{new Date(project?.end_date).toLocaleDateString() || 'N/A'}</TableCell>
-                    {/*  */}
-                    {/* <TableCell align="center">{project?.end_date}</TableCell> */}
-                    {/* <TableCell align="center">{project.status}</TableCell> */}
-                    {/* <TableCell align="center" 
-                    style={{ display: 'flex', justifyContent: 'center',alignItems:'center', gap: 10 }}
+          {/* Responsive Table Container */}
+          <div className="overflow-x-auto">
+            <TableContainer 
+              component={Paper} 
+              style={{ 
+                borderRadius: '8px',
+                minWidth: '1200px' // Ensure minimum width for wide table
+              }}
+            >
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#F2EDED' }}>
+                    <TableCell 
+                      align="center" 
+                      width={80}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
                     >
-                      <RiEditFill
-                        style={{ cursor: 'pointer', color: '#61D435', fontSize: '23px' }}
-                        title="Edit"
-                      />
-                      <AiOutlineStop
-                        style={{ cursor: 'pointer', color: 'red', fontSize: '23px' }}
-                        title="Delete"
-                      />
-                    </TableCell> */}
-                    <TableCell align="center">
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ minWidth: '100px' }}
-          size="small"
-          onClick={() => {
-            navigate(`/project/expense/${project?.id}`)
-            }}
-        >
-          Expense
-        </Button>
-      </TableCell>
-
-      <TableCell align="center">
-        <Button
-          variant="contained"
-          color="primary"
-          style={{ backgroundColor: '#27d865',
-            color: 'white',minWidth: '120px' }}
-          size="small"
-          onClick={() => {
-            navigate(`/project/view_projects_details/${project?.id}`)
-            }}
-        >
-          View Details
-        </Button>
-      </TableCell>
-      {/* Milestone */}
-      <TableCell align="center">
-        <Button
-          variant="contained"
-          color="primary"
-          style={{ backgroundColor: '#1a01fe',
-            color: 'white',minWidth: '120px' }}
-          size="small"
-          onClick={() => {
-            navigate(`/project/milestone-listing/${project?.id}`)
-            }}
-        >
-          Project Milestone
-        </Button>
-      </TableCell>
-
-      {/* Client Details Button */}
-      <TableCell align="center">
-        <Button
-          variant="contained"
-          color="secondary"
-          size="small"
-          sx={{
-            fontSize:'11px',
-            padding:'4px',
-            minWidth: '100px'
-          }}
-          onClick={() => {
-            navigate(`/project/client_details/${project?.id}`)
-            }}        >
-        Add Client Details
-        </Button>
-      </TableCell>
-      <TableCell align="center">
-        <Button
-          variant="contained"
-          color="secondary"
-          size="small"
-          sx={{
-            fontSize:'11px',
-            padding:'4px',
-            minWidth: '100px'
-          }}
-          onClick={() => {
-            navigate(`/project/view_client_details/${project?.id}`)
-            }}        >
-        View Client Details
-        </Button>
-      </TableCell>
-
-      {/* WO PO Button */}
-      <TableCell align="center">
-        <Button
-          variant="contained"
-          style={{ backgroundColor: '#FF8C00',
-           color: 'white',minWidth: '100px' }}
-          size="small"
-          onClick={() => {
-            setOpenWpoModal(true)
-            setActiveProject(project?.id)
-          }}
-        >
-         Add WOPO
-        </Button>
-      </TableCell>
-      <TableCell align="center">
-        <Button
-          variant="contained"
-          style={{ backgroundColor: '#FF8C00', color: 'white',minWidth: '110px' }}
-          size="small"
-          onClick={() => {
-            setOpenWpoView(true)
-            setActiveProject(project?.id)
-          }}
-        >
-         View WOPO
-        </Button>
-      </TableCell>
-
-      <TableCell align="center">
-        <Button
-          variant="contained"
-          style={{ backgroundColor: '#FF8C00', color: 'white',minWidth: '110px' }}
-          size="small"
-          onClick={() => {
-            // navigate(`/project/manage-drawing-design/${project?.id}`)
-            setOpenDrawingModal(true);
-            setActiveProject(project?.id);
-          }}
-        >
-         MDL
-        </Button>
-      </TableCell>
-
+                      Sr No.
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={180}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Project Name
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={150}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Activity
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={150}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Alloted Land Area
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={180}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      LandBank Name
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={180}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Project Created At
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={180}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Project End Date
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={120}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Expense
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={130}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      View Details
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={140}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Project Milestone
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={140}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Add Client Details
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={140}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      View Client Details
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={120}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Add WO PO
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={120}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      View WO PO
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={120}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Manage Drawings
+                    </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {currentRows?.map((project, index) => (
+                    <TableRow 
+                      key={project.id}
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: '#f5f5f5'
+                        }
+                      }}
+                    >
+                      <TableCell 
+                        align="center"
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        {index + 1 + page * rowsPerPage}
+                      </TableCell>
+                      <TableCell 
+                        align="center"
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' },
+                          wordBreak: 'break-word'
+                        }}
+                      >
+                        {project.project_name}
+                      </TableCell>
+                      <TableCell 
+                        align="center" 
+                        sx={{
+                          minWidth: '100px',
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        {project.project_activity_name}
+                      </TableCell>
+                      <TableCell 
+                        align="center" 
+                        sx={{
+                          minWidth: '100px',
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        {project.alloted_land_area}
+                      </TableCell>
+                      <TableCell 
+                        align="center"
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        {project.landbank_name}
+                      </TableCell>
+                      <TableCell 
+                        align="center"
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        {new Date(project?.start_date).toLocaleDateString() || 'N/A'}
+                      </TableCell>
+                      <TableCell 
+                        align="center"
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        {new Date(project?.end_date).toLocaleDateString() || 'N/A'}
+                      </TableCell>
+                      
+                      {/* Action Buttons */}
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          sx={{
+                            minWidth: { xs: '80px', sm: '100px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' }
+                          }}
+                          onClick={() => {
+                            navigate(`/project/expense/${project?.id}`)
+                          }}
+                        >
+                          Expense
+                        </Button>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#27d865',
+                            color: 'white',
+                            minWidth: { xs: '90px', sm: '120px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' },
+                            '&:hover': {
+                              backgroundColor: '#22c55e'
+                            }
+                          }}
+                          onClick={() => {
+                            navigate(`/project/view_projects_details/${project?.id}`)
+                          }}
+                        >
+                          View Details
+                        </Button>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#1a01fe',
+                            color: 'white',
+                            minWidth: { xs: '90px', sm: '120px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' },
+                            '&:hover': {
+                              backgroundColor: '#1501d9'
+                            }
+                          }}
+                          onClick={() => {
+                            navigate(`/project/milestone-listing/${project?.id}`)
+                          }}
+                        >
+                          Milestone
+                        </Button>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          color="secondary"
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '10px', sm: '11px' },
+                            padding: { xs: '4px 6px', sm: '4px 8px' },
+                            minWidth: { xs: '80px', sm: '100px' }
+                          }}
+                          onClick={() => {
+                            navigate(`/project/client_details/${project?.id}`)
+                          }}
+                        >
+                          Add Client
+                        </Button>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          color="secondary"
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '10px', sm: '11px' },
+                            padding: { xs: '4px 6px', sm: '4px 8px' },
+                            minWidth: { xs: '80px', sm: '100px' }
+                          }}
+                          onClick={() => {
+                            navigate(`/project/view_client_details/${project?.id}`)
+                          }}
+                        >
+                          View Client
+                        </Button>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#FF8C00',
+                            color: 'white',
+                            minWidth: { xs: '80px', sm: '100px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' },
+                            '&:hover': {
+                              backgroundColor: '#e67c00'
+                            }
+                          }}
+                          onClick={() => {
+                            setOpenWpoModal(true)
+                            setActiveProject(project?.id)
+                          }}
+                        >
+                          Add WOPO
+                        </Button>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#FF8C00',
+                            color: 'white',
+                            minWidth: { xs: '80px', sm: '110px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' },
+                            '&:hover': {
+                              backgroundColor: '#e67c00'
+                            }
+                          }}
+                          onClick={() => {
+                            setOpenWpoView(true)
+                            setActiveProject(project?.id)
+                          }}
+                        >
+                          View WOPO
+                        </Button>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#FF8C00',
+                            color: 'white',
+                            minWidth: { xs: '60px', sm: '80px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' },
+                            '&:hover': {
+                              backgroundColor: '#e67c00'
+                            }
+                          }}
+                          onClick={() => {
+                            setOpenDrawingModal(true);
+                            setActiveProject(project?.id);
+                          }}
+                        >
+                          MDL
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+
           <TablePagination
             component="div"
-            count={projectData?.data?.length || 0}
+            count={filteredProjects.length}
             page={page}
             onPageChange={handleChangePage}
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             rowsPerPageOptions={[5, 10, 25]}
             style={{ borderTop: '1px solid #e0e0e0' }}
+            sx={{
+              '& .MuiTablePagination-toolbar': {
+                fontSize: { xs: '12px', sm: '14px' },
+                padding: { xs: '8px', sm: '16px' }
+              },
+              '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+                fontSize: { xs: '12px', sm: '14px' }
+              }
+            }}
           />
         </>
       )}
-  
+
+      {/* No projects found message */}
+      {!ProjectLoading && !ProjectError && filteredProjects.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-500 text-lg">No projects found matching your search.</p>
+        </div>
+      )}
+
       <ProjectCreate open={createModal} handleClose={handleCloseCreateModal} refetch={refetch} />
       <ProjectUpdate open={updateModal} handleClose={handleCloseUpdateModal} />
-      <ProjectWpo open={openWpoModal} 
-      projectId={activeProject}
-      handleClose={handleCloseWpoModal}
+      <ProjectWpo 
+        open={openWpoModal} 
+        projectId={activeProject}
+        handleClose={handleCloseWpoModal}
         refetch={refetch}
       />
-    <ProjectWpoViewModal open={openWpoViewModal} 
-      projectId={activeProject}
-      handleClose={handleCloseWpoViewModal}
+      <ProjectWpoViewModal 
+        open={openWpoViewModal} 
+        projectId={activeProject}
+        handleClose={handleCloseWpoViewModal}
         refetch={refetch}
       />
       <ProjectDrawingUploadDialog 
@@ -324,7 +633,6 @@ const navigate = useNavigate();
       />
     </div>
   );
-  
 };
 
 export default ProjectListingTable;

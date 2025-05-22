@@ -33,9 +33,25 @@ function UserGroupSection() {
   const [selectedGroup, setSelectedGroup] = useState(null); 
   const [openConfirm, setOpenConfirm] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState(null);
+  const [searchFilter, setSearchFilter] = useState('');
 
-  if (isLoading) return <CircularProgress />;
-  if (error) return <p>Error loading groups.</p>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <CircularProgress size={50} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          Error loading groups. Please try again later.
+        </div>
+      </div>
+    );
+  }
 
   const rows = groupData?.data?.map((group, index) => ({
     id: group.id,
@@ -43,6 +59,11 @@ function UserGroupSection() {
     sr: index + 1,
     permission_list: group.permission_list,
   })) || [];
+
+  // Filter rows based on search
+  const filteredRows = rows.filter(row =>
+    row.name.toLowerCase().includes(searchFilter.toLowerCase())
+  );
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -52,6 +73,7 @@ function UserGroupSection() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+
   const handleOpenConfirm = (groupId) => {
     setSelectedGroupId(groupId);
     setOpenConfirm(true);
@@ -79,83 +101,243 @@ function UserGroupSection() {
     setEditModal(true);
   };
 
-  const currentRows = rows.slice(
+  const currentRows = filteredRows.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
 
   return (
-    <div className="bg-white p-4 md:w-[90%] lg:w-[70%] mx-auto my-8 rounded-md">
-      <div className="flex flex-row my-6 px-10 items-center justify-between">
-        <TextField
-          value={""}
-          placeholder="Search"
-          variant="outlined"
-          size="small"
-          style={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
-        />
-        <h2 className="text-3xl text-[#29346B] font-semibold">User Groups</h2>
-        <Button
-          variant="contained"
-          style={{ backgroundColor: '#FF8C00', color: 'white', fontWeight: 'bold', fontSize: '16px', textTransform: 'none' }}
-          onClick={() => setCreateModal(true)}
-        >
-          Add Group
-        </Button>
+    <div className="bg-white p-3 sm:p-4 md:p-6 w-full max-w-6xl mx-auto my-4 sm:my-6 md:my-8 rounded-lg shadow-sm">
+      {/* Responsive Header */}
+      <div className="mb-6">
+        {/* Title - Always on top on mobile */}
+        <div className="text-center mb-4 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl md:text-3xl text-[#29346B] font-semibold">
+            User Groups
+          </h2>
+        </div>
+        
+        {/* Search and Button Container */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
+          {/* Search Input */}
+          <div className="w-full sm:w-auto sm:flex-1 sm:max-w-xs">
+            <TextField
+              value={searchFilter}
+              placeholder="Search groups..."
+              onChange={(e) => setSearchFilter(e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              style={{ 
+                backgroundColor: '#f9f9f9', 
+                borderRadius: '8px'
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  fontSize: { xs: '14px', sm: '16px' }
+                }
+              }}
+            />
+          </div>
+
+          {/* Add Button */}
+          <div className="w-full sm:w-auto">
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={() => setCreateModal(true)}
+              sx={{
+                backgroundColor: '#FF8C00',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: { xs: '14px', sm: '16px' },
+                textTransform: 'none',
+                padding: { xs: '10px 16px', sm: '8px 24px' },
+                '&:hover': {
+                  backgroundColor: '#e67c00'
+                }
+              }}
+            >
+              Add Group
+            </Button>
+          </div>
+        </div>
       </div>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow style={{ backgroundColor: '#F2EDED' }}>
-              <TableCell align="center">Sr No.</TableCell>
-              <TableCell align="center">Group Name</TableCell>
-              <TableCell align="center">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {currentRows.map((row) => (
-              <TableRow key={row.id}>
-                <TableCell align="center">{row.sr}</TableCell>
-                <TableCell align="center">{row.name}</TableCell>
-                <TableCell align="center" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20 }}>
-                  <RiEditFill
-                    style={{ cursor: 'pointer', color: '#61D435', fontSize: '23px' }}
-                    title="Edit"
-                    onClick={() => handleEditClick(row)}
-                  />
-                  <DeleteIcon
-                    style={{ cursor: 'pointer', color: 'red', fontSize: '23px' }}
-                    title="Delete"
-                    onClick={() => handleOpenConfirm(row.id)}
-                  />
+
+      {/* Responsive Table Container */}
+      <div className="overflow-x-auto">
+        <TableContainer 
+          component={Paper} 
+          style={{ 
+            borderRadius: '8px', 
+            overflow: 'hidden',
+            minWidth: '300px'
+          }}
+        >
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow style={{ backgroundColor: '#F2EDED' }}>
+                <TableCell 
+                  align="center" 
+                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                  sx={{
+                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                  }}
+                >
+                  Sr No.
+                </TableCell>
+                <TableCell 
+                  align="center" 
+                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                  sx={{
+                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                  }}
+                >
+                  Group Name
+                </TableCell>
+                <TableCell 
+                  align="center" 
+                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                  sx={{
+                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                  }}
+                >
+                  Actions
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <TablePagination
-          component="div"
-          count={rows.length}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5, 10, 25]}
-          style={{ borderTop: '1px solid #e0e0e0' }}
-        />
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {currentRows.map((row) => (
+                <TableRow 
+                  key={row.id}
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: '#f5f5f5'
+                    }
+                  }}
+                >
+                  <TableCell 
+                    align="center"
+                    sx={{
+                      fontSize: { xs: '14px', sm: '16px', md: '20px' },
+                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                    }}
+                  >
+                    {row.sr}
+                  </TableCell>
+                  <TableCell 
+                    align="center" 
+                    style={{ color: '#1D2652' }}
+                    sx={{
+                      fontSize: { xs: '14px', sm: '16px', md: '20px' },
+                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' },
+                      wordBreak: 'break-word'
+                    }}
+                  >
+                    {row.name}
+                  </TableCell>
+                  <TableCell 
+                    align="center"
+                    sx={{
+                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                      <RiEditFill
+                        style={{ 
+                          cursor: 'pointer', 
+                          color: '#61D435', 
+                          fontSize: '20px'
+                        }}
+                        title="Edit"
+                        onClick={() => handleEditClick(row)}
+                      />
+                      <DeleteIcon
+                        style={{ 
+                          cursor: 'pointer', 
+                          color: 'red', 
+                          fontSize: '20px'
+                        }}
+                        title="Delete"
+                        onClick={() => handleOpenConfirm(row.id)}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          <TablePagination
+            component="div"
+            count={filteredRows.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[5, 10, 25]}
+            style={{ borderTop: '1px solid #e0e0e0' }}
+            sx={{
+              '& .MuiTablePagination-toolbar': {
+                fontSize: { xs: '12px', sm: '14px' },
+                padding: { xs: '8px', sm: '16px' }
+              },
+              '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+                fontSize: { xs: '12px', sm: '14px' }
+              }
+            }}
+          />
+        </TableContainer>
+      </div>
+
       <CreateGroupModal open={createModal} setOpen={setCreateModal} />
       <EditGroupModal open={editModal} setOpen={setEditModal} groupData={selectedGroup} />
-      <Dialog open={openConfirm} onClose={handleCloseConfirm}>
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog 
+        open={openConfirm} 
+        onClose={handleCloseConfirm}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            margin: { xs: '16px', sm: '32px' },
+            width: { xs: 'calc(100% - 32px)', sm: 'auto' }
+          }
+        }}
+      >
+        <DialogTitle 
+          sx={{ 
+            fontSize: { xs: '18px', sm: '20px' },
+            padding: { xs: '16px', sm: '24px' },
+            paddingBottom: { xs: '8px', sm: '16px' }
+          }}
+        >
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent sx={{ padding: { xs: '0 16px', sm: '0 24px' } }}>
+          <DialogContentText sx={{ fontSize: { xs: '14px', sm: '16px' } }}>
             Are you sure you want to delete this group? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseConfirm} color="primary">Cancel</Button>
-          <Button onClick={handleDelete} color="secondary">Delete</Button>
+        <DialogActions sx={{ padding: { xs: '16px', sm: '24px' } }}>
+          <Button 
+            onClick={handleCloseConfirm} 
+            color="primary"
+            sx={{ fontSize: { xs: '14px', sm: '16px' } }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDelete} 
+            color="secondary"
+            sx={{ fontSize: { xs: '14px', sm: '16px' } }}
+          >
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
     </div>
