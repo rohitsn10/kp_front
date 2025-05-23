@@ -1,4 +1,4 @@
-import { Autocomplete, TextField } from '@mui/material';
+import { Autocomplete, TextField, Typography, Box } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import HSECards from '../../components/pages/hse/hse-cards';
 import { useGetMainProjectsQuery } from '../../api/users/projectApi';
@@ -9,7 +9,7 @@ function HseMainPage() {
   const [locationID, setLocationID] = useState(null);
   const [locationOptions, setLocationOptions] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
-// console.log(">>>>>>>>>>>",locationID)
+
   const handleProjectChange = (event, newValue) => {
     setSelectedProject(newValue);
     setLocationID(null);
@@ -37,7 +37,8 @@ function HseMainPage() {
       <TextField 
         label="Loading projects..." 
         disabled
-        sx={{ width: 400 }}
+        fullWidth
+        size="small"
       />
     );
   } else if (isError) {
@@ -45,7 +46,8 @@ function HseMainPage() {
       <TextField 
         label="Error loading projects" 
         error
-        sx={{ width: 400 }}
+        fullWidth
+        size="small"
       />
     );
   } else if (projectOptions.length === 0) {
@@ -53,7 +55,8 @@ function HseMainPage() {
       <TextField 
         label="No projects available" 
         disabled
-        sx={{ width: 400 }}
+        fullWidth
+        size="small"
       />
     );
   } else {
@@ -62,7 +65,8 @@ function HseMainPage() {
         disablePortal
         options={projectOptions}
         getOptionLabel={(option) => option.project_name || ''}
-        sx={{ width: 400 }}
+        fullWidth
+        size="small"
         renderInput={(params) => (
           <TextField {...params} label="Projects" />
         )}
@@ -78,7 +82,8 @@ function HseMainPage() {
       <TextField 
         label="Select a project first" 
         disabled
-        sx={{ width: 400 }}
+        fullWidth
+        size="small"
       />
     );
   } else if (locationOptions.length === 0) {
@@ -86,7 +91,8 @@ function HseMainPage() {
       <TextField 
         label="No locations available" 
         disabled
-        sx={{ width: 400 }}
+        fullWidth
+        size="small"
       />
     );
   } else {
@@ -95,7 +101,8 @@ function HseMainPage() {
         disablePortal
         options={locationOptions}
         getOptionLabel={(option) => option.land_bank_location_name || ''}
-        sx={{ width: 400 }}
+        fullWidth
+        size="small"
         renderInput={(params) => (
           <TextField {...params} label="Select Site" />
         )}
@@ -106,29 +113,65 @@ function HseMainPage() {
   }
 
   return (
-    <div className="bg-white rounded-md p-8 m-4 min-h-screen flex flex-col gap-4">
-      <div className="text-center">
-        <h1 className="text-2xl">HSE Dashboard</h1>
-      </div>
+    <div className="w-full min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          
+          {/* Header Section - Simple and Responsive */}
+          <div className="px-4 sm:px-6 lg:px-8 py-6 text-center border-b border-gray-200">
+            <h1 className="text-xl sm:text-2xl text-[#29346B] font-semibold">
+              HSE Dashboard
+            </h1>
+          </div>
 
-      <div className="flex flex-row gap-4">
-        {/* Select Project Dropdown */}
-        <div className="flex flex-col gap-2">
-          <label className="text-xl">Select Project</label>
-          {projectDropdownContent}
+          {/* Dropdowns Section */}
+          <div className="px-4 sm:px-6 lg:px-8 py-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              
+              {/* Select Project Dropdown */}
+              <div className="flex flex-col gap-3">
+                <label className="text-base sm:text-lg font-medium text-[#29346B]">
+                  Select Project
+                </label>
+                <div className="w-full">
+                  {projectDropdownContent}
+                </div>
+              </div>
+
+              {/* Select Site Dropdown */}
+              <div className="flex flex-col gap-3">
+                <label className="text-base sm:text-lg font-medium text-[#29346B]">
+                  Select Site
+                </label>
+                <div className="w-full">
+                  {locationDropdownContent}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Section */}
+          <div className="px-4 sm:px-6 lg:px-8 pb-6">
+            {selectedProject && selectedLocation ? (
+              <HSECards selectedSite={locationID} />
+            ) : (
+              <div className="text-center py-8 sm:py-12">
+                <div className="bg-gray-50 rounded-lg p-6 sm:p-8 max-w-md mx-auto">
+                  <div className="text-4xl sm:text-5xl mb-4">🏗️</div>
+                  <h3 className="text-lg sm:text-xl font-medium text-gray-800 mb-2">
+                    Ready to Start
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-600">
+                    {!selectedProject 
+                      ? "Please select a project to continue."
+                      : "Please select a site to view the HSE dashboard."
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* Add Location Dropdown */}
-      <div className="flex flex-row gap-4">
-        <div className="flex flex-col gap-2">
-          <label className="text-xl">Select Site</label>
-          {locationDropdownContent}
-        </div>
-      </div>
-
-      <div>
-        {selectedProject && selectedLocation && <HSECards selectedSite={locationID} />}
       </div>
     </div>
   );
