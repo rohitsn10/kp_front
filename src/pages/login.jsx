@@ -94,7 +94,7 @@ const handleFormSubmit = async (e) => {
                     </div>
                     <div>
                         <p className="text-sm md:text-base text-[#29346B] text-center">
-                            Test 1Your energy, your control - sign in now.
+                            Your energy, your control - sign in now.
                         </p>
                     </div>
                 </div>
