@@ -437,7 +437,7 @@ function LandListing() {
                       padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
                     }}
                   >
-                    {row.land_bank_status === "Approved" ? (
+                    {row.land_bank_status != "Approved" ? (
                       <span
                         style={{
                           cursor: "pointer",
@@ -454,12 +454,16 @@ function LandListing() {
                     ) : (
                       <span
                         style={{
-                          cursor: "not-allowed",
-                          color: "#A0A0A0",
+                          cursor: "pointer",
+                          color: "#F6812D",
                           fontWeight: "bold",
+                          textDecoration: "underline",
                         }}
+                        onClick={() =>
+                          navigate("/add-land-doc", { state: { landData: row } })
+                        }
                       >
-                        Attachments
+                        Add Attachments
                       </span>
                     )}
                   </TableCell>
@@ -490,10 +494,16 @@ function LandListing() {
                     ) : (
                       <span
                         style={{
-                          cursor: "not-allowed",
-                          color: "#A0A0A0",
+                          cursor: "pointer",
+                          color: "#F6812D",
                           fontWeight: "bold",
+                          textDecoration: "underline",
                         }}
+                        onClick={() =>
+                          navigate(`/edit-land-doc/${row.id}`, {
+                            state: { landData: row },
+                          })
+                        }
                       >
                         Edit Attachments
                       </span>
@@ -521,10 +531,24 @@ function LandListing() {
                           })
                         }
                       >
-                        View Attachments
+                        View Land Attachments
                       </span>
                     ) : (
-                      <></>
+                      <span
+                        style={{
+                          cursor: "pointer",
+                          color: "#F6812D",
+                          fontWeight: "bold",
+                          textDecoration: "underline",
+                        }}
+                        onClick={() =>
+                          navigate(`/view-landbank-docs/${row.id}`, {
+                            state: { landData: row },
+                          })
+                        }
+                      >
+                        View Land Attachments
+                      </span>
                     )}
                   </TableCell>
                 </TableRow>

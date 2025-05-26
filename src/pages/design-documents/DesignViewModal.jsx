@@ -66,20 +66,17 @@ const FileCard = styled(Paper)(({ theme }) => ({
 const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
   const [selectedPdf, setSelectedPdf] = useState({ url: '', name: '' });
-
+  console.log("Drawing details>>", drawingDetails);
   const [selectedVersion, setSelectedVersion] = useState(null);
   const [versionData, setVersionData] = useState(null);
   const [versions, setVersions] = useState([]);
-  const baseURL = import.meta.env.VITE_API_KEY
-  // Dummy Version Tabs:
-  // Initialize selected version when modal opens or drawing details change
-  // useEffect(() => {
-  //   setSelectedVersion(versions[0].version_number);
-  //   setVersionData(versions[0]);
-  // }, [drawingDetails]);
+  const baseURL = import.meta.env.VITE_API_KEY;
 
   useEffect(() => {
     if (drawingDetails) {
+      // Get all commented actions from the main object (outside) - this is the correct source
+      const allCommentedActions = drawingDetails.commented_actions || [];
+      
       // Prepare versions list - starting with "main"
       const versionsList = [
         {
@@ -94,15 +91,16 @@ const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
             drawing_and_design_attachments: drawingDetails.drawing_and_design_attachments || [],
             other_drawing_and_design_attachments: drawingDetails.other_drawing_and_design_attachments || []
           },
-          commented_actions: drawingDetails.commented_actions?.length > 0 
-            ? drawingDetails.commented_actions[drawingDetails.commented_actions.length - 1]
+          // For main version (Version 1), show the first comment that was made on it
+          commented_actions: allCommentedActions.length > 0 
+            ? allCommentedActions[0]  // "Issue 1" - first comment made on Version 1
             : null
         }
       ];
       
       // Add versions from resubmitted_actions
       if (drawingDetails.resubmitted_actions && drawingDetails.resubmitted_actions.length > 0) {
-        drawingDetails.resubmitted_actions.forEach(version => {
+        drawingDetails.resubmitted_actions.forEach((version, index) => {
           versionsList.push({
             ...version,
             label: `Version ${version.version_number}`,
@@ -115,7 +113,10 @@ const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
                 ...doc,
                 url: doc.url.startsWith('http') ? doc.url : `${baseURL}${doc.url}`
               })) || []
-            }
+            },
+            // Use the correct comment from the main commented_actions array
+            // Version 2 should show comment at index 1, Version 3 should show comment at index 2, etc.
+            commented_actions: allCommentedActions[index + 1] || null
           });
         });
       }
@@ -127,23 +128,6 @@ const DrawingDocumentViewModal = ({ open, handleClose, drawingDetails }) => {
       setVersionData(versionsList[0]);
     }
   }, [drawingDetails]);
-
-  // Handle version change
-  // const handleVersionChange = (event) => {
-  //   const versionNumber = event.target.value;
-  //   setSelectedVersion(versionNumber);
-    
-  //   // Find the corresponding version data
-  //   const newVersionData = versions.find(
-  //     version => version.version_number === versionNumber
-  //   );
-    
-  //   if (newVersionData) {
-  //     setVersionData(newVersionData);
-  //   }
-  // };
-
-  
 
   const handleVersionChange = (event) => {
     const versionNumber = event.target.value;

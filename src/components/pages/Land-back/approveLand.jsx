@@ -59,7 +59,7 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
   const [landBankStatus, setLandBankStatus] = useState("pending");
   const [approveRejectLandBankStatus, { isLoading, error }] = useApproveRejectLandBankStatusMutation();
   const [tabValue, setTabValue] = useState(0);
-
+  console.log(">>>>>>>>",selectedLand)
   useEffect(() => {
     if (selectedLand) {
       const fileKeys = Object.keys(selectedLand).filter((key) => key.includes("file"));

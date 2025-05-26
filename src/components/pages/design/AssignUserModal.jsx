@@ -20,10 +20,10 @@ function AssignUserModal({ open, handleClose, drawingDetails }) {
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [assignedUsers, setAssignedUsers] = useState([]);
-  console.log(drawingDetails)
+  // console.log(drawingDetails)
   // Fetch users data
   const { data: usersData, isLoading, error } = useFetchUsersQuery();
-console.log(usersData)
+// console.log(usersData)
   useEffect(() => {
     // Reset selections when the modal opens with new drawing details
     if (open && drawingDetails) {

@@ -59,6 +59,12 @@ export const masterDesignApi = createApi({
         body: formData,
       }),
     }),
+        getDrawingDashboardCount: builder.query({
+      query: (projectId) => ({
+        url: `project_module/drawing_dashboard_count?project_id=${projectId}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -69,5 +75,6 @@ export const {
   useGetDrawingsByProjectIdQuery,
   useGetDrawingByIdQuery,
   useApprovalOrCommentOnDrawingMutation,
-  useUploadExcelDrawingAndDesignMutation
+  useUploadExcelDrawingAndDesignMutation,
+  useGetDrawingDashboardCountQuery
 } = masterDesignApi;

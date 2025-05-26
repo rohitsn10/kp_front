@@ -1,7 +1,9 @@
 import { Autocomplete, TextField, Typography, Box } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import HSECards from '../../components/pages/hse/hse-cards';
+// import HSEStatsCards from '../../components/pages/hse/hse-stats-cards'; // Import the new component
 import { useGetMainProjectsQuery } from '../../api/users/projectApi';
+import HSEStatsCards from '../../components/pages/hse/hse-cards/HSEStatsCards';
 
 function HseMainPage() {
   const { data, isLoading, isError } = useGetMainProjectsQuery();
@@ -153,7 +155,20 @@ function HseMainPage() {
           {/* Content Section */}
           <div className="px-4 sm:px-6 lg:px-8 pb-6">
             {selectedProject && selectedLocation ? (
-              <HSECards selectedSite={locationID} />
+              <>
+                              {/* Navigation Cards Section */}
+                <div>
+                  <h2 className="text-xl font-bold text-[#29346B] mb-6">HSE Management Tools</h2>
+                  <HSECards selectedSite={locationID} />
+                </div>
+                {/* ADD HSE STATS CARDS HERE - FIRST */}
+                <div className="mb-8">
+                  <HSEStatsCards selectedSite={locationID} />
+                </div>
+                
+                {/* Divider between stats and navigation cards */}
+                <div className="border-t border-gray-200 mb-8"></div>
+              </>
             ) : (
               <div className="text-center py-8 sm:py-12">
                 <div className="bg-gray-50 rounded-lg p-6 sm:p-8 max-w-md mx-auto">

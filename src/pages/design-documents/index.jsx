@@ -9,7 +9,9 @@ import {
   Select,
   MenuItem,
   InputAdornment,
-  Alert
+  Alert,
+  Box,
+  Typography
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { useGetMainProjectsQuery } from "../../api/users/projectApi";
@@ -110,34 +112,29 @@ function DesignDocumentsPage() {
     setUploadModalOpen(false);
   };
 
-  const handleAssignUser = (drawing) => {
-    setSelectedDrawing(drawing);
+  // Project-level user action handlers
+  const handleProjectAssignUser = () => {
     setAssignUserModalOpen(true);
   };
 
   const handleCloseAssignUserModal = () => {
     setAssignUserModalOpen(false);
-    setSelectedDrawing(null);
   };
 
-  const handleViewAssignedUsers = (drawing) => {
-    setSelectedDrawing(drawing);
+  const handleProjectViewAssignedUsers = () => {
     setViewUserModalOpen(true);
   };
 
   const handleCloseViewAssignedModal = () => {
     setViewUserModalOpen(false);
-    setSelectedDrawing(null);
   };
 
-  const handleSendNotification = (drawing) => {
+  const handleProjectSendNotification = () => {
     setNotiModalOpen(true);
-    setSelectedDrawing(drawing);
   };
 
   const handleCloseSendNotification = () => {
     setNotiModalOpen(false);
-    setSelectedDrawing(null);
   };
 
   const handleOpenViewModal = () => {
@@ -178,6 +175,9 @@ function DesignDocumentsPage() {
     setSortOption("all");
     setFilterStatus("all");
   };
+
+  // Get selected project details for project-level actions
+  const selectedProject = projects?.data?.find((project) => project.id === selectedProjectId);
 
   return (
     <div className="w-full min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
@@ -246,7 +246,7 @@ function DesignDocumentsPage() {
             <div className="px-4 sm:px-6 lg:px-8 pb-6">
               {/* Graph Component */}
               <div className="mb-6">
-                <DesignDocumentsGraph />
+                <DesignDocumentsGraph projectID={selectedProjectId}/>
               </div>
 
               <h3 className="text-base sm:text-lg font-semibold text-[#29346B] mb-4">
@@ -284,7 +284,7 @@ function DesignDocumentsPage() {
                 </div>
 
                 {/* Filter Controls */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                   {/* Sort Option */}
                   <FormControl fullWidth>
                     <InputLabel 
@@ -360,6 +360,71 @@ function DesignDocumentsPage() {
                     Clear Filters
                   </Button>
                 </div>
+
+                {/* Project-Level User Actions */}
+                <Box sx={{ 
+                  borderTop: '1px solid #e5e7eb', 
+                  paddingTop: 3,
+                  marginTop: 2
+                }}>
+                  <Typography 
+                    variant="subtitle2" 
+                    sx={{ 
+                      color: '#29346B', 
+                      fontWeight: 600, 
+                      marginBottom: 2,
+                      fontSize: { xs: '14px', sm: '16px' }
+                    }}
+                  >
+                    Project Actions: {selectedProject?.project_name}
+                  </Typography>
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                    {/* Assign User to Project */}
+                    <Button
+                      variant="contained"
+                      startIcon={<PersonAddIcon />}
+                      onClick={handleProjectAssignUser}
+                      sx={{ 
+                        bgcolor: "#4F46E5", 
+                        "&:hover": { bgcolor: "#4338CA" },
+                        fontSize: { xs: '12px', sm: '14px' },
+                        padding: { xs: '6px 12px', sm: '8px 16px' }
+                      }}
+                    >
+                      Assign Users
+                    </Button>
+
+                    {/* View Project Users */}
+                    <Button
+                      variant="contained"
+                      startIcon={<VisibilityIcon />}
+                      onClick={handleProjectViewAssignedUsers}
+                      sx={{ 
+                        bgcolor: "#2563EB", 
+                        "&:hover": { bgcolor: "#1D4ED8" },
+                        fontSize: { xs: '12px', sm: '14px' },
+                        padding: { xs: '6px 12px', sm: '8px 16px' }
+                      }}
+                    >
+                      View Users
+                    </Button>
+
+                    {/* Send Project Notification */}
+                    <Button
+                      variant="contained"
+                      startIcon={<NotificationsActiveIcon />}
+                      onClick={handleProjectSendNotification}
+                      sx={{ 
+                        bgcolor: "#F97316", 
+                        "&:hover": { bgcolor: "#EA580C" },
+                        fontSize: { xs: '12px', sm: '14px' },
+                        padding: { xs: '6px 12px', sm: '8px 16px' }
+                      }}
+                    >
+                      Send Notification
+                    </Button>
+                  </div>
+                </Box>
               </div>
 
               {/* Loading/Error/Content */}
@@ -384,7 +449,6 @@ function DesignDocumentsPage() {
                         <th className="py-2 px-2 sm:px-3 text-[#29346B] border text-left text-xs sm:text-sm font-semibold">Status</th>
                         <th className="py-2 px-2 sm:px-3 text-[#29346B] border text-left text-xs sm:text-sm font-semibold">Action</th>
                         <th className="py-2 px-2 sm:px-3 text-[#29346B] border text-left text-xs sm:text-sm font-semibold">Approval</th>
-                        <th className="py-2 px-2 sm:px-3 text-[#29346B] border text-left text-xs sm:text-sm font-semibold">User Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -468,54 +532,6 @@ function DesignDocumentsPage() {
                               {drawing.is_approved ? "Approved" : "Approve"}
                             </Button>
                           </td>
-                          <td className="py-2 px-2 sm:px-3 border">
-                            <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
-                              {/* Assign User */}
-                              <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => handleAssignUser(drawing)}
-                                sx={{ 
-                                  bgcolor: "#4F46E5", 
-                                  "&:hover": { bgcolor: "#4338CA" }, 
-                                  minWidth: { xs: "30px", sm: "40px" }, 
-                                  padding: { xs: "4px", sm: "6px" }
-                                }}
-                              >
-                                <PersonAddIcon sx={{ fontSize: { xs: '14px', sm: '18px' } }} />
-                              </Button>
-
-                              {/* View Assigned Users */}
-                              <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => handleViewAssignedUsers(drawing)}
-                                sx={{ 
-                                  bgcolor: "#2563EB", 
-                                  "&:hover": { bgcolor: "#1D4ED8" }, 
-                                  minWidth: { xs: "30px", sm: "40px" }, 
-                                  padding: { xs: "4px", sm: "6px" }
-                                }}
-                              >
-                                <VisibilityIcon sx={{ fontSize: { xs: '14px', sm: '18px' } }} />
-                              </Button>
-
-                              {/* Send Notification */}
-                              <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => handleSendNotification(drawing)}
-                                sx={{ 
-                                  bgcolor: "#F97316", 
-                                  "&:hover": { bgcolor: "#EA580C" }, 
-                                  minWidth: { xs: "30px", sm: "40px" }, 
-                                  padding: { xs: "4px", sm: "6px" }
-                                }}
-                              >
-                                <NotificationsActiveIcon sx={{ fontSize: { xs: '14px', sm: '18px' } }} />
-                              </Button>
-                            </div>
-                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -556,7 +572,7 @@ function DesignDocumentsPage() {
         </div>
       </div>
 
-      {/* All Modals */}
+      {/* All Modals - Updated to work with project-level data */}
       <DrawingDocumentUploadDialog
         open={uploadModalOpen}
         handleClose={handleUploadClose}
@@ -574,20 +590,21 @@ function DesignDocumentsPage() {
         drawingDetails={selectedDrawing}
         refetchDrawings={refetch}
       />
+      {/* Project-level modals - pass project details instead of drawing details */}
       <AssignUserModal
         open={assignUserModalOpen}
         handleClose={handleCloseAssignUserModal}
-        drawingDetails={selectedDrawing}
+        projectDetails={selectedProject} // Changed from drawingDetails
       />
       <UserNotiModal
         open={notiModalOpen}
         handleClose={handleCloseSendNotification}
-        drawingDetails={selectedDrawing}
+        projectDetails={selectedProject} // Changed from drawingDetails
       />
       <ViewUserModal
         open={viewUserModalOpen}
         handleClose={handleCloseViewAssignedModal}
-        drawingDetails={selectedDrawing}
+        projectDetails={selectedProject} // Changed from drawingDetails
       />
     </div>
   );

@@ -65,31 +65,25 @@ import { HiClipboardDocumentCheck } from "react-icons/hi2";
         links:'/project/multiple-activities'
       }
       ]
-    },
-    {
-      name: 'Material Management',
-      icons: <img src="https://cdn.iconscout.com/icon/premium/png-256-thumb/raw-material-4186345-3472642.png" alt="material" width="100" height="100" />,
-      links: "/material-management"
-    },     
-    {
-      name:'Tracking',
-      icons:<svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M25.6667 2.33337H2.33333V25.6667H25.6667V2.33337ZM23.3333 4.66671V12.8334H20.3537L17.9958 16.6052L11.1533 7.48187L6.47033 12.8334H4.66666V4.66671H23.3333ZM4.66666 15.1667H7.52966L11.0133 11.1849L18.1708 20.7282L21.6475 15.1667H23.3333V23.3334H4.66666V15.1667Z" fill="#FB3B42"/>
-      </svg>
-      ,
-      links:"/tracking"
-    },
+    },   
+    // {
+    //   name:'Tracking',
+    //   icons:<svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    //   <path d="M25.6667 2.33337H2.33333V25.6667H25.6667V2.33337ZM23.3333 4.66671V12.8334H20.3537L17.9958 16.6052L11.1533 7.48187L6.47033 12.8334H4.66666V4.66671H23.3333ZM4.66666 15.1667H7.52966L11.0133 11.1849L18.1708 20.7282L21.6475 15.1667H23.3333V23.3334H4.66666V15.1667Z" fill="#FB3B42"/>
+    //   </svg>
+    //   ,
+    //   links:"/tracking"
+    // },
     {
       name:'Quality Assurance',
       icons:<AiOutlineSafety/>
       ,
       links:"/quality-main"
     },
-    {
-      name:'Design & Documents',
-      icons:<DesignServicesIcon/>
-      ,
-      links:"/design-documents"
+        {
+      name:"Hoto",
+      icons:<HiClipboardDocumentCheck/>,
+      links:'/hoto-page'
     },
     {
       name:'HSE',
@@ -97,6 +91,13 @@ import { HiClipboardDocumentCheck } from "react-icons/hi2";
       ,
       links:"/HSE"
     },
+    {
+      name:'Design & Documents',
+      icons:<DesignServicesIcon/>
+      ,
+      links:"/design-documents"
+    },
+
     {
       name:'Reports',
       icons:<svg width="24" height="24" viewBox="0 0 26 22" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -130,10 +131,15 @@ import { HiClipboardDocumentCheck } from "react-icons/hi2";
       }
       ]
     },
-    {
-      name:"Hoto",
-      icons:<HiClipboardDocumentCheck/>,
-      links:'/hoto-page'
-    }
+    // {
+    //   name:"Hoto",
+    //   icons:<HiClipboardDocumentCheck/>,
+    //   links:'/hoto-page'
+    // },
+        {
+      name: 'Material Management',
+      icons: <img src="https://cdn.iconscout.com/icon/premium/png-256-thumb/raw-material-4186345-3472642.png" alt="material" width="100" height="100" />,
+      links: "/material-management"
+    },  
   ]
   export default sidebarConstant
