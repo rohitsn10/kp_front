@@ -5,10 +5,12 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import { Autocomplete } from '@mui/material';
+import { Autocomplete, IconButton, Box } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useGetActivitiesQuery } from '../../../../api/users/projectActivityApi';
 import { useGetDropdownSubActivitiesQuery } from '../../../../api/users/subActivityApi';
-import { useCreateSubSubActivityMutation, useGetSubSubActivityQuery } from '../../../../api/users/multipleActivityApi'; // Import the mutation hook
+import { useCreateSubSubActivityMutation, useGetSubSubActivityQuery } from '../../../../api/users/multipleActivityApi';
 import { toast } from 'react-toastify';
 
 export default function ProjectMultipleActivityModal({
@@ -19,7 +21,7 @@ export default function ProjectMultipleActivityModal({
 }) {
   const [selectedProjectActivity, setSelectedProjectActivity] = useState(null);
   const [selectedSubActivity, setSelectedSubActivity] = useState(null);
-  const [subSubActivityNames, setSubSubActivityNames] = useState(''); // State for sub-sub activity name
+  const [subSubActivityNames, setSubSubActivityNames] = useState(['']); // Array of strings
 
   // Fetching activities using useGetActivitiesQuery hook
   const { data: activityData, error: activityError, isLoading: activityLoading } = useGetActivitiesQuery();
@@ -27,41 +29,69 @@ export default function ProjectMultipleActivityModal({
 
   // Fetching sub-activities using useGetDropdownSubActivitiesQuery hook
   const { data: subActivityData, error: subActivityError, isLoading: subActivityLoading } = useGetDropdownSubActivitiesQuery(selectedProjectActivity?.value, {
-    skip: !selectedProjectActivity, // Skip fetching until a project activity is selected
+    skip: !selectedProjectActivity,
   });
 
   // Using the mutation hook to create a sub-sub activity
   const [createSubSubActivity, { isLoading: creating, error: createError, isSuccess }] = useCreateSubSubActivityMutation();
 
+  // Function to add a new input field
+  const addSubSubActivityInput = () => {
+    setSubSubActivityNames([...subSubActivityNames, '']);
+  };
+
+  // Function to remove an input field
+  const removeSubSubActivityInput = (index) => {
+    if (subSubActivityNames.length > 1) {
+      const updatedNames = subSubActivityNames.filter((_, i) => i !== index);
+      setSubSubActivityNames(updatedNames);
+    }
+  };
+
+  // Function to handle input change
+  const handleSubSubActivityChange = (index, value) => {
+    const updatedNames = [...subSubActivityNames];
+    updatedNames[index] = value;
+    setSubSubActivityNames(updatedNames);
+  };
+
   const handleClose = () => {
     setOpen(false);
+    // Reset form when closing
+    setSelectedProjectActivity(null);
+    setSelectedSubActivity(null);
+    setSubSubActivityNames(['']);
   };
 
   const handleSubmit = () => {
-    if (!selectedProjectActivity || !selectedSubActivity || !subSubActivityNames.trim()) {
+    // Filter out empty strings from the array
+    const filteredNames = subSubActivityNames.filter(name => name.trim() !== '');
+    
+    if (!selectedProjectActivity || !selectedSubActivity || filteredNames.length === 0) {
       toast.error('Please fill in all required fields!');
       return;
     }
+
     // Prepare the data to be sent
     const subSubActivityData = {
       projectActivityId: selectedProjectActivity?.value,
       subActivityId: selectedSubActivity?.value,
-      subSubActivityNames: [subSubActivityNames], // We assume it's an array
+      subSubActivityNames: filteredNames, // Send only non-empty names
     };
+
+    console.log('Payload being sent:', subSubActivityData);
 
     // Call the mutation to create the sub-sub activity
     createSubSubActivity(subSubActivityData)
       .then((response) => {
         console.log('Sub-Sub Activity Created:', response.data);
-        toast.success('Multiple Activity Created Successfully!');
-        refetch()
-        // Handle success (you can close the dialog or show a success message)
-        setOpen(false);
+        toast.success('Multiple Activities Created Successfully!');
+        refetch();
+        handleClose();
       })
       .catch((error) => {
         console.error('Error creating sub-sub activity:', error);
-        toast.error('Error creating sub-sub activity!');
-        // Handle error (you can show an error message if needed)
+        toast.error('Error creating sub-sub activities!');
       });
   };
 
@@ -93,18 +123,6 @@ export default function ProjectMultipleActivityModal({
         <DialogContent>
           <h2 className="text-[#29346B] text-2xl font-semibold mb-5">Add Multiple Activities</h2>
 
-          {/* Input Field */}
-          {/* <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-            Activity Name
-          </label>
-          <input
-            type="text"
-            className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
-            value={multipleActivityInput}
-            placeholder="Enter Activity Name"
-            onChange={(e) => setMultipleActInput(e.target.value)}
-          /> */}
-
           {/* Project Activity Dropdown */}
           <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
             Select Project Activity
@@ -115,7 +133,7 @@ export default function ProjectMultipleActivityModal({
             value={selectedProjectActivity}
             onChange={(event, newValue) => {
               setSelectedProjectActivity(newValue);
-              setSelectedSubActivity(null); // Reset sub-activity when activity changes
+              setSelectedSubActivity(null);
             }}
             renderInput={(params) => (
               <TextField
@@ -125,9 +143,9 @@ export default function ProjectMultipleActivityModal({
                 fullWidth
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    border: '1px solid #FACC15', // Yellow border
+                    border: '1px solid #FACC15',
                     borderBottom: '4px solid #FACC15',
-                    borderRadius: '6px', // Rounded corners
+                    borderRadius: '6px',
                   },
                   '& .MuiOutlinedInput-root.Mui-focused': {
                     border: 'none',
@@ -147,7 +165,7 @@ export default function ProjectMultipleActivityModal({
             getOptionLabel={(option) => option.label}
             value={selectedSubActivity}
             onChange={(event, newValue) => setSelectedSubActivity(newValue)}
-            disabled={!selectedProjectActivity} // Disable until a project activity is selected
+            disabled={!selectedProjectActivity}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -156,9 +174,9 @@ export default function ProjectMultipleActivityModal({
                 fullWidth
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    border: '1px solid #FACC15', // Yellow border
+                    border: '1px solid #FACC15',
                     borderBottom: '4px solid #FACC15',
-                    borderRadius: '6px', // Rounded corners
+                    borderRadius: '6px',
                   },
                   '& .MuiOutlinedInput-root.Mui-focused': {
                     border: 'none',
@@ -169,45 +187,98 @@ export default function ProjectMultipleActivityModal({
             )}
           />
 
-          {/* Sub-Sub Activity Name */}
-          <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-            Multiple Activity Name
-          </label>
-          <TextField
-            value={subSubActivityNames}
-            onChange={(e) => setSubSubActivityNames(e.target.value)}
-            variant="outlined"
-            fullWidth
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                border: '1px solid #FACC15',
-                borderBottom: '4px solid #FACC15',
-                borderRadius: '6px',
-              },
-            }}
-          />
+          {/* Multiple Activity Names */}
+          <Box sx={{ mt: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <label className="text-[#29346B] text-lg font-semibold">
+                Multiple Activity Names
+              </label>
+              <Button
+                onClick={addSubSubActivityInput}
+                startIcon={<AddIcon />}
+                sx={{
+                  backgroundColor: '#10B981',
+                  color: 'white',
+                  textTransform: 'none',
+                  fontSize: '14px',
+                  padding: '4px 12px',
+                  '&:hover': {
+                    backgroundColor: '#059669',
+                  },
+                }}
+              >
+                Add More
+              </Button>
+            </Box>
+
+            {/* Dynamic Input Fields for Multiple Activity Names */}
+            {subSubActivityNames.map((name, index) => (
+              <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <TextField
+                  value={name}
+                  onChange={(e) => handleSubSubActivityChange(index, e.target.value)}
+                  variant="outlined"
+                  fullWidth
+                  placeholder={`Enter multiple activity name ${index + 1}`}
+                  sx={{
+                    mr: 1,
+                    '& .MuiOutlinedInput-root': {
+                      border: '1px solid #FACC15',
+                      borderBottom: '4px solid #FACC15',
+                      borderRadius: '6px',
+                    },
+                  }}
+                />
+                {subSubActivityNames.length > 1 && (
+                  <IconButton
+                    onClick={() => removeSubSubActivityInput(index)}
+                    sx={{
+                      color: '#EF4444',
+                      '&:hover': {
+                        backgroundColor: '#FEE2E2',
+                      },
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                )}
+              </Box>
+            ))}
+          </Box>
+
+          {/* Display count of multiple activity names */}
+          <Box sx={{ mt: 1, mb: 2 }}>
+            <span className="text-sm text-gray-600">
+              {subSubActivityNames.filter(name => name.trim() !== '').length} multiple activity name(s) added
+            </span>
+          </Box>
         </DialogContent>
 
         <DialogActions
           sx={{
-            justifyContent: 'center', // Centers the button horizontally
-            padding: '20px', // Adds spacing around the button
+            justifyContent: 'center',
+            padding: '20px',
           }}
         >
           <Button
             onClick={handleSubmit}
             type="submit"
+            disabled={creating}
             sx={{
-              backgroundColor: '#F6812D', // Orange background color
-              color: '#FFFFFF', // White text color
-              fontSize: '16px', // Slightly larger text
-              padding: '6px 36px', // Makes the button bigger (adjust width here)
-              width: '200px', // Explicit width for larger button
-              borderRadius: '8px', // Rounded corners
-              textTransform: 'none', // Disables uppercase transformation
-              fontWeight: 'bold', // Makes the text bold
+              backgroundColor: '#F6812D',
+              color: '#FFFFFF',
+              fontSize: '16px',
+              padding: '6px 36px',
+              width: '200px',
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 'bold',
               '&:hover': {
-                backgroundColor: '#E66A1F', // Slightly darker orange on hover
+                backgroundColor: '#E66A1F',
+              },
+              '&:disabled': {
+                backgroundColor: '#D1D5DB',
+                color: '#9CA3AF',
               },
             }}
           >

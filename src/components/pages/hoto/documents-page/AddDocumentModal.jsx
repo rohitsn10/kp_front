@@ -12,7 +12,6 @@ import {
   MenuItem,
   Typography,
   Box,
-  Chip,
   List,
   ListItem,
   ListItemIcon,
@@ -37,7 +36,6 @@ const AddDocumentModal = ({ open, handleClose, projectId, onSuccess }) => {
   // Form state
   const [documentName, setDocumentName] = useState('');
   const [category, setCategory] = useState('');
-  const [status, setStatus] = useState('Pending');
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [error, setError] = useState(null);
   
@@ -48,7 +46,6 @@ const AddDocumentModal = ({ open, handleClose, projectId, onSuccess }) => {
   const resetForm = () => {
     setDocumentName('');
     setCategory('');
-    setStatus('Pending');
     setSelectedFiles([]);
     setError(null);
   };
@@ -157,7 +154,7 @@ const AddDocumentModal = ({ open, handleClose, projectId, onSuccess }) => {
       formData.append('project_id', projectId);
       formData.append('document_name', documentName.trim());
       formData.append('category', category.trim());
-      formData.append('status', status);
+      formData.append('status', 'Pending'); // Always set to Pending for new documents
       
       // Append each file to the FormData
       selectedFiles.forEach(file => {
@@ -204,14 +201,6 @@ const AddDocumentModal = ({ open, handleClose, projectId, onSuccess }) => {
     'Layout Documentation',
     'Foundation Documentation',
     'Water System Documentation'
-  ];
-  
-  // Status options
-  const statusOptions = [
-    { value: 'Pending', label: 'Pending', color: '#F59E0B' },
-    { value: 'Approved', label: 'Approved', color: '#10B981' },
-    { value: 'Rejected', label: 'Rejected', color: '#EF4444' },
-    { value: 'Needs Revision', label: 'Needs Revision', color: '#F97316' }
   ];
   
   return (
@@ -281,56 +270,8 @@ const AddDocumentModal = ({ open, handleClose, projectId, onSuccess }) => {
               )}
             </FormControl>
             
-            <FormControl fullWidth disabled={isLoading}>
-              <InputLabel id="status-label">Status</InputLabel>
-              <Select
-                labelId="status-label"
-                value={status}
-                label="Status"
-                onChange={(e) => setStatus(e.target.value)}
-                renderValue={(selected) => {
-                  const selectedOption = statusOptions.find(option => option.value === selected);
-                  return (
-                    <Chip
-                      label={selectedOption.label}
-                      sx={{
-                        bgcolor: `${selectedOption.color}20`,
-                        color: selectedOption.color,
-                        fontWeight: 'medium'
-                      }}
-                    />
-                  );
-                }}
-              >
-                {statusOptions.map((option) => (
-                  <MenuItem
-                    key={option.value}
-                    value={option.value}
-                    sx={{
-                      '&.Mui-selected': {
-                        bgcolor: `${option.color}10`,
-                      },
-                      '&.Mui-selected:hover': {
-                        bgcolor: `${option.color}20`,
-                      }
-                    }}
-                  >
-                    <Chip
-                      label={option.label}
-                      size="small"
-                      sx={{
-                        bgcolor: `${option.color}20`,
-                        color: option.color,
-                        fontWeight: 'medium'
-                      }}
-                    />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            
             <Typography variant="caption" sx={{ gridColumn: { xs: '1', md: '1 / span 2' }, color: 'text.secondary' }}>
-              Project ID: {projectId}
+              Project ID: {projectId} | Status will be set to "Pending"
             </Typography>
           </Box>
         </Box>
