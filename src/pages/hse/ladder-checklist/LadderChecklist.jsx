@@ -264,7 +264,7 @@ function LadderChecklist() {
                 <strong>Signature:</strong>
               </Typography>
               <ImageViewer 
-                src={selectedLadderChecklist.inspected_by_signature} 
+                src={`${import.meta.env.VITE_API_KEY}${selectedLadderChecklist.inspected_by_signature}`}
                 alt={`${selectedLadderChecklist.inspected_by_name} Signature`} 
               />
             </>

@@ -14,10 +14,13 @@ import {
   Typography,
   TablePagination,
   TextField,
+  Box,
 } from "@mui/material";
+import { Download } from "@mui/icons-material"; // Add this import for download icon
 import TrainingAttendanceDialog from "../../../components/pages/hse/safety-training/CreateSafetyTraining";
 import { useGetSafetyTrainingAttendanceQuery } from "../../../api/hse/safetyTraining/safetyTrainingApi";
 import { useParams } from "react-router-dom";
+
 const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
   const [open, setOpen] = useState(false);
 
@@ -60,12 +63,37 @@ function SafetyTraining() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTraining, setSelectedTraining] = useState(null);
-  const [openParticipantsModal, setOpenParticipantsModal] = useState(false);
+  const [openDetailsModal, setOpenDetailsModal] = useState(false);
   const { locationId } = useParams();
   const { data, isLoading, error } = useGetSafetyTrainingAttendanceQuery(
     locationId ? parseInt(locationId) : undefined
   );
   const [openCreateDialog, setCreateDialog] = useState(false);
+
+  // Function to handle file download
+  const handleDownloadAttendance = (fileUrl, siteName, date) => {
+    if (!fileUrl) {
+      alert("No attendance file available for download");
+      return;
+    }
+
+    // Create full URL for download using VITE_API_KEY
+    const fullUrl = `${import.meta.env.VITE_API_KEY}${fileUrl}`;
+    
+    // Create a temporary anchor element to trigger download
+    const link = document.createElement('a');
+    link.href = fullUrl;
+    
+    // Extract filename from URL or create a meaningful name
+    const fileName = fileUrl.split('/').pop() || `attendance_${siteName}_${date}.docx`;
+    link.download = fileName;
+    
+    // Append to body, click, and remove
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const dummySafetyData = [
     {
       site: "Training Facility A",
@@ -122,9 +150,9 @@ function SafetyTraining() {
     page * rowsPerPage + rowsPerPage
   );
 
-  const openParticipantsModalHandler = (training) => {
+  const openDetailsModalHandler = (training) => {
     setSelectedTraining(training);
-    setOpenParticipantsModal(true);
+    setOpenDetailsModal(true);
   };
 
   return (
@@ -132,7 +160,7 @@ function SafetyTraining() {
       <h2 className="text-3xl text-[#29346B] font-semibold text-center mb-6">
         Safety Training Records
       </h2>
-      <div className="flex flex-row  flex-wrap gap-4 justify-between p-6 md:p-4 mb-5">
+      <div className="flex flex-row flex-wrap gap-4 justify-between p-6 md:p-4 mb-5">
         <TextField
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -178,9 +206,7 @@ function SafetyTraining() {
                 <TableCell align="center">
                   {training.faculty_signature ? (
                     <ImageViewer
-                      src={`${import.meta.env.VITE_IMAGE_URL}${
-                        training.faculty_signature
-                      }`}
+                      src={`${import.meta.env.VITE_API_KEY}${training.faculty_signature}`}
                       alt={`${training.faculty_name || "Faculty"} Signature`}
                     />
                   ) : (
@@ -188,13 +214,30 @@ function SafetyTraining() {
                   )}
                 </TableCell>
                 <TableCell align="center">
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => openParticipantsModalHandler(training)}
-                  >
-                    View Participants
-                  </Button>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => openDetailsModalHandler(training)}
+                      size="small"
+                    >
+                      View Details
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={() => handleDownloadAttendance(
+                        training.file_upload, 
+                        training.site_name, 
+                        training.date
+                      )}
+                      size="small"
+                      startIcon={<Download />}
+                      disabled={!training.file_upload}
+                    >
+                      Download Attendance
+                    </Button>
+                  </Box>
                 </TableCell>
               </TableRow>
             ))}
@@ -213,32 +256,110 @@ function SafetyTraining() {
         style={{ borderTop: "1px solid #e0e0e0" }}
       />
 
-      {/* Participants Modal */}
+      {/* Training Details Modal */}
       <Dialog
-        open={openParticipantsModal}
-        onClose={() => setOpenParticipantsModal(false)}
+        open={openDetailsModal}
+        onClose={() => setOpenDetailsModal(false)}
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Participants Details</DialogTitle>
-        <DialogContent>
-          {selectedTraining?.participants?.map((participant, index) => (
-            <div key={index} className="mb-4 p-3 border rounded">
-              <Typography>
-                <strong>Name:</strong> {participant.name}
-              </Typography>
-              <Typography>
-                <strong>Designation:</strong> {participant.designation}
-              </Typography>
-              <Typography>
-                <strong>Signature:</strong>
-              </Typography>
-              <ImageViewer
-                src={participant.signature}
-                alt={`${participant.name} Signature`}
-              />
-            </div>
-          ))}
+        <DialogTitle sx={{ backgroundColor: "#29346B", color: "white", textAlign: "center" }}>
+          Safety Training Details
+        </DialogTitle>
+        <DialogContent sx={{ padding: "24px" }}>
+          {selectedTraining && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                    Basic Information
+                  </Typography>
+                  <Typography sx={{ mb: 1 }}>
+                    <strong>Site Name:</strong> {selectedTraining.site_name || "N/A"}
+                  </Typography>
+                  <Typography sx={{ mb: 1 }}>
+                    <strong>Location ID:</strong> {selectedTraining.location || "N/A"}
+                  </Typography>
+                  <Typography sx={{ mb: 1 }}>
+                    <strong>Training Date:</strong> {selectedTraining.date || "N/A"}
+                  </Typography>
+                  <Typography sx={{ mb: 1 }}>
+                    <strong>Training Topic:</strong> {selectedTraining.training_topic || "N/A"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                    Faculty Information
+                  </Typography>
+                  <Typography sx={{ mb: 1 }}>
+                    <strong>Faculty Name:</strong> {selectedTraining.faculty_name || "Not Assigned"}
+                  </Typography>
+                  <Typography sx={{ mb: 1 }}>
+                    <strong>Faculty Signature:</strong>
+                  </Typography>
+                  {selectedTraining.faculty_signature ? (
+                    <Box sx={{ border: '1px solid #ddd', borderRadius: '4px', p: 1, display: 'inline-block' }}>
+                      <ImageViewer
+                        src={`${import.meta.env.VITE_API_KEY}${selectedTraining.faculty_signature}`}
+                        alt="Faculty Signature"
+                        width={150}
+                        height={50}
+                      />
+                    </Box>
+                  ) : (
+                    <Typography sx={{ color: '#666', fontStyle: 'italic' }}>
+                      No signature available
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+              
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                  Additional Details
+                </Typography>
+                <Typography sx={{ mb: 1 }}>
+                  <strong>Remarks:</strong> {selectedTraining.remarks || "No remarks"}
+                </Typography>
+                <Typography sx={{ mb: 1 }}>
+                  <strong>Created At:</strong> {new Date(selectedTraining.created_at).toLocaleString() || "N/A"}
+                </Typography>
+                <Typography sx={{ mb: 1 }}>
+                  <strong>Training ID:</strong> {selectedTraining.id || "N/A"}
+                </Typography>
+              </Box>
+
+              <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #eee' }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                  Attendance File
+                </Typography>
+                {selectedTraining.file_upload ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Typography>
+                      <strong>File:</strong> {selectedTraining.file_upload.split('/').pop()}
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={() => handleDownloadAttendance(
+                        selectedTraining.file_upload, 
+                        selectedTraining.site_name, 
+                        selectedTraining.date
+                      )}
+                      startIcon={<Download />}
+                      size="small"
+                    >
+                      Download
+                    </Button>
+                  </Box>
+                ) : (
+                  <Typography sx={{ color: '#666', fontStyle: 'italic' }}>
+                    No attendance file available
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          )}
         </DialogContent>
       </Dialog>
       <TrainingAttendanceDialog
