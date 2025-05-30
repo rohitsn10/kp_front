@@ -223,7 +223,27 @@ const handleRevalidateReceive = (permitId) => {
     if (!items) return "None";
     return items.split(",").map((item) => item.trim()).join(", ");
   };
+const PDFDownloader = ({ src, fileName = "signature.pdf" }) => {
+  const handleDownload = () => {
+    const fullUrl = `${import.meta.env.VITE_API_KEY}${src}`;
+    window.open(fullUrl, '_blank');
+  };
 
+  return (
+    <Button
+      variant="outlined"
+      size="small"
+      onClick={handleDownload}
+      style={{
+        textTransform: 'none',
+        color: '#29346B',
+        borderColor: '#29346B'
+      }}
+    >
+      Download PDF
+    </Button>
+  );
+};
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[90%] mx-auto my-8 rounded-md pt-5">
       <h2 className="text-3xl text-[#29346B] font-semibold text-center">
@@ -565,19 +585,17 @@ const handleRevalidateReceive = (permitId) => {
                     {selectedPermit.issuer_done ? "Completed" : "Pending"}
                   </Typography>
                 </Grid>
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" fontWeight="bold">Issuer Signature:</Typography>
-                  {selectedPermit.issuer_sign ? (
-                    <ImageViewer 
-                      src={selectedPermit.issuer_sign} 
-                      alt="Issuer Signature" 
-                      width={150} 
-                      height={50} 
-                    />
-                  ) : (
-                    <Typography variant="body2">Not available</Typography>
-                  )}
-                </Grid>
+<Grid item xs={12}>
+  <Typography variant="subtitle2" fontWeight="bold">Issuer Signature:</Typography>
+  {selectedPermit.issuer_sign ? (
+    <PDFDownloader 
+      src={selectedPermit.issuer_sign} 
+      fileName="issuer_signature.pdf"
+    />
+  ) : (
+    <Typography variant="body2">Not available</Typography>
+  )}
+</Grid>
                 
                 <Grid item xs={6}>
                   <Typography variant="subtitle2" fontWeight="bold">Approver Status:</Typography>

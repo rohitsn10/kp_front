@@ -20,7 +20,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import BoomLiftInspectionDialog from "../../../components/pages/hse/boom-lift/CreateBoomLift";
 import { useGetBoomLiftInspectionQuery } from "../../../api/hse/boomLift/boomLiftApi.js";
 import { useParams } from "react-router-dom";
-import ImageViewer from "../../../utils/signatureViewer";
+// import ImageViewer from "../../../utils/signatureViewer";
 // import ImageViewer from "../../../components/common/ImageViewer"; // Import the ImageViewer component
 
 function BoomLiftInspection() {
@@ -39,7 +39,63 @@ function BoomLiftInspection() {
     parseInt(locationId), 
     { skip: skipQuery }
   );
+  const PDFDownloader = ({ src, fileName = "signature.pdf" }) => {
+  const [downloadError, setDownloadError] = useState(false);
+
+  // Check if src is valid
+  const isValidSrc = src && typeof src === 'string' && src.trim() !== '';
   
+  const handleDownload = () => {
+    if (!isValidSrc) {
+      setDownloadError(true);
+      return;
+    }
+    
+    try {
+      // Use the src directly since it already includes the base URL
+      window.open(src, '_blank');
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      setDownloadError(true);
+    }
+  };
+
+  if (!isValidSrc || downloadError) {
+    return (
+      <div 
+        style={{ 
+          padding: '8px 12px',
+          border: '1px dashed #ccc',
+          borderRadius: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#999',
+          fontSize: '12px',
+          textAlign: 'center',
+          backgroundColor: '#f9f9f9'
+        }}
+      >
+        No PDF available
+      </div>
+    );
+  }
+
+  return (
+    <Button
+      variant="outlined"
+      size="small"
+      onClick={handleDownload}
+      style={{
+        textTransform: 'none',
+        color: '#29346B',
+        borderColor: '#29346B'
+      }}
+    >
+      📄 Download PDF
+    </Button>
+  );
+};
   // Debug logs to help identify API call issues
   useEffect(() => {
     console.log("Location ID:", locationId);
@@ -307,17 +363,15 @@ function BoomLiftInspection() {
               <p className="text-sm text-gray-700">
                 <span className="font-bold">Inspected By:</span> {selectedInspection.InspectedBy}
               </p>
-              {selectedInspection.InspectedSignature && (
-                <div className="mt-3">
-                  <p className="text-sm font-bold text-gray-700 mb-1">Signature:</p>
-                  <ImageViewer 
-                    src={`${import.meta.env.VITE_API_KEY}${selectedInspection.InspectedSignature}`}
-                    alt="Inspector Signature" 
-                    width={150} 
-                    height={50} 
-                  />
-                </div>
-              )}
+{selectedInspection.InspectedSignature && (
+  <div className="mt-3">
+    <p className="text-sm font-bold text-gray-700 mb-1">Signature:</p>
+    <PDFDownloader 
+      src={`${import.meta.env.VITE_API_KEY}${selectedInspection.InspectedSignature}`}
+      fileName="inspector_signature.pdf"
+    />
+  </div>
+)}
             </div>
           ) : (
             <p className="text-center text-gray-500">No inspection details available</p>

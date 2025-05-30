@@ -28,7 +28,64 @@ function CraneHydraInspection() {
   const [openDetails, setOpenDetails] = useState(false);
   const [openChecklist, setOpenChecklist] = useState(false);
   const [selectedInspection, setSelectedInspection] = useState(null);
+const PDFDownloader = ({ src, fileName = "signature.pdf" }) => {
+  const [downloadError, setDownloadError] = useState(false);
 
+  // Check if src is valid
+  const isValidSrc = src && typeof src === 'string' && src.trim() !== '';
+  
+  const handleDownload = () => {
+    if (!isValidSrc) {
+      setDownloadError(true);
+      return;
+    }
+    
+    try {
+      // If src already includes the base URL, use it directly, otherwise prepend the API base
+      const downloadUrl = src.startsWith('http') ? src : `${import.meta.env.VITE_API_KEY}${src}`;
+      window.open(downloadUrl, '_blank');
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      setDownloadError(true);
+    }
+  };
+
+  if (!isValidSrc || downloadError) {
+    return (
+      <div 
+        style={{ 
+          padding: '8px 12px',
+          border: '1px dashed #ccc',
+          borderRadius: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#999',
+          fontSize: '12px',
+          textAlign: 'center',
+          backgroundColor: '#f9f9f9'
+        }}
+      >
+        No PDF available
+      </div>
+    );
+  }
+
+  return (
+    <Button
+      variant="outlined"
+      size="small"
+      onClick={handleDownload}
+      style={{
+        textTransform: 'none',
+        color: '#29346B',
+        borderColor: '#29346B'
+      }}
+    >
+      📄 Download PDF
+    </Button>
+  );
+};
   // const { data } = useGetCraneHydraInspectionQuery(locationId ? parseInt(locationId) : undefined);
   const [openCreateDialog, setOpenDialog] = useState(false);
   const skipQuery = !locationId || isNaN(parseInt(locationId));
@@ -190,24 +247,43 @@ function CraneHydraInspection() {
         </div>
 
         <DialogContent className="p-6 space-y-4 bg-gray-50">
-          {selectedInspection ? (
-            <div className="p-4 border rounded-lg shadow-sm">
-              <p className="text-sm text-gray-700">
-                <span className="font-bold">Remarks:</span>{" "}
-                {selectedInspection?.all_valid_document_remarks || ""}
-                {selectedInspection.Remarks}
-              </p>
-              <p className="text-sm text-gray-600">
-                <span className="font-bold">Inspected By:</span>{" "}
-                {selectedInspection?.user || ""}
-                {selectedInspection.InspectedBy}
-              </p>
-            </div>
-          ) : (
-            <p className="text-center text-gray-500">
-              No inspection details available
-            </p>
-          )}
+<DialogContent className="p-6 space-y-4 bg-gray-50">
+  {selectedInspection ? (
+    <div className="p-4 border rounded-lg shadow-sm">
+      <p className="text-sm text-gray-700 mb-2">
+        <span className="font-bold">Equipment Name:</span> {selectedInspection.equipment_name || "-"}
+      </p>
+      <p className="text-sm text-gray-700 mb-2">
+        <span className="font-bold">Identification Number:</span> {selectedInspection.identification_number || "-"}
+      </p>
+      <p className="text-sm text-gray-700 mb-2">
+        <span className="font-bold">Make/Model:</span> {selectedInspection.make_model || "-"}
+      </p>
+      <p className="text-sm text-gray-700 mb-2">
+        <span className="font-bold">Inspection Date:</span> {selectedInspection.inspection_date || "-"}
+      </p>
+      <p className="text-sm text-gray-700 mb-2">
+        <span className="font-bold">Site Name:</span> {selectedInspection.site_name || "-"}
+      </p>
+      <p className="text-sm text-gray-600 mb-2">
+        <span className="font-bold">Inspected By:</span> {selectedInspection.inspected_name || "-"}
+      </p>
+      {selectedInspection.inspected_sign && (
+        <div className="mt-3">
+          <p className="text-sm font-bold text-gray-700 mb-2">Signature:</p>
+          <PDFDownloader 
+            src={selectedInspection.inspected_sign}
+            fileName="inspector_signature.pdf"
+          />
+        </div>
+      )}
+    </div>
+  ) : (
+    <p className="text-center text-gray-500">
+      No inspection details available
+    </p>
+  )}
+</DialogContent>
         </DialogContent>
       </Dialog>
 

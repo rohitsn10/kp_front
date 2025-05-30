@@ -8,7 +8,11 @@ import {
   TextField,
   MenuItem,
   CircularProgress,
+  Chip,
+  Box,
+  IconButton,
 } from "@mui/material";
+import { Add as AddIcon, Delete as DeleteIcon, CloudUpload as UploadIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { useCreateLandBankMasterMutation } from "../../../api/users/landbankApi";
 import { useGetLandCategoriesQuery } from "../../../api/users/categoryApi";
@@ -45,6 +49,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
     tcr: "",
     advocate_name: "",
     total_land_area: "",
+    keypoints: [], // New field for keypoints
     // File fields
     land_location_files: [],
     land_survey_number_files: [],
@@ -55,6 +60,8 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
     land_lease_deed_files: [],
     land_transmission_line_files: [],
   });
+
+  const [currentKeypoint, setCurrentKeypoint] = useState("");
 
   useEffect(() => {
     setFormData({
@@ -85,6 +92,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
       tcr: "",
       advocate_name: "",
       total_land_area: "",
+      keypoints: [],
       land_location_files: [],
       land_survey_number_files: [],
       land_key_plan_files: [],
@@ -94,6 +102,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
       land_lease_deed_files: [],
       land_transmission_line_files: [],
     });
+    setCurrentKeypoint("");
   }, [activeItem]);
 
   const inputStyles = {
@@ -101,18 +110,18 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
       borderRadius: "6px",
       transition: "border 0.2s ease-in-out",
       "&:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on hover
+        borderColor: "#FACC15",
         borderBottom: "4px solid #FACC15",
       },
       "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on focus
+        borderColor: "#FACC15",
         borderWidth: "2px",
         borderBottom: "4px solid #FACC15",
       },
     },
     "& .MuiOutlinedInput-notchedOutline": {
-      border: "1px solid #FACC15", // Default border
-      borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
+      border: "1px solid #FACC15",
+      borderBottom: "4px solid #FACC15",
     },
   };
 
@@ -122,6 +131,31 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
 
   const handleFileChange = (e, field) => {
     setFormData({ ...formData, [field]: Array.from(e.target.files) });
+  };
+
+  // Keypoints handlers
+  const addKeypoint = () => {
+    if (currentKeypoint.trim() && !formData.keypoints.includes(currentKeypoint.trim())) {
+      setFormData({
+        ...formData,
+        keypoints: [...formData.keypoints, currentKeypoint.trim()]
+      });
+      setCurrentKeypoint("");
+    }
+  };
+
+  const removeKeypoint = (indexToRemove) => {
+    setFormData({
+      ...formData,
+      keypoints: formData.keypoints.filter((_, index) => index !== indexToRemove)
+    });
+  };
+
+  const handleKeypointKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addKeypoint();
+    }
   };
 
   const handleSubmit = async () => {
@@ -144,7 +178,10 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
 
     const formDataToSend = new FormData();
     Object.keys(formData).forEach((key) => {
-      if (Array.isArray(formData[key])) {
+      if (key === 'keypoints') {
+        // Send keypoints as JSON string array
+        formDataToSend.append(key, JSON.stringify(formData[key]));
+      } else if (Array.isArray(formData[key])) {
         formData[key].forEach((file) => formDataToSend.append(key, file));
       } else {
         formDataToSend.append(key, formData[key]);
@@ -160,22 +197,94 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
     }
   };
 
-  return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-      <h2 className="text-3xl mx-auto my-5 font-semibold text-[#29346B]">Create Land Bank</h2>
+  const FileUploadComponent = ({ field, label, files, onChange }) => (
+    <div className="col-span-full sm:col-span-1 my-4">
+      <label className="block mb-3 text-[#29346B] text-base sm:text-lg font-semibold">
+        {label} <span className="text-red-600">*</span>
+      </label>
+      <div className="relative">
+        <input
+          type="file"
+          id={field.name}
+          className="hidden"
+          multiple
+          onChange={(e) => onChange(e, field.name)}
+        />
+        <label
+          htmlFor={field.name}
+          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-yellow-300 rounded-lg cursor-pointer bg-yellow-50 hover:bg-yellow-100 transition-colors duration-200"
+        >
+          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+            <UploadIcon className="w-8 h-8 mb-2 text-yellow-500" />
+            <p className="mb-2 text-sm text-gray-600 text-center px-2">
+              <span className="font-semibold">Click to upload</span> or drag and drop
+            </p>
+            <p className="text-xs text-gray-500">Multiple files allowed</p>
+          </div>
+        </label>
+      </div>
+      {files.length > 0 && (
+        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+          <p className="text-sm font-medium text-gray-700 mb-2">
+            {files.length} file(s) selected:
+          </p>
+          <div className="space-y-1">
+            {files.slice(0, 3).map((file, index) => (
+              <p key={index} className="text-xs text-gray-600 truncate">
+                • {file.name}
+              </p>
+            ))}
+            {files.length > 3 && (
+              <p className="text-xs text-gray-500">
+                ...and {files.length - 3} more files
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
-      <DialogContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+  return (
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      fullWidth 
+      maxWidth="lg"
+      PaperProps={{
+        sx: { 
+          margin: { xs: 1, sm: 2 },
+          width: { xs: 'calc(100% - 16px)', sm: 'auto' },
+          maxHeight: { xs: 'calc(100% - 16px)', sm: 'auto' }
+        }
+      }}
+    >
+      <div className="px-4 sm:px-6">
+        <h2 className="text-2xl sm:text-3xl text-center my-4 sm:my-5 font-semibold text-[#29346B]">
+          Create Land Bank
+        </h2>
+      </div>
+
+      <DialogContent className="px-4 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-2">
           {/* Basic Information */}
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Land Bank Name <span className="text-red-600">*</span>
             </label>
-            <TextField name="land_name" value={formData.land_name} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="land_name" 
+              value={formData.land_name} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Land Category <span className="text-red-600">*</span>
             </label>
             <TextField
@@ -186,6 +295,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
               fullWidth
               margin="normal"
               sx={inputStyles}
+              size="small"
             >
               {isLoadingCategory ? (
                 <MenuItem disabled><CircularProgress size={24} /></MenuItem>
@@ -201,133 +311,273 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
 
           {/* Block Numbers */}
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Old Block Number
             </label>
-            <TextField name="old_block_number" value={formData.old_block_number} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="old_block_number" 
+              value={formData.old_block_number} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               New Block Number
             </label>
-            <TextField name="new_block_number" value={formData.new_block_number} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="new_block_number" 
+              value={formData.new_block_number} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           {/* Deed Information */}
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Sale Deed Date
             </label>
-            <TextField type="date" name="sale_deed_date" value={formData.sale_deed_date} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              type="date" 
+              name="sale_deed_date" 
+              value={formData.sale_deed_date} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Lease Deed Number
             </label>
-            <TextField name="lease_deed_number" value={formData.lease_deed_number} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="lease_deed_number" 
+              value={formData.lease_deed_number} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           {/* Location Information */}
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Survey Number <span className="text-red-600">*</span>
             </label>
-            <TextField name="survey_number" value={formData.survey_number} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="survey_number" 
+              value={formData.survey_number} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Village Name <span className="text-red-600">*</span>
             </label>
-            <TextField name="village_name" value={formData.village_name} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="village_name" 
+              value={formData.village_name} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               District Name <span className="text-red-600">*</span>
             </label>
-            <TextField name="district_name" value={formData.district_name} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="district_name" 
+              value={formData.district_name} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Taluka/Tahshil Name <span className="text-red-600">*</span>
             </label>
-            <TextField name="taluka_tahshil_name" value={formData.taluka_tahshil_name} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="taluka_tahshil_name" 
+              value={formData.taluka_tahshil_name} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           {/* Land Details */}
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Proposed GSS Number
             </label>
-            <TextField name="propose_gss_number" value={formData.propose_gss_number} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="propose_gss_number" 
+              value={formData.propose_gss_number} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Land Coordinates
             </label>
-            <TextField name="land_co_ordinates" value={formData.land_co_ordinates} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="land_co_ordinates" 
+              value={formData.land_co_ordinates} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           {/* Area Information */}
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Area (Meters)
             </label>
-            <TextField type="number" name="area_meters" value={formData.area_meters} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              type="number" 
+              name="area_meters" 
+              value={formData.area_meters} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Area (Acres)
             </label>
-            <TextField type="number" name="area_acres" value={formData.area_acres} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              type="number" 
+              name="area_acres" 
+              value={formData.area_acres} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           {/* Additional Information */}
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Industrial Jantri
             </label>
-            <TextField name="industrial_jantri" value={formData.industrial_jantri} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="industrial_jantri" 
+              value={formData.industrial_jantri} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Jantri Value
             </label>
-            <TextField type="number" name="jantri_value" value={formData.jantri_value} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              type="number" 
+              name="jantri_value" 
+              value={formData.jantri_value} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           {/* Seller/Buyer Information */}
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Seller Name
             </label>
-            <TextField name="seller_name" value={formData.seller_name} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="seller_name" 
+              value={formData.seller_name} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Buyer Name
             </label>
-            <TextField name="buyer_name" value={formData.buyer_name} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="buyer_name" 
+              value={formData.buyer_name} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           {/* Status and Additional Fields */}
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Land Status
             </label>
-            <TextField name="land_status" value={formData.land_status} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="land_status" 
+              value={formData.land_status} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Mortgaged
             </label>
             <TextField
@@ -338,6 +588,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
               fullWidth
               margin="normal"
               sx={inputStyles}
+              size="small"
             >
               <MenuItem value="yes">Yes</MenuItem>
               <MenuItem value="no">No</MenuItem>
@@ -346,51 +597,148 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
 
           {/* Additional Details */}
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Actual Bucket
             </label>
-            <TextField name="actual_bucket" value={formData.actual_bucket} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="actual_bucket" 
+              value={formData.actual_bucket} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Index Number
             </label>
-            <TextField name="index_number" value={formData.index_number} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="index_number" 
+              value={formData.index_number} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-  <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
-    TCR
-  </label>
-  <select
-    name="tcr"
-    value={formData.tcr}
-    onChange={handleChange}
-    className="w-full px-4 py-2 border rounded"
-  >
-    <option value="True">True</option>
-    <option value="False">False</option>
-  </select>
-</div>
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
+              TCR
+            </label>
+            <TextField
+              name="tcr"
+              select
+              value={formData.tcr}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              sx={inputStyles}
+              size="small"
+            >
+              <MenuItem value="True">True</MenuItem>
+              <MenuItem value="False">False</MenuItem>
+            </TextField>
+          </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Advocate Name
             </label>
-            <TextField name="advocate_name" value={formData.advocate_name} onChange={handleChange}
-            fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="advocate_name" 
+              value={formData.advocate_name} 
+              onChange={handleChange}
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
           <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Total Land Area
             </label>
-            <TextField name="total_land_area" type="number" value={formData.total_land_area} onChange={handleChange} fullWidth margin="normal" sx={inputStyles} />
+            <TextField 
+              name="total_land_area" 
+              type="number" 
+              value={formData.total_land_area} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
           </div>
 
-          <div className="col-span-2">
-            <label className="block mt-4 mb-1 text-[#29346B] text-lg font-semibold">
+          {/* Keypoints Section */}
+          <div className="col-span-full">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
+              Key Points
+            </label>
+            <div className="flex flex-col sm:flex-row gap-2 mt-2">
+              <TextField
+                value={currentKeypoint}
+                onChange={(e) => setCurrentKeypoint(e.target.value)}
+                onKeyPress={handleKeypointKeyPress}
+                placeholder="Enter a key point"
+                fullWidth
+                sx={inputStyles}
+                size="small"
+              />
+              <Button
+                onClick={addKeypoint}
+                variant="contained"
+                startIcon={<AddIcon />}
+                disabled={!currentKeypoint.trim()}
+                sx={{
+                  backgroundColor: '#FACC15',
+                  color: '#29346B',
+                  minWidth: { xs: '100%', sm: 'auto' },
+                  '&:hover': {
+                    backgroundColor: '#E6A015',
+                  },
+                }}
+              >
+                Add
+              </Button>
+            </div>
+            
+            {/* Display added keypoints */}
+            {formData.keypoints.length > 0 && (
+              <Box className="mt-3 p-3 border border-yellow-200 rounded-lg bg-yellow-50">
+                <p className="text-sm font-medium text-[#29346B] mb-2">
+                  Added Key Points ({formData.keypoints.length}):
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {formData.keypoints.map((point, index) => (
+                    <Chip
+                      key={index}
+                      label={point}
+                      onDelete={() => removeKeypoint(index)}
+                      deleteIcon={<DeleteIcon />}
+                      variant="outlined"
+                      sx={{
+                        borderColor: '#FACC15',
+                        color: '#29346B',
+                        '& .MuiChip-deleteIcon': {
+                          color: '#29346B',
+                        },
+                      }}
+                    />
+                  ))}
+                </div>
+              </Box>
+            )}
+          </div>
+
+          <div className="col-span-full">
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Remarks
             </label>
             <TextField
@@ -406,8 +754,10 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
           </div>
 
           {/* Required File Uploads */}
-          <div className="col-span-2">
-            <h3 className="text-xl font-semibold text-[#29346B] mt-6 mb-4">Required Documents</h3>
+          <div className="col-span-full">
+            <h3 className="text-lg sm:text-xl font-semibold text-[#29346B] mt-6 mb-4">
+              Required Documents
+            </h3>
           </div>
 
           {[
@@ -420,34 +770,26 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
             { name: "land_lease_deed_files", label: "Lease Deed Files" },
             { name: "land_transmission_line_files", label: "Transmission Line Files" }
           ].map((file) => (
-            <div className="col-span-2 my-4" key={file.name}>
-              <label className="block mb-3 text-[#29346B] text-lg font-semibold">
-                {file.label} <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="file"
-                className="w-full cursor-pointer border rounded-md border-yellow-200 border-b-2 border-b-yellow-400 outline-none file:bg-yellow-300 file:border-none file:p-2 file:rounded-md file:text-[#29346B] file:font-semibold file:text-lg bg-white-500"
-                multiple
-                onChange={(e) => handleFileChange(e, file.name)}
-              />
-              {formData[file.name].length > 0 && (
-                <div className="mt-2 text-sm text-gray-600">
-                  {formData[file.name].length} file(s) selected
-                </div>
-              )}
-            </div>
+            <FileUploadComponent
+              key={file.name}
+              field={file}
+              label={file.label}
+              files={formData[file.name]}
+              onChange={handleFileChange}
+            />
           ))}
         </div>
       </DialogContent>
 
-      <DialogActions className="p-4">
+      <DialogActions className="p-4 flex-col sm:flex-row gap-2">
         <Button
           onClick={handleClose}
           variant="outlined"
-          className="mr-2"
+          fullWidth
           sx={{
             borderColor: '#FACC15',
             color: '#29346B',
+            order: { xs: 2, sm: 1 },
             '&:hover': {
               borderColor: '#E6A015',
             },
@@ -459,9 +801,11 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
           onClick={handleSubmit}
           variant="contained"
           disabled={isLoading}
+          fullWidth
           sx={{
             backgroundColor: '#FACC15',
             color: '#29346B',
+            order: { xs: 1, sm: 2 },
             '&:hover': {
               backgroundColor: '#E6A015',
             },

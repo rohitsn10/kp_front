@@ -21,80 +21,62 @@ import TrailerInspectionDialog from "../../../components/pages/hse/trailer-inspe
 import { useGetTrailerInspectionQuery } from "../../../api/hse/trailerInspection/trailerInspectionApi";
 import { useParams } from "react-router-dom";
 
-const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
-  const [open, setOpen] = useState(false);
-  const [imageError, setImageError] = useState(false);
+const PDFDownloader = ({ src, fileName = "signature.pdf" }) => {
+  const [downloadError, setDownloadError] = useState(false);
 
   // Check if src is valid
   const isValidSrc = src && typeof src === 'string' && src.trim() !== '';
   
-  // Handle image loading error
-  const handleImageError = () => {
-    console.error("Error loading image:", src);
-    setImageError(true);
+  const handleDownload = () => {
+    if (!isValidSrc) {
+      setDownloadError(true);
+      return;
+    }
+    
+    try {
+      // If src already includes the base URL, use it directly, otherwise prepend the API base
+      const downloadUrl = src.startsWith('http') ? src : `${import.meta.env.VITE_API_KEY}${src}`;
+      window.open(downloadUrl, '_blank');
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      setDownloadError(true);
+    }
   };
 
-  if (!isValidSrc || imageError) {
+  if (!isValidSrc || downloadError) {
     return (
       <div 
         style={{ 
-          width: `${width}px`, 
-          height: `${height}px`,
+          padding: '8px 12px',
           border: '1px dashed #ccc',
+          borderRadius: '4px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: '#999',
-          fontSize: '10px',
-          textAlign: 'center'
+          fontSize: '12px',
+          textAlign: 'center',
+          backgroundColor: '#f9f9f9'
         }}
       >
-        No image available
+        No PDF available
       </div>
     );
   }
 
   return (
-    <>
-      <img 
-        src={src} 
-        alt={alt || "Image"} 
-        onClick={() => setOpen(true)}
-        onError={handleImageError}
-        style={{ 
-          width: `${width}px`, 
-          height: `${height}px`, 
-          cursor: 'pointer',
-          objectFit: 'contain',
-          border: '1px solid #eee'
-        }} 
-      />
-      <Dialog 
-        open={open} 
-        onClose={() => setOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle className="flex justify-between items-center">
-          <span>{alt || "Image Viewer"}</span>
-          <IconButton onClick={() => setOpen(false)} size="small">
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <img 
-            src={src} 
-            alt={alt || "Image"} 
-            onError={handleImageError}
-            style={{ 
-              width: '100%', 
-              maxHeight: '500px', 
-              objectFit: 'contain' 
-            }} 
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+    <Button
+      variant="outlined"
+      size="small"
+      onClick={handleDownload}
+      style={{
+        textTransform: 'none',
+        color: '#29346B',
+        borderColor: '#29346B'
+      }}
+    >
+      📄 Download PDF
+    </Button>
   );
 };
 
@@ -641,15 +623,13 @@ function TrailerInspection() {
                 {selectedInspection.inspected_name || "-"}
               </p>
               
-              <div className="mt-4">
-                <p className="text-sm font-bold text-gray-700 mb-2">Signature:</p>
-                <ImageViewer 
-                  src={selectedInspection.inspected_sign} 
-                  alt="Inspector Signature"
-                  width={200}
-                  height={60} 
-                />
-              </div>
+<div className="mt-4">
+  <p className="text-sm font-bold text-gray-700 mb-2">Signature:</p>
+  <PDFDownloader 
+    src={selectedInspection.inspected_sign} 
+    fileName="inspector_signature.pdf"
+  />
+</div>
             </div>
           ) : (
             <p className="text-center text-gray-500">

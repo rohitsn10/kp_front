@@ -205,19 +205,26 @@ export default function CraneHydraInspectionDialog({ open, setOpen,onSuccess }) 
   };
   
   // Signature upload handler
-  const handleSignatureUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setInspectedBySignature(file); // Store the actual file object
-      
-      // If you still need to show a preview:
-      const reader = new FileReader();
-      reader.onload = () => {
-        setSignaturePreview(reader.result); // New state for preview only
-      };
-      reader.readAsDataURL(file);
+const handleSignatureUpload = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    // Check file size (20MB = 20 * 1024 * 1024 bytes)
+    const maxSize = 20 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("File size must be less than 20MB");
+      return;
     }
-  };
+    
+    // Check if it's a PDF
+    if (file.type !== 'application/pdf') {
+      toast.error("Please upload a PDF file only");
+      return;
+    }
+    
+    setInspectedBySignature(file);
+    setSignaturePreview(file.name); // Show filename instead of image preview
+  }
+};  
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
@@ -431,7 +438,7 @@ export default function CraneHydraInspectionDialog({ open, setOpen,onSuccess }) 
         </Grid>
 
         <div className="my-4 border-t border-gray-300 pt-4">
-          <h3 className="text-xl font-bold text-[#29346B] mb-4">Inspection Details</h3>
+          <h3 classNa me="text-xl font-bold text-[#29346B] mb-4">Inspection Details</h3>
           
           {/* Inspection Fields */}
           {renderInspectionField('all_valid_document', 'All valid documents are available - Registration, Insurance, Vehicle Fitness, PUC &  License')}
@@ -503,21 +510,25 @@ export default function CraneHydraInspectionDialog({ open, setOpen,onSuccess }) 
                   sx={{ height: "56px" }}
                 >
                   Upload Signature
-                  <input
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={handleSignatureUpload}
-                  />
+<input
+  type="file"
+  accept=".pdf,application/pdf"
+  hidden
+  onChange={handleSignatureUpload}
+/>
                 </Button>
-                {signaturePreview && (
-                  <Avatar
-                    src={signaturePreview}
-                    alt="Inspector Signature"
-                    variant="rounded"
-                    sx={{ width: 100, height: 56 }}
-                  />
-                )}
+{signaturePreview && (
+  <Box sx={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    padding: '8px 12px', 
+    border: '1px solid #ccc', 
+    borderRadius: '4px',
+    backgroundColor: '#f5f5f5'
+  }}>
+    📄 {signaturePreview}
+  </Box>
+)}
               </Box>
             </Grid>
           </Grid>

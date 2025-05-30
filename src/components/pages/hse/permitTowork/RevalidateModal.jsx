@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -18,55 +18,76 @@ import {
   Grid,
   Chip,
   CircularProgress,
-  Alert
+  Alert,
+  IconButton,
+  Tooltip
 } from "@mui/material";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import DownloadIcon from '@mui/icons-material/Download';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { toast } from "react-toastify";
 
 // Import the other modals
 import ApprovePermitModal from "./ApprovePermitModal";
 import ReceiverPermitModal from "./ReceiverPermitModal";
 import { useGetIssuerPermitQuery, useIssuerApprovePermitMutation } from "../../../../api/hse/permitTowork/permitToworkApi";
+import { AuthContext } from "../../../../context/AuthContext"; // Update path as needed
 
-// Reuse your existing ImageViewer component
-const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
-  const [open, setOpen] = useState(false);
- 
+// PDF Download Component
+const PDFDownloader = ({ src, alt, label = "Download PDF" }) => {
+  const handleDownload = async () => {
+    try {
+      const fullUrl = `${import.meta.env.VITE_API_KEY}${src}`;
+      const response = await fetch(fullUrl);
+      
+      if (!response.ok) {
+        toast.error("Failed to download PDF");
+        return;
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extract filename from src or use a default name
+      const filename = src.split('/').pop() || `${alt.replace(/\s+/g, '_')}.pdf`;
+      link.download = filename;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("PDF downloaded successfully!");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download PDF");
+    }
+  };
+
   return (
-    <>
-      <img
-        src={`${import.meta.env.VITE_API_KEY}${src}`}
-        alt={alt}
-        onClick={() => setOpen(true)}
-        style={{
-          width: `${width}px`,
-          height: `${height}px`,
-          cursor: 'pointer'
+    <Tooltip title={label}>
+      <IconButton 
+        onClick={handleDownload}
+        size="small"
+        sx={{ 
+          color: "#d32f2f",
+          "&:hover": {
+            backgroundColor: "rgba(211, 47, 47, 0.04)"
+          }
         }}
-      />
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="md"
-        fullWidth
       >
-        <DialogContent>
-          <img
-            src={`${import.meta.env.VITE_API_KEY}${src}`}
-            alt={alt}
-            style={{
-              width: '100%',
-              maxHeight: '500px',
-              objectFit: 'contain'
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+        <DownloadIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
   );
 };
 
 const RevalidateModal = ({ open, onClose, permitId }) => {
+  const { user } = useContext(AuthContext);
+  
   // Add state for controlling the nested modals
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [receiverModalOpen, setReceiverModalOpen] = useState(false);
@@ -86,7 +107,7 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
   const [canAddNewPtw, setCanAddNewPtw] = useState(true);
   const [pendingPtwExists, setPendingPtwExists] = useState(false);
   
-  // Form state
+  // Form state - Updated for PDF upload
   const [issuerForm, setIssuerForm] = useState({
     renewal_date: new Date().toISOString().split('T')[0],
     day_number: "1",
@@ -94,8 +115,25 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
     end_time: "17:00",
     issuer_name: "",
     issuer_sign: null,
-    file_name: "No file chosen"
+    pdfFileName: "",
+    pdfFileSize: 0
   });
+
+  // Auto-populate issuer name when modal opens or user context changes
+  useEffect(() => {
+    if (user?.name && open) {
+      setIssuerForm(prev => ({ ...prev, issuer_name: user.name }));
+    }
+  }, [user, open]);
+
+  // Helper function to format file size
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   // Reset modal states when the main modal closes
   useEffect(() => {
@@ -241,20 +279,48 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
     setIssuerForm(prev => ({ ...prev, [name]: value }));
   };
 
+  // Handle PDF upload with validation
   const handleIssuerFileChange = (e) => {
-    if (e.target.files.length > 0) {
+    const file = e.target.files[0];
+    if (file) {
+      // Check if it's a PDF file
+      if (file.type !== 'application/pdf') {
+        toast.error("Please upload only PDF files!");
+        return;
+      }
+      
+      // Check file size (20MB = 20 * 1024 * 1024 bytes)
+      const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+      if (file.size > maxSize) {
+        toast.error(`File size too large! Please upload a PDF smaller than 20MB. Current size: ${formatFileSize(file.size)}`);
+        return;
+      }
+      
+      // If validation passes, set the file
       setIssuerForm(prev => ({
         ...prev,
-        issuer_sign: e.target.files[0],
-        file_name: e.target.files[0].name
+        issuer_sign: file,
+        pdfFileName: file.name,
+        pdfFileSize: file.size
       }));
+      toast.success(`PDF uploaded successfully! Size: ${formatFileSize(file.size)}`);
     }
+  };
+
+  // Remove uploaded PDF
+  const handleRemovePdf = () => {
+    setIssuerForm(prev => ({
+      ...prev,
+      issuer_sign: null,
+      pdfFileName: "",
+      pdfFileSize: 0
+    }));
   };
 
   // Submit a new renewal
   const handleSubmitIssuer = async () => {
     if (!issuerForm.issuer_name || !issuerForm.issuer_sign) {
-      alert("Please fill all required fields");
+      toast.error("Please fill all required fields");
       return;
     }
 
@@ -273,6 +339,7 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
       });
       
       if (response.data && response.data.status) {
+        toast.success("Renewal submitted successfully!");
         // Refresh data
         refetch();
         
@@ -282,9 +349,10 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
           day_number: (nextDayNumber + 1).toString(),
           start_time: "08:00",
           end_time: "17:00",
-          issuer_name: "",
+          issuer_name: user?.name || "",
           issuer_sign: null,
-          file_name: "No file chosen"
+          pdfFileName: "",
+          pdfFileSize: 0
         });
         
         // Hide the form
@@ -292,6 +360,7 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
       }
     } catch (error) {
       console.error("Error submitting issuer form:", error);
+      toast.error("Error submitting renewal. Please try again.");
     }
   };
 
@@ -390,16 +459,23 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
                             </TableCell>
                             <TableCell>
                               {day.issuer ? (
-                                <Box>
-                                  <Typography variant="body2">{day.issuer.issuer_name}</Typography>
-                                  {day.issuer.issuer_sign && (
-                                    <ImageViewer 
-                                      src={day.issuer.issuer_sign} 
-                                      alt="Issuer Signature" 
-                                      width={80} 
-                                      height={30} 
-                                    />
-                                  )}
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Box>
+                                    <Typography variant="body2">{day.issuer.issuer_name}</Typography>
+                                    {day.issuer.issuer_sign && (
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                        <PictureAsPdfIcon sx={{ color: "#d32f2f", fontSize: 16 }} />
+                                        <Typography variant="caption" color="text.secondary">
+                                          Signed PDF
+                                        </Typography>
+                                        <PDFDownloader 
+                                          src={day.issuer.issuer_sign} 
+                                          alt="Issuer Signature" 
+                                          label="Download Issuer PDF"
+                                        />
+                                      </Box>
+                                    )}
+                                  </Box>
                                 </Box>
                               ) : (
                                 <Chip 
@@ -412,22 +488,29 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
                             </TableCell>
                             <TableCell>
                               {day.approver ? (
-                                <Box>
-                                  <Typography variant="body2">{day.approver.approver_name}</Typography>
-                                  <Typography 
-                                    variant="caption" 
-                                    color={day.approver.approver_status.toLowerCase() === "approved" ? "success.main" : "error.main"}
-                                  >
-                                    {day.approver.approver_status}
-                                  </Typography>
-                                  {day.approver.approver_sign && (
-                                    <ImageViewer 
-                                      src={day.approver.approver_sign} 
-                                      alt="Approver Signature" 
-                                      width={80} 
-                                      height={30} 
-                                    />
-                                  )}
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Box>
+                                    <Typography variant="body2">{day.approver.approver_name}</Typography>
+                                    <Typography 
+                                      variant="caption" 
+                                      color={day.approver.approver_status.toLowerCase() === "approved" ? "success.main" : "error.main"}
+                                    >
+                                      {day.approver.approver_status}
+                                    </Typography>
+                                    {day.approver.approver_sign && (
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                        <PictureAsPdfIcon sx={{ color: "#d32f2f", fontSize: 16 }} />
+                                        <Typography variant="caption" color="text.secondary">
+                                          Signed PDF
+                                        </Typography>
+                                        <PDFDownloader 
+                                          src={day.approver.approver_sign} 
+                                          alt="Approver Signature" 
+                                          label="Download Approver PDF"
+                                        />
+                                      </Box>
+                                    )}
+                                  </Box>
                                 </Box>
                               ) : day.issuer ? (
                                 <Chip 
@@ -447,16 +530,23 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
                             </TableCell>
                             <TableCell>
                               {day.receiver ? (
-                                <Box>
-                                  <Typography variant="body2">{day.receiver.receiver_name}</Typography>
-                                  {day.receiver.receiver_sign && (
-                                    <ImageViewer 
-                                      src={day.receiver.receiver_sign} 
-                                      alt="Receiver Signature" 
-                                      width={80} 
-                                      height={30} 
-                                    />
-                                  )}
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Box>
+                                    <Typography variant="body2">{day.receiver.receiver_name}</Typography>
+                                    {day.receiver.receiver_sign && (
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                        <PictureAsPdfIcon sx={{ color: "#d32f2f", fontSize: 16 }} />
+                                        <Typography variant="caption" color="text.secondary">
+                                          Signed PDF
+                                        </Typography>
+                                        <PDFDownloader 
+                                          src={day.receiver.receiver_sign} 
+                                          alt="Receiver Signature" 
+                                          label="Download Receiver PDF"
+                                        />
+                                      </Box>
+                                    )}
+                                  </Box>
                                 </Box>
                               ) : day.approver && day.approver.approver_status.toLowerCase() === "approved" ? (
                                 <Chip 
@@ -488,7 +578,7 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
                               )}
                             </TableCell>
                             <TableCell>
-                              {/* FIX: Button to trigger Approve Modal - fixed condition */}
+                              {/* Button to trigger Approve Modal */}
                               {day.issuer && !day.approver && (
                                 <Button 
                                   size="small" 
@@ -500,7 +590,7 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
                                 </Button>
                               )}
                               
-                              {/* FIX: Button to trigger Receive Modal - fixed condition */}
+                              {/* Button to trigger Receive Modal */}
                               {day.approver && 
                                day.approver.approver_status.toLowerCase() === "approved" && 
                                !day.receiver && (
@@ -567,6 +657,7 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
                           shrink: true,
                         }}
                         margin="normal"
+                        disabled={isLoadingIssue}
                       />
                     </Grid>
                     
@@ -579,6 +670,7 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
                         fullWidth
                         required
                         margin="normal"
+                        disabled={isLoadingIssue}
                       />
                     </Grid>
                     
@@ -595,6 +687,7 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
                           shrink: true,
                         }}
                         margin="normal"
+                        disabled={isLoadingIssue}
                       />
                     </Grid>
                     
@@ -611,6 +704,7 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
                           shrink: true,
                         }}
                         margin="normal"
+                        disabled={isLoadingIssue}
                       />
                     </Grid>
                     
@@ -619,38 +713,95 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
                         label="Issuer Name"
                         name="issuer_name"
                         value={issuerForm.issuer_name}
-                        onChange={handleIssuerFormChange}
                         fullWidth
                         required
                         margin="normal"
+                        disabled={true}
+                        placeholder={user?.name || "Enter issuer name"}
+                        helperText="This field is locked and auto-populated with your logged-in name"
+                        sx={{
+                          '& .MuiInputBase-input.Mui-disabled': {
+                            WebkitTextFillColor: '#000000',
+                            opacity: 1,
+                          },
+                          '& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'rgba(0, 0, 0, 0.23)',
+                          },
+                          '& .MuiInputLabel-root.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.6)',
+                          }
+                        }}
                       />
                     </Grid>
                     
                     <Grid item xs={12}>
                       <Typography variant="subtitle2" gutterBottom>
-                        Issuer Signature (File Upload)*
+                        Signed PDF Document*
                       </Typography>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+                        Upload a PDF document that contains digital signatures. Maximum file size: 20MB
+                      </Typography>
+                      
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                         <Button
                           variant="contained"
                           component="label"
-                          startIcon={<FileUploadIcon />}
+                          startIcon={<PictureAsPdfIcon />}
                           style={{
                             backgroundColor: "#FF8C00",
                             color: "white",
                             textTransform: "none",
+                            height: "48px",
                           }}
+                          disabled={isLoadingIssue}
                         >
-                          Choose File
+                          Upload Signed PDF
                           <input
                             type="file"
-                            accept="image/*"
+                            accept=".pdf,application/pdf"
                             hidden
                             onChange={handleIssuerFileChange}
                             required
                           />
                         </Button>
-                        <Typography variant="body2">{issuerForm.file_name}</Typography>
+                        
+                        {/* Show uploaded PDF info */}
+                        {issuerForm.pdfFileName && (
+                          <Box sx={{ 
+                            display: "flex", 
+                            alignItems: "center", 
+                            gap: 2,
+                            padding: 2,
+                            backgroundColor: "#f5f5f5",
+                            borderRadius: "8px",
+                            border: "1px solid #e0e0e0"
+                          }}>
+                            <PictureAsPdfIcon sx={{ color: "#d32f2f", fontSize: 32 }} />
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="body1" fontWeight="medium">
+                                {issuerForm.pdfFileName}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                Size: {formatFileSize(issuerForm.pdfFileSize)}
+                              </Typography>
+                            </Box>
+                            <Button
+                              size="small"
+                              color="error"
+                              startIcon={<DeleteIcon />}
+                              onClick={handleRemovePdf}
+                              disabled={isLoadingIssue}
+                            >
+                              Remove
+                            </Button>
+                          </Box>
+                        )}
+                        
+                        {!issuerForm.pdfFileName && (
+                          <Typography variant="body2" color="text.secondary">
+                            No PDF document uploaded
+                          </Typography>
+                        )}
                       </Box>
                     </Grid>
                   </Grid>
@@ -659,6 +810,7 @@ const RevalidateModal = ({ open, onClose, permitId }) => {
                     <Button
                       variant="outlined"
                       onClick={() => setShowAddForm(false)}
+                      disabled={isLoadingIssue}
                     >
                       Cancel
                     </Button>

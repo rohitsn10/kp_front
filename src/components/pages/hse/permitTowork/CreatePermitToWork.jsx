@@ -17,11 +17,13 @@ import {
   Typography,
   Box,
   Avatar,
+  Chip,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreatePermitToWorkMutation } from "../../../../api/hse/permitTowork/permitToworkApi";
 import { useParams } from "react-router-dom";
-// import { useCreatePermitToWorkMutation } from "your-rtk-query-file"; // Import path may need adjustment
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function PermitToWorkDialog({ open, setOpen, refetch }) {
   const [createPermitToWork, { isLoading }] = useCreatePermitToWorkMutation();
@@ -47,10 +49,11 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
   const [risk_assessment_number, setRiskAssessmentNumber] = useState("");
   const [fire_protection, setFireProtection] = useState([]);
   const [other_fire_protection, setOtherFireProtection] = useState(""); 
-  // New state for issuer name and signature
+  // Updated state for issuer name and signed PDF
   const [issuer_name, setIssuerName] = useState("");
-  const [issuer_signature, setIssuerSignature] = useState(null);
-  const [signaturePreview, setSignaturePreview] = useState("");
+  const [issuer_signed_pdf, setIssuerSignedPdf] = useState(null);
+  const [pdfFileName, setPdfFileName] = useState("");
+  const [pdfFileSize, setPdfFileSize] = useState(0);
 
   const validateForm = () => {
     const requiredFields = [
@@ -68,7 +71,7 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
       { value: job_preparation.length > 0 ? "ok" : "", label: "Job Preparation" },
       { value: fire_protection.length > 0 ? "ok" : "", label: "Fire Protection" },
       { value: issuer_name, label: "Issuer Name" },
-      { value: issuer_signature ? "ok" : "", label: "Issuer Signature" },
+      { value: issuer_signed_pdf ? "ok" : "", label: "Signed PDF Document" },
     ];
   
     // Check general required fields
@@ -108,18 +111,45 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
     return true;
   };
 
-  // Handle signature upload
-  const handleSignatureUpload = (event) => {
+  // Helper function to format file size
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Handle PDF upload with size validation
+  const handlePdfUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setIssuerSignature(file);
-      // Create a preview URL for the image
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSignaturePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      // Check if it's a PDF file
+      if (file.type !== 'application/pdf') {
+        toast.error("Please upload only PDF files!");
+        return;
+      }
+      
+      // Check file size (20MB = 20 * 1024 * 1024 bytes)
+      const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+      if (file.size > maxSize) {
+        toast.error(`File size too large! Please upload a PDF smaller than 20MB. Current size: ${formatFileSize(file.size)}`);
+        return;
+      }
+      
+      // If validation passes, set the file
+      setIssuerSignedPdf(file);
+      setPdfFileName(file.name);
+      setPdfFileSize(file.size);
+      toast.success(`PDF uploaded successfully! Size: ${formatFileSize(file.size)}`);
     }
+  };
+
+  // Remove uploaded PDF
+  const handleRemovePdf = () => {
+    setIssuerSignedPdf(null);
+    setPdfFileName("");
+    setPdfFileSize(0);
   };
 
   // Permit type options (changed to strings to match API)
@@ -227,9 +257,9 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
       }
     });
     
-    // Append the signature file
-    if (issuer_signature) {
-      formData.append('issuer_sign', issuer_signature);
+    // Append the signed PDF file (changed field name from 'issuer_sign' to 'issuer_signed_pdf')
+    if (issuer_signed_pdf) {
+      formData.append('issuer_signature', issuer_signed_pdf);
     }
   
     try {
@@ -656,7 +686,7 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
           </Typography>
         </div>
         
-        {/* NEW SECTION: Issuer Name and Signature */}
+        {/* UPDATED SECTION: Issuer Name and Signed PDF */}
         <div className="mb-4 mt-6 border-t pt-4">
           <Typography variant="h6" className="text-[#29346B] text-lg font-semibold mb-4">
             Permit Issuer Details
@@ -677,16 +707,21 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
             />
           </div>
           
-          {/* Issuer Signature */}
+          {/* Signed PDF Document */}
           <div className="mb-4">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Issuer Signature<span className="text-red-600"> *</span>
+              Signed PDF Document<span className="text-red-600"> *</span>
             </label>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Typography variant="body2" className="mb-2 text-gray-600">
+              Upload a PDF document that contains digital signatures. Maximum file size: 20MB
+            </Typography>
+            
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <Button
                 variant="outlined"
                 component="label"
                 color="primary"
+                startIcon={<PictureAsPdfIcon />}
                 sx={{ 
                   height: "56px",
                   borderColor: "#FACC15",
@@ -697,24 +732,49 @@ export default function PermitToWorkDialog({ open, setOpen, refetch }) {
                   }
                 }}
               >
-                Upload Signature
+                Upload Signed PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf,application/pdf"
                   hidden
-                  onChange={handleSignatureUpload}
+                  onChange={handlePdfUpload}
                 />
               </Button>
-              {signaturePreview ? (
-                <Avatar
-                  src={signaturePreview}
-                  alt="Issuer Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
-              ) : (
+              
+              {/* Show uploaded PDF info */}
+              {pdfFileName && (
+                <Box sx={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: 2,
+                  padding: 2,
+                  backgroundColor: "#f5f5f5",
+                  borderRadius: "8px",
+                  border: "1px solid #e0e0e0"
+                }}>
+                  <PictureAsPdfIcon sx={{ color: "#d32f2f", fontSize: 32 }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body1" fontWeight="medium">
+                      {pdfFileName}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Size: {formatFileSize(pdfFileSize)}
+                    </Typography>
+                  </Box>
+                  <Button
+                    size="small"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={handleRemovePdf}
+                  >
+                    Remove
+                  </Button>
+                </Box>
+              )}
+              
+              {!pdfFileName && (
                 <Typography variant="body2" color="text.secondary">
-                  No signature uploaded
+                  No PDF document uploaded
                 </Typography>
               )}
             </Box>

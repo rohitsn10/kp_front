@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -15,32 +15,78 @@ import {
   Alert,
 } from "@mui/material";
 import { useApproverApprovePermitMutation } from "../../../../api/hse/permitTowork/permitToworkApi";
-// import { useApproverApprovePermitMutation } from "../path/to/permitToWorkApi"; // Update this path
+import { AuthContext } from "../../../../context/AuthContext"; // Update path as needed
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { toast } from "react-toastify";
 
 const ApprovePermitModal = ({ open, onClose, permitId }) => {
+  const { user } = useContext(AuthContext);
   const [approverName, setApproverName] = useState("");
   const [approverStatus, setApproverStatus] = useState("");
   const [approverSignature, setApproverSignature] = useState(null);
-  const [fileLabel, setFileLabel] = useState("No file chosen");
+  const [pdfFileName, setPdfFileName] = useState("");
+  const [pdfFileSize, setPdfFileSize] = useState(0);
   
   // Use the RTK Query mutation hook
   const [approverApprovePermit, { isLoading, isSuccess, isError, error }] = 
     useApproverApprovePermitMutation();
 
-  // File handling
-  const handleFileChange = (e) => {
-    if (e.target.files.length > 0) {
-      setApproverSignature(e.target.files[0]);
-      setFileLabel(e.target.files[0].name);
+  // Auto-populate approver name when modal opens or user context changes
+  useEffect(() => {
+    if (user?.name && open) {
+      setApproverName(user.name);
     }
+  }, [user, open]);
+
+  // Helper function to format file size
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Handle PDF upload with size validation
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check if it's a PDF file
+      if (file.type !== 'application/pdf') {
+        toast.error("Please upload only PDF files!");
+        return;
+      }
+      
+      // Check file size (20MB = 20 * 1024 * 1024 bytes)
+      const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+      if (file.size > maxSize) {
+        toast.error(`File size too large! Please upload a PDF smaller than 20MB. Current size: ${formatFileSize(file.size)}`);
+        return;
+      }
+      
+      // If validation passes, set the file
+      setApproverSignature(file);
+      setPdfFileName(file.name);
+      setPdfFileSize(file.size);
+      toast.success(`PDF uploaded successfully! Size: ${formatFileSize(file.size)}`);
+    }
+  };
+
+  // Remove uploaded PDF
+  const handleRemovePdf = () => {
+    setApproverSignature(null);
+    setPdfFileName("");
+    setPdfFileSize(0);
   };
 
   // Reset form on close
   const handleClose = () => {
-    setApproverName("");
+    setApproverName(user?.name || ""); // Reset to user's name instead of empty
     setApproverStatus("");
     setApproverSignature(null);
-    setFileLabel("No file chosen");
+    setPdfFileName("");
+    setPdfFileSize(0);
     onClose();
   };
 
@@ -48,7 +94,7 @@ const ApprovePermitModal = ({ open, onClose, permitId }) => {
   const handleSubmit = async () => {
     // Validate form
     if (!approverName || !approverStatus || !approverSignature) {
-      alert("Please fill all required fields");
+      toast.error("Please fill all required fields");
       return;
     }
 
@@ -57,7 +103,7 @@ const ApprovePermitModal = ({ open, onClose, permitId }) => {
       const formData = new FormData();
       formData.append("approver_name", approverName);
       formData.append("approver_status", approverStatus === "approve" ? "approved" : "rejected");
-      formData.append("approver_sign", approverSignature);
+      formData.append("approver_sign", approverSignature); // Keeping the same API field name
       // Adding default current time values since they are required by the backend
     //   const now = new Date().toISOString();
     //   formData.append("start_time", now);
@@ -105,9 +151,22 @@ const ApprovePermitModal = ({ open, onClose, permitId }) => {
             fullWidth
             required
             value={approverName}
-            onChange={(e) => setApproverName(e.target.value)}
             variant="outlined"
-            disabled={isLoading}
+            disabled={true}
+            placeholder={user?.name || "Enter approver name"}
+            helperText="This field is locked and auto-populated with your logged-in name"
+            sx={{
+              '& .MuiInputBase-input.Mui-disabled': {
+                WebkitTextFillColor: '#000000', // Makes text black instead of gray
+                opacity: 1,
+              },
+              '& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'rgba(0, 0, 0, 0.23)', // Normal border color
+              },
+              '& .MuiInputLabel-root.Mui-disabled': {
+                color: 'rgba(0, 0, 0, 0.6)', // Normal label color
+              }
+            }}
           />
           
           <FormControl fullWidth required>
@@ -126,33 +185,74 @@ const ApprovePermitModal = ({ open, onClose, permitId }) => {
           
           <Box>
             <Typography variant="subtitle2" gutterBottom>
-              Approver Signature (File Upload)*
+              Signed PDF Document*
             </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+              Upload a PDF document that contains digital signatures. Maximum file size: 20MB
+            </Typography>
+            
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <Button
                 variant="contained"
                 component="label"
+                startIcon={<PictureAsPdfIcon />}
                 style={{
                   backgroundColor: "#FF8C00",
                   color: "white",
                   textTransform: "none",
+                  height: "48px",
                 }}
                 disabled={isLoading}
               >
-                Choose File
+                Upload Signed PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf,application/pdf"
                   hidden
                   onChange={handleFileChange}
                   required
                 />
               </Button>
-              <Typography variant="body2">{fileLabel}</Typography>
+              
+              {/* Show uploaded PDF info */}
+              {pdfFileName && (
+                <Box sx={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: 2,
+                  padding: 2,
+                  backgroundColor: "#f5f5f5",
+                  borderRadius: "8px",
+                  border: "1px solid #e0e0e0"
+                }}>
+                  <PictureAsPdfIcon sx={{ color: "#d32f2f", fontSize: 32 }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body1" fontWeight="medium">
+                      {pdfFileName}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Size: {formatFileSize(pdfFileSize)}
+                    </Typography>
+                  </Box>
+                  <Button
+                    size="small"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={handleRemovePdf}
+                    disabled={isLoading}
+                  >
+                    Remove
+                  </Button>
+                </Box>
+              )}
+              
+              {!pdfFileName && (
+                <Typography variant="body2" color="text.secondary">
+                  No PDF document uploaded
+                </Typography>
+              )}
             </Box>
           </Box>
-          
-
         </Box>
       </DialogContent>
       
