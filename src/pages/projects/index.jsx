@@ -21,7 +21,10 @@ import { useNavigate } from 'react-router-dom';
 import ProjectWpo from '../../components/pages/projects/ProjectWPO/ProjectWpo';
 import ProjectWpoViewModal from '../../components/pages/projects/ProjectWPO/ProjectWpoView';
 import ProjectDrawingUploadDialog from '../design-documents/DesignUploadModal';
-
+import ProjectRoleAssignmentModal from './project-role-assignment/ProjectRoleAssignmentModal';
+import ProjectRoleViewModal from './project-role-view/ProjectRoleViewModal';
+// import ProjectRoleAssignmentModal from './ProjectRoleAssignmentModal'; // Import the new modal
+// ProjectRoleAssignmentModal
 const ProjectListingTable = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -33,6 +36,15 @@ const ProjectListingTable = () => {
   const { data: projectData, isLoading: ProjectLoading, error: ProjectError, refetch } = useGetMainProjectsQuery()
   const [openWpoViewModal, setOpenWpoView] = useState(false);
   const [openDrawingModal, setOpenDrawingModal] = useState(false);
+  
+  // New state for role assignment modal
+  const [openRoleModal, setOpenRoleModal] = useState(false);
+  const [selectedProjectForRole, setSelectedProjectForRole] = useState(null);
+
+// 2. STATE VARIABLES - Add these to your existing useState declarations
+const [openRoleViewModal, setOpenRoleViewModal] = useState(false);
+const [selectedProjectForRoleView, setSelectedProjectForRoleView] = useState(null);
+
 
   const navigate = useNavigate();
 
@@ -65,6 +77,27 @@ const ProjectListingTable = () => {
     setOpenDrawingModal(false);
     setActiveProject(null);
   };
+
+  // New handler for role assignment modal
+  const handleOpenRoleModal = (project) => {
+    setSelectedProjectForRole(project);
+    setOpenRoleModal(true);
+  };
+
+  const handleCloseRoleModal = () => {
+    setOpenRoleModal(false);
+    setSelectedProjectForRole(null);
+  };
+
+  const handleOpenRoleViewModal = (project) => {
+  setSelectedProjectForRoleView(project);
+  setOpenRoleViewModal(true);
+};
+
+const handleCloseRoleViewModal = () => {
+  setOpenRoleViewModal(false);
+  setSelectedProjectForRoleView(null);
+};
 
   // Filter projects based on search
   const filteredProjects = projectData?.data?.filter(project =>
@@ -159,7 +192,7 @@ const ProjectListingTable = () => {
               component={Paper} 
               style={{ 
                 borderRadius: '8px',
-                minWidth: '1200px' // Ensure minimum width for wide table
+                minWidth: '1300px' // Increased minimum width for the new column
               }}
             >
               <Table stickyHeader>
@@ -330,6 +363,29 @@ const ProjectListingTable = () => {
                     >
                       Manage Drawings
                     </TableCell>
+                    {/* New column for Role Assignment */}
+                    <TableCell 
+                      align="center" 
+                      width={130}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Assign Roles
+                    </TableCell>
+<TableCell 
+  align="center" 
+  width={130}
+  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+  sx={{
+    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+  }}
+>
+  View Assigned Roles
+</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -576,6 +632,46 @@ const ProjectListingTable = () => {
                           MDL
                         </Button>
                       </TableCell>
+
+                      {/* New Role Assignment Button */}
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#29346B',
+                            color: 'white',
+                            minWidth: { xs: '80px', sm: '110px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' },
+                            '&:hover': {
+                              backgroundColor: '#1E2A5A'
+                            }
+                          }}
+                          onClick={() => handleOpenRoleModal(project)}
+                        >
+                          Assign Roles
+                        </Button>
+                      </TableCell>
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+  <Button
+    variant="contained"
+    size="small"
+    sx={{
+      backgroundColor: '#27d865',
+      color: 'white',
+      minWidth: { xs: '80px', sm: '120px' },
+      fontSize: { xs: '10px', sm: '12px' },
+      padding: { xs: '4px 8px', sm: '6px 12px' },
+      '&:hover': {
+        backgroundColor: '#22c55e'
+      }
+    }}
+    onClick={() => handleOpenRoleViewModal(project)}
+  >
+    View Roles
+  </Button>
+</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -631,6 +727,20 @@ const ProjectListingTable = () => {
         handleDrawingClose={handleCloseDrawingModal} 
         projectId={activeProject}
       />
+      
+      {/* Role Assignment Modal */}
+      <ProjectRoleAssignmentModal
+        open={openRoleModal}
+        handleClose={handleCloseRoleModal}
+        projectId={selectedProjectForRole?.id}
+        projectName={selectedProjectForRole?.project_name}
+      />
+      <ProjectRoleViewModal
+  open={openRoleViewModal}
+  handleClose={handleCloseRoleViewModal}
+  projectId={selectedProjectForRoleView?.id}
+  projectName={selectedProjectForRoleView?.project_name}
+/>
     </div>
   );
 };
