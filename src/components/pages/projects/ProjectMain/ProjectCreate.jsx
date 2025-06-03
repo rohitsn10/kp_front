@@ -56,6 +56,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
   const [totalArea, setTotalArea] = useState("");
   const [capacity, setCapacity] = useState("");
   const [numDays, setNumDays] = useState("");
+  const [address, setAddress] = useState("");
   const [locations, setLocations] = useState([]);
   // State for selection fields
   const [projectCategory, setProjectCategory] = useState(null);
@@ -75,14 +76,25 @@ function ProjectCreate({ open, handleClose, refetch }) {
   const [electricityLine, setElectricityLine] = useState(null);
   const [areaError, setAreaError] = useState("");
 
+  const [loiDate, setLoiDate] = useState("");
+  const [loaDate, setLoaDate] = useState("");
+  const [poDate, setPoDate] = useState("");
+  const [capacityType, setCapacityType] = useState(null);
+
   const ciUtilityOptions = [
     { id: "ci", label: "CI" },
     { id: "utility", label: "Utility" },
   ];
-
+  const capacityTypeOptions = [
+    { id: "ac", label: "AC" },
+    { id: "dc", label: "DC" },
+  ];
   const cppIppOptions = [
     { id: "cpp", label: "CPP" },
     { id: "ipp", label: "IPP" },
+    { id: "drebp", label: "DREBP" },
+    { id: "kusum", label: "Kusum" },
+
   ];
 
   const { data: landBankData, isLoading: LandLoading } =
@@ -168,7 +180,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
     }
   }, [subActivities, getSubSubActivities]); // Make sure getSubSubActivities is memoized if needed
 
- 
+
   useEffect(() => {
     if (subSubActivitiesData?.data) {
       const formattedActivities = subSubActivitiesData.data.map((activity) => ({
@@ -245,6 +257,14 @@ function ProjectCreate({ open, handleClose, refetch }) {
       toast.error("CI Utility selection is required");
       isValid = false;
     }
+    if (!address) {
+      toast.error("Address is required");
+      isValid = false;
+    }
+    if (!capacityType) {
+      toast.error("Capacity Type (AC/DC) is required");
+      isValid = false;
+    }
     if (!cppIpp) {
       toast.error("CPP/IPP selection is required");
       isValid = false;
@@ -274,7 +294,10 @@ function ProjectCreate({ open, handleClose, refetch }) {
       toast.error("SPOC selection is required");
       isValid = false;
     }
-
+    if (!locations || locations.length === 0) {
+      toast.error("At least one location is required");
+      isValid = false;
+    }
     if (!isValid) {
       return; // Stop execution if validation fails
     }
@@ -296,6 +319,11 @@ function ProjectCreate({ open, handleClose, refetch }) {
       project_activity_id: activity,
       electricity_line_id: electricityLine.id,
       spoc_user: spoc,
+      address: address.trim(),
+      loi_date: loiDate ? new Date(loiDate).toISOString() : null,
+      loa_date: loaDate ? new Date(loaDate).toISOString() : null,
+      po_date: poDate ? new Date(poDate).toISOString() : null,
+      capacity_type: capacityType?.id,
       project_predication_date: new Date(committedDate).toISOString(),
       location_name: Array.isArray(locations)
         ? locations.join(", ")
@@ -331,7 +359,11 @@ function ProjectCreate({ open, handleClose, refetch }) {
       setCommittedDate("");
       setTotalArea("");
       setCapacity("");
-      setNumDays("");
+      setAddress("");
+      setLoiDate("");
+      setLoaDate("");
+      setPoDate("");
+      setCapacityType(null);
       setProjectCategory(null);
       setSubCategory(null);
       setActivity(null);
@@ -344,6 +376,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
       setCppIpp(null);
       setElectricityLine(null);
       setAreaError("");
+      setLocations([]);
     }
   }, [open]);
 
@@ -429,18 +462,21 @@ function ProjectCreate({ open, handleClose, refetch }) {
           </div>
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Add Total Area
+              Add Total Area (Acres)
             </label>
             <TextField
               type="number"
               value={totalArea}
               onChange={handleTotalAreaChange}
-              placeholder="Add Total Area"
+              placeholder="Enter area in acres"
               fullWidth
               sx={inputStyles}
               error={!!areaError}
               helperText={areaError}
-              disabled={!totalLandArea} // Disable if no land is selected
+              disabled={!totalLandArea}
+              InputProps={{
+                endAdornment: <span style={{ color: '#666', fontSize: '14px' }}>acres</span>,
+              }}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -499,6 +535,25 @@ function ProjectCreate({ open, handleClose, refetch }) {
                     </div> */}
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              Capacity Type
+            </label>
+            <Autocomplete
+              options={capacityTypeOptions}
+              getOptionLabel={(option) => option.label}
+              value={capacityType}
+              onChange={(_, value) => setCapacityType(value)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  fullWidth
+                  placeholder="Select AC/DC"
+                  sx={inputStyles}
+                />
+              )}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Add Capacity
             </label>
             <TextField
@@ -513,7 +568,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
 
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Utility Options
+              Project Type
             </label>
             <Autocomplete
               options={ciUtilityOptions}
@@ -732,20 +787,21 @@ function ProjectCreate({ open, handleClose, refetch }) {
           </div>
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Enter number of Days
+              Address
             </label>
             <TextField
-              type="number"
-              value={numDays}
-              onChange={(e) => setNumDays(e.target.value)}
-              placeholder="Enter number of Days"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Enter Address"
               fullWidth
+              multiline
+              rows={3}
               sx={inputStyles}
             />
           </div>
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Add Locations
+              Add Locations *
             </label>
             <Autocomplete
               multiple
@@ -759,11 +815,48 @@ function ProjectCreate({ open, handleClose, refetch }) {
                   fullWidth
                   placeholder="Type and press Enter to add location"
                   sx={inputStyles}
+                  required
                 />
               )}
             />
           </div>
 
+          <div className="flex flex-col gap-2">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              LOI Date
+            </label>
+            <TextField
+              type="date"
+              value={loiDate}
+              onChange={(e) => setLoiDate(e.target.value)}
+              fullWidth
+              sx={inputStyles}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              LOA Date
+            </label>
+            <TextField
+              type="date"
+              value={loaDate}
+              onChange={(e) => setLoaDate(e.target.value)}
+              fullWidth
+              sx={inputStyles}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+              PO Date
+            </label>
+            <TextField
+              type="date"
+              value={poDate}
+              onChange={(e) => setPoDate(e.target.value)}
+              fullWidth
+              sx={inputStyles}
+            />
+          </div>
           {/* <Autocomplete options={criticalActivities} value={criticalActivity} onChange={(_, value) => setCriticalActivity(value)} renderInput={(params) => <TextField {...params} fullWidth placeholder='Select Critical Activity' sx={inputStyles} />} /> */}
         </div>
         <div className="flex flex-row justify-center my-4">
