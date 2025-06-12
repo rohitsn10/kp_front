@@ -20,44 +20,84 @@ import {
 import CreateHSEMeetingMinutes from '../../../components/pages/hse/create-safety-meeting-minutes/CreateSafetyMOM';
 import { useGetMinutesOfSafetyTrainingQuery } from '../../../api/hse/safetyTrainingMinutes/safetyTrainingMinutes';
 import { useParams } from 'react-router-dom';
-
+import { Download, PictureAsPdf } from '@mui/icons-material';
 // Reusable Image Viewer Component
-const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
-  const [open, setOpen] = useState(false);
-  const baseUrl = import.meta.env.VITE_API_KEY || '';
-  const fullImageUrl = src && !src.startsWith('http') ? `${baseUrl}${src}` : src;
+// PDF Download Component
+const PDFDownloader = ({ src, signatureType, personName }) => {
+  const handleDownload = async () => {
+    if (!src) {
+      alert(`No ${signatureType} signature file available for download`);
+      return;
+    }
+
+    try {
+      const baseUrl = import.meta.env.VITE_API_KEY || '';
+      const fullUrl = src && !src.startsWith('http') ? `${baseUrl}${src}` : src;
+      
+      // Fetch the file as blob to force download
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch signature file');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const fileName = src.split('/').pop() || `${signatureType}_signature_${personName?.replace(/\s+/g, '_')}.pdf`;
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.setAttribute('download', fileName);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert(`Failed to download ${signatureType} signature file. Please try again.`);
+    }
+  };
+
+  const displayFileName = src ? src.split('/').pop() : `${signatureType}_signature.pdf`;
 
   return (
-    <>
-      <img
-        src={fullImageUrl}
-        alt={alt}
-        onClick={() => setOpen(true)}
-        style={{
-          width: `${width}px`,
-          height: `${height}px`,
-          cursor: 'pointer'
-        }}
-      />
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="md"
-        fullWidth
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        padding: "8px 16px",
+        border: "1px solid #e0e0e0",
+        borderRadius: "4px",
+        backgroundColor: "#f5f5f5",
+        minWidth: "200px",
+        justifyContent: "center"
+      }}>
+        <PictureAsPdf style={{ color: '#d32f2f' }} />
+        <Typography variant="body2" style={{ 
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: '150px'
+        }}>
+          {displayFileName}
+        </Typography>
+      </div>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleDownload}
+        startIcon={<Download />}
+        size="small"
+        style={{ fontSize: '12px' }}
       >
-        <DialogContent>
-          <img
-            src={fullImageUrl}
-            alt={alt}
-            style={{
-              width: '100%',
-              maxHeight: '500px',
-              objectFit: 'contain'
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+        Download PDF
+      </Button>
+    </div>
   );
 };
 
@@ -313,33 +353,36 @@ function SafetyMeeting() {
               ])}
               
               {/* Signatures */}
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="p-3 border rounded">
-                  <Typography><strong>Minutes Prepared By:</strong> {selectedMeeting.minutes_prepared_by}</Typography>
-                  <Typography className="mt-2"><strong>Signature:</strong></Typography>
-                  {selectedMeeting.signature_prepared_by ? (
-                    <ImageViewer
-                      src={selectedMeeting.signature_prepared_by}
-                      alt="Preparer's Signature"
-                    />
-                  ) : (
-                    <Typography variant="body2">No signature available</Typography>
-                  )}
-                </div>
-                
-                <div className="p-3 border rounded">
-                  <Typography><strong>Chairman:</strong> {selectedMeeting.chairman_name}</Typography>
-                  <Typography className="mt-2"><strong>Signature:</strong></Typography>
-                  {selectedMeeting.signature_chairman ? (
-                    <ImageViewer
-                      src={selectedMeeting.signature_chairman}
-                      alt="Chairman's Signature"
-                    />
-                  ) : (
-                    <Typography variant="body2">No signature available</Typography>
-                  )}
-                </div>
-              </div>
+{/* Signatures */}
+<div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+  <div className="p-3 border rounded">
+    <Typography><strong>Minutes Prepared By:</strong> {selectedMeeting.minutes_prepared_by}</Typography>
+    <Typography className="mt-2"><strong>Signature:</strong></Typography>
+    {selectedMeeting.signature_prepared_by ? (
+      <PDFDownloader
+        src={selectedMeeting.signature_prepared_by}
+        signatureType="preparer"
+        personName={selectedMeeting.minutes_prepared_by}
+      />
+    ) : (
+      <Typography variant="body2">No signature available</Typography>
+    )}
+  </div>
+  
+  <div className="p-3 border rounded">
+    <Typography><strong>Chairman:</strong> {selectedMeeting.chairman_name}</Typography>
+    <Typography className="mt-2"><strong>Signature:</strong></Typography>
+    {selectedMeeting.signature_chairman ? (
+      <PDFDownloader
+        src={selectedMeeting.signature_chairman}
+        signatureType="chairman"
+        personName={selectedMeeting.chairman_name}
+      />
+    ) : (
+      <Typography variant="body2">No signature available</Typography>
+    )}
+  </div>
+</div>
             </div>
           )}
         </DialogContent>

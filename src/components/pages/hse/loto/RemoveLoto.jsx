@@ -10,12 +10,14 @@ import {
   Typography,
   Divider,
   Box,
-  Avatar,
   CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useRemoveLotoRegisterMutation, useUpdateLotoRegisterMutation } from "../../../../api/hse/loto/lotoRegisterApi";
 // import { useUpdateLotoRegisterMutation } from "../api/lotoRegisterApi"; // Update this path to your actual API file path
+
+// Add the file size constant
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB in bytes
 
 export default function RemoveLogoutForm({ open, setOpen, lotoId=1,lotoData }) {
   const [removedDateTime, setRemovedDateTime] = useState("");
@@ -60,17 +62,28 @@ export default function RemoveLogoutForm({ open, setOpen, lotoId=1,lotoData }) {
     },
   };
 
+  // Updated signature upload handler for PDF files
   const handleSignatureUpload = (setter, e) => {
     const file = e.target.files[0];
+    
     if (file) {
-      setter(file); // Store the actual file for FormData
+      // Check file type
+      if (file.type !== 'application/pdf') {
+        toast.error('Please select a PDF file only');
+        // Clear the input
+        e.target.value = '';
+        return;
+      }
       
-      // For preview purpose
-      const reader = new FileReader();
-      reader.onload = () => {
-        e.target.dataset.preview = reader.result;
-      };
-      reader.readAsDataURL(file);
+      // Check file size (15MB limit)
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error('File size must be less than 15MB');
+        // Clear the input
+        e.target.value = '';
+        return;
+      }
+      
+      setter(file); // Store the actual file for FormData
     }
   };
 
@@ -184,10 +197,10 @@ export default function RemoveLogoutForm({ open, setOpen, lotoId=1,lotoData }) {
             />
           </Grid>
 
-          {/* Removed By Signature */}
+          {/* Removed By Signature PDF */}
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Removed By Signature<span className="text-red-600"> *</span>
+              Removed By Signature PDF (Max 15MB)<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -202,21 +215,23 @@ export default function RemoveLogoutForm({ open, setOpen, lotoId=1,lotoData }) {
                 color="primary"
                 sx={{ height: "56px" }}
               >
-                Upload Signature
+                Upload Signature PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf"
                   hidden
                   onChange={(e) => handleSignatureUpload(setRemovedBySignature, e)}
                 />
               </Button>
               {removedBySignature && (
-                <Avatar
-                  src={e => e.target.dataset.preview || ''}
-                  alt="Removed By Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
+                <Box sx={{ ml: 2 }}>
+                  <Typography variant="caption" display="block">
+                    File: {removedBySignature.name}
+                  </Typography>
+                  <Typography variant="caption" display="block" color="text.secondary">
+                    Size: {(removedBySignature.size / (1024 * 1024)).toFixed(2)} MB
+                  </Typography>
+                </Box>
               )}
             </Box>
           </Grid>
@@ -236,10 +251,10 @@ export default function RemoveLogoutForm({ open, setOpen, lotoId=1,lotoData }) {
             />
           </Grid>
 
-          {/* Removed Approved By Site In-Charge Signature */}
+          {/* Removed Approved By Site In-Charge Signature PDF */}
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Removed Approved By Site In-Charge Signature<span className="text-red-600"> *</span>
+              Removed Approved By Site In-Charge Signature PDF (Max 15MB)<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -254,10 +269,10 @@ export default function RemoveLogoutForm({ open, setOpen, lotoId=1,lotoData }) {
                 color="primary"
                 sx={{ height: "56px" }}
               >
-                Upload Signature
+                Upload Signature PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf"
                   hidden
                   onChange={(e) =>
                     handleSignatureUpload(setRemovedApprovedBySiteInChargeSignature, e)
@@ -265,12 +280,14 @@ export default function RemoveLogoutForm({ open, setOpen, lotoId=1,lotoData }) {
                 />
               </Button>
               {removedApprovedBySiteInChargeSignature && (
-                <Avatar
-                  src={e => e.target.dataset.preview || ''}
-                  alt="Approved By Site In-Charge Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
+                <Box sx={{ ml: 2 }}>
+                  <Typography variant="caption" display="block">
+                    File: {removedApprovedBySiteInChargeSignature.name}
+                  </Typography>
+                  <Typography variant="caption" display="block" color="text.secondary">
+                    Size: {(removedApprovedBySiteInChargeSignature.size / (1024 * 1024)).toFixed(2)} MB
+                  </Typography>
+                </Box>
               )}
             </Box>
           </Grid>

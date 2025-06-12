@@ -16,7 +16,7 @@ import {
 import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
 import { useCreateSuggestionSchemeReportMutation } from "../../../../api/hse/suggestionScheme/suggestionSchemeReportApi ";
-
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 export default function SuggestionFormDialog({ open, setOpen,onSuccess }) {
   const { locationId } = useParams();
   const [site, setSite] = useState("");
@@ -25,36 +25,37 @@ export default function SuggestionFormDialog({ open, setOpen,onSuccess }) {
   const [designation, setDesignation] = useState("");
   const [descriptionOfSuggestion, setDescriptionOfSuggestion] = useState("");
   const [benefitsUponImplementation, setBenefitsUponImplementation] = useState("");
-  const [evaluation, setEvaluation] = useState({
-    evaluated_by: "",
-    name: "",
-    designation: "",
-    remarks: "",
-    signature: null,
-  });
+const [evaluation, setEvaluation] = useState({
+  evaluated_by: "",
+  name: "",
+  designation: "",
+  remarks: "",
+  signature: null,
+  signatureFileName: "",
+});
   
   // RTK Query mutation hook
   const [createSuggestionSchemeReport, { isLoading }] = useCreateSuggestionSchemeReportMutation();
 
-  const validateForm = () => {
-    if (!site.trim()) return toast.error("Site is required!");
-    if (!date.trim()) return toast.error("Date is required!");
-    if (!name.trim()) return toast.error("Name is required!");
-    if (!designation.trim()) return toast.error("Designation is required!");
-    if (!descriptionOfSuggestion.trim())
-      return toast.error("Description of Suggestion is required!");
-    if (!benefitsUponImplementation.trim())
-      return toast.error("Benefits Upon Implementation is required!");
-    if (!evaluation.evaluated_by.trim())
-      return toast.error("Evaluated By is required!");
-    if (!evaluation.name.trim()) return toast.error("Evaluator Name is required!");
-    if (!evaluation.designation.trim())
-      return toast.error("Evaluator Designation is required!");
-    if (!evaluation.remarks.trim()) return toast.error("Evaluation Remarks are required!");
-    if (!evaluation.signature) return toast.error("Evaluator Signature is required!");
+const validateForm = () => {
+  if (!site.trim()) return toast.error("Site is required!");
+  if (!date.trim()) return toast.error("Date is required!");
+  if (!name.trim()) return toast.error("Name is required!");
+  if (!designation.trim()) return toast.error("Designation is required!");
+  if (!descriptionOfSuggestion.trim())
+    return toast.error("Description of Suggestion is required!");
+  if (!benefitsUponImplementation.trim())
+    return toast.error("Benefits Upon Implementation is required!");
+  if (!evaluation.evaluated_by.trim())
+    return toast.error("Evaluated By is required!");
+  if (!evaluation.name.trim()) return toast.error("Evaluator Name is required!");
+  if (!evaluation.designation.trim())
+    return toast.error("Evaluator Designation is required!");
+  if (!evaluation.remarks.trim()) return toast.error("Evaluation Remarks are required!");
+  if (!evaluation.signature) return toast.error("Evaluator Signature PDF is required!"); // Updated message
 
-    return true;
-  };
+  return true;
+};
 
   const handleClose = () => setOpen(false);
 
@@ -78,19 +79,29 @@ export default function SuggestionFormDialog({ open, setOpen,onSuccess }) {
     },
   };
 
-  const handleEvaluationSignatureUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setEvaluation({ ...evaluation, signature: file }); // Store the file object directly for FormData
-      
-      // Create a preview for display
-      const reader = new FileReader();
-      reader.onload = () => {
-        setEvaluation(prev => ({ ...prev, signaturePreview: reader.result }));
-      };
-      reader.readAsDataURL(file);
+const handleEvaluationSignatureUpload = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    // Check file type
+    if (file.type !== 'application/pdf') {
+      toast.error("Please upload a PDF file for evaluator signature!");
+      return;
     }
-  };
+    
+    // Check file size (15MB = 15 * 1024 * 1024 bytes)
+    const maxSize = 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("Evaluator signature PDF must be less than 15MB!");
+      return;
+    }
+    
+    setEvaluation({ 
+      ...evaluation, 
+      signature: file,
+      signatureFileName: file.name
+    });
+  }
+};
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
@@ -130,22 +141,22 @@ export default function SuggestionFormDialog({ open, setOpen,onSuccess }) {
     }
   };
 
-  const resetForm = () => {
-    setSite("");
-    setDate("");
-    setName("");
-    setDesignation("");
-    setDescriptionOfSuggestion("");
-    setBenefitsUponImplementation("");
-    setEvaluation({
-      evaluated_by: "",
-      name: "",
-      designation: "",
-      remarks: "",
-      signature: null,
-      signaturePreview: null
-    });
-  };
+const resetForm = () => {
+  setSite("");
+  setDate("");
+  setName("");
+  setDesignation("");
+  setDescriptionOfSuggestion("");
+  setBenefitsUponImplementation("");
+  setEvaluation({
+    evaluated_by: "",
+    name: "",
+    designation: "",
+    remarks: "",
+    signature: null,
+    signatureFileName: "" // Add this line
+  });
+};
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
@@ -330,41 +341,54 @@ export default function SuggestionFormDialog({ open, setOpen,onSuccess }) {
             />
           </Grid>
 
-          <Grid item xs={12}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Evaluator Signature<span className="text-red-600"> *</span>
-            </label>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Button
-                variant="outlined"
-                component="label"
-                color="primary"
-                sx={{ height: "56px" }}
-              >
-                Upload Signature
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={handleEvaluationSignatureUpload}
-                />
-              </Button>
-              {evaluation.signaturePreview && (
-                <Avatar
-                  src={evaluation.signaturePreview}
-                  alt="Evaluator Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
-              )}
-            </Box>
-          </Grid>
+<Grid item xs={12}>
+  <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+    Evaluator Signature PDF<span className="text-red-600"> *</span>
+  </label>
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 2,
+    }}
+  >
+    <Button
+      variant="outlined"
+      component="label"
+      color="primary"
+      sx={{ height: "56px" }}
+    >
+      Upload Signature PDF
+      <input
+        type="file"
+        accept=".pdf"
+        hidden
+        onChange={handleEvaluationSignatureUpload}
+      />
+    </Button>
+    {evaluation.signature && (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          padding: "8px 12px",
+          border: "1px solid #e0e0e0",
+          borderRadius: "4px",
+          backgroundColor: "#f5f5f5",
+        }}
+      >
+        <PictureAsPdfIcon color="error" />
+        <Typography variant="body2">
+          {evaluation.signatureFileName}
+        </Typography>
+      </Box>
+    )}
+  </Box>
+  <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+    Upload signed PDF (Max: 15MB)
+  </Typography>
+</Grid>
         </Grid>
       </DialogContent>
 

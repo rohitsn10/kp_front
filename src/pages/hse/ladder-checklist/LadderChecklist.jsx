@@ -17,11 +17,88 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
-import ImageViewer from '../../../utils/signatureViewer';
+// import ImageViewer from '../../../utils/signatureViewer';
 import LadderInspectionDialog from '../../../components/pages/hse/ladder-inspection/CreateLadderInspection';
 import { useParams } from 'react-router-dom';
 import { useGetLadderInspectionsQuery } from '../../../api/hse/ladder/ladderInspectionApi';
+import { Download, PictureAsPdf } from '@mui/icons-material';
+// PDF Download Component
+const PDFDownloader = ({ src, signatureType, personName }) => {
+  const handleDownload = async () => {
+    if (!src) {
+      alert(`No ${signatureType} signature file available for download`);
+      return;
+    }
 
+    try {
+      const fullUrl = src.startsWith('http') ? src : `${import.meta.env.VITE_API_KEY}${src}`;
+      
+      // Fetch the file as blob to force download
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch signature file');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const fileName = src.split('/').pop() || `${signatureType}_signature_${personName?.replace(/\s+/g, '_')}.pdf`;
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.setAttribute('download', fileName);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert(`Failed to download ${signatureType} signature file. Please try again.`);
+    }
+  };
+
+  const displayFileName = src ? src.split('/').pop() : `${signatureType}_signature.pdf`;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        padding: "8px 16px",
+        border: "1px solid #e0e0e0",
+        borderRadius: "4px",
+        backgroundColor: "#f5f5f5",
+        minWidth: "200px",
+        justifyContent: "center"
+      }}>
+        <PictureAsPdf style={{ color: '#d32f2f' }} />
+        <Typography variant="body2" style={{ 
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: '150px'
+        }}>
+          {displayFileName}
+        </Typography>
+      </div>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleDownload}
+        startIcon={<Download />}
+        size="small"
+        style={{ fontSize: '12px' }}
+      >
+        Download PDF
+      </Button>
+    </div>
+  );
+};
 function LadderChecklist() {
   const [page, setPage] = useState(0);
   const { locationId } = useParams();
@@ -263,10 +340,21 @@ function LadderChecklist() {
               <Typography variant="body1">
                 <strong>Signature:</strong>
               </Typography>
-              <ImageViewer 
+              {/* <ImageViewer 
                 src={`${import.meta.env.VITE_API_KEY}${selectedLadderChecklist.inspected_by_signature}`}
                 alt={`${selectedLadderChecklist.inspected_by_name} Signature`} 
-              />
+              /> */}
+              {selectedLadderChecklist?.inspected_by_signature ? (
+  <PDFDownloader
+    src={selectedLadderChecklist?.inspected_by_signature}
+    signatureType="inspector"
+    personName={selectedLadderChecklist?.inspected_by_name}
+  />
+) : (
+  <Typography variant="body2" style={{ color: '#666', fontStyle: 'italic' }}>
+    No signature available
+  </Typography>
+)}
             </>
           )}
         </DialogContent>

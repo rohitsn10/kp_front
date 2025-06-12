@@ -13,8 +13,10 @@ import {
   DialogContent,
   Typography,
   TablePagination,
-  TextField
+  TextField,
+  Box
 } from '@mui/material';
+import { Download, PictureAsPdf } from '@mui/icons-material';
 import CreateAuditForm from '../../../components/pages/hse/internal-audit/CreateAuditForm';
 import CorrectionForm from '../../../components/pages/hse/internal-audit/CorrectionForm';
 import VerificationForm from '../../../components/pages/hse/internal-audit/VerificationForm';
@@ -22,41 +24,100 @@ import ClosureReportForm from '../../../components/pages/hse/internal-audit/Clos
 import { useParams } from 'react-router-dom';
 import { useGetInternalAuditReportsQuery } from '../../../api/hse/internalAudit/internalAuditReportApi ';
 
-// Reusable Image Viewer Component
-const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
-  const [open, setOpen] = useState(false);
+// PDF Download Component
+const PDFDownloader = ({ src, fileName, signatureType, personName }) => {
+  const handleDownload = async () => {
+    if (!src) {
+      alert(`No ${signatureType} signature file available for download`);
+      return;
+    }
+
+    try {
+      const fullUrl = `${import.meta.env.VITE_API_KEY}${src}`;
+      
+      // Fetch the file as blob to force download
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch signature file');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const downloadFileName = fileName || `${signatureType}_signature_${personName?.replace(/\s+/g, '_')}.pdf`;
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = downloadFileName;
+      link.setAttribute('download', downloadFileName);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert(`Failed to download ${signatureType} signature file. Please try again.`);
+    }
+  };
+
+  const truncateFileName = (name, maxLength = 20) => {
+    if (!name) return `${signatureType}_signature.pdf`;
+    const cleanName = name.replace(/\.[^/.]+$/, ""); // Remove extension
+    if (cleanName.length <= maxLength) return name;
+    return cleanName.substring(0, maxLength) + '...pdf';
+  };
+
+  const displayFileName = src ? src.split('/').pop() : `${signatureType}_signature.pdf`;
 
   return (
-    <>
-      <img
-        src={`${import.meta.env.VITE_API_KEY}${src}`}
-        alt={alt}
-        onClick={() => setOpen(true)}
-        style={{
-          width: `${width}px`,
-          height: `${height}px`,
-          cursor: 'pointer'
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 1,
+        padding: "8px",
+        border: "1px solid #e0e0e0",
+        borderRadius: "4px",
+        backgroundColor: "#f5f5f5",
+        minWidth: "150px",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
         }}
-      />
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="md"
-        fullWidth
       >
-        <DialogContent>
-          <img
-            src={src}
-            alt={alt}
-            style={{
-              width: '100%',
-              maxHeight: '500px',
-              objectFit: 'contain'
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+        <PictureAsPdf color="error" fontSize="small" />
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            fontSize: '11px',
+            textAlign: 'center',
+            wordBreak: 'break-word'
+          }}
+          title={displayFileName}
+        >
+          {truncateFileName(displayFileName)}
+        </Typography>
+      </Box>
+      <Button
+        variant="contained"
+        size="small"
+        color="primary"
+        onClick={handleDownload}
+        startIcon={<Download />}
+        sx={{ fontSize: '10px', py: 0.5, px: 1 }}
+        disabled={!src}
+      >
+        Download
+      </Button>
+    </Box>
   );
 };
 
@@ -139,44 +200,94 @@ function InternalAuditReport() {
       case 'observations':
         return (
           <>
-            <DialogTitle>Audit Observations</DialogTitle>
-            <DialogContent>
-              <div className="mb-4 p-3 border rounded">
-                <Typography><strong>Observer Details:</strong> {selectedAudit.observer_details}</Typography>
-                <Typography><strong>Observer Name:</strong> {selectedAudit.observer_name}</Typography>
-                <Typography><strong>Observer Signature:</strong></Typography>
-                <ImageViewer
-                  src={selectedAudit.observer_sign}
-                  alt="Observer Signature"
-                />
-                <Typography><strong>Auditee Name:</strong> {selectedAudit.auditee_name}</Typography>
-                <Typography><strong>Auditee Signature:</strong></Typography>
-                <ImageViewer
-                  src={selectedAudit.auditee_sign}
-                  alt="Auditee Signature"
-                />
-                <Typography><strong>Agreed Completion Date:</strong> {selectedAudit.agreed_completion_date}</Typography>
-              </div>
+            <DialogTitle sx={{ backgroundColor: "#29346B", color: "white", textAlign: "center" }}>
+              Audit Observations
+            </DialogTitle>
+            <DialogContent sx={{ padding: "24px" }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                      Observation Details
+                    </Typography>
+                    <Typography sx={{ mb: 1 }}>
+                      <strong>Observer Details:</strong> {selectedAudit.observer_details}
+                    </Typography>
+                    <Typography sx={{ mb: 1 }}>
+                      <strong>Agreed Completion Date:</strong> {selectedAudit.agreed_completion_date}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                      Signatures
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Box>
+                        <Typography sx={{ mb: 1 }}>
+                          <strong>Observer:</strong> {selectedAudit.observer_name}
+                        </Typography>
+                        <PDFDownloader
+                          src={selectedAudit.observer_sign}
+                          signatureType="observer"
+                          personName={selectedAudit.observer_name}
+                        />
+                      </Box>
+                      <Box>
+                        <Typography sx={{ mb: 1 }}>
+                          <strong>Auditee:</strong> {selectedAudit.auditee_name}
+                        </Typography>
+                        <PDFDownloader
+                          src={selectedAudit.auditee_sign}
+                          signatureType="auditee"
+                          personName={selectedAudit.auditee_name}
+                        />
+                      </Box>
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
             </DialogContent>
           </>
         );
       case 'correction':
         return (
           <>
-            <DialogTitle>Correction Details</DialogTitle>
-            <DialogContent>
+            <DialogTitle sx={{ backgroundColor: "#29346B", color: "white", textAlign: "center" }}>
+              Correction Details
+            </DialogTitle>
+            <DialogContent sx={{ padding: "24px" }}>
               {selectedAudit.corrections && selectedAudit.corrections.length > 0 ? (
-                <div className="mb-4 p-3 border rounded">
-                  <Typography><strong>Root Cause:</strong> {selectedAudit.corrections[0].root_cause}</Typography>
-                  <Typography><strong>Corrective Action:</strong> {selectedAudit.corrections[0].corrective_action}</Typography>
-                  <Typography><strong>Auditee Name:</strong> {selectedAudit.corrections[0].correction_auditee_name}</Typography>
-                  <Typography><strong>Date:</strong> {selectedAudit.corrections[0].correction_auditee_date}</Typography>
-                  <Typography><strong>Auditee Signature:</strong></Typography>
-                  <ImageViewer
-                    src={selectedAudit.corrections[0].correction_auditee_sign}
-                    alt="Correction Auditee Signature"
-                  />
-                </div>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                        Correction Information
+                      </Typography>
+                      <Typography sx={{ mb: 1 }}>
+                        <strong>Root Cause:</strong> {selectedAudit.corrections[0].root_cause}
+                      </Typography>
+                      <Typography sx={{ mb: 1 }}>
+                        <strong>Corrective Action:</strong> {selectedAudit.corrections[0].corrective_action}
+                      </Typography>
+                      <Typography sx={{ mb: 1 }}>
+                        <strong>Date:</strong> {selectedAudit.corrections[0].correction_auditee_date}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                        Auditee Signature
+                      </Typography>
+                      <Typography sx={{ mb: 1 }}>
+                        <strong>Auditee:</strong> {selectedAudit.corrections[0].correction_auditee_name}
+                      </Typography>
+                      <PDFDownloader
+                        src={selectedAudit.corrections[0].correction_auditee_sign}
+                        signatureType="correction_auditee"
+                        personName={selectedAudit.corrections[0].correction_auditee_name}
+                      />
+                    </Box>
+                  </Box>
+                </Box>
               ) : (
                 <Typography>Correction details are not available for this audit.</Typography>
               )}
@@ -186,18 +297,36 @@ function InternalAuditReport() {
       case 'verification':
         return (
           <>
-            <DialogTitle>Verification of Corrective Action</DialogTitle>
-            <DialogContent>
+            <DialogTitle sx={{ backgroundColor: "#29346B", color: "white", textAlign: "center" }}>
+              Verification of Corrective Action
+            </DialogTitle>
+            <DialogContent sx={{ padding: "24px" }}>
               {selectedAudit.verifications && selectedAudit.verifications.length > 0 ? (
-                <div className="mb-4 p-3 border rounded">
-                  <Typography><strong>Auditor Name:</strong> {selectedAudit.verifications[0].verification_auditor_name}</Typography>
-                  <Typography><strong>Date:</strong> {selectedAudit.verifications[0].verification_auditor_date}</Typography>
-                  <Typography><strong>Auditor Signature:</strong></Typography>
-                  <ImageViewer
-                    src={selectedAudit.verifications[0].verification_auditor_sign}
-                    alt="Verification Auditor Signature"
-                  />
-                </div>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                        Verification Information
+                      </Typography>
+                      <Typography sx={{ mb: 1 }}>
+                        <strong>Auditor:</strong> {selectedAudit.verifications[0].verification_auditor_name}
+                      </Typography>
+                      <Typography sx={{ mb: 1 }}>
+                        <strong>Date:</strong> {selectedAudit.verifications[0].verification_auditor_date}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                        Auditor Signature
+                      </Typography>
+                      <PDFDownloader
+                        src={selectedAudit.verifications[0].verification_auditor_sign}
+                        signatureType="verification_auditor"
+                        personName={selectedAudit.verifications[0].verification_auditor_name}
+                      />
+                    </Box>
+                  </Box>
+                </Box>
               ) : (
                 <Typography>Verification details are not available for this audit.</Typography>
               )}
@@ -207,19 +336,39 @@ function InternalAuditReport() {
       case 'closure':
         return (
           <>
-            <DialogTitle>Closure Report</DialogTitle>
-            <DialogContent>
+            <DialogTitle sx={{ backgroundColor: "#29346B", color: "white", textAlign: "center" }}>
+              Closure Report
+            </DialogTitle>
+            <DialogContent sx={{ padding: "24px" }}>
               {selectedAudit.closures && selectedAudit.closures.length > 0 ? (
-                <div className="mb-4 p-3 border rounded">
-                  <Typography><strong>Closure Report:</strong> {selectedAudit.closures[0].report_closure}</Typography>
-                  <Typography><strong>Site Incharge Name:</strong> {selectedAudit.closures[0].siteincharge_name}</Typography>
-                  <Typography><strong>Date:</strong> {selectedAudit.closures[0].siteincharge_date}</Typography>
-                  <Typography><strong>Site Incharge Signature:</strong></Typography>
-                  <ImageViewer
-                    src={selectedAudit.closures[0].siteincharge_sign}
-                    alt="Site Incharge Signature"
-                  />
-                </div>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                        Closure Information
+                      </Typography>
+                      <Typography sx={{ mb: 1 }}>
+                        <strong>Closure Report:</strong> {selectedAudit.closures[0].report_closure}
+                      </Typography>
+                      <Typography sx={{ mb: 1 }}>
+                        <strong>Site Incharge:</strong> {selectedAudit.closures[0].siteincharge_name}
+                      </Typography>
+                      <Typography sx={{ mb: 1 }}>
+                        <strong>Date:</strong> {selectedAudit.closures[0].siteincharge_date}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                        Site Incharge Signature
+                      </Typography>
+                      <PDFDownloader
+                        src={selectedAudit.closures[0].siteincharge_sign}
+                        signatureType="siteincharge"
+                        personName={selectedAudit.closures[0].siteincharge_name}
+                      />
+                    </Box>
+                  </Box>
+                </Box>
               ) : (
                 <Typography>Closure details are not available for this audit.</Typography>
               )}
@@ -280,7 +429,7 @@ function InternalAuditReport() {
                    audit.is_verification_done ? "Verified" : 
                    audit.is_correction_done ? "Corrected" : "Open"}
                 </TableCell>
-                {/* <TableCell align="center">
+                <TableCell align="center">
                   <div className="flex justify-center gap-2">
                     <Button
                       variant="contained"
@@ -307,46 +456,17 @@ function InternalAuditReport() {
                     >
                       Verification
                     </Button>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      color="info"
+                      onClick={() => openAuditDetailsHandler(audit, 'closure')}
+                      disabled={!audit.is_closure_done}
+                    >
+                      Closure
+                    </Button>
                   </div>
-                </TableCell> */}
-                <TableCell align="center">
-  <div className="flex justify-center gap-2">
-    <Button
-      variant="contained"
-      size="small"
-      onClick={() => openAuditDetailsHandler(audit, 'observations')}
-    >
-      Observations
-    </Button>
-    <Button
-      variant="contained"
-      size="small"
-      color="secondary"
-      onClick={() => openAuditDetailsHandler(audit, 'correction')}
-      disabled={!audit.is_correction_done}
-    >
-      Correction
-    </Button>
-    <Button
-      variant="contained"
-      size="small"
-      color="success"
-      onClick={() => openAuditDetailsHandler(audit, 'verification')}
-      disabled={!audit.is_verification_done}
-    >
-      Verification
-    </Button>
-    <Button
-      variant="contained"
-      size="small"
-      color="info"
-      onClick={() => openAuditDetailsHandler(audit, 'closure')}
-      disabled={!audit.is_closure_done}
-    >
-      Closure
-    </Button>
-  </div>
-</TableCell>
+                </TableCell>
                 <TableCell align="center">
                   <div className="flex justify-center gap-2">
                     <Button

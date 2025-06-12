@@ -17,7 +17,7 @@ import { toast } from "react-toastify";
 import { useCreateLadderInspectionMutation } from "../../../../api/hse/ladder/ladderInspectionApi";
 import { useParams } from "react-router-dom";
 // import { useCreateLadderInspectionMutation } from "../services/ladderInspectionApi"; // Adjust path as needed
-
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 export default function LadderInspectionDialog({ open, setOpen,onSuccess }) {
   const { locationId } = useParams();
   const [site, setSite] = useState("");
@@ -35,25 +35,26 @@ export default function LadderInspectionDialog({ open, setOpen,onSuccess }) {
     custom_check: "",
   });
   const [remarks, setRemarks] = useState("");
-  const [inspectedCheckedBy, setInspectedCheckedBy] = useState({
-    name: "",
-    signature: null,
-  });
+const [inspectedCheckedBy, setInspectedCheckedBy] = useState({
+  name: "",
+  signature: null,
+  signatureFileName: "",
+});
 
   // RTK Query hook for creating ladder inspection
   const [createLadderInspection, { isLoading }] = useCreateLadderInspectionMutation();
 
-  const validateForm = () => {
-    if (!site.trim()) return toast.error("Site is required!");
-    if (!ladderNo.trim()) return toast.error("Ladder No. is required!");
-    if (!dateOfInspection.trim()) return toast.error("Date of Inspection is required!");
-    if (!inspectedCheckedBy.name.trim())
-      return toast.error("Inspected/Checked By Name is required!");
-    if (!inspectedCheckedBy.signature)
-      return toast.error("Inspected/Checked By Signature is required!");
+const validateForm = () => {
+  if (!site.trim()) return toast.error("Site is required!");
+  if (!ladderNo.trim()) return toast.error("Ladder No. is required!");
+  if (!dateOfInspection.trim()) return toast.error("Date of Inspection is required!");
+  if (!inspectedCheckedBy.name.trim())
+    return toast.error("Inspected/Checked By Name is required!");
+  if (!inspectedCheckedBy.signatureFile) // Changed from signature to signatureFile
+    return toast.error("Inspected/Checked By Signature PDF is required!");
 
-    return true;
-  };
+  return true;
+};
 
   const handleClose = () => setOpen(false);
 
@@ -81,26 +82,30 @@ export default function LadderInspectionDialog({ open, setOpen,onSuccess }) {
     setVisualPhysicalChecks({ ...visualPhysicalChecks, [field]: value });
   };
 
-  const handleInspectedCheckedBySignatureUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Store the actual file for form submission
-      setInspectedCheckedBy({
-        ...inspectedCheckedBy,
-        signatureFile: file,
-      });
-      
-      // Create preview for display
-      const reader = new FileReader();
-      reader.onload = () => {
-        setInspectedCheckedBy(prev => ({
-          ...prev,
-          signature: reader.result,
-        }));
-      };
-      reader.readAsDataURL(file);
+const handleInspectedCheckedBySignatureUpload = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    // Check file type
+    if (file.type !== 'application/pdf') {
+      toast.error("Please upload a PDF file for inspector signature!");
+      return;
     }
-  };
+    
+    // Check file size (15MB = 15 * 1024 * 1024 bytes)
+    const maxSize = 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("Inspector signature PDF must be less than 15MB!");
+      return;
+    }
+    
+    // Store the actual file for form submission
+    setInspectedCheckedBy({
+      ...inspectedCheckedBy,
+      signatureFile: file,
+      signatureFileName: file.name,
+    });
+  }
+};
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
@@ -146,11 +151,12 @@ export default function LadderInspectionDialog({ open, setOpen,onSuccess }) {
           custom_check: "",
         });
         setRemarks("");
-        setInspectedCheckedBy({
-          name: "",
-          signature: null,
-          signatureFile: null,
-        });
+setInspectedCheckedBy({
+  name: "",
+  signature: null,
+  signatureFile: null,
+  signatureFileName: "",
+});
         onSuccess();
         setOpen(false);
       } else {
@@ -283,41 +289,54 @@ export default function LadderInspectionDialog({ open, setOpen,onSuccess }) {
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Inspected/Checked By Signature<span className="text-red-600"> *</span>
-            </label>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Button
-                variant="outlined"
-                component="label"
-                color="primary"
-                sx={{ height: "56px" }}
-              >
-                Upload Signature
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={handleInspectedCheckedBySignatureUpload}
-                />
-              </Button>
-              {inspectedCheckedBy.signature && (
-                <Avatar
-                  src={inspectedCheckedBy.signature}
-                  alt="Inspected/Checked By Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
-              )}
-            </Box>
-          </Grid>
+<Grid item xs={12} md={6}>
+  <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+    Inspected/Checked By Signature PDF<span className="text-red-600"> *</span>
+  </label>
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 2,
+    }}
+  >
+    <Button
+      variant="outlined"
+      component="label"
+      color="primary"
+      sx={{ height: "56px" }}
+    >
+      Upload Signature PDF
+      <input
+        type="file"
+        accept=".pdf"
+        hidden
+        onChange={handleInspectedCheckedBySignatureUpload}
+      />
+    </Button>
+    {inspectedCheckedBy.signatureFile && (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          padding: "8px 12px",
+          border: "1px solid #e0e0e0",
+          borderRadius: "4px",
+          backgroundColor: "#f5f5f5",
+        }}
+      >
+        <PictureAsPdfIcon color="error" />
+        <Typography variant="body2">
+          {inspectedCheckedBy.signatureFileName}
+        </Typography>
+      </Box>
+    )}
+  </Box>
+  <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+    Upload signed PDF (Max: 15MB)
+  </Typography>
+</Grid>
         </Grid>
       </DialogContent>
 

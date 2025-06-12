@@ -15,14 +15,15 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreateClosureInternalAuditReportMutation } from "../../../../api/hse/internalAudit/internalAuditReportApi ";
-// import { useCreateClosureInternalAuditReportMutation } from "../../../api/hse/internalAudit/internalAuditReportApi"; // Adjust import path as needed
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 export default function ClosureReportForm({ open, setOpen, auditId, onSuccess }) {
   const [closure, setClosure] = useState({
     report_closure: "",
     siteincharge_name: "",
     siteincharge_sign: null,
-    siteincharge_date: ""
+    siteincharge_date: "",
+    signatureFileName: ""
   });
 
   // RTK mutation hook
@@ -34,7 +35,7 @@ export default function ClosureReportForm({ open, setOpen, auditId, onSuccess })
     if (!closure.siteincharge_name.trim())
       return toast.error("Site In-Charge Name is required!");
     if (!closure.siteincharge_sign)
-      return toast.error("Site In-Charge Signature is required!");
+      return toast.error("Site In-Charge Signature PDF is required!");
     if (!closure.siteincharge_date.trim())
       return toast.error("Site In-Charge Date is required!");
 
@@ -49,7 +50,8 @@ export default function ClosureReportForm({ open, setOpen, auditId, onSuccess })
         report_closure: "",
         siteincharge_name: "",
         siteincharge_sign: null,
-        siteincharge_date: ""
+        siteincharge_date: "",
+        signatureFileName: ""
       });
     }
   };
@@ -69,21 +71,25 @@ export default function ClosureReportForm({ open, setOpen, auditId, onSuccess })
   const handleSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Check file type
+      if (file.type !== 'application/pdf') {
+        toast.error("Please upload a PDF file for site in-charge signature!");
+        return;
+      }
+      
+      // Check file size (15MB = 15 * 1024 * 1024 bytes)
+      const maxSize = 15 * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error("Site in-charge signature PDF must be less than 15MB!");
+        return;
+      }
+      
       // Store the actual file for form submission
       setClosure(prev => ({
         ...prev,
-        siteincharge_sign: file
+        siteincharge_sign: file,
+        signatureFileName: file.name
       }));
-
-      // Create a preview
-      const reader = new FileReader();
-      reader.onload = () => {
-        setClosure(prev => ({
-          ...prev,
-          signaturePreview: reader.result
-        }));
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -177,7 +183,7 @@ export default function ClosureReportForm({ open, setOpen, auditId, onSuccess })
           
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Site In-Charge/Site Head - Signature<span className="text-red-600"> *</span>
+              Site In-Charge/Site Head - Signature PDF<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -193,23 +199,36 @@ export default function ClosureReportForm({ open, setOpen, auditId, onSuccess })
                 sx={{ height: "56px" }}
                 disabled={isLoading}
               >
-                Upload Signature
+                Upload Signature PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf"
                   hidden
                   onChange={handleSignatureUpload}
                 />
               </Button>
-              {closure.signaturePreview && (
-                <Avatar
-                  src={closure.signaturePreview}
-                  alt="Site In-Charge Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
+              {closure.siteincharge_sign && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    padding: "8px 12px",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "4px",
+                    backgroundColor: "#f5f5f5",
+                  }}
+                >
+                  <PictureAsPdfIcon color="error" />
+                  <Typography variant="body2">
+                    {closure.signatureFileName}
+                  </Typography>
+                </Box>
               )}
             </Box>
+            <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+              Upload signed PDF (Max: 15MB)
+            </Typography>
           </Grid>
 
           <Grid item xs={12} md={6}>

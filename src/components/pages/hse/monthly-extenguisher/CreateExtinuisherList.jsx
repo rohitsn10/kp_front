@@ -33,6 +33,7 @@ const extinguisherTypes = ["Dry Powder", "CO2", "Foam", "Water"];
 const pressureOptions = ["Normal", "Low", "High"];
 const conditionOptions = ["Good", "Fair", "Poor"];
 const accessOptions = ["Clear", "Partially Blocked", "Blocked"];
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB in bytes
 
 const FireExtinguisherInspectionDialog = ({ open, setOpen,onSuccess }) => {
   // Form state
@@ -145,9 +146,37 @@ const FireExtinguisherInspectionDialog = ({ open, setOpen,onSuccess }) => {
   };
 
   // Handle signature file selection
-  const handleSignatureChange = (event) => {
-    setSignature(event.target.files[0]);
-  };
+const handleSignatureChange = (event) => {
+  const file = event.target.files[0];
+  
+  if (file) {
+    // Check file type
+    if (file.type !== 'application/pdf') {
+      setToast({
+        open: true,
+        message: 'Please select a PDF file only',
+        severity: 'error'
+      });
+      // Clear the input
+      event.target.value = '';
+      return;
+    }
+    
+    // Check file size (15MB limit)
+    if (file.size > MAX_FILE_SIZE) {
+      setToast({
+        open: true,
+        message: 'File size must be less than 15MB',
+        severity: 'error'
+      });
+      // Clear the input
+      event.target.value = '';
+      return;
+    }
+    
+    setSignature(file);
+  }
+};
 
   // Form validation with detailed error tracking
   const validateForm = () => {
@@ -375,40 +404,46 @@ const FireExtinguisherInspectionDialog = ({ open, setOpen,onSuccess }) => {
                   />
                 </Grid>
                 
-                <Grid item xs={12} md={6}>
-                  <Box>
-                    <Typography 
-                      variant="body2" 
-                      color={errors.signature ? "error" : "text.secondary"} 
-                      gutterBottom
-                    >
-                      Signature (Upload File) *
-                      {errors.signature && <span style={{ marginLeft: '8px' }}>Signature is required</span>}
-                    </Typography>
-                    <input
-                      accept="image/*,.pdf,.docx"
-                      id="signature-upload"
-                      type="file"
-                      onChange={handleSignatureChange}
-                      style={{ display: 'none' }}
-                    />
-                    <label htmlFor="signature-upload">
-                      <Button
-                        variant="outlined"
-                        component="span"
-                        fullWidth
-                        className="border-[#29346B] text-[#29346B] hover:bg-[#29346B10]"
-                      >
-                        Upload Signature
-                      </Button>
-                    </label>
-                    {signature && (
-                      <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                        File: {signature.name}
-                      </Typography>
-                    )}
-                  </Box>
-                </Grid>
+<Grid item xs={12} md={6}>
+  <Box>
+    <Typography 
+      variant="body2" 
+      color={errors.signature ? "error" : "text.secondary"} 
+      gutterBottom
+    >
+      Signature PDF (Max 15MB) *
+      {errors.signature && <span style={{ marginLeft: '8px' }}>Signature PDF is required</span>}
+    </Typography>
+    <input
+      accept=".pdf"
+      id="signature-upload"
+      type="file"
+      onChange={handleSignatureChange}
+      style={{ display: 'none' }}
+    />
+    <label htmlFor="signature-upload">
+      <Button
+        variant="outlined"
+        component="span"
+        fullWidth
+        className="border-[#29346B] text-[#29346B] hover:bg-[#29346B10]"
+      >
+        Upload Signature PDF
+      </Button>
+    </label>
+    {signature && (
+      <Box sx={{ mt: 1 }}>
+        <Typography variant="caption" display="block">
+          File: {signature.name}
+        </Typography>
+        <Typography variant="caption" display="block" color="text.secondary">
+          Size: {(signature.size / (1024 * 1024)).toFixed(2)} MB
+        </Typography>
+      </Box>
+    )}
+  </Box>
+</Grid>
+
               </Grid>
             </Paper>
           </Grid>

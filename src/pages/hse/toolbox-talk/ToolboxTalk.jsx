@@ -19,11 +19,87 @@ import {
   CircularProgress,
   Link
 } from '@mui/material';
-import ImageViewer from '../../../utils/signatureViewer';
 import ToolboxAttendanceDialog from '../../../components/pages/hse/toolbox-talks';
 import { useGetToolTalkAttendanceQuery } from '../../../api/hse/toolbox/toolBoxApi';
 import { useParams } from 'react-router-dom';
+import { Download, PictureAsPdf } from '@mui/icons-material';
+// PDF Download Component
+const PDFDownloader = ({ src, signatureType, personName }) => {
+  const handleDownload = async () => {
+    if (!src) {
+      alert(`No ${signatureType} signature file available for download`);
+      return;
+    }
 
+    try {
+      const fullUrl = src.startsWith('http') ? src : `${import.meta.env.VITE_API_KEY}${src}`;
+      
+      // Fetch the file as blob to force download
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch signature file');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const fileName = src.split('/').pop() || `${signatureType}_signature_${personName?.replace(/\s+/g, '_')}.pdf`;
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.setAttribute('download', fileName);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert(`Failed to download ${signatureType} signature file. Please try again.`);
+    }
+  };
+
+  const displayFileName = src ? src.split('/').pop() : `${signatureType}_signature.pdf`;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        padding: "8px 16px",
+        border: "1px solid #e0e0e0",
+        borderRadius: "4px",
+        backgroundColor: "#f5f5f5",
+        minWidth: "200px",
+        justifyContent: "center"
+      }}>
+        <PictureAsPdf style={{ color: '#d32f2f' }} />
+        <Typography variant="body2" style={{ 
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: '150px'
+        }}>
+          {displayFileName}
+        </Typography>
+      </div>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleDownload}
+        startIcon={<Download />}
+        size="small"
+        style={{ fontSize: '12px' }}
+      >
+        Download PDF
+      </Button>
+    </div>
+  );
+};
 function ToolboxTalk() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -261,49 +337,58 @@ function ToolboxTalk() {
       </Dialog>
 
       {/* Participants Modal */}
-      <Dialog 
-        open={openParticipantsModal} 
-        onClose={() => setOpenParticipantsModal(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Participants Details</DialogTitle>
-        <DialogContent>
-          {selectedToolboxTalk && (
-            <div className="mb-4 p-3 border rounded">
-              <Typography variant="h6" gutterBottom>Contractor Information</Typography>
-              <Typography><strong>Name of Contractor:</strong> {selectedToolboxTalk.name_of_contractor}</Typography>
-              
-              <Typography variant="h6" gutterBottom className="mt-4">TBT Conducted By</Typography>
-              <Typography><strong>Name:</strong> {selectedToolboxTalk.tbt_conducted_by_name}</Typography>
-              <Typography><strong>Signature:</strong></Typography>
-              <ImageViewer 
-                src={selectedToolboxTalk.tbt_conducted_by_signature} 
-                alt={`${selectedToolboxTalk.tbt_conducted_by_name} Signature`} 
-              />
-              
-              {selectedToolboxTalk.participant_upload_attachments && (
-                <div className="mt-4">
-                  <Typography variant="h6" gutterBottom>Participant Attachments</Typography>
-                  <div className="flex items-center gap-2">
-                    <Typography>
-                      <strong>File:</strong> {selectedToolboxTalk.participant_upload_attachments.split('/').pop()}
-                    </Typography>
-                    <Button 
-                      variant="contained" 
-                      color="primary" 
-                      size="small"
-                      onClick={() => handleFileDownload(selectedToolboxTalk.participant_upload_attachments)}
-                    >
-                      Download
-                    </Button>
-                  </div>
-                </div>
-              )}
+<Dialog 
+  open={openParticipantsModal} 
+  onClose={() => setOpenParticipantsModal(false)}
+  maxWidth="md"
+  fullWidth
+>
+  <DialogTitle>Participants Details</DialogTitle>
+  <DialogContent>
+    {selectedToolboxTalk && (
+      <div className="mb-4 p-3 border rounded">
+        <Typography variant="h6" gutterBottom>Contractor Information</Typography>
+        <Typography><strong>Name of Contractor:</strong> {selectedToolboxTalk.name_of_contractor}</Typography>
+        
+        <Typography variant="h6" gutterBottom className="mt-4">TBT Conducted By</Typography>
+        <Typography><strong>Name:</strong> {selectedToolboxTalk.tbt_conducted_by_name}</Typography>
+        <Typography><strong>Signature:</strong></Typography>
+        
+        {/* Replace ImageViewer with PDFDownloader */}
+        {selectedToolboxTalk.tbt_conducted_by_signature ? (
+          <PDFDownloader
+            src={selectedToolboxTalk.tbt_conducted_by_signature}
+            signatureType="conductor"
+            personName={selectedToolboxTalk.tbt_conducted_by_name}
+          />
+        ) : (
+          <Typography variant="body2" style={{ color: '#666', fontStyle: 'italic' }}>
+            No signature available
+          </Typography>
+        )}
+        
+        {selectedToolboxTalk.participant_upload_attachments && (
+          <div className="mt-4">
+            <Typography variant="h6" gutterBottom>Participant Attachments</Typography>
+            <div className="flex items-center gap-2">
+              <Typography>
+                <strong>File:</strong> {selectedToolboxTalk.participant_upload_attachments.split('/').pop()}
+              </Typography>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                size="small"
+                onClick={() => handleFileDownload(selectedToolboxTalk.participant_upload_attachments)}
+              >
+                Download
+              </Button>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        )}
+      </div>
+    )}
+  </DialogContent>
+</Dialog>
       
       <ToolboxAttendanceDialog
         open={openCreateDialog}

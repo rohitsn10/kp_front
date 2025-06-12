@@ -18,12 +18,98 @@ import {
   CircularProgress
 } from '@mui/material';
 import { 
-  Download as DownloadIcon 
+  Download as DownloadIcon,
+  PictureAsPdf
 } from '@mui/icons-material';
-import ImageViewer from '../../../utils/signatureViewer';
 import TrainingInductionDialog from '../../../components/pages/hse/induction-training/CreateTrainingInduction';
 import { useGetInductionTrainingsQuery } from '../../../api/hse/induction/inductionApi';
 import { useParams } from 'react-router-dom';
+
+// PDF Signature Component
+const PDFSignatureViewer = ({ src, facultyName, width = 120, height = 35 }) => {
+  const handleDownload = async () => {
+    if (!src) {
+      alert("No signature file available for download");
+      return;
+    }
+
+    try {
+      const fullUrl = `${import.meta.env.VITE_API_KEY}${src}`;
+      
+      // Fetch the file as blob to force download
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch signature file');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const fileName = src.split('/').pop() || `signature_${facultyName?.replace(/\s+/g, '_')}.pdf`;
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.setAttribute('download', fileName);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download signature file. Please try again.');
+    }
+  };
+
+  const truncateFileName = (name, maxLength = 15) => {
+    if (!name) return 'signature.pdf';
+    const cleanName = name.replace(/\.[^/.]+$/, ""); // Remove extension
+    if (cleanName.length <= maxLength) return name;
+    return cleanName.substring(0, maxLength) + '...pdf';
+  };
+
+  const displayFileName = src ? src.split('/').pop() : 'signature.pdf';
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 0.5,
+        padding: "4px 8px",
+        border: "1px solid #e0e0e0",
+        borderRadius: "4px",
+        backgroundColor: "#f5f5f5",
+        cursor: "pointer",
+        width: `${width}px`,
+        height: `${height}px`,
+        justifyContent: "center",
+        overflow: "hidden",
+      }}
+      onClick={handleDownload}
+      title={displayFileName}
+    >
+      <PictureAsPdf color="error" fontSize="small" />
+      <Typography 
+        variant="caption" 
+        sx={{ 
+          fontSize: '9px',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: '100px',
+          textAlign: 'center'
+        }}
+      >
+        {truncateFileName(displayFileName)}
+      </Typography>
+    </Box>
+  );
+};
 
 function InductionTraining() {
   const [page, setPage] = useState(0);
@@ -35,7 +121,7 @@ function InductionTraining() {
   const { locationId } = useParams();
   
   // Use the updated query hook with locationId parameter
-  const { data: inductionTrainingsResponse, isLoading, error,refetch } = useGetInductionTrainingsQuery(
+  const { data: inductionTrainingsResponse, isLoading, error, refetch } = useGetInductionTrainingsQuery(
     locationId ? parseInt(locationId) : undefined
   );
   const inductionTrainings = inductionTrainingsResponse?.data || [];
@@ -84,15 +170,41 @@ function InductionTraining() {
   };
 
   // Function to handle file download
-  const handleDownloadFile = (filePath) => {
-    // Create a link with the file path
-    const link = document.createElement('a');
-    link.href = filePath;
-    link.target = '_blank';
-    link.download = filePath.split('/').pop(); // Extract filename
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadFile = async (filePath) => {
+    if (!filePath) {
+      alert("No participants file available for download");
+      return;
+    }
+
+    try {
+      const fullUrl = `${import.meta.env.VITE_API_KEY}${filePath}`;
+      
+      // Fetch the file as blob to force download
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch participants file');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const fileName = filePath.split('/').pop() || 'participants_file';
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.setAttribute('download', fileName);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download participants file. Please try again.');
+    }
   };
 
   // Prepare topics array for display
@@ -164,10 +276,14 @@ function InductionTraining() {
                 <TableCell align="center">{training.date}</TableCell>
                 <TableCell align="center">{training.faculty_name}</TableCell>
                 <TableCell align="center">
-                  <ImageViewer 
-                    src={`${import.meta.env.VITE_API_KEY}${training.faculty_signature}`}
-                    alt={`${training.faculty_name} Signature`} 
-                  />
+                  {training.faculty_signature ? (
+                    <PDFSignatureViewer 
+                      src={training.faculty_signature}
+                      facultyName={training.faculty_name}
+                    />
+                  ) : (
+                    "No Signature"
+                  )}
                 </TableCell>
                 <TableCell align="center">
                   <div className="flex flex-col gap-2">
@@ -175,6 +291,7 @@ function InductionTraining() {
                       variant="contained" 
                       color="primary"
                       onClick={() => openTopicsModalHandler(training)}
+                      size="small"
                     >
                       View Topics
                     </Button>
@@ -183,6 +300,8 @@ function InductionTraining() {
                       color="secondary"
                       onClick={() => handleDownloadFile(training.participants_file)}
                       startIcon={<DownloadIcon />}
+                      size="small"
+                      disabled={!training.participants_file}
                     >
                       Download Participants
                     </Button>
@@ -212,14 +331,16 @@ function InductionTraining() {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Topics Discussed</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ backgroundColor: "#29346B", color: "white", textAlign: "center" }}>
+          Topics Discussed
+        </DialogTitle>
+        <DialogContent sx={{ padding: "24px" }}>
           {selectedTraining && (
             <>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ color: '#29346B', fontWeight: 'bold' }}>
                 Main Topic: {selectedTraining.training_topics}
               </Typography>
-              <Typography variant="subtitle1" gutterBottom mb={2}>
+              <Typography variant="subtitle1" gutterBottom mb={2} sx={{ color: '#29346B', fontWeight: 'bold' }}>
                 Detailed Topics:
               </Typography>
               <Box sx={{ 
@@ -238,18 +359,75 @@ function InductionTraining() {
                       sx={{ 
                         display: 'flex', 
                         borderBottom: '1px solid #e0e0e0',
-                        pb: 1 
+                        pb: 1,
+                        backgroundColor: topicContent ? '#f9f9f9' : '#ffffff'
                       }}
                     >
                       <Typography variant="body1" component="span" fontWeight="bold" width="50%" pr={2}>
                         {label}
                       </Typography>
-                      <Typography variant="body1" component="span" width="50%">
-                        {topicContent}
+                      <Typography variant="body1" component="span" width="50%" sx={{
+                        color: topicContent ? '#000' : '#999',
+                        fontStyle: topicContent ? 'normal' : 'italic'
+                      }}>
+                        {topicContent || 'Not covered'}
                       </Typography>
                     </Box>
                   );
                 })}
+              </Box>
+              
+              {/* Faculty Signature Section in Modal */}
+              <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #eee' }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
+                  Faculty Information
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                  <Typography sx={{ fontWeight: 'bold' }}>Faculty Name:</Typography>
+                  <Typography>{selectedTraining.faculty_name}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography sx={{ fontWeight: 'bold'}}>Faculty Signature:</Typography>
+                  {selectedTraining.faculty_signature ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          padding: "8px 16px",
+                          border: "1px solid #e0e0e0",
+                          borderRadius: "4px",
+                          backgroundColor: "#f5f5f5",
+                        }}
+                      >
+                        <PictureAsPdf color="error" />
+                      <Typography sx={{maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} variant="body2">
+                          {selectedTraining.faculty_signature.split('/').pop() || 'signature.pdf'}
+                        </Typography>
+                      </Box>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                          const viewer = new PDFSignatureViewer({
+                            src: selectedTraining.faculty_signature,
+                            facultyName: selectedTraining.faculty_name
+                          });
+                          viewer.handleDownload();
+                        }}
+                        startIcon={<DownloadIcon />}
+                        size="small"
+                      >
+                        Download Signature
+                      </Button>
+                    </Box>
+                  ) : (
+                    <Typography sx={{ color: '#666', fontStyle: 'italic' }}>
+                      No signature available
+                    </Typography>
+                  )}
+                </Box>
               </Box>
             </>
           )}

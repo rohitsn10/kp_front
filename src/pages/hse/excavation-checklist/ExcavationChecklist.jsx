@@ -18,41 +18,82 @@ import {
 import ExcavationPermitDialog from '../../../components/pages/hse/excavation/CreateExcavation';
 import { useParams } from 'react-router-dom';
 import { useGetLocationExcavationPermitsQuery } from '../../../api/hse/excavation/excavationPermitApi';
+import { Download, PictureAsPdf } from '@mui/icons-material';
+// PDF Download Component
+const PDFDownloader = ({ src, signatureType, personName, width = 200, height = 70 }) => {
+  const handleDownload = async () => {
+    if (!src) {
+      alert(`No ${signatureType} signature file available for download`);
+      return;
+    }
 
-const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
-  const [open, setOpen] = useState(false);
- 
+    try {
+      const fullUrl = src.startsWith('http') ? src : `${import.meta.env.VITE_API_KEY}${src}`;
+
+      // Fetch the file as blob to force download
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch signature file');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const fileName = src.split('/').pop() || `${signatureType}_signature_${personName?.replace(/\s+/g, '_')}.pdf`;
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.setAttribute('download', fileName);
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert(`Failed to download ${signatureType} signature file. Please try again.`);
+    }
+  };
+
+  const displayFileName = src ? src.split('/').pop() : `${signatureType}_signature.pdf`;
+
   return (
-    <>
-      <img
-        src={`${import.meta.env.VITE_API_KEY}${src}`}
-        alt={alt}
-        onClick={() => setOpen(true)}
-        style={{
-          width: `${width}px`,
-          height: `${height}px`,
-          cursor: 'pointer'
-        }}
-      />
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="md"
-        fullWidth
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', margin: '8px 0' }}>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        padding: "8px 16px",
+        border: "1px solid #e0e0e0",
+        borderRadius: "4px",
+        backgroundColor: "#f5f5f5",
+        minWidth: "200px",
+        justifyContent: "center"
+      }}>
+        <PictureAsPdf style={{ color: '#d32f2f' }} />
+        <Typography variant="body2" style={{
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: '150px'
+        }}>
+          {displayFileName}
+        </Typography>
+      </div>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleDownload}
+        startIcon={<Download />}
+        size="small"
+        style={{ fontSize: '12px' }}
       >
-        <DialogContent>
-          <img
-            src={`${import.meta.env.VITE_API_KEY}${src}`}
-            alt={alt}
-            style={{
-              width: '100%',
-              maxHeight: '500px',
-              objectFit: 'contain'
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+        Download PDF
+      </Button>
+    </div>
   );
 };
 
@@ -68,7 +109,7 @@ function ExcavationChecklist() {
   const [createExcavation, setCreateExcavation] = useState(false);
   const { locationId } = useParams();
   const parsedLocationId = locationId ? parseInt(locationId, 10) : null;
-  
+
   // Use the query hook with proper skip option
   const {
     data: response,
@@ -100,7 +141,7 @@ function ExcavationChecklist() {
 
   const openModal = (excavation, modalType) => {
     setSelectedExcavation(excavation);
-    switch(modalType) {
+    switch (modalType) {
       case 'size':
         setOpenSizeModal(true);
         break;
@@ -117,7 +158,7 @@ function ExcavationChecklist() {
   };
 
   const closeModal = (modalType) => {
-    switch(modalType) {
+    switch (modalType) {
       case 'size':
         setOpenSizeModal(false);
         break;
@@ -195,33 +236,33 @@ function ExcavationChecklist() {
                   <TableCell align="center">{excavation.location_area_work}</TableCell>
                   <TableCell align="center">
                     <div className="flex flex-col gap-2">
-                      <Button 
-                        variant="contained" 
-                        color="primary" 
+                      <Button
+                        variant="contained"
+                        color="primary"
                         size="small"
                         onClick={() => openModal(excavation, 'size')}
                       >
                         Size Details
                       </Button>
-                      <Button 
-                        variant="contained" 
-                        color="secondary" 
+                      <Button
+                        variant="contained"
+                        color="secondary"
                         size="small"
                         onClick={() => openModal(excavation, 'clearances')}
                       >
                         Clearances
                       </Button>
-                      <Button 
-                        variant="contained" 
-                        color="info" 
+                      <Button
+                        variant="contained"
+                        color="info"
                         size="small"
                         onClick={() => openModal(excavation, 'precautions')}
                       >
                         Precautions
                       </Button>
-                      <Button 
-                        variant="contained" 
-                        color="success" 
+                      <Button
+                        variant="contained"
+                        color="success"
                         size="small"
                         onClick={() => openModal(excavation, 'details')}
                       >
@@ -254,8 +295,8 @@ function ExcavationChecklist() {
       />
 
       {/* Size Details Modal */}
-      <Dialog 
-        open={openSizeModal} 
+      <Dialog
+        open={openSizeModal}
         onClose={() => closeModal('size')}
         maxWidth="md"
         fullWidth
@@ -277,8 +318,8 @@ function ExcavationChecklist() {
       </Dialog>
 
       {/* Clearances Modal */}
-      <Dialog 
-        open={openClearancesModal} 
+      <Dialog
+        open={openClearancesModal}
         onClose={() => closeModal('clearances')}
         maxWidth="md"
         fullWidth
@@ -293,13 +334,16 @@ function ExcavationChecklist() {
                 <Typography><strong>Cleared By:</strong> {selectedExcavation.electrical_cable_name}</Typography>
                 <Typography><strong>Date:</strong> {formatDate(selectedExcavation.electrical_cable_date)}</Typography>
                 <Typography><strong>Signature:</strong></Typography>
-                {selectedExcavation.sign_upload && (
-                  <ImageViewer
-                  src={selectedExcavation.sign_upload}
-                  alt="Signature"
-                  width={200} 
-                  height={70}
-                />
+                {selectedExcavation.sign_upload ? (
+                  <PDFDownloader
+                    src={selectedExcavation.sign_upload}
+                    signatureType="electrical_clearance"
+                    personName={selectedExcavation.electrical_cable_name}
+                  />
+                ) : (
+                  <Typography variant="body2" style={{ color: '#666', fontStyle: 'italic' }}>
+                    No signature available
+                  </Typography>
                 )}
               </div>
 
@@ -309,13 +353,16 @@ function ExcavationChecklist() {
                 <Typography><strong>Cleared By:</strong> {selectedExcavation.water_gas_name}</Typography>
                 <Typography><strong>Date:</strong> {formatDate(selectedExcavation.water_gas_date)}</Typography>
                 <Typography><strong>Signature:</strong></Typography>
-                {selectedExcavation.water_sign_upload && (
-                  <ImageViewer
-                  src={selectedExcavation.water_sign_upload}
-                  alt="Signature"
-                  width={200} 
-                  height={70}
-                />
+                {selectedExcavation.water_sign_upload ? (
+                  <PDFDownloader
+                    src={selectedExcavation.water_sign_upload}
+                    signatureType="water_gas_clearance"
+                    personName={selectedExcavation.water_gas_name}
+                  />
+                ) : (
+                  <Typography variant="body2" style={{ color: '#666', fontStyle: 'italic' }}>
+                    No signature available
+                  </Typography>
                 )}
               </div>
 
@@ -325,13 +372,16 @@ function ExcavationChecklist() {
                 <Typography><strong>Cleared By:</strong> {selectedExcavation.telephone_name}</Typography>
                 <Typography><strong>Date:</strong> {formatDate(selectedExcavation.telephone_date)}</Typography>
                 <Typography><strong>Signature:</strong></Typography>
-                {selectedExcavation.telephone_sign_upload && (
-                  <ImageViewer
-                  src={selectedExcavation.telephone_sign_upload}
-                  alt="Signature"
-                  width={200} 
-                  height={70}
-                />
+                {selectedExcavation.telephone_sign_upload ? (
+                  <PDFDownloader
+                    src={selectedExcavation.telephone_sign_upload}
+                    signatureType="telephone_clearance"
+                    personName={selectedExcavation.telephone_name}
+                  />
+                ) : (
+                  <Typography variant="body2" style={{ color: '#666', fontStyle: 'italic' }}>
+                    No signature available
+                  </Typography>
                 )}
               </div>
             </>
@@ -340,8 +390,8 @@ function ExcavationChecklist() {
       </Dialog>
 
       {/* Precautions Modal */}
-      <Dialog 
-        open={openPrecautionsModal} 
+      <Dialog
+        open={openPrecautionsModal}
         onClose={() => closeModal('precautions')}
         maxWidth="md"
         fullWidth
@@ -357,13 +407,16 @@ function ExcavationChecklist() {
               <Typography><strong>Other Precautions:</strong> {selectedExcavation.any_other_precaution}</Typography>
               <Typography className="mt-4"><strong>Name:</strong> {selectedExcavation.name_acceptor}</Typography>
               <Typography><strong>Signature:</strong></Typography>
-              {selectedExcavation.acceptor_sign_upload && (
-                <ImageViewer
+              {selectedExcavation.acceptor_sign_upload ? (
+                <PDFDownloader
                   src={selectedExcavation.acceptor_sign_upload}
-                  alt="Signature"
-                  width={200} 
-                  height={80}
+                  signatureType="acceptor"
+                  personName={selectedExcavation.name_acceptor}
                 />
+              ) : (
+                <Typography variant="body2" style={{ color: '#666', fontStyle: 'italic' }}>
+                  No signature available
+                </Typography>
               )}
             </div>
           )}
@@ -371,8 +424,8 @@ function ExcavationChecklist() {
       </Dialog>
 
       {/* Additional Details Modal */}
-      <Dialog 
-        open={openDetailsModal} 
+      <Dialog
+        open={openDetailsModal}
         onClose={() => closeModal('details')}
         maxWidth="md"
         fullWidth
@@ -384,13 +437,16 @@ function ExcavationChecklist() {
               <Typography><strong>Remarks:</strong> {selectedExcavation.remarks}</Typography>
               <Typography className="mt-4"><strong>Checked By:</strong> {selectedExcavation.check_by_name}</Typography>
               <Typography><strong>Signature:</strong></Typography>
-              {selectedExcavation.check_by_sign && (
-                <ImageViewer
+              {selectedExcavation.check_by_sign ? (
+                <PDFDownloader
                   src={selectedExcavation.check_by_sign}
-                  alt="Signature"
-                  width={200} 
-                  height={80}
+                  signatureType="checker"
+                  personName={selectedExcavation.check_by_name}
                 />
+              ) : (
+                <Typography variant="body2" style={{ color: '#666', fontStyle: 'italic' }}>
+                  No signature available
+                </Typography>
               )}
             </div>
           )}

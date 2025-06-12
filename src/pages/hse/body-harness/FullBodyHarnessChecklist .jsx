@@ -17,46 +17,69 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
+import { Download as DownloadIcon } from '@mui/icons-material';
 import HarnessInspectionDialog from "../../../components/pages/hse/body-harness/CreateHarnessChecklist";
 import { useGetAllHarnessInspectionsQuery } from "../../../api/hse/harness/harnessApi";
 import { useParams } from "react-router-dom";
 import moment from 'moment';
 // import { useGetAllHarnessInspectionsQuery } from '../../../path/to/your/api'; // Adjust the import path as needed
 
-const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
-  const [open, setOpen] = useState(false);
+// PDF Download Component
+const PDFDownloadButton = ({ src, fileName = "inspector_signature.pdf" }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!src) return;
+    
+    setIsDownloading(true);
+    try {
+      const fullUrl = `${import.meta.env.VITE_API_KEY}${src}`;
+      const response = await fetch(fullUrl);
+      
+      if (!response.ok) {
+        throw new Error('Failed to download PDF');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create temporary link element and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // You can add a toast notification here if you have one
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
-    <>
-      <img
-        src={`${import.meta.env.VITE_API_KEY}${src}`}
-        alt={alt}
-        onClick={() => setOpen(true)}
-        style={{
-          width: `${width}px`,
-          height: `${height}px`,
-          cursor: "pointer",
-        }}
-      />
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogContent>
-          <img
-            src={`${import.meta.env.VITE_API_KEY}${src}`}
-            alt={alt}
-            style={{
-              width: "100%",
-              maxHeight: "500px",
-              objectFit: "contain",
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+    <Button
+      variant="outlined"
+      size="small"
+      startIcon={<DownloadIcon />}
+      onClick={handleDownload}
+      disabled={isDownloading || !src}
+      sx={{
+        borderColor: '#FF8C00',
+        color: '#FF8C00',
+        '&:hover': {
+          borderColor: '#FF8C00',
+          backgroundColor: 'rgba(255, 140, 0, 0.04)'
+        }
+      }}
+    >
+      {isDownloading ? 'Downloading...' : 'Download PDF'}
+    </Button>
   );
 };
 
@@ -432,16 +455,9 @@ function FullBodyHarnessChecklist() {
                     <Typography>
                       <strong>Inspector Signature:</strong>
                     </Typography>
-                    {/* <img 
-                      src={selectedHarness.inspector_signature} 
-                      alt="Inspector Signature" 
-                      style={{ maxWidth: '200px', marginTop: '8px' }}
-                    /> */}
-                    <ImageViewer
+                    <PDFDownloadButton
                       src={selectedHarness.inspector_signature}
-                      alt="Signature"
-                      width={200}
-                      height={70}
+                      fileName={`inspector_signature_${selectedHarness.site_name}_${moment(selectedHarness.date_of_inspection).format("YYYY-MM-DD")}.pdf`}
                     />
                   </div>
                 )}

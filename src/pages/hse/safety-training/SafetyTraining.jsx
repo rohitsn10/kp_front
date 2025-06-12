@@ -16,45 +16,63 @@ import {
   TextField,
   Box,
 } from "@mui/material";
-import { Download } from "@mui/icons-material"; // Add this import for download icon
+import { Download, PictureAsPdf } from "@mui/icons-material";
 import TrainingAttendanceDialog from "../../../components/pages/hse/safety-training/CreateSafetyTraining";
 import { useGetSafetyTrainingAttendanceQuery } from "../../../api/hse/safetyTraining/safetyTrainingApi";
 import { useParams } from "react-router-dom";
 
-const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
-  const [open, setOpen] = useState(false);
+const PDFViewer = ({ src, fileName, width = 120, height = 35 }) => {
+  const handleDownload = () => {
+    const fullUrl = `${import.meta.env.VITE_API_KEY}${src}`;
+    const link = document.createElement('a');
+    link.href = fullUrl;
+    link.download = fileName || 'signature.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Truncate filename if too long
+  const truncateFileName = (name, maxLength = 15) => {
+    if (!name) return 'signature.pdf';
+    const cleanName = name.replace(/\.[^/.]+$/, ""); // Remove extension
+    if (cleanName.length <= maxLength) return name;
+    return cleanName.substring(0, maxLength) + '...pdf';
+  };
 
   return (
-    <>
-      <img
-        src={src}
-        alt={alt}
-        onClick={() => setOpen(true)}
-        style={{
-          width: `${width}px`,
-          height: `${height}px`,
-          cursor: "pointer",
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        padding: "4px 8px",
+        border: "1px solid #e0e0e0",
+        borderRadius: "4px",
+        backgroundColor: "#f5f5f5",
+        cursor: "pointer",
+        width: `${width}px`,
+        height: `${height}px`,
+        justifyContent: "center",
+        overflow: "hidden",
+      }}
+      onClick={handleDownload}
+      title={fileName || 'signature.pdf'} // Show full name on hover
+    >
+      <PictureAsPdf color="error" fontSize="small" />
+      <Typography 
+        variant="caption" 
+        sx={{ 
+          fontSize: '10px',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: '80px'
         }}
-      />
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="md"
-        fullWidth
       >
-        <DialogContent>
-          <img
-            src={src}
-            alt={alt}
-            style={{
-              width: "100%",
-              maxHeight: "500px",
-              objectFit: "contain",
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+        {truncateFileName(fileName)}
+      </Typography>
+    </Box>
   );
 };
 
@@ -77,49 +95,37 @@ function SafetyTraining() {
       return;
     }
 
-    // Create full URL for download using VITE_API_KEY
     const fullUrl = `${import.meta.env.VITE_API_KEY}${fileUrl}`;
-    
-    // Create a temporary anchor element to trigger download
     const link = document.createElement('a');
     link.href = fullUrl;
-    
-    // Extract filename from URL or create a meaningful name
     const fileName = fileUrl.split('/').pop() || `attendance_${siteName}_${date}.docx`;
     link.download = fileName;
-    
-    // Append to body, click, and remove
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const dummySafetyData = [
-    {
-      site: "Training Facility A",
-      date: "2025-03-27",
-      faculty_name: "Dr. Jane Smith",
-      signature: "https://dummyimage.com/150x50/000/fff.png&text=Signature",
-      topic: "Workplace Safety and Hazard Prevention",
-      participants: [
-        {
-          name: "John Doe",
-          designation: "Safety Officer",
-          signature: "https://dummyimage.com/150x50/000/fff.png&text=Signature",
-        },
-        {
-          name: "Alice Johnson",
-          designation: "Project Manager",
-          signature: "https://dummyimage.com/150x50/000/fff.png&text=Signature",
-        },
-        {
-          name: "Robert Smith",
-          designation: "Engineer",
-          signature: "https://dummyimage.com/150x50/000/fff.png&text=Signature",
-        },
-      ],
-    },
-  ];
+  // Function to handle signature download
+  const handleDownloadSignature = (signatureUrl, facultyName) => {
+    if (!signatureUrl) {
+      alert("No signature file available for download");
+      return;
+    }
+
+    const fullUrl = `${import.meta.env.VITE_API_KEY}${signatureUrl}`;
+    const link = document.createElement('a');
+    link.href = fullUrl;
+    const fileName = signatureUrl.split('/').pop() || `signature_${facultyName?.replace(/\s+/g, '_')}.pdf`;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Function to check if file is PDF
+  const isPDF = (fileUrl) => {
+    return fileUrl && (fileUrl.toLowerCase().endsWith('.pdf') || fileUrl.toLowerCase().includes('.pdf'));
+  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -190,7 +196,7 @@ function SafetyTraining() {
               <TableCell align="center">Topic</TableCell>
               <TableCell align="center">Date</TableCell>
               <TableCell align="center">Faculty Name</TableCell>
-              <TableCell align="center">Faculty Signature</TableCell>
+              {/* <TableCell align="center">Faculty Signature</TableCell> */}
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -203,16 +209,16 @@ function SafetyTraining() {
                 <TableCell align="center">
                   {training.faculty_name || "N/A"}
                 </TableCell>
-                <TableCell align="center">
+                {/* <TableCell align="center">
                   {training.faculty_signature ? (
-                    <ImageViewer
-                      src={`${import.meta.env.VITE_API_KEY}${training.faculty_signature}`}
-                      alt={`${training.faculty_name || "Faculty"} Signature`}
+                    <PDFViewer
+                      src={training.faculty_signature}
+                      fileName={`signature_${training.faculty_name?.replace(/\s+/g, '_')}.pdf`}
                     />
                   ) : (
                     "No Signature"
                   )}
-                </TableCell>
+                </TableCell> */}
                 <TableCell align="center">
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
                     <Button
@@ -294,17 +300,52 @@ function SafetyTraining() {
                   <Typography sx={{ mb: 1 }}>
                     <strong>Faculty Name:</strong> {selectedTraining.faculty_name || "Not Assigned"}
                   </Typography>
-                  <Typography sx={{ mb: 1 }}>
+                  <Typography sx={{ mb: 2 }}>
                     <strong>Faculty Signature:</strong>
                   </Typography>
                   {selectedTraining.faculty_signature ? (
-                    <Box sx={{ border: '1px solid #ddd', borderRadius: '4px', p: 1, display: 'inline-block' }}>
-                      <ImageViewer
-                        src={`${import.meta.env.VITE_API_KEY}${selectedTraining.faculty_signature}`}
-                        alt="Faculty Signature"
-                        width={150}
-                        height={50}
-                      />
+                    <Box sx={{ border: '1px solid #ddd', borderRadius: '4px', p: 2, display: 'inline-block' }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            padding: "8px 16px",
+                            border: "1px solid #e0e0e0",
+                            borderRadius: "4px",
+                            backgroundColor: "#f5f5f5",
+                            minWidth: "200px",
+                            maxWidth: "250px",
+                          }}
+                        >
+                          <PictureAsPdf color="error" />
+                          <Typography 
+                            variant="body2"
+                            sx={{
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              flex: 1
+                            }}
+                            title={selectedTraining.faculty_signature.split('/').pop() || 'signature.pdf'}
+                          >
+                            {selectedTraining.faculty_signature.split('/').pop() || 'signature.pdf'}
+                          </Typography>
+                        </Box>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => handleDownloadSignature(
+                            selectedTraining.faculty_signature,
+                            selectedTraining.faculty_name
+                          )}
+                          startIcon={<Download />}
+                          size="small"
+                        >
+                          Download Signature PDF
+                        </Button>
+                      </Box>
                     </Box>
                   ) : (
                     <Typography sx={{ color: '#666', fontStyle: 'italic' }}>
@@ -333,10 +374,10 @@ function SafetyTraining() {
                 <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#29346B', mb: 1 }}>
                   Attendance File
                 </Typography>
-                {selectedTraining.file_upload ? (
+                {selectedTraining?.file_upload ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Typography>
-                      <strong>File:</strong> {selectedTraining.file_upload.split('/').pop()}
+                    <Typography sx={{ display: 'flex', alignItems: 'center', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <strong>File:</strong> <p className="max-w-24">{selectedTraining.file_upload.split('/').pop()}</p>
                     </Typography>
                     <Button
                       variant="contained"

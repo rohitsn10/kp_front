@@ -15,13 +15,14 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreateVerificationInternalAuditReportMutation } from "../../../../api/hse/internalAudit/internalAuditReportApi ";
-// import { useCreateVerificationInternalAuditReportMutation } from "../../../api/hse/internalAudit/internalAuditReportApi"; // Adjust import path as needed
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 export default function VerificationForm({ open, setOpen, auditId, onSuccess }) {
   const [verification, setVerification] = useState({
     verification_auditor_name: "",
     verification_auditor_sign: null,
-    verification_auditor_date: ""
+    verification_auditor_date: "",
+    signatureFileName: ""
   });
 
   // RTK mutation hook
@@ -31,7 +32,7 @@ export default function VerificationForm({ open, setOpen, auditId, onSuccess }) 
     if (!verification.verification_auditor_name.trim())
       return toast.error("Auditor Name is required!");
     if (!verification.verification_auditor_sign)
-      return toast.error("Auditor Signature is required!");
+      return toast.error("Auditor Signature PDF is required!");
     if (!verification.verification_auditor_date.trim())
       return toast.error("Auditor Date is required!");
 
@@ -45,7 +46,8 @@ export default function VerificationForm({ open, setOpen, auditId, onSuccess }) 
       setVerification({
         verification_auditor_name: "",
         verification_auditor_sign: null,
-        verification_auditor_date: ""
+        verification_auditor_date: "",
+        signatureFileName: ""
       });
     }
   };
@@ -65,21 +67,25 @@ export default function VerificationForm({ open, setOpen, auditId, onSuccess }) 
   const handleSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Check file type
+      if (file.type !== 'application/pdf') {
+        toast.error("Please upload a PDF file for auditor signature!");
+        return;
+      }
+      
+      // Check file size (15MB = 15 * 1024 * 1024 bytes)
+      const maxSize = 15 * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error("Auditor signature PDF must be less than 15MB!");
+        return;
+      }
+      
       // Store the actual file for form submission
       setVerification(prev => ({
         ...prev,
-        verification_auditor_sign: file
+        verification_auditor_sign: file,
+        signatureFileName: file.name
       }));
-
-      // Create a preview
-      const reader = new FileReader();
-      reader.onload = () => {
-        setVerification(prev => ({
-          ...prev,
-          signaturePreview: reader.result
-        }));
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -147,9 +153,10 @@ export default function VerificationForm({ open, setOpen, auditId, onSuccess }) 
               disabled={isLoading}
             />
           </Grid>
+          
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Auditor Signature<span className="text-red-600"> *</span>
+              Auditor Signature PDF<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -165,23 +172,36 @@ export default function VerificationForm({ open, setOpen, auditId, onSuccess }) 
                 sx={{ height: "56px" }}
                 disabled={isLoading}
               >
-                Upload Signature
+                Upload Signature PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf"
                   hidden
                   onChange={handleSignatureUpload}
                 />
               </Button>
-              {verification.signaturePreview && (
-                <Avatar
-                  src={verification.signaturePreview}
-                  alt="Auditor Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
+              {verification.verification_auditor_sign && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    padding: "8px 12px",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "4px",
+                    backgroundColor: "#f5f5f5",
+                  }}
+                >
+                  <PictureAsPdfIcon color="error" />
+                  <Typography variant="body2">
+                    {verification.signatureFileName}
+                  </Typography>
+                </Box>
               )}
             </Box>
+            <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+              Upload signed PDF (Max: 15MB)
+            </Typography>
           </Grid>
 
           <Grid item xs={12} md={6}>

@@ -33,7 +33,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useCreateMinutesOfSafetyTrainingMutation } from "../../../../api/hse/safetyTrainingMinutes/safetyTrainingMinutes";
 import { useParams } from "react-router-dom";
-
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 export default function CreateHSEMeetingMinutes({ open, setOpen,onSuccess }) {
   // Basic Information
   const { locationId } = useParams();
@@ -87,39 +87,54 @@ export default function CreateHSEMeetingMinutes({ open, setOpen,onSuccess }) {
   // Signatures
   const [minutesPreparedBy, setMinutesPreparedBy] = useState("");
   const [signaturePreparedBy, setSignaturePreparedBy] = useState(null);
-  const [signaturePreparedByPreview,setSignaturePreparedByPreview]=useState(null)
+  // const [signaturePreparedByPreview,setSignaturePreparedByPreview]=useState(null)
   const [signatureChairman, setSignatureChairman] = useState(null);
-  const [signatureChairmanPreview,setSignatureChairmanPreview]=useState(null)
+  // const [signatureChairmanPreview,setSignatureChairmanPreview]=useState(null)
+const [signaturePreparedByName, setSignaturePreparedByName] = useState("");
+const [signatureChairmanName, setSignatureChairmanName] = useState("");
 
-
-  const handleSignaturePrepare = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSignaturePreparedBy(file); // Store the File object directly
-      
-      // You can still preview the image if needed
-      const reader = new FileReader();
-      reader.onload = () => {
-        setSignaturePreparedByPreview(reader.result); // For preview only
-      };
-      reader.readAsDataURL(file);
+const handleSignaturePrepare = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    // Check file type
+    if (file.type !== 'application/pdf') {
+      toast.error("Please upload a PDF file for prepared by signature!");
+      return;
     }
-  };
+    
+    // Check file size (15MB = 15 * 1024 * 1024 bytes)
+    const maxSize = 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("Prepared by signature PDF must be less than 15MB!");
+      return;
+    }
+    
+    setSignaturePreparedBy(file);
+    setSignaturePreparedByName(file.name);
+  }
+};
   
   // Similarly for chairman signature
-  const handleSignatureChairman = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSignatureChairman(file);
-      
-      // For preview if needed
-      const reader = new FileReader();
-      reader.onload = () => {
-        setSignatureChairmanPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+const handleSignatureChairman = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    // Check file type
+    if (file.type !== 'application/pdf') {
+      toast.error("Please upload a PDF file for chairman signature!");
+      return;
     }
-  };
+    
+    // Check file size (15MB = 15 * 1024 * 1024 bytes)
+    const maxSize = 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("Chairman signature PDF must be less than 15MB!");
+      return;
+    }
+    
+    setSignatureChairman(file);
+    setSignatureChairmanName(file.name);
+  }
+};
 
 
   // Style for all input fields
@@ -169,7 +184,9 @@ export default function CreateHSEMeetingMinutes({ open, setOpen,onSuccess }) {
     if (!momRecordedBy.trim()) return toast.error("MOM Recorded By is required!");
     if (!momIssueDate) return toast.error("MOM Issue Date is required!");
     if (!chairmanName.trim()) return toast.error("Chairman Name is required!");
-    
+      if (!signaturePreparedBy) return toast.error("Prepared By Signature PDF is required!");
+  if (!signatureChairman) return toast.error("Chairman Signature PDF is required!");
+  
     // You can add more validation as needed
     
     return true;
@@ -1154,6 +1171,7 @@ onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value)
 </Accordion>
 
 {/* Signatures Section */}
+{/* Signatures Section */}
 <div className="p-4 border border-gray-200 rounded-lg mt-4">
   <h3 className="text-[#29346B] text-xl font-semibold mb-3">Signatures</h3>
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1171,76 +1189,100 @@ onChange={(e) => handleItemChange(index, "target_date", new Date(e.target.value)
       />
     </div>
     <div>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-               Signature Prepared by<span className="text-red-600"> *</span>
-            </label>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Button
-                variant="outlined"
-                component="label"
-                color="primary"
-                sx={{ height: "56px" }}
-              >
-                Upload Signature
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={handleSignaturePrepare}
-                />
-              </Button>
-              {signaturePreparedByPreview && (
-                <Avatar
-                  src={signaturePreparedByPreview}
-                  alt="Faculty Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
-              )}
-            </Box>
-
+      <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+        Signature Prepared by PDF<span className="text-red-600"> *</span>
+      </label>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <Button
+          variant="outlined"
+          component="label"
+          color="primary"
+          sx={{ height: "56px" }}
+        >
+          Upload Signature PDF
+          <input
+            type="file"
+            accept=".pdf"
+            hidden
+            onChange={handleSignaturePrepare}
+          />
+        </Button>
+        {signaturePreparedBy && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              padding: "8px 12px",
+              border: "1px solid #e0e0e0",
+              borderRadius: "4px",
+              backgroundColor: "#f5f5f5",
+            }}
+          >
+            <PictureAsPdfIcon color="error" />
+            <Typography variant="body2">
+              {signaturePreparedByName}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+      <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+        Upload signed PDF (Max: 15MB)
+      </Typography>
     </div>
     <div>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-            Chairman Signature <span className="text-red-600"> *</span>
-            </label>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Button
-                variant="outlined"
-                component="label"
-                color="primary"
-                sx={{ height: "56px" }}
-              >
-                Upload Signature
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={handleSignatureChairman}
-                />
-              </Button>
-              {signatureChairmanPreview && (
-                <Avatar
-                  src={signatureChairmanPreview}
-                  alt="Faculty Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
-              )}
-            </Box>
-
+      <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+        Chairman Signature PDF<span className="text-red-600"> *</span>
+      </label>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <Button
+          variant="outlined"
+          component="label"
+          color="primary"
+          sx={{ height: "56px" }}
+        >
+          Upload Signature PDF
+          <input
+            type="file"
+            accept=".pdf"
+            hidden
+            onChange={handleSignatureChairman}
+          />
+        </Button>
+        {signatureChairman && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              padding: "8px 12px",
+              border: "1px solid #e0e0e0",
+              borderRadius: "4px",
+              backgroundColor: "#f5f5f5",
+            }}
+          >
+            <PictureAsPdfIcon color="error" />
+            <Typography variant="body2">
+              {signatureChairmanName}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+      <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+        Upload signed PDF (Max: 15MB)
+      </Typography>
     </div>
   </div>
 </div>

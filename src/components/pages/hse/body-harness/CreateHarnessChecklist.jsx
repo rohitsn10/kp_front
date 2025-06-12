@@ -14,12 +14,15 @@ import {
   FormControlLabel,
   Radio,
   Box,
-  Avatar,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useCreateHarnessInspectionMutation, useGetAllHarnessInspectionsQuery } from "../../../../api/hse/harness/harnessApi";
 import { useParams } from "react-router-dom";
+import commonInputStyles from "../../../../utils/commonInputStyles";
 // import { useCreateHarnessInspectionMutation } from "../path/to/harnessInspectionApi"; // Update path as needed
+
+// Add the file size constant
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB in bytes
 
 export default function HarnessInspectionDialog({ open, setOpen, onSuccess }) {
   const [site, setSite] = useState("");
@@ -89,8 +92,8 @@ export default function HarnessInspectionDialog({ open, setOpen, onSuccess }) {
       return false;
     }
 
-    if (!inspectorSignature) {
-      toast.error("Inspector Signature is required!");
+    if (!inspectorSignatureFile) {
+      toast.error("Inspector Signature PDF is required!");
       return false;
     }
 
@@ -98,37 +101,30 @@ export default function HarnessInspectionDialog({ open, setOpen, onSuccess }) {
   };
 
   const handleClose = () => setOpen(false);
-
-  const commonInputStyles = {
-    "& .MuiOutlinedInput-root": {
-      borderRadius: "6px",
-      transition: "border 0.2s ease-in-out",
-      "&:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15",
-        borderBottom: "4px solid #FACC15",
-      },
-      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15",
-        borderWidth: "2px",
-        borderBottom: "4px solid #FACC15",
-      },
-    },
-    "& .MuiOutlinedInput-notchedOutline": {
-      border: "1px solid #FACC15",
-      borderBottom: "4px solid #FACC15",
-    },
-  };
-
+  
+  // Updated signature upload handler for PDF files
   const handleSignatureUpload = (e) => {
     const file = e.target.files[0];
+    
     if (file) {
-      setInspectorSignatureFile(file);
+      // Check file type
+      if (file.type !== 'application/pdf') {
+        toast.error('Please select a PDF file only');
+        // Clear the input
+        e.target.value = '';
+        return;
+      }
       
-      const reader = new FileReader();
-      reader.onload = () => {
-        setInspectorSignature(reader.result);
-      };
-      reader.readAsDataURL(file);
+      // Check file size (15MB limit)
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error('File size must be less than 15MB');
+        // Clear the input
+        e.target.value = '';
+        return;
+      }
+      
+      setInspectorSignatureFile(file);
+      setInspectorSignature(file); // Keep for compatibility with existing logic
     }
   };
 
@@ -179,7 +175,7 @@ export default function HarnessInspectionDialog({ open, setOpen, onSuccess }) {
     formData.append("report", report);
     formData.append("inspector_name", inspectorName);
     
-    // Inspector signature is optional for now, but will be added in the future
+    // Inspector signature PDF
     if (inspectorSignatureFile) {
       formData.append("inspector_signature", inspectorSignatureFile);
     }
@@ -396,20 +392,10 @@ export default function HarnessInspectionDialog({ open, setOpen, onSuccess }) {
             />
           </Grid>
           
-          {/* <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Inspector Signature"
-              variant="outlined"
-              placeholder="Enter inspector's signature (optional for now)"
-              value={inspectorSignature}
-              sx={commonInputStyles}
-              onChange={(e) => setInspectorSignature(e.target.value)}
-            />
-          </Grid> */}
+          {/* Inspector Signature PDF Upload */}
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Signature<span className="text-red-600"> *</span>
+              Signature PDF (Max 15MB)<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -424,21 +410,23 @@ export default function HarnessInspectionDialog({ open, setOpen, onSuccess }) {
                 color="primary"
                 sx={{ height: "56px" }}
               >
-                Upload Signature
+                Upload Signature PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf"
                   hidden
                   onChange={handleSignatureUpload}
                 />
               </Button>
-              {inspectorSignature && (
-                <Avatar
-                  src={inspectorSignature}
-                  alt="Inspector Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
+              {inspectorSignatureFile && (
+                <Box sx={{ ml: 2 }}>
+                  <Typography variant="caption" display="block">
+                    File: {inspectorSignatureFile.name}
+                  </Typography>
+                  <Typography variant="caption" display="block" color="text.secondary">
+                    Size: {(inspectorSignatureFile.size / (1024 * 1024)).toFixed(2)} MB
+                  </Typography>
+                </Box>
               )}
             </Box>
           </Grid>

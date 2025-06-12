@@ -10,13 +10,15 @@ import {
   Typography,
   Divider,
   Box,
-  Avatar,
   CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
 import { useCreateLotoRegisterMutation } from "../../../../api/hse/loto/lotoRegisterApi";
 // import { useCreateLotoRegisterMutation } from "../api/lotoRegisterApi"; // Update this path to your actual API file path
+
+// Add the file size constant
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB in bytes
 
 export default function CreateLotoRegister({ open, setOpen }) {
   const { locationId } = useParams();
@@ -65,17 +67,28 @@ export default function CreateLotoRegister({ open, setOpen }) {
     },
   };
 
+  // Updated signature upload handler for PDF files
   const handleSignatureUpload = (setter, e) => {
     const file = e.target.files[0];
+    
     if (file) {
-      setter(file); // Store the actual file for FormData
+      // Check file type
+      if (file.type !== 'application/pdf') {
+        toast.error('Please select a PDF file only');
+        // Clear the input
+        e.target.value = '';
+        return;
+      }
       
-      // For preview purpose
-      const reader = new FileReader();
-      reader.onload = () => {
-        e.target.dataset.preview = reader.result;
-      };
-      reader.readAsDataURL(file);
+      // Check file size (15MB limit)
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error('File size must be less than 15MB');
+        // Clear the input
+        e.target.value = '';
+        return;
+      }
+      
+      setter(file); // Store the actual file for FormData
     }
   };
 
@@ -209,10 +222,10 @@ export default function CreateLotoRegister({ open, setOpen }) {
             />
           </Grid>
 
-          {/* Applied By Signature */}
+          {/* Applied By Signature PDF */}
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Applied By Signature<span className="text-red-600"> *</span>
+              Applied By Signature PDF (Max 15MB)<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -227,21 +240,23 @@ export default function CreateLotoRegister({ open, setOpen }) {
                 color="primary"
                 sx={{ height: "56px" }}
               >
-                Upload Signature
+                Upload Signature PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf"
                   hidden
                   onChange={(e) => handleSignatureUpload(setAppliedBySignature, e)}
                 />
               </Button>
               {appliedBySignature && (
-                <Avatar
-                  src={e => e.target.dataset.preview || ''}
-                  alt="Applied By Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
+                <Box sx={{ ml: 2 }}>
+                  <Typography variant="caption" display="block">
+                    File: {appliedBySignature.name}
+                  </Typography>
+                  <Typography variant="caption" display="block" color="text.secondary">
+                    Size: {(appliedBySignature.size / (1024 * 1024)).toFixed(2)} MB
+                  </Typography>
+                </Box>
               )}
             </Box>
           </Grid>
@@ -261,10 +276,10 @@ export default function CreateLotoRegister({ open, setOpen }) {
             />
           </Grid>
 
-          {/* Applied Approved By Signature */}
+          {/* Applied Approved By Signature PDF */}
           <Grid item xs={12}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Applied Approved By Signature<span className="text-red-600"> *</span>
+              Applied Approved By Signature PDF (Max 15MB)<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -279,10 +294,10 @@ export default function CreateLotoRegister({ open, setOpen }) {
                 color="primary"
                 sx={{ height: "56px" }}
               >
-                Upload Signature
+                Upload Signature PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf"
                   hidden
                   onChange={(e) =>
                     handleSignatureUpload(setAppliedApprovedBySignature, e)
@@ -290,12 +305,14 @@ export default function CreateLotoRegister({ open, setOpen }) {
                 />
               </Button>
               {appliedApprovedBySignature && (
-                <Avatar
-                  src={e => e.target.dataset.preview || ''}
-                  alt="Approved By Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
+                <Box sx={{ ml: 2 }}>
+                  <Typography variant="caption" display="block">
+                    File: {appliedApprovedBySignature.name}
+                  </Typography>
+                  <Typography variant="caption" display="block" color="text.secondary">
+                    Size: {(appliedApprovedBySignature.size / (1024 * 1024)).toFixed(2)} MB
+                  </Typography>
+                </Box>
               )}
             </Box>
           </Grid>

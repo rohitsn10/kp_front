@@ -16,7 +16,7 @@ import {
 import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
 import { useCreateInternalAuditReportMutation } from "../../../../api/hse/internalAudit/internalAuditReportApi ";
-// import { useCreateInternalAuditReportMutation } from "../redux/internalAuditReportApi"; // Adjust the import path as needed
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 export default function CreateAuditForm({ open, setOpen, onSuccess }) {
   const { locationId } = useParams();
@@ -25,8 +25,10 @@ export default function CreateAuditForm({ open, setOpen, onSuccess }) {
   const [observer_details, setObserverDetails] = useState("");
   const [observer_name, setObserverName] = useState("");
   const [observer_sign, setObserverSign] = useState(null);
+  const [observer_sign_name, setObserverSignName] = useState("");
   const [auditee_name, setAuditeeName] = useState("");
   const [auditee_sign, setAuditeeSign] = useState(null);
+  const [auditee_sign_name, setAuditeeSignName] = useState("");
   const [agreed_completion_date, setAgreedCompletionDate] = useState("");
   
   // Using the RTK Query mutation hook
@@ -37,9 +39,9 @@ export default function CreateAuditForm({ open, setOpen, onSuccess }) {
     if (!date.trim()) return toast.error("Date is required!");
     if (!observer_details.trim()) return toast.error("Observations are required!");
     if (!observer_name.trim()) return toast.error("Auditor/Observer Name is required!");
-    if (!observer_sign) return toast.error("Auditor/Observer Signature is required!");
+    if (!observer_sign) return toast.error("Auditor/Observer Signature PDF is required!");
     if (!auditee_name.trim()) return toast.error("Auditee Name is required!");
-    if (!auditee_sign) return toast.error("Auditee Signature is required!");
+    if (!auditee_sign) return toast.error("Auditee Signature PDF is required!");
     if (!agreed_completion_date.trim()) return toast.error("Agreed Completion Date is required!");
 
     return true;
@@ -62,28 +64,42 @@ export default function CreateAuditForm({ open, setOpen, onSuccess }) {
   const handleObserverSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setObserverSign(file);
+      // Check file type
+      if (file.type !== 'application/pdf') {
+        toast.error("Please upload a PDF file for observer signature!");
+        return;
+      }
       
-      // For preview
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        document.getElementById('observer-sign-preview').src = event.target.result;
-      };
-      reader.readAsDataURL(file);
+      // Check file size (15MB = 15 * 1024 * 1024 bytes)
+      const maxSize = 15 * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error("Observer signature PDF must be less than 15MB!");
+        return;
+      }
+      
+      setObserverSign(file);
+      setObserverSignName(file.name);
     }
   };
 
   const handleAuditeeSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setAuditeeSign(file);
+      // Check file type
+      if (file.type !== 'application/pdf') {
+        toast.error("Please upload a PDF file for auditee signature!");
+        return;
+      }
       
-      // For preview
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        document.getElementById('auditee-sign-preview').src = event.target.result;
-      };
-      reader.readAsDataURL(file);
+      // Check file size (15MB = 15 * 1024 * 1024 bytes)
+      const maxSize = 15 * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error("Auditee signature PDF must be less than 15MB!");
+        return;
+      }
+      
+      setAuditeeSign(file);
+      setAuditeeSignName(file.name);
     }
   };
 
@@ -194,7 +210,7 @@ export default function CreateAuditForm({ open, setOpen, onSuccess }) {
           </Grid>
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Auditor/Observer Signature<span className="text-red-600"> *</span>
+              Auditor/Observer Signature PDF<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -209,23 +225,36 @@ export default function CreateAuditForm({ open, setOpen, onSuccess }) {
                 color="primary"
                 sx={{ height: "56px" }}
               >
-                Upload Signature
+                Upload Signature PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf"
                   hidden
                   onChange={handleObserverSignatureUpload}
                 />
               </Button>
               {observer_sign && (
-                <Avatar
-                  id="observer-sign-preview"
-                  alt="Observer Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    padding: "8px 12px",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "4px",
+                    backgroundColor: "#f5f5f5",
+                  }}
+                >
+                  <PictureAsPdfIcon color="error" />
+                  <Typography variant="body2">
+                    {observer_sign_name}
+                  </Typography>
+                </Box>
               )}
             </Box>
+            <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+              Upload signed PDF (Max: 15MB)
+            </Typography>
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -243,7 +272,7 @@ export default function CreateAuditForm({ open, setOpen, onSuccess }) {
           </Grid>
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Auditee Signature<span className="text-red-600"> *</span>
+              Auditee Signature PDF<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -258,23 +287,36 @@ export default function CreateAuditForm({ open, setOpen, onSuccess }) {
                 color="primary"
                 sx={{ height: "56px" }}
               >
-                Upload Signature
+                Upload Signature PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf"
                   hidden
                   onChange={handleAuditeeSignatureUpload}
                 />
               </Button>
               {auditee_sign && (
-                <Avatar
-                  id="auditee-sign-preview"
-                  alt="Auditee Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    padding: "8px 12px",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "4px",
+                    backgroundColor: "#f5f5f5",
+                  }}
+                >
+                  <PictureAsPdfIcon color="error" />
+                  <Typography sx={{maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} variant="body2">
+                    {auditee_sign_name}
+                  </Typography>
+                </Box>
               )}
             </Box>
+            <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+              Upload signed PDF (Max: 15MB)
+            </Typography>
           </Grid>
 
           <Grid item xs={12}>

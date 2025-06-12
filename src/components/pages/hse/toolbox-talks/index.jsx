@@ -15,7 +15,7 @@ import {
 import { toast } from "react-toastify";
 import { useCreateToolTalkAttendanceMutation, useGetToolTalkAttendanceQuery } from "../../../../api/hse/toolbox/toolBoxApi";
 import { useParams } from "react-router-dom";
-
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 export default function ToolboxAttendanceDialog({ open, setOpen, onSuccess }) {
   const [createToolTalkAttendance, { isLoading }] = useCreateToolTalkAttendanceMutation();
   const { refetch } = useGetToolTalkAttendanceQuery();
@@ -27,7 +27,8 @@ export default function ToolboxAttendanceDialog({ open, setOpen, onSuccess }) {
   const [permitNo, setPermitNo] = useState("");
   const [permitDate, setPermitDate] = useState("");
   const [conductorName, setConductorName] = useState("");
-  const [conductorSignature, setConductorSignature] = useState(null);
+  // const [conductorSignature, setConductorSignature] = useState(null);
+  const [conductorSignatureName, setConductorSignatureName] = useState("");
   const [conductorSignatureFile, setConductorSignatureFile] = useState(null);
   const [contractorName, setContractorName] = useState("");
   const [jobActivity, setJobActivity] = useState("");
@@ -44,27 +45,27 @@ export default function ToolboxAttendanceDialog({ open, setOpen, onSuccess }) {
   
   const [remarks, setRemarks] = useState("");
 
-  const validateForm = () => {
-    if (!site.trim()) return toast.error("Site is required!");
-    if (!location.trim()) return toast.error("Location is required!");
-    if (!date.trim()) return toast.error("Date is required!");
-    if (!time.trim()) return toast.error("Time is required!");
-    if (!permitNo.trim()) return toast.error("TBT Against Permit No. is required!");
-    if (!permitDate.trim()) return toast.error("Permit Date is required!");
-    if (!conductorName.trim()) return toast.error("TBT Conductor Name is required!");
-    if (!conductorSignatureFile) return toast.error("TBT Conductor Signature is required!");
-    if (!contractorName.trim()) return toast.error("Name of contractor is required!");
-    if (!jobActivity.trim()) return toast.error("Job activity details are required!");
-    if (!participantAttachmentsFile) return toast.error("Participant attachments are required!");
-    
-    // Validate at least one topic
-    if (!ppesTopic.trim() && !toolsTopic.trim() && !hazardTopic.trim() && 
-        !emergencyTopic.trim() && !healthTopic.trim() && !othersTopic.trim()) {
-      return toast.error("At least one topic must be discussed!");
-    }
+const validateForm = () => {
+  if (!site.trim()) return toast.error("Site is required!");
+  if (!location.trim()) return toast.error("Location is required!");
+  if (!date.trim()) return toast.error("Date is required!");
+  if (!time.trim()) return toast.error("Time is required!");
+  if (!permitNo.trim()) return toast.error("TBT Against Permit No. is required!");
+  if (!permitDate.trim()) return toast.error("Permit Date is required!");
+  if (!conductorName.trim()) return toast.error("TBT Conductor Name is required!");
+  if (!conductorSignatureFile) return toast.error("TBT Conductor Signature PDF is required!"); // Updated message
+  if (!contractorName.trim()) return toast.error("Name of contractor is required!");
+  if (!jobActivity.trim()) return toast.error("Job activity details are required!");
+  if (!participantAttachmentsFile) return toast.error("Participant attachments are required!");
+  
+  // Validate at least one topic
+  if (!ppesTopic.trim() && !toolsTopic.trim() && !hazardTopic.trim() && 
+      !emergencyTopic.trim() && !healthTopic.trim() && !othersTopic.trim()) {
+    return toast.error("At least one topic must be discussed!");
+  }
 
-    return true;
-  };
+  return true;
+};
 
   const handleClose = () => {
     // Clear all state fields
@@ -75,8 +76,9 @@ export default function ToolboxAttendanceDialog({ open, setOpen, onSuccess }) {
     setPermitNo("");
     setPermitDate("");
     setConductorName("");
-    setConductorSignature(null);
+    // setConductorSignature(null);
     setConductorSignatureFile(null);
+    setConductorSignatureName(""); 
     setContractorName("");
     setJobActivity("");
     setParticipantAttachments(null);
@@ -117,18 +119,26 @@ export default function ToolboxAttendanceDialog({ open, setOpen, onSuccess }) {
     },
   };
 
-  const handleConductorSignatureUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setConductorSignatureFile(file);
-      
-      const reader = new FileReader();
-      reader.onload = () => {
-        setConductorSignature(reader.result);
-      };
-      reader.readAsDataURL(file);
+const handleConductorSignatureUpload = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    // Check file type
+    if (file.type !== 'application/pdf') {
+      toast.error("Please upload a PDF file for conductor signature!");
+      return;
     }
-  };
+    
+    // Check file size (15MB = 15 * 1024 * 1024 bytes)
+    const maxSize = 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("Conductor signature PDF must be less than 15MB!");
+      return;
+    }
+    
+    setConductorSignatureFile(file);
+    setConductorSignatureName(file.name);
+  }
+};
 
   const handleParticipantAttachmentsUpload = (e) => {
     const file = e.target.files[0];
@@ -315,41 +325,54 @@ export default function ToolboxAttendanceDialog({ open, setOpen, onSuccess }) {
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Signature<span className="text-red-600"> *</span>
-            </label>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Button
-                variant="outlined"
-                component="label"
-                color="primary"
-                sx={{ height: "56px" }}
-              >
-                Upload Signature
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={handleConductorSignatureUpload}
-                />
-              </Button>
-              {conductorSignature && (
-                <Avatar
-                  src={conductorSignature}
-                  alt="Conductor Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
-              )}
-            </Box>
-          </Grid>
+<Grid item xs={12} md={6}>
+  <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+    Signature PDF<span className="text-red-600"> *</span>
+  </label>
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 2,
+    }}
+  >
+    <Button
+      variant="outlined"
+      component="label"
+      color="primary"
+      sx={{ height: "56px" }}
+    >
+      Upload Signature PDF
+      <input
+        type="file"
+        accept=".pdf"
+        hidden
+        onChange={handleConductorSignatureUpload}
+      />
+    </Button>
+    {conductorSignatureFile && (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          padding: "8px 12px",
+          border: "1px solid #e0e0e0",
+          borderRadius: "4px",
+          backgroundColor: "#f5f5f5",
+        }}
+      >
+        <PictureAsPdfIcon color="error" />
+        <Typography variant="body2">
+          {conductorSignatureName}
+        </Typography>
+      </Box>
+    )}
+  </Box>
+  <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+    Upload signed PDF (Max: 15MB)
+  </Typography>
+</Grid>
 
           {/* Contractor & Job Activity */}
           <Grid item xs={12} md={6}>

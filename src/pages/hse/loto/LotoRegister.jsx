@@ -16,45 +16,68 @@ import {
   TextField,
   Stack
 } from '@mui/material';
+import { Download as DownloadIcon } from '@mui/icons-material';
 import RemoveLogoutForm from '../../../components/pages/hse/loto/RemoveLoto.jsx';
 import CreateLotoRegister from '../../../components/pages/hse/loto/CreateLotoRegister';
 import { useParams } from 'react-router-dom';
 import { useGetLotoRegistersQuery } from '../../../api/hse/loto/lotoRegisterApi.js';
 
-const ImageViewer = ({ src, alt, width = 100, height = 30 }) => {
-  const [open, setOpen] = useState(false);
- 
+// PDF Download Component
+const PDFDownloadButton = ({ src, fileName = "signature.pdf" }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!src) return;
+    
+    setIsDownloading(true);
+    try {
+      const fullUrl = `${import.meta.env.VITE_API_KEY}${src}`;
+      const response = await fetch(fullUrl);
+      
+      if (!response.ok) {
+        throw new Error('Failed to download PDF');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create temporary link element and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // You can add a toast notification here if you have one
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
-    <>
-      <img
-        src={`${import.meta.env.VITE_API_KEY}${src}`}
-        alt={alt}
-        onClick={() => setOpen(true)}
-        style={{
-          width: `${width}px`,
-          height: `${height}px`,
-          cursor: 'pointer'
-        }}
-      />
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogContent>
-          <img
-            src={`${import.meta.env.VITE_API_KEY}${src}`}
-            alt={alt}
-            style={{
-              width: '100%',
-              maxHeight: '500px',
-              objectFit: 'contain'
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+    <Button
+      variant="outlined"
+      size="small"
+      startIcon={<DownloadIcon />}
+      onClick={handleDownload}
+      disabled={isDownloading || !src}
+      sx={{
+        borderColor: '#FF8C00',
+        color: '#FF8C00',
+        '&:hover': {
+          borderColor: '#FF8C00',
+          backgroundColor: 'rgba(255, 140, 0, 0.04)'
+        }
+      }}
+    >
+      {isDownloading ? 'Downloading...' : 'Download PDF'}
+    </Button>
   );
 };
 
@@ -247,26 +270,26 @@ function LotoRegister() {
               <Typography variant="body1">
                 <strong>Applied By:</strong> {selectedLoto.applied_by_name}
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" className="mb-2">
                 <strong>Applied By Signature:</strong>
               </Typography>
               {selectedLoto.applied_by_signature && (
-                <ImageViewer 
-                  src={selectedLoto.applied_by_signature} 
-                  alt={`${selectedLoto.applied_by_name} Signature`} 
+                <PDFDownloadButton
+                  src={selectedLoto.applied_by_signature}
+                  fileName={`applied_by_signature_${selectedLoto.applied_by_name}_${selectedLoto.applied_lock_tag_number}.pdf`}
                 />
               )}
               
-              <Typography variant="body1" className="mt-2">
+              <Typography variant="body1" className="mt-4">
                 <strong>Approved By:</strong> {selectedLoto.applied_approved_by_name}
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" className="mb-2">
                 <strong>Approved By Signature:</strong>
               </Typography>
               {selectedLoto.applied_approved_by_signature && (
-                <ImageViewer 
-                  src={selectedLoto.applied_approved_by_signature} 
-                  alt={`${selectedLoto.applied_approved_by_name} Signature`} 
+                <PDFDownloadButton
+                  src={selectedLoto.applied_approved_by_signature}
+                  fileName={`approved_by_signature_${selectedLoto.applied_approved_by_name}_${selectedLoto.applied_lock_tag_number}.pdf`}
                 />
               )}
 
@@ -287,26 +310,26 @@ function LotoRegister() {
                   <Typography variant="body1">
                     <strong>Removed By:</strong> {selectedLoto.removed_by_name}
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography variant="body1" className="mb-2">
                     <strong>Removed By Signature:</strong>
                   </Typography>
                   {selectedLoto.removed_by_signature && (
-                    <ImageViewer 
-                      src={selectedLoto.removed_by_signature} 
-                      alt={`${selectedLoto.removed_by_name} Signature`} 
+                    <PDFDownloadButton
+                      src={selectedLoto.removed_by_signature}
+                      fileName={`removed_by_signature_${selectedLoto.removed_by_name}_${selectedLoto.removed_lock_tag_number}.pdf`}
                     />
                   )}
                   
-                  <Typography variant="body1" className="mt-2">
+                  <Typography variant="body1" className="mt-4">
                     <strong>Site In Charge:</strong> {selectedLoto.removed_site_in_charge_name}
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography variant="body1" className="mb-2">
                     <strong>Site In Charge Signature:</strong>
                   </Typography>
                   {selectedLoto.removed_approved_by_site_in_charge_signature && (
-                    <ImageViewer 
-                      src={selectedLoto.removed_approved_by_site_in_charge_signature} 
-                      alt={`${selectedLoto.removed_site_in_charge_name} Signature`} 
+                    <PDFDownloadButton
+                      src={selectedLoto.removed_approved_by_site_in_charge_signature}
+                      fileName={`site_in_charge_signature_${selectedLoto.removed_site_in_charge_name}_${selectedLoto.removed_lock_tag_number}.pdf`}
                     />
                   )}
                 </>

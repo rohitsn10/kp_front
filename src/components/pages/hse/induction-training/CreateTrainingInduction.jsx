@@ -24,22 +24,21 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon, CloudUpload as CloudUploadIcon } from "@mui/icons-material";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { toast } from "react-toastify";
 import { useCreateInductionTrainingMutation } from "../../../../api/hse/induction/inductionApi";
 import { useParams } from "react-router-dom";
-// Import the mutation hook from our RTK API file
-// import { useCreateInductionTrainingMutation } from "../services/inductionTrainingApi";
 
-export default function TrainingInductionDialog({ open, setOpen,onSuccess }) {
+export default function TrainingInductionDialog({ open, setOpen, onSuccess }) {
   // Initialize the RTK mutation hook
   const [createInductionTraining, { isLoading }] = useCreateInductionTrainingMutation();
-  // const { refetch} = useGetAllInductionTrainingsQuery();
   const { locationId } = useParams();
   const [site, setSite] = useState("");
   const [date, setDate] = useState("");
   const [facultyName, setFacultyName] = useState("");
   const [topic, setTopic] = useState("");
   const [facultySignature, setFacultySignature] = useState(null);
+  const [facultySignatureName, setFacultySignatureName] = useState("");
   
   // Individual state for each topic
   const [topic1, setTopic1] = useState("");
@@ -83,7 +82,7 @@ export default function TrainingInductionDialog({ open, setOpen,onSuccess }) {
     }
     
     if (!facultySignature) {
-      toast.error("Faculty Signature is required!");
+      toast.error("Faculty Signature PDF is required!");
       return false;
     }
     
@@ -143,8 +142,22 @@ export default function TrainingInductionDialog({ open, setOpen,onSuccess }) {
   const handleFacultySignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Instead of converting to base64, just store the file directly for FormData
+      // Check file type
+      if (file.type !== 'application/pdf') {
+        toast.error("Please upload a PDF file for faculty signature!");
+        return;
+      }
+      
+      // Check file size (15MB = 15 * 1024 * 1024 bytes)
+      const maxSize = 15 * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error("Faculty signature PDF must be less than 15MB!");
+        return;
+      }
+      
+      // Store the file directly for FormData
       setFacultySignature(file);
+      setFacultySignatureName(file.name);
     }
   };
 
@@ -174,7 +187,7 @@ export default function TrainingInductionDialog({ open, setOpen,onSuccess }) {
     const formData = new FormData();
     
     // Append basic fields (matching the API endpoint field names)
-    formData.append('location',locationId)
+    formData.append('location', locationId)
     formData.append("site_name", site);
     formData.append("date", date);
     formData.append("faculty_name", facultyName);
@@ -218,12 +231,9 @@ export default function TrainingInductionDialog({ open, setOpen,onSuccess }) {
         // Success handling
         console.log("API Response:", response);
         toast.success(response.message || "Induction training data submitted successfully!");
-        // refetch();
         // Close the dialog and reset form if needed
         setOpen(false);
         onSuccess();
-        // You might want to trigger a refetch of data if displaying a list
-        // refreshData();
       } else {
         // Handle case where API returns a failure status
         toast.error(response?.message || "Failed to submit training data. Please try again.");
@@ -310,7 +320,7 @@ export default function TrainingInductionDialog({ open, setOpen,onSuccess }) {
 
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Faculty Signature<span className="text-red-600"> *</span>
+              Faculty Signature PDF<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -325,23 +335,37 @@ export default function TrainingInductionDialog({ open, setOpen,onSuccess }) {
                 color="primary"
                 sx={{ height: "56px" }}
               >
-                Upload Signature
+                Upload Signature PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf"
                   hidden
                   onChange={handleFacultySignatureUpload}
                 />
               </Button>
               {facultySignature && (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    padding: "8px 12px",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "4px",
+                    backgroundColor: "#f5f5f5",
+                  }}
+                >
+                  <PictureAsPdfIcon color="error" />
                   <Typography variant="body2">
-                    {facultySignature.name} ({Math.round(facultySignature.size / 1024)} KB)
+                    {facultySignatureName}
                   </Typography>
                   <IconButton 
                     size="small" 
                     color="error" 
-                    onClick={() => setFacultySignature(null)}
+                    onClick={() => {
+                      setFacultySignature(null);
+                      setFacultySignatureName("");
+                    }}
                     sx={{ ml: 1 }}
                   >
                     <DeleteIcon fontSize="small" />
@@ -349,6 +373,9 @@ export default function TrainingInductionDialog({ open, setOpen,onSuccess }) {
                 </Box>
               )}
             </Box>
+            <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+              Upload signed PDF (Max: 15MB)
+            </Typography>
           </Grid>
 
           {/* Topics Discussed Section */}

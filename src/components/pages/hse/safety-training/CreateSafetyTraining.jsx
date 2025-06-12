@@ -15,6 +15,8 @@ import {
 import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
 import { useCreateSafetyTrainingAttendanceMutation } from "../../../../api/hse/safetyTraining/safetyTrainingApi";
+import commonInputStyles from "../../../../utils/commonInputStyles";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 export default function TrainingAttendanceDialog({ open, setOpen }) {
   const [site, setSite] = useState("");
@@ -23,16 +25,18 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
   const [topic, setTopic] = useState("");
   const [remarks, setRemarks] = useState("");
   const [facultySignature, setFacultySignature] = useState(null);
+  const [facultySignatureName, setFacultySignatureName] = useState("");
   const [participantDoc, setParticipantDoc] = useState(null);
   const [participantDocName, setParticipantDocName] = useState("");
   const { locationId } = useParams();
   const [createAttendance, { isLoading }] = useCreateSafetyTrainingAttendanceMutation();
+  
   const validateForm = () => {
     if (!site.trim()) return toast.error("Site is required!");
     if (!date.trim()) return toast.error("Date is required!");
     if (!facultyName.trim()) return toast.error("Faculty Name is required!");
     if (!topic.trim()) return toast.error("Training Topic is required!");
-    if (!facultySignature) return toast.error("Faculty Signature is required!");
+    if (!facultySignature) return toast.error("Faculty Signature PDF is required!");
     if (!participantDoc) return toast.error("Participant document is required!");
 
     return true;
@@ -40,36 +44,24 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
 
   const handleClose = () => setOpen(false);
 
-  const commonInputStyles = {
-    "& .MuiOutlinedInput-root": {
-      borderRadius: "6px",
-      transition: "border 0.2s ease-in-out",
-      "&:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on hover
-        borderBottom: "4px solid #FACC15",
-      },
-      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on focus
-        borderWidth: "2px",
-        borderBottom: "4px solid #FACC15",
-      },
-    },
-    "& .MuiOutlinedInput-notchedOutline": {
-      border: "1px solid #FACC15", // Default border
-      borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
-    },
-  };
-
   const handleFacultySignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // In a real implementation, you'd upload this file to a server
-      // and get back a URL. For this example, we'll create a local URL
-      const reader = new FileReader();
-      reader.onload = () => {
-        setFacultySignature(reader.result);
-      };
-      reader.readAsDataURL(file);
+      // Check file type
+      if (file.type !== 'application/pdf') {
+        toast.error("Please upload a PDF file for faculty signature!");
+        return;
+      }
+      
+      // Check file size (15MB = 15 * 1024 * 1024 bytes)
+      const maxSize = 15 * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error("Faculty signature PDF must be less than 15MB!");
+        return;
+      }
+      
+      setFacultySignature(file);
+      setFacultySignatureName(file.name);
     }
   };
 
@@ -90,11 +82,10 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
     formData.append("faculty_name", facultyName);
     formData.append("training_topic", topic);
     formData.append("remarks", remarks);
-    formData.append("location", locationId); // Ensure it's passed from URL params
+    formData.append("location", locationId);
   
-    // Faculty signature as base64 or file upload depending on backend expectations
-    const signatureBlob = await fetch(facultySignature).then(res => res.blob());
-    formData.append("trainer_signature", signatureBlob, "signature.png");
+    // Append the PDF signature file directly
+    formData.append("trainer_signature", facultySignature);
   
     formData.append("file_upload", participantDoc);
   
@@ -199,7 +190,7 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
 
           <Grid item xs={12} md={6}>
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Faculty Signature<span className="text-red-600"> *</span>
+              Faculty Signature PDF<span className="text-red-600"> *</span>
             </label>
             <Box
               sx={{
@@ -214,23 +205,36 @@ export default function TrainingAttendanceDialog({ open, setOpen }) {
                 color="primary"
                 sx={{ height: "56px" }}
               >
-                Upload Signature
+                Upload Signature PDF
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf"
                   hidden
                   onChange={handleFacultySignatureUpload}
                 />
               </Button>
               {facultySignature && (
-                <Avatar
-                  src={facultySignature}
-                  alt="Faculty Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    padding: "8px 12px",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "4px",
+                    backgroundColor: "#f5f5f5",
+                  }}
+                >
+                  <PictureAsPdfIcon color="error" />
+                  <Typography variant="body2">
+                    {facultySignatureName}
+                  </Typography>
+                </Box>
               )}
             </Box>
+            <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+              Upload signed PDF (Max: 15MB)
+            </Typography>
           </Grid>
 
           {/* Participant Document Upload Section */}

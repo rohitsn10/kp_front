@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { useCreateExcavationPermitMutation } from "../../../../api/hse/excavation/excavationPermitApi";
 // import { useCreateExcavationPermitMutation } from "../services/excavationPermitApi"; // Import the mutation hook
 export default function ExcavationPermitDialog({ open, setOpen, onSuccess }) {
@@ -43,23 +44,27 @@ export default function ExcavationPermitDialog({ open, setOpen, onSuccess }) {
     hour: "",
   });
   const [purposeOfExcavation, setPurposeOfExcavation] = useState("");
-  const [clearancesForExcavation, setClearancesForExcavation] = useState({
-    electrical_cables: { description: "", name: "", signature: null, date: "" },
-    water_gas_pipes: { description: "", name: "", signature: null, date: "" },
-    telephone_it_cables: { description: "", name: "", signature: null, date: "" },
-  });
-  const [precautionsTakenByAcceptor, setPrecautionsTakenByAcceptor] = useState({
-    road_barricading_done: "No",
-    warning_signs_provided: "No",
-    barricading_excavated_area: "No",
-    shoring_carried_out: "No",
-    other_precautions: "",
-    name: "",
-    signature: null,
-  });
+const [clearancesForExcavation, setClearancesForExcavation] = useState({
+  electrical_cables: { description: "", name: "", signature: null, date: "", signatureFileName: "" },
+  water_gas_pipes: { description: "", name: "", signature: null, date: "", signatureFileName: "" },
+  telephone_it_cables: { description: "", name: "", signature: null, date: "", signatureFileName: "" },
+});
+const [precautionsTakenByAcceptor, setPrecautionsTakenByAcceptor] = useState({
+  road_barricading_done: "No",
+  warning_signs_provided: "No",
+  barricading_excavated_area: "No",
+  shoring_carried_out: "No",
+  other_precautions: "",
+  name: "",
+  signature: null,
+  signatureFileName: "",
+});
   const [remarks, setRemarks] = useState("");
-  const [checkedBy, setCheckedBy] = useState({ name: "", signature: null });
-
+const [checkedBy, setCheckedBy] = useState({ 
+  name: "", 
+  signature: null,
+  signatureFileName: ""
+});
   // RTK mutation hook
   const [createExcavationPermit, { isLoading }] = useCreateExcavationPermitMutation();
 
@@ -83,31 +88,31 @@ export default function ExcavationPermitDialog({ open, setOpen, onSuccess }) {
       return toast.error("Expected Duration of Work details are required!");
     if (!purposeOfExcavation.trim())
       return toast.error("Purpose of Excavation is required!");
-    if (
-      !clearancesForExcavation.electrical_cables.name.trim() ||
-      !clearancesForExcavation.electrical_cables.signature ||
-      !clearancesForExcavation.electrical_cables.date.trim()
-    )
+  if (
+    !clearancesForExcavation.electrical_cables.name.trim() ||
+    !clearancesForExcavation.electrical_cables.signatureFileName ||
+    !clearancesForExcavation.electrical_cables.date.trim()
+  )
       return toast.error("Electrical Cables clearance details are required!");
-    if (
-      !clearancesForExcavation.water_gas_pipes.name.trim() ||
-      !clearancesForExcavation.water_gas_pipes.signature ||
-      !clearancesForExcavation.water_gas_pipes.date.trim()
-    )
+  if (
+    !clearancesForExcavation.water_gas_pipes.name.trim() ||
+    !clearancesForExcavation.water_gas_pipes.signatureFileName ||
+    !clearancesForExcavation.water_gas_pipes.date.trim()
+  )
       return toast.error("Water/Gas Pipes clearance details are required!");
-    if (
-      !clearancesForExcavation.telephone_it_cables.name.trim() ||
-      !clearancesForExcavation.telephone_it_cables.signature ||
-      !clearancesForExcavation.telephone_it_cables.date.trim()
-    )
+  if (
+    !clearancesForExcavation.telephone_it_cables.name.trim() ||
+    !clearancesForExcavation.telephone_it_cables.signatureFileName ||
+    !clearancesForExcavation.telephone_it_cables.date.trim()
+  )
       return toast.error("Telephone/IT Cables clearance details are required!");
-    if (
-      !precautionsTakenByAcceptor.name.trim() ||
-      !precautionsTakenByAcceptor.signature
-    )
+  if (
+    !precautionsTakenByAcceptor.name.trim() ||
+    !precautionsTakenByAcceptor.signatureFileName
+  )
       return toast.error("Precautions Taken by Acceptor details are required!");
-    if (!checkedBy.name.trim() || !checkedBy.signature)
-      return toast.error("Checked By details are required!");
+  if (!checkedBy.name.trim() || !checkedBy.signatureFileName)
+    return toast.error("Checked By details are required!");
 
     return true;
   };
@@ -134,53 +139,80 @@ export default function ExcavationPermitDialog({ open, setOpen, onSuccess }) {
     },
   };
 
-  const handleClearanceSignatureUpload = (field, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setClearancesForExcavation({
-          ...clearancesForExcavation,
-          [field]: {
-            ...clearancesForExcavation[field],
-            signature: reader.result,
-            signatureFile: file, // Store the actual file for FormData
-          },
-        });
-      };
-      reader.readAsDataURL(file);
+const handleClearanceSignatureUpload = (field, e) => {
+  const file = e.target.files[0];
+  if (file) {
+    // Check file type
+    if (file.type !== 'application/pdf') {
+      toast.error("Please upload a PDF file for clearance signature!");
+      return;
     }
-  };
+    
+    // Check file size (15MB = 15 * 1024 * 1024 bytes)
+    const maxSize = 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("Clearance signature PDF must be less than 15MB!");
+      return;
+    }
+    
+    setClearancesForExcavation({
+      ...clearancesForExcavation,
+      [field]: {
+        ...clearancesForExcavation[field],
+        signatureFile: file,
+        signatureFileName: file.name,
+      },
+    });
+  }
+};
 
-  const handlePrecautionsSignatureUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPrecautionsTakenByAcceptor({
-          ...precautionsTakenByAcceptor,
-          signature: reader.result,
-          signatureFile: file, // Store the actual file for FormData
-        });
-      };
-      reader.readAsDataURL(file);
+const handlePrecautionsSignatureUpload = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    // Check file type
+    if (file.type !== 'application/pdf') {
+      toast.error("Please upload a PDF file for acceptor signature!");
+      return;
     }
-  };
+    
+    // Check file size (15MB = 15 * 1024 * 1024 bytes)
+    const maxSize = 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("Acceptor signature PDF must be less than 15MB!");
+      return;
+    }
+    
+    setPrecautionsTakenByAcceptor({
+      ...precautionsTakenByAcceptor,
+      signatureFile: file,
+      signatureFileName: file.name,
+    });
+  }
+};
 
-  const handleCheckedBySignatureUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setCheckedBy({ 
-          ...checkedBy, 
-          signature: reader.result,
-          signatureFile: file, // Store the actual file for FormData
-        });
-      };
-      reader.readAsDataURL(file);
+const handleCheckedBySignatureUpload = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    // Check file type
+    if (file.type !== 'application/pdf') {
+      toast.error("Please upload a PDF file for checker signature!");
+      return;
     }
-  };
+    
+    // Check file size (15MB = 15 * 1024 * 1024 bytes)
+    const maxSize = 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("Checker signature PDF must be less than 15MB!");
+      return;
+    }
+    
+    setCheckedBy({ 
+      ...checkedBy, 
+      signatureFile: file,
+      signatureFileName: file.name,
+    });
+  }
+};
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
@@ -280,11 +312,11 @@ export default function ExcavationPermitDialog({ open, setOpen, onSuccess }) {
     setStartingTheWork({ date: "", time: "" });
     setExpectedDurationOfWork({ day: "", hour: "" });
     setPurposeOfExcavation("");
-    setClearancesForExcavation({
-      electrical_cables: { description: "", name: "", signature: null, date: "" },
-      water_gas_pipes: { description: "", name: "", signature: null, date: "" },
-      telephone_it_cables: { description: "", name: "", signature: null, date: "" },
-    });
+  setClearancesForExcavation({
+    electrical_cables: { description: "", name: "", signature: null, date: "", signatureFileName: "" },
+    water_gas_pipes: { description: "", name: "", signature: null, date: "", signatureFileName: "" },
+    telephone_it_cables: { description: "", name: "", signature: null, date: "", signatureFileName: "" },
+  });
     setPrecautionsTakenByAcceptor({
       road_barricading_done: "No",
       warning_signs_provided: "No",
@@ -295,7 +327,7 @@ export default function ExcavationPermitDialog({ open, setOpen, onSuccess }) {
       signature: null,
     });
     setRemarks("");
-    setCheckedBy({ name: "", signature: null });
+     setCheckedBy({ name: "", signature: null, signatureFileName: "" });
   };
 
   return (
@@ -618,38 +650,51 @@ export default function ExcavationPermitDialog({ open, setOpen, onSuccess }) {
                     }
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                    }}
-                  >
-                    <Button
-                      variant="outlined"
-                      component="label"
-                      color="primary"
-                      sx={{ height: "56px" }}
-                    >
-                      Upload Signature
-                      <input
-                        type="file"
-                        accept="image/*"
-                        hidden
-                        onChange={(e) => handleClearanceSignatureUpload(key, e)}
-                      />
-                    </Button>
-                    {clearance.signature && (
-                      <Avatar
-                        src={clearance.signature}
-                        alt={`${key.replace(/_/g, " ")} Signature`}
-                        variant="rounded"
-                        sx={{ width: 100, height: 56 }}
-                      />
-                    )}
-                  </Box>
-                </Grid>
+<Grid item xs={12}>
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 2,
+    }}
+  >
+    <Button
+      variant="outlined"
+      component="label"
+      color="primary"
+      sx={{ height: "56px" }}
+    >
+      Upload Signature PDF
+      <input
+        type="file"
+        accept=".pdf"
+        hidden
+        onChange={(e) => handleClearanceSignatureUpload(key, e)}
+      />
+    </Button>
+    {clearance.signatureFileName && (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          padding: "8px 12px",
+          border: "1px solid #e0e0e0",
+          borderRadius: "4px",
+          backgroundColor: "#f5f5f5",
+        }}
+      >
+        <PictureAsPdfIcon color="error" />
+        <Typography variant="body2">
+          {clearance.signatureFileName}
+        </Typography>
+      </Box>
+    )}
+  </Box>
+  <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+    Upload signed PDF (Max: 15MB)
+  </Typography>
+</Grid>
               </Grid>
             </Grid>
           ))}
@@ -793,42 +838,56 @@ export default function ExcavationPermitDialog({ open, setOpen, onSuccess }) {
               </Grid>
 
               {/* Signature of Acceptor */}
-              <Grid item xs={12} md={6}>
-                <FormLabel component="legend" className="text-[#29346B] font-medium">
-                  Signature of Acceptor:
-                </FormLabel>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    marginTop: "8px"
-                  }}
-                >
-                  <Button
-                    variant="outlined"
-                    component="label"
-                    color="primary"
-                    sx={{ height: "56px" }}
-                  >
-                    Upload Signature
-                    <input
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      onChange={handlePrecautionsSignatureUpload}
-                    />
-                  </Button>
-                  {precautionsTakenByAcceptor.signature && (
-                    <Avatar
-                      src={precautionsTakenByAcceptor.signature}
-                      alt="Precautions Signature"
-                      variant="rounded"
-                      sx={{ width: 100, height: 56 }}
-                    />
-                  )}
-                </Box>
-              </Grid>
+{/* Signature of Acceptor */}
+<Grid item xs={12} md={6}>
+  <FormLabel component="legend" className="text-[#29346B] font-medium">
+    Signature of Acceptor PDF:
+  </FormLabel>
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 2,
+      marginTop: "8px"
+    }}
+  >
+    <Button
+      variant="outlined"
+      component="label"
+      color="primary"
+      sx={{ height: "56px" }}
+    >
+      Upload Signature PDF
+      <input
+        type="file"
+        accept=".pdf"
+        hidden
+        onChange={handlePrecautionsSignatureUpload}
+      />
+    </Button>
+    {precautionsTakenByAcceptor.signatureFileName && (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          padding: "8px 12px",
+          border: "1px solid #e0e0e0",
+          borderRadius: "4px",
+          backgroundColor: "#f5f5f5",
+        }}
+      >
+        <PictureAsPdfIcon color="error" />
+        <Typography variant="body2">
+          {precautionsTakenByAcceptor.signatureFileName}
+        </Typography>
+      </Box>
+    )}
+  </Box>
+  <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+    Upload signed PDF (Max: 15MB)
+  </Typography>
+</Grid>
             </Grid>
           </Grid>
 
@@ -871,38 +930,51 @@ export default function ExcavationPermitDialog({ open, setOpen, onSuccess }) {
               }
             />
           </Grid>
-          <Grid item xs={12} md={6}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Button
-                variant="outlined"
-                component="label"
-                color="primary"
-                sx={{ height: "56px" }}
-              >
-                Upload Signature
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={handleCheckedBySignatureUpload}
-                />
-              </Button>
-              {checkedBy.signature && (
-                <Avatar
-                  src={checkedBy.signature}
-                  alt="Checked By Signature"
-                  variant="rounded"
-                  sx={{ width: 100, height: 56 }}
-                />
-              )}
-            </Box>
-          </Grid>
+<Grid item xs={12} md={6}>
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 2,
+    }}
+  >
+    <Button
+      variant="outlined"
+      component="label"
+      color="primary"
+      sx={{ height: "56px" }}
+    >
+      Upload Signature PDF
+      <input
+        type="file"
+        accept=".pdf"
+        hidden
+        onChange={handleCheckedBySignatureUpload}
+      />
+    </Button>
+    {checkedBy.signatureFileName && (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          padding: "8px 12px",
+          border: "1px solid #e0e0e0",
+          borderRadius: "4px",
+          backgroundColor: "#f5f5f5",
+        }}
+      >
+        <PictureAsPdfIcon color="error" />
+        <Typography variant="body2">
+          {checkedBy.signatureFileName}
+        </Typography>
+      </Box>
+    )}
+  </Box>
+  <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+    Upload signed PDF (Max: 15MB)
+  </Typography>
+</Grid>
         </Grid>
       </DialogContent>
 
