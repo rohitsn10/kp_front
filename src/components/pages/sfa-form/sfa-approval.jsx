@@ -372,6 +372,35 @@ const AssessmentFormApproval = ({
                   {renderDetailItem("Geographical Coordinates", activeItem.geo_graphical_cordinates)}
                   {renderDetailItem("Land Co-ordinates", activeItem.land_co_ordinates)}
                   {renderDetailItem("Substation Coordinates", activeItem.substation_cordinates)}
+                  
+                  {/* New coordinate fields */}
+                  <Typography variant="subtitle" color="primary" sx={{ mt: 2, mb: 2 }}>
+                    Geo Coordinates Details
+                  </Typography>
+                  {renderDetailItem("Geo Coordinate Format", activeItem.geo_coordinate_format)}
+                  {renderDetailItem("Geo Easting", activeItem.geo_easting)}
+                  {renderDetailItem("Geo Northing", activeItem.geo_northing)}
+                  {renderDetailItem("Geo Zone", activeItem.geo_zone)}
+                  
+                  <Typography variant="subtitle" color="primary" sx={{ mt: 2, mb: 2 }}>
+                    Land Coordinates Details
+                  </Typography>
+                  {renderDetailItem("Land Coordinate Format", activeItem.land_coordinate_format)}
+                  {renderDetailItem("Land Easting", activeItem.land_easting)}
+                  {renderDetailItem("Land Northing", activeItem.land_northing)}
+                  {renderDetailItem("Land Zone", activeItem.land_zone)}
+                  
+                  <Typography variant="subtitle" color="primary" sx={{ mt: 2, mb: 2 }}>
+                    Substation Coordinates Details
+                  </Typography>
+                  {renderDetailItem("Substation Coordinate Format", activeItem.substation_coordinate_format)}
+                  {renderDetailItem("Substation Easting", activeItem.substation_easting)}
+                  {renderDetailItem("Substation Northing", activeItem.substation_northing)}
+                  {renderDetailItem("Substation Zone", activeItem.substation_zone)}
+                  
+                  <Typography variant="subtitle2" color="primary" sx={{ mt: 2, mb: 1 }}>
+                    Road & Transportation
+                  </Typography>
                   {renderDetailItem("Distance from Main Road", activeItem.distance_from_main_road)}
                   {renderDetailItem("Road/Highway Details", activeItem.road_highway_details)}
                   {renderDetailItem("Approach Road Available", activeItem.is_there_an_approach_road_available_to_the_site)}

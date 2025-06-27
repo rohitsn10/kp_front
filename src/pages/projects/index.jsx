@@ -23,6 +23,7 @@ import ProjectWpoViewModal from '../../components/pages/projects/ProjectWPO/Proj
 import ProjectDrawingUploadDialog from '../design-documents/DesignUploadModal';
 import ProjectRoleAssignmentModal from './project-role-assignment/ProjectRoleAssignmentModal';
 import ProjectRoleViewModal from './project-role-view/ProjectRoleViewModal';
+import ProjectActivityUploadDialog from '../../components/pages/projects/ProjectActivity/ProjectActivityUploadDialog';
 // import ProjectRoleAssignmentModal from './ProjectRoleAssignmentModal'; // Import the new modal
 // ProjectRoleAssignmentModal
 const ProjectListingTable = () => {
@@ -36,7 +37,7 @@ const ProjectListingTable = () => {
   const { data: projectData, isLoading: ProjectLoading, error: ProjectError, refetch } = useGetMainProjectsQuery()
   const [openWpoViewModal, setOpenWpoView] = useState(false);
   const [openDrawingModal, setOpenDrawingModal] = useState(false);
-  
+  const [openActivityModal, setOpenActivityModal] = useState(false);
   // New state for role assignment modal
   const [openRoleModal, setOpenRoleModal] = useState(false);
   const [selectedProjectForRole, setSelectedProjectForRole] = useState(null);
@@ -78,6 +79,10 @@ const [selectedProjectForRoleView, setSelectedProjectForRoleView] = useState(nul
     setActiveProject(null);
   };
 
+  const handleCloseActivityModal = () => {
+  setOpenActivityModal(false);
+  setActiveProject(null);
+};
   // New handler for role assignment modal
   const handleOpenRoleModal = (project) => {
     setSelectedProjectForRole(project);
@@ -192,7 +197,7 @@ const handleCloseRoleViewModal = () => {
               component={Paper} 
               style={{ 
                 borderRadius: '8px',
-                minWidth: '1300px' // Increased minimum width for the new column
+                minWidth: '1420px' // Increased minimum width for the new column
               }}
             >
               <Table stickyHeader>
@@ -363,6 +368,17 @@ const handleCloseRoleViewModal = () => {
                     >
                       Manage Drawings
                     </TableCell>
+                    <TableCell 
+  align="center" 
+  width={120}
+  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+  sx={{
+    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+  }}
+>
+  Upload Activity
+</TableCell>
                     {/* New column for Role Assignment */}
                     <TableCell 
                       align="center" 
@@ -632,6 +648,28 @@ const handleCloseRoleViewModal = () => {
                           MDL
                         </Button>
                       </TableCell>
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+  <Button
+    variant="contained"
+    size="small"
+    sx={{
+      backgroundColor: '#FF8C00',
+      color: 'white',
+      minWidth: { xs: '60px', sm: '80px' },
+      fontSize: { xs: '10px', sm: '12px' },
+      padding: { xs: '4px 8px', sm: '6px 12px' },
+      '&:hover': {
+        backgroundColor: '#e67c00'
+      }
+    }}
+    onClick={() => {
+      setOpenActivityModal(true);
+      setActiveProject(project?.id);
+    }}
+  >
+   Upload Activity Sheet
+  </Button>
+</TableCell>
 
                       {/* New Role Assignment Button */}
                       <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
@@ -727,6 +765,15 @@ const handleCloseRoleViewModal = () => {
         handleDrawingClose={handleCloseDrawingModal} 
         projectId={activeProject}
       />
+<ProjectActivityUploadDialog 
+  open={openActivityModal} 
+  handleActivityClose={handleCloseActivityModal} 
+  projectId={activeProject}
+  onSuccess={() => {
+    // Add any success callback logic here if needed
+    console.log('Activity sheet uploaded successfully');
+  }}
+/>
       
       {/* Role Assignment Modal */}
       <ProjectRoleAssignmentModal
@@ -741,6 +788,7 @@ const handleCloseRoleViewModal = () => {
   projectId={selectedProjectForRoleView?.id}
   projectName={selectedProjectForRoleView?.project_name}
 />
+
     </div>
   );
 };

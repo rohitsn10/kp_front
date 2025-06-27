@@ -54,12 +54,26 @@ const formatDate = (dateString) => {
   }
 };
 
+// Helper function to format coordinate data
+const formatCoordinateData = (format, easting, northing, zone) => {
+  if (!format && !easting && !northing && !zone) return "N/A";
+  
+  const parts = [];
+  if (format) parts.push(`Format: ${format}`);
+  if (easting) parts.push(`Easting: ${easting}`);
+  if (northing) parts.push(`Northing: ${northing}`);
+  if (zone) parts.push(`Zone: ${zone}`);
+  
+  return parts.length > 0 ? parts.join(", ") : "N/A";
+};
+
 export default function LandApproveModal({ open, setOpen, selectedLand }) {
   const [files, setFiles] = useState({});
   const [landBankStatus, setLandBankStatus] = useState("pending");
   const [approveRejectLandBankStatus, { isLoading, error }] = useApproveRejectLandBankStatusMutation();
   const [tabValue, setTabValue] = useState(0);
   console.log(">>>>>>>>",selectedLand)
+  
   useEffect(() => {
     if (selectedLand) {
       const fileKeys = Object.keys(selectedLand).filter((key) => key.includes("file"));
@@ -129,6 +143,34 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
       </Typography>
     </Box>
   );
+
+  // Helper component for displaying keypoints
+// Helper component for displaying keypoints
+const KeypointsDisplay = ({ keypoints }) => {
+  if (!keypoints || !Array.isArray(keypoints) || keypoints.length === 0) {
+    return <Typography variant="body1">N/A</Typography>;
+  }
+  
+  return (
+    <Box component="ul" sx={{ 
+      margin: 0, 
+      paddingLeft: 2,
+      '& li': {
+        marginBottom: 1,
+        fontSize: { xs: '0.875rem', sm: '1rem' },
+        lineHeight: 1.5
+      }
+    }}>
+      {keypoints.map((point, index) => (
+        <li key={index}>
+          <Typography variant="body1" component="span">
+            {point}
+          </Typography>
+        </li>
+      ))}
+    </Box>
+  );
+};
 
   if (!selectedLand) return null;
 
@@ -202,7 +244,7 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
         >
           <Tab label="Basic Info" />
           <Tab label="Technical" />
-          <Tab label="Location" />
+          <Tab label="Location & Coordinates" />
           <Tab label="Infrastructure" />
           <Tab label="Documents" />
         </Tabs>
@@ -245,6 +287,32 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
                 <InfoField label="Area (meters)" value={selectedLand.area_meters} />
                 <InfoField label="Area (acres)" value={selectedLand.area_acres} />
                 <InfoField label="SFA Available Area (acres)" value={selectedLand.sfa_available_area_acres} />
+                
+                <Divider sx={{ my: { xs: 1.5, sm: 2 } }} />
+                
+                <Typography 
+                  variant="subtitle1" 
+                  gutterBottom
+                  sx={{
+                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                  }}
+                >
+                  Key Points
+                </Typography>
+                <Box sx={{ mb: { xs: 1.5, sm: 2 } }}>
+                  <Typography 
+                    variant="subtitle2" 
+                    color="text.secondary" 
+                    sx={{ 
+                      fontWeight: 500,
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                      mb: 1
+                    }}
+                  >
+                    Keypoints
+                  </Typography>
+                  <KeypointsDisplay keypoints={selectedLand.keypoints} />
+                </Box>
               </Paper>
             </Grid>
             
@@ -366,6 +434,45 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
                   gutterBottom
                   sx={{
                     fontSize: { xs: '1rem', sm: '1.125rem' }
+                  }}
+                >
+                  Coordinate Information
+                </Typography>
+                <InfoField 
+                  label="Geo Coordinates" 
+                  value={formatCoordinateData(
+                    selectedLand.geo_coordinate_format,
+                    selectedLand.geo_easting,
+                    selectedLand.geo_northing,
+                    selectedLand.geo_zone
+                  )} 
+                />
+                <InfoField 
+                  label="Land Coordinates" 
+                  value={formatCoordinateData(
+                    selectedLand.land_coordinate_format,
+                    selectedLand.land_easting,
+                    selectedLand.land_northing,
+                    selectedLand.land_zone
+                  )} 
+                />
+                <InfoField 
+                  label="Substation Coordinates" 
+                  value={formatCoordinateData(
+                    selectedLand.substation_coordinate_format,
+                    selectedLand.substation_easting,
+                    selectedLand.substation_northing,
+                    selectedLand.substation_zone
+                  )} 
+                />
+                
+                <Divider sx={{ my: { xs: 1.5, sm: 2 } }} />
+                
+                <Typography 
+                  variant="subtitle1" 
+                  gutterBottom
+                  sx={{
+                    fontSize: { xs: '0.875rem', sm: '1rem' }
                   }}
                 >
                   Environmental Factors
