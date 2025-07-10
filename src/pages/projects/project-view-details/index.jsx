@@ -113,7 +113,7 @@ function ViewProjectDetails() {
                                 onClick={handleOpenUpdateModal}
                                 className="flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none"
                             >
-                                Update Project
+                                Update Project Details
                             </button>
                             <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
                                 {projectData.ci_or_utility}
