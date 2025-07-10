@@ -49,6 +49,13 @@ export const projectApi = createApi({
         method: "GET",
       }),
     }),
+      updateProjectById: builder.mutation({
+      query: ({ project_id, ...body }) => ({
+        url: `project_module/update_main_project/${project_id}`,
+        method: "PUT",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -57,5 +64,6 @@ export const {
   useGetMainProjectsQuery,
   useUpdateMainProjectMutation,
   useDeleteMainProjectMutation,
-  useGetProjectDataByIdQuery
+  useGetProjectDataByIdQuery,
+  useUpdateProjectByIdMutation
 } = projectApi;

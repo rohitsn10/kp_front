@@ -2,22 +2,24 @@ import React, { useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useGetProjectDataByIdQuery } from "../../../api/users/projectApi";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { 
-    dummyActivitiesData, 
-    getProjectSummary, 
-    getStatusChartData, 
-    getCategoryChartData 
+import {
+    dummyActivitiesData,
+    getProjectSummary,
+    getStatusChartData,
+    getCategoryChartData
 } from './dummyActivitiesData';
 import { exportActivitiesToExcelWithCharts } from './excelExportUtils';
+import ProjectUpdate from "../../../components/pages/projects/ProjectMain/ProjectUpdate";
+// import ProjectUpdate from "../project-update-details/ProjectUpdateModal";
 
 function ViewProjectDetails() {
     const { projectId } = useParams();
-    const { data: projectFetchData, error, isLoading } = useGetProjectDataByIdQuery(projectId);
+    const { data: projectFetchData, error, isLoading,refetch } = useGetProjectDataByIdQuery(projectId);
     const projectData = projectFetchData?.data;
     const [activeTab, setActiveTab] = useState('overview');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
-
+    const [updateModal, setUpdateModal] = useState(false)
     // Get summary data
     const summary = getProjectSummary();
     const statusChartData = getStatusChartData();
@@ -44,6 +46,12 @@ function ViewProjectDetails() {
             alert('Failed to export data. Please try again.');
         }
     };
+    const handleOpenUpdateModal = () => {
+        setUpdateModal(true)
+    }
+    const handleCloseUpdateModal = () => {
+        setUpdateModal(false)
+    }
 
     if (isLoading) return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -53,7 +61,7 @@ function ViewProjectDetails() {
             </div>
         </div>
     );
-    
+
     if (error) return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <div className="text-center">
@@ -101,6 +109,12 @@ function ViewProjectDetails() {
                                 </svg>
                                 Export to Excel
                             </button>
+                            <button
+                                onClick={handleOpenUpdateModal}
+                                className="flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none"
+                            >
+                                Update Project
+                            </button>
                             <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
                                 {projectData.ci_or_utility}
                             </span>
@@ -114,26 +128,26 @@ function ViewProjectDetails() {
 
                 {/* Progress Overview Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                    <ProgressCard 
-                        title="Overall Progress" 
+                    <ProgressCard
+                        title="Overall Progress"
                         value={`${summary.overallProgress}%`}
                         icon="📊"
                         color="bg-blue-500"
                     />
-                    <ProgressCard 
-                        title="Completed Tasks" 
+                    <ProgressCard
+                        title="Completed Tasks"
                         value={`${summary.completedTasks}/${summary.totalTasks}`}
                         icon="✅"
                         color="bg-green-500"
                     />
-                    <ProgressCard 
-                        title="In Progress" 
+                    <ProgressCard
+                        title="In Progress"
                         value={summary.wipTasks}
                         icon="🔄"
                         color="bg-yellow-500"
                     />
-                    <ProgressCard 
-                        title="Pending Tasks" 
+                    <ProgressCard
+                        title="Pending Tasks"
                         value={summary.pendingTasks}
                         icon="⏳"
                         color="bg-red-500"
@@ -144,18 +158,18 @@ function ViewProjectDetails() {
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
                     <div className="border-b border-gray-200">
                         <nav className="flex space-x-8 px-6">
-                            <TabButton 
-                                active={activeTab === 'overview'} 
+                            <TabButton
+                                active={activeTab === 'overview'}
                                 onClick={() => setActiveTab('overview')}
                                 label="Project Overview"
                             />
-                            <TabButton 
-                                active={activeTab === 'dashboard'} 
+                            <TabButton
+                                active={activeTab === 'dashboard'}
                                 onClick={() => setActiveTab('dashboard')}
                                 label="Dashboard"
                             />
-                            <TabButton 
-                                active={activeTab === 'activities'} 
+                            <TabButton
+                                active={activeTab === 'activities'}
                                 onClick={() => setActiveTab('activities')}
                                 label="Activities"
                             />
@@ -190,18 +204,18 @@ function ViewProjectDetails() {
                                             Project Timeline
                                         </h2>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <TimelineCard 
-                                                label="Start Date" 
+                                            <TimelineCard
+                                                label="Start Date"
                                                 value={formatDate(projectData.start_date)}
                                                 color="green"
                                             />
-                                            <TimelineCard 
-                                                label="End Date" 
+                                            <TimelineCard
+                                                label="End Date"
                                                 value={formatDate(projectData.end_date)}
                                                 color="blue"
                                             />
-                                            <TimelineCard 
-                                                label="COD Commission" 
+                                            <TimelineCard
+                                                label="COD Commission"
                                                 value={formatDate(projectData.cod_commission_date)}
                                                 color="orange"
                                             />
@@ -274,19 +288,19 @@ function ViewProjectDetails() {
                                 <div className="bg-gray-50 rounded-lg p-6">
                                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Progress Overview</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <ProgressBar 
+                                        <ProgressBar
                                             label="Service Tasks"
                                             completed={dummyActivitiesData.filter(t => t.category === 'Service' && t.status === 'Completed').length}
                                             total={summary.serviceTasks}
                                             color="bg-blue-500"
                                         />
-                                        <ProgressBar 
+                                        <ProgressBar
                                             label="Supply Tasks"
                                             completed={dummyActivitiesData.filter(t => t.category === 'Supply' && t.status === 'Completed').length}
                                             total={summary.supplyTasks}
                                             color="bg-purple-500"
                                         />
-                                        <ProgressBar 
+                                        <ProgressBar
                                             label="Overall Project"
                                             completed={summary.completedTasks}
                                             total={summary.totalTasks}
@@ -301,7 +315,7 @@ function ViewProjectDetails() {
                             <div className="space-y-6">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                     <h3 className="text-lg font-semibold text-gray-900">Project Activities</h3>
-                                    
+
                                     {/* Search and Filter Controls */}
                                     <div className="flex flex-col sm:flex-row gap-3">
                                         {/* Search Input */}
@@ -319,7 +333,7 @@ function ViewProjectDetails() {
                                                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                             />
                                         </div>
-                                        
+
                                         {/* Status Filter */}
                                         <select
                                             value={statusFilter}
@@ -362,7 +376,7 @@ function ViewProjectDetails() {
                                         </button>
                                     )}
                                 </div>
-                                
+
                                 {/* Activities List */}
                                 <div className="grid grid-cols-1 gap-4">
                                     {filteredActivities.length > 0 ? (
@@ -374,8 +388,8 @@ function ViewProjectDetails() {
                                             <div className="text-gray-400 text-4xl mb-3">🔍</div>
                                             <h4 className="text-lg font-medium text-gray-900 mb-2">No activities found</h4>
                                             <p className="text-gray-500">
-                                                {searchTerm || statusFilter !== 'All' 
-                                                    ? 'Try adjusting your search or filter criteria.' 
+                                                {searchTerm || statusFilter !== 'All'
+                                                    ? 'Try adjusting your search or filter criteria.'
                                                     : 'No activities available.'}
                                             </p>
                                             {(searchTerm || statusFilter !== 'All') && (
@@ -397,6 +411,12 @@ function ViewProjectDetails() {
                     </div>
                 </div>
             </div>
+            <ProjectUpdate
+                isOpen={updateModal}
+                onClose={handleCloseUpdateModal}
+                project={projectData}
+                handleRefetch={()=>{refetch()}}
+            />
         </div>
     );
 }
@@ -444,11 +464,10 @@ const ProgressCard = ({ title, value, icon, color }) => (
 const TabButton = ({ active, onClick, label }) => (
     <button
         onClick={onClick}
-        className={`py-3 px-1 border-b-2 font-medium text-sm ${
-            active 
-                ? 'border-blue-500 text-blue-600' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-        }`}
+        className={`py-3 px-1 border-b-2 font-medium text-sm ${active
+            ? 'border-blue-500 text-blue-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
     >
         {label}
     </button>
@@ -465,7 +484,7 @@ const StatItem = ({ label, value }) => (
 // Progress Bar Component
 const ProgressBar = ({ label, completed, total, color }) => {
     const percentage = total > 0 ? (completed / total) * 100 : 0;
-    
+
     return (
         <div className="bg-white rounded-lg p-4 border border-gray-200">
             <div className="flex justify-between items-center mb-2">
@@ -473,7 +492,7 @@ const ProgressBar = ({ label, completed, total, color }) => {
                 <span className="text-sm text-gray-500">{completed}/{total}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
+                <div
                     className={`${color} h-2 rounded-full transition-all duration-300`}
                     style={{ width: `${percentage}%` }}
                 ></div>
@@ -518,7 +537,7 @@ const ActivityCard = ({ activity }) => {
                     {activity.status}
                 </span>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <div>
                     <div className="text-xs text-gray-500">Progress</div>
@@ -537,17 +556,17 @@ const ActivityCard = ({ activity }) => {
                     <div className="text-sm font-semibold">{formatDate(activity.plannedEndDate)}</div>
                 </div>
             </div>
-            
+
             {/* Progress Bar */}
             <div className="mb-3">
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                         className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${activity.completionPercentage}%` }}
                     ></div>
                 </div>
             </div>
-            
+
             {activity.remarks && (
                 <div className="text-sm text-gray-600 italic">
                     Remarks: {activity.remarks}
