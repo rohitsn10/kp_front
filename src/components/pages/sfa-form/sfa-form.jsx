@@ -168,7 +168,6 @@ const AssessmentFormModal = ({ open, handleClose }) => {
     sfa_name: "",
     land_sfa_file: [],
     sfa_for_transmission_line_gss_files: [],
-    timeline: "",
     solar_or_winds: "",
     date_of_assessment: "",
     site_visit_date: "",
@@ -193,24 +192,15 @@ const AssessmentFormModal = ({ open, handleClose }) => {
     any_railway_lane_within_the_proposed_location: "",
     is_the_proposed_site_is_of_natural_contour_or_filled_up_area: "",
     
-    // Enhanced coordinate fields
-    geo_graphical_cordinates: "",
-    geo_coordinate_format: "decimal_degree",
-    // geo_easting: "",
-    // geo_northing: "",
-    // geo_zone: "",
-    
-    // land_co_ordinates: "",
-    land_coordinate_format: "decimal_degree", 
+    // Land coordinates only (Geographical removed)
+    // land_coordinate_format: "decimal_degree", 
+    // land_cordinates: "",
     // land_easting: "",
     // land_northing: "",
     // land_zone: "",
     
     substation_cordinates: "",
     substation_coordinate_format: "decimal_degree",
-    // substation_easting: "",
-    // substation_northing: "",
-    // substation_zone: "",
     
     solar_isolation_data: "",
     rain_fall_pattern: "",
@@ -265,6 +255,33 @@ const AssessmentFormModal = ({ open, handleClose }) => {
     any_other_general_observation: "",
   });
 
+  // List of optional fields
+  const optionalFields = useMemo(() => [
+    "client_consultant",
+    "land_title",
+    "sfa_land_orientation",
+    "rain_fall_pattern",
+    "solar_isolation_data",
+    "transmission_line_load_carrying_or_evacuation_capacity",
+    "construction_power_availability_and_identify_source_distance",
+    "grid_availability_data_outage_pattern",
+    "kv_grid_voltage_variation",
+    "hz_grid_voltage_variation",
+    "check_protection_system_details_of_substation",
+    "any_future_plan_for_expansion_of_substation",
+    "is_there_any_power_export_happening_at_substation",
+    "any_specific_requirements_of_eb_for_double_pole_structure",
+    "nearest_industry_category_and_distance",
+    "availability_of_labor_and_cost_of_labor",
+    "provide_near_by_civil_electrical_contractors",
+    "availability_of_construction_material_nearby",
+    "any_weather_station_nearby",
+    "water_availability",
+    "construction_water_availability",
+    "details_of_local_drainage_scheme",
+    "availability_of_potable_water",
+  ], []);
+
   const [addSfaDataToLandBank] = useAddSfaDataToLandBankMutation();
   const { refetch } = useGetSfaDataQuery();
 
@@ -289,11 +306,16 @@ const AssessmentFormModal = ({ open, handleClose }) => {
   // Memoized validation function
   const validateForm = useCallback(() => {
     for (let [key, value] of Object.entries(formData)) {
+      // Skip optional fields and file uploads
       if (
-        key !== "land_sfa_file" &&
-        key !== "sfa_for_transmission_line_gss_files" &&
-        (!value || value.toString().toLowerCase() === "none")
+        optionalFields.includes(key) ||
+        key === "land_sfa_file" ||
+        key === "sfa_for_transmission_line_gss_files"
       ) {
+        continue;
+      }
+
+      if (!value || value.toString().toLowerCase() === "none") {
         toast.error(`Please fill in the ${key.replace(/_/g, ' ')} field.`);
         return false;
       }
@@ -305,11 +327,11 @@ const AssessmentFormModal = ({ open, handleClose }) => {
     }
   
     return true;
-  }, [formData]);
+  }, [formData, optionalFields]);
 
   // Memoized submit handler
   const handleSubmit = useCallback(async () => {
-        console.log(">>>>>>",formData);
+    console.log(">>>>>>",formData);
 
     if (!validateForm()) return;
     const formDataToSend = new FormData();
@@ -411,16 +433,6 @@ const AssessmentFormModal = ({ open, handleClose }) => {
 
           {/* Dates and Basic Fields */}
           <MemoizedTextField
-            label="Timeline"
-            name="timeline"
-            type="date"
-            value={formData.timeline}
-            onChange={handleChange}
-            InputLabelProps={{ shrink: true }}
-            required
-          />
-          
-          <MemoizedTextField
             label="Solar or Wind"
             name="solar_or_winds"
             select
@@ -451,14 +463,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             required
           />
 
-          {/* Enhanced Coordinate Fields */}
-          <CoordinateInputGroup
-            prefix="geo_graphical"
-            label="Geographical Coordinates"
-            formData={formData}
-            handleChange={handleChange}
-          />
-
+          {/* Land Coordinate Fields Only */}
           <CoordinateInputGroup
             prefix="land_co"
             label="Land Coordinates"
@@ -479,6 +484,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="sfa_land_category"
             value={formData.sfa_land_category}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -486,6 +492,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="sfa_land_profile"
             value={formData.sfa_land_profile}
             onChange={handleChange}
+            required
           />
 
           {/* Batch 3 */}
@@ -501,6 +508,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="palnt_capacity"
             value={formData.palnt_capacity}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -508,6 +516,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="sfa_available_area_acres"
             value={formData.sfa_available_area_acres}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -515,6 +524,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="distance_from_main_road"
             value={formData.distance_from_main_road}
             onChange={handleChange}
+            required
           />
 
           {/* Batch 4 */}
@@ -523,6 +533,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="road_highway_details"
             value={formData.road_highway_details}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -544,6 +555,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="sfa_land_soil_testing_availability"
             value={formData.sfa_land_soil_testing_availability}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -551,6 +563,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="any_shadow_casting_buildings_or_hill"
             value={formData.any_shadow_casting_buildings_or_hill}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -558,6 +571,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="any_water_ponds_or_nalas_within_the_proposed_location"
             value={formData.any_water_ponds_or_nalas_within_the_proposed_location}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -565,6 +579,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="any_roads_or_bridge_within_the_proposed_location"
             value={formData.any_roads_or_bridge_within_the_proposed_location}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -572,13 +587,15 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="any_railway_lane_within_the_proposed_location"
             value={formData.any_railway_lane_within_the_proposed_location}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
-            label="Is proposed site of naturalcontour or filled up area"
+            label="Is proposed site of natural contour or filled up area"
             name="is_the_proposed_site_is_of_natural_contour_or_filled_up_area"
             value={formData.is_the_proposed_site_is_of_natural_contour_or_filled_up_area}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -600,6 +617,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="communication_network_availability"
             value={formData.communication_network_availability}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -607,6 +625,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="permission_required_for_power_generation"
             value={formData.permission_required_for_power_generation}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -614,6 +633,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="transmission_network_availabilty_above_400_220_33kv"
             value={formData.transmission_network_availabilty_above_400_220_33kv}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -621,6 +641,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="distance_of_supply_point_from_proposed_site"
             value={formData.distance_of_supply_point_from_proposed_site}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -628,6 +649,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="distance_of_nearest_substation_from_proposed_site"
             value={formData.distance_of_nearest_substation_from_proposed_site}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -642,6 +664,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="right_of_way_requirement_up_to_the_delivery_point"
             value={formData.right_of_way_requirement_up_to_the_delivery_point}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -663,6 +686,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="substation_capacity_mva"
             value={formData.substation_capacity_mva}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -670,6 +694,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="substation_load_side_voltage_level_kv"
             value={formData.substation_load_side_voltage_level_kv}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -691,6 +716,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="check_space_availability_in_substation_to_conct_power_by_area"
             value={formData.check_space_availability_in_substation_to_conct_power_by_area}
             onChange={handleChange}
+            required
           />
 
           {/* Batch 9 */}
@@ -699,6 +725,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="transformer_rating_in_substation"
             value={formData.transformer_rating_in_substation}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -734,6 +761,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="any_transmission_communication_line_passing_through_site"
             value={formData.any_transmission_communication_line_passing_through_site}
             onChange={handleChange}
+            required
           />
 
           {/* Batch 10 */}
@@ -742,6 +770,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="neighboring_area_or_vicinity_details"
             value={formData.neighboring_area_or_vicinity_details}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -756,6 +785,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="nearest_village_or_district_name_and_distance"
             value={formData.nearest_village_or_district_name_and_distance}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -763,6 +793,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="nearest_highway_or_airport_name_and_distance"
             value={formData.nearest_highway_or_airport_name_and_distance}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -777,6 +808,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="logistics"
             value={formData.logistics}
             onChange={handleChange}
+            required
           />
 
           {/* Batch 11 */}
@@ -785,6 +817,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="is_there_an_approach_road_available_to_the_site"
             value={formData.is_there_an_approach_road_available_to_the_site}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -792,6 +825,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="can_truck_of_Multi_axel_with_40_foot_container_reach_site"
             value={formData.can_truck_of_Multi_axel_with_40_foot_container_reach_site}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -799,6 +833,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="availability_of_vehicle_for_hiring_or_cost_per_km"
             value={formData.availability_of_vehicle_for_hiring_or_cost_per_km}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -806,6 +841,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="list_the_risks_including_journey"
             value={formData.list_the_risks_including_journey}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -813,6 +849,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="nearest_police_station_and_distance"
             value={formData.nearest_police_station_and_distance}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -820,6 +857,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="nearest_hospital_and_distance"
             value={formData.nearest_hospital_and_distance}
             onChange={handleChange}
+            required
           />
 
           {/* Batch 12 */}
@@ -828,6 +866,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="nearest_fire_station_and_distance"
             value={formData.nearest_fire_station_and_distance}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -835,6 +874,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="nearest_seashore_and_distance"
             value={formData.nearest_seashore_and_distance}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -842,6 +882,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="availability_of_accommodation_to_site_approximate_cost"
             value={formData.availability_of_accommodation_to_site_approximate_cost}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -871,6 +912,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="water_belt_profile_of_the_area"
             value={formData.water_belt_profile_of_the_area}
             onChange={handleChange}
+            required
           />
 
           <MemoizedTextField
@@ -906,6 +948,7 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             name="any_other_general_observation"
             value={formData.any_other_general_observation}
             onChange={handleChange}
+            required
           />
         </div>
       </DialogContent>

@@ -1,25 +1,47 @@
 // Sidebar.jsx
-import React, { useState } from 'react'
+import React, { useContext, useState, useMemo } from 'react'
 import logoImg from '../../../assets/logo.png'
 import { Link, useLocation } from 'react-router-dom';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import sidebarConstant from '../../../constants/sidebarRoutes.jsx';
+import { AuthContext } from '../../../context/AuthContext.jsx';
 
 function Sidebar({ isOpen }) {
   const location = useLocation();
   const currPath = location.pathname;  
   const [openDropdown, setOpenDropdown] = useState(null);
+  const { user, token, permissions } = useContext(AuthContext);
   
+  console.log("Permissions>>", permissions);
+  console.log("Group from permissions>>", permissions?.group);
+
+  // Filter sidebar items based on group from permissions
+  const filteredSidebarItems = useMemo(() => {
+    const userGroup = permissions?.group;
+    
+    // If group exists and starts with 'LAND', show only Land Bank and SFA
+    if (userGroup?.name && userGroup.name.startsWith('LAND')) {
+      return sidebarConstant.filter(item => 
+        item.name === 'Land Bank' || item.name === 'SFA' || item.name === 'Reports'
+      );
+    }
+    
+    // If group doesn't exist or doesn't start with 'LAND', hide Land Bank and SFA, show rest
+    return sidebarConstant.filter(item => 
+      item.name !== 'Land Bank' && item.name !== 'SFA'
+    );
+  }, [permissions]);
+
   const handleToggleDropdown = (itemName) => {
     setOpenDropdown((prev) => (prev === itemName ? null : itemName));
   };
 
-  const SidebarItems = ({item}) => {
+  const SidebarItems = ({ item }) => {
     const isActive = currPath === item?.links;
     const hasSubNavActive = item?.subNavs?.some(subItem => currPath === subItem.links);
     
-    return(
+    return (
       <div className="mb-1">
         <Link to={item?.links}>
           <div 
@@ -84,15 +106,10 @@ function Sidebar({ isOpen }) {
         </div>
         
         <nav className="px-3 flex-1 overflow-y-auto">
-          {sidebarConstant.map((item, index) => <SidebarItems key={index} item={item}/>)}
+          {filteredSidebarItems.map((item, index) => (
+            <SidebarItems key={index} item={item}/>
+          ))}
         </nav>
-        
-        {/* <div className="p-4 border-t border-gray-200">
-          <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500">
-            <p className="font-medium text-gray-700 mb-1">Dashboard v1.0</p>
-            <p>© 2025 Your Company</p>
-          </div>
-        </div> */}
       </div>
     </aside>
   )

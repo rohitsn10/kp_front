@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   Table,
   TableBody,
@@ -15,13 +15,17 @@ import {
 } from "@mui/material";
 import { RiEditFill } from "react-icons/ri";
 import { AiOutlineStop } from "react-icons/ai";
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useGetSfaDataQuery } from "../../api/sfa/sfaApi";
 import AssessmentFormModal from "../../components/pages/sfa-form/sfa-form";
 import AssessmentFormUpdateModal from "../../components/pages/sfa-form/sfaUpdate";
 import AssessmentFormApproval from "../../components/pages/sfa-form/sfa-approval";
+import ViewSFADetailsModal from "../../components/pages/sfa-form/sfa-view"; // Import the new modal
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import LibraryAddIcon from "@mui/icons-material/LibraryAdd";
 import CreateLandBankModal from "../../components/pages/Land-bank/createLandBank";
+import { AuthContext } from "../../context/AuthContext";
+
 
 const SiteVisitTable = () => {
   const [page, setPage] = useState(0);
@@ -32,25 +36,55 @@ const SiteVisitTable = () => {
   const [openUpdateSfa, setUpdateSfa] = useState(false);
   const [openApproveSfa, setOpenApproveSfa] = useState(false);
   const [openCreateLandBank, setCreateLandBank] = useState(false);
-
+  const [openViewModal, setOpenViewModal] = useState(false); // New state for view modal
   const [activeItem, setActiveItem] = useState(null);
+
+
+  // Get permissions from AuthContext
+  const { permissions } = useContext(AuthContext);
+  
+  // Check if user has LAND permissions (for both Approve and Create Land Bank)
+  const hasLandPermissions = () => {
+    const userGroup = permissions?.group?.name;
+    const landGroups = [
+      'admin',
+      'LAND_HOD_FULL',
+      'LAND_MANAGER_FULL', 
+      'LAND_SPOC_FULL',
+      'LAND_AM_FULL'
+    ];
+    return landGroups.includes(userGroup);
+  };
+
+
+  const canAccessLandFeatures = hasLandPermissions();
+
 
   const handleCloseSpa = () => {
     setOpenCreateSpa(!openCreateSfa);
   };
+  
   const handleSfaUpdateClose = () => {
     setActiveItem(null);
     setUpdateSfa(!openUpdateSfa);
   };
+  
   const handleSfaApproveClose = () => {
     setActiveItem(null);
     setOpenApproveSfa(false);
   };
 
+
   const handleCreateLandBankClose = () => {
     setActiveItem(null);
     setCreateLandBank(false);
   };
+
+  const handleViewModalClose = () => {
+    setActiveItem(null);
+    setOpenViewModal(false);
+  };
+
 
   if (isLoading) {
     return (
@@ -59,6 +93,7 @@ const SiteVisitTable = () => {
       </div>
     );
   }
+
 
   if (isError) {
     return (
@@ -70,39 +105,45 @@ const SiteVisitTable = () => {
     );
   }
 
+
   const siteData = data?.data || [];
   const filteredRows = siteData?.filter((row) =>
     row.sfa_name?.toLowerCase().includes(filter?.toLowerCase())
   );
+
 
   const currentRows = filteredRows?.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
 
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
+
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
+
+  // Calculate total columns for colspan - updated to include View Data column
+  const totalColumns = 6 + (canAccessLandFeatures ? 2 : 0); // Base 6 (added View Data) + Approve + Create Land Bank
+
+
   return (
     <div className="bg-white p-3 sm:p-4 md:p-6 w-full max-w-7xl mx-auto my-4 sm:my-6 md:my-8 rounded-lg shadow-sm">
       {/* Responsive Header */}
       <div className="mb-6">
-        {/* Title - Always on top on mobile */}
         <div className="text-center mb-4 sm:mb-6">
           <h2 className="text-xl sm:text-2xl md:text-3xl text-[#29346B] font-semibold">
             SFA Listing
           </h2>
         </div>
         
-        {/* Search and Button Container */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
-          {/* Search Input */}
           <div className="w-full sm:w-auto sm:flex-1 sm:max-w-xs">
             <TextField
               value={filter}
@@ -123,7 +164,7 @@ const SiteVisitTable = () => {
             />
           </div>
 
-          {/* Add Button */}
+
           <div className="w-full sm:w-auto">
             <Button
               onClick={() => {
@@ -149,13 +190,14 @@ const SiteVisitTable = () => {
         </div>
       </div>
 
+
       {/* Responsive Table Container */}
       <div className="overflow-x-auto">
         <TableContainer 
           component={Paper} 
           style={{ 
             borderRadius: "8px",
-            minWidth: "800px" // Ensure minimum width for wide table
+            minWidth: "800px"
           }}
         >
           <Table stickyHeader>
@@ -211,6 +253,7 @@ const SiteVisitTable = () => {
                 >
                   Edit
                 </TableCell>
+                {/* New View Data column header - visible for everyone */}
                 <TableCell 
                   align="center"
                   style={{ fontWeight: 'normal', color: '#5C5E67' }}
@@ -219,20 +262,37 @@ const SiteVisitTable = () => {
                     padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
                   }}
                 >
-                  Approve
+                  View Data
                 </TableCell>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  Create Land Bank
-                </TableCell>
+                {/* Conditionally render Approve column header */}
+                {canAccessLandFeatures && (
+                  <TableCell 
+                    align="center"
+                    style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                    sx={{
+                      fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                    }}
+                  >
+                    Approve
+                  </TableCell>
+                )}
+                {/* Conditionally render Create Land Bank column header */}
+                {canAccessLandFeatures && (
+                  <TableCell 
+                    align="center"
+                    style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                    sx={{
+                      fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                    }}
+                  >
+                    Create Land Bank
+                  </TableCell>
+                )}
               </TableRow>
             </TableHead>
+
 
             <TableBody>
               {currentRows.length > 0 ? (
@@ -280,7 +340,7 @@ const SiteVisitTable = () => {
                         padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
                       }}
                     >
-                      {row.land_category_name || "N/A"}
+                      {row?.solar_or_winds || "N/A"}
                     </TableCell>
                     <TableCell 
                       align="center"
@@ -289,53 +349,37 @@ const SiteVisitTable = () => {
                       }}
                     >
                       <div style={{ display: "flex", justifyContent: "center" }}>
-                        <RiEditFill
-                          onClick={() => {
-                            setActiveItem(row);
-                            setUpdateSfa(true);
-                          }}
-                          style={{
-                            cursor: "pointer",
-                            color: "#61D435",
-                            fontSize: "20px",
-                          }}
-                          title="Edit"
-                        />
+                        {row?.status_of_site_visit == 'Pending' ?
+                          <RiEditFill
+                            onClick={() => {
+                              setActiveItem(row);
+                              setUpdateSfa(true);
+                            }}
+                            style={{
+                              cursor: "pointer",
+                              color: "#61D435",
+                              fontSize: "20px",
+                            }}
+                            title="Edit"
+                          />
+                          :
+                          <RiEditFill
+                            onClick={() => {
+                              // setActiveItem(row);
+                              // setUpdateSfa(true);
+                            }}
+                            style={{
+                              cursor: "not-allowed",
+                              color: "gray",
+                              fontSize: "20px",
+                              opacity: 0.6,
+                            }}
+                            title="Edit"
+                          />
+                        }
                       </div>
                     </TableCell>
-                    <TableCell 
-                      align="center"
-                      sx={{
-                        padding: { xs: '4px', sm: '8px', md: '12px' }
-                      }}
-                    >
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => {
-                          setActiveItem(row);
-                          setOpenApproveSfa(true);
-                        }}
-                        startIcon={<FactCheckIcon style={{ fontSize: "16px" }} />}
-                        sx={{
-                          backgroundColor: "#f95406",
-                          color: "white",
-                          minWidth: { xs: "80px", sm: "90px" },
-                          padding: { xs: "4px 8px", sm: "6px 16px" },
-                          fontSize: { xs: "11px", sm: "13px" },
-                          textTransform: "none",
-                          fontWeight: "500",
-                          '&:hover': {
-                            backgroundColor: '#e04905'
-                          },
-                          '& .MuiButton-startIcon': {
-                            marginRight: { xs: '2px', sm: '8px' }
-                          }
-                        }}
-                      >
-                        Approve
-                      </Button>
-                    </TableCell>
+                    {/* New View Data column cell - visible for everyone */}
                     <TableCell 
                       align="center"
                       sx={{
@@ -347,24 +391,133 @@ const SiteVisitTable = () => {
                         size="small"
                         onClick={() => {
                           setActiveItem(row);
-                          setCreateLandBank(true);
+                          setOpenViewModal(true);
                         }}
+                        startIcon={<VisibilityIcon style={{ fontSize: "16px" }} />}
                         sx={{
-                          minWidth: { xs: "70px", sm: "80px" },
+                          color: "#1976d2",
+                          borderColor: "#1976d2",
+                          minWidth: { xs: "70px", sm: "100px" },
                           padding: { xs: "4px 8px", sm: "6px 12px" },
                           fontSize: { xs: "11px", sm: "13px" },
-                          textTransform: "none"
+                          textTransform: "none",
+                          fontWeight: "500",
+                          "&:hover": {
+                            borderColor: "#115293",
+                            backgroundColor: "rgba(25, 118, 210, 0.04)",
+                          },
+                          "& .MuiButton-startIcon": {
+                            marginRight: { xs: "2px", sm: "8px" },
+                          },
                         }}
                       >
-                        Create
+                        View
                       </Button>
                     </TableCell>
+                    {/* Conditionally render Approve column cell */}
+                    {canAccessLandFeatures && (
+                      <TableCell 
+                        align="center"
+                        sx={{
+                          padding: { xs: '4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={() => {
+                            setActiveItem(row);
+                            setOpenApproveSfa(true);
+                          }}
+                          startIcon={<FactCheckIcon style={{ fontSize: "16px" }} />}
+                          disabled={row?.status_of_site_visit === "Approved"}
+                          sx={{
+                            backgroundColor:
+                              row?.status_of_site_visit === "Approved" ? "gray" : "#f95406",
+                            color: "white",
+                            minWidth: { xs: "80px", sm: "90px" },
+                            padding: { xs: "4px 8px", sm: "6px 16px" },
+                            fontSize: { xs: "11px", sm: "13px" },
+                            textTransform: "none",
+                            fontWeight: "500",
+                            "&:hover": {
+                              backgroundColor:
+                                row?.status_of_site_visit === "Approved" ? "gray" : "#e04905",
+                            },
+                            "& .MuiButton-startIcon": {
+                              marginRight: { xs: "2px", sm: "8px" },
+                            },
+                            opacity: row?.status_of_site_visit === "Approved" ? 0.6 : 1,
+                          }}
+                        >
+                          Approve
+                        </Button>
+                      </TableCell>
+                    )}
+                    {/* Conditionally render Create Land Bank column cell */}
+                    {canAccessLandFeatures && (
+                      <TableCell 
+                        align="center"
+                        sx={{
+                          padding: { xs: '4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => {
+                            setActiveItem(row);
+                            setCreateLandBank(true);
+                          }}
+                          disabled={row?.status_of_site_visit !== "Approved" || row?.is_land_bank_created === true}
+                          sx={{
+                            minWidth: { xs: "70px", sm: "150px" },
+                            padding: { xs: "4px 8px", sm: "6px 12px" },
+                            fontSize: { xs: "11px", sm: "13px" },
+                            textTransform: "none",
+                            color: row?.is_land_bank_created 
+                              ? "#2e7d32"
+                              : row?.status_of_site_visit === "Approved" 
+                                ? "#1976d2" 
+                                : "gray",
+                            borderColor: row?.is_land_bank_created 
+                              ? "#2e7d32"
+                              : row?.status_of_site_visit === "Approved" 
+                                ? "#1976d2" 
+                                : "gray",
+                            opacity: row?.is_land_bank_created 
+                              ? 1
+                              : row?.status_of_site_visit === "Approved" 
+                                ? 1 
+                                : 0.6,
+                            cursor: row?.status_of_site_visit === "Approved" && !row?.is_land_bank_created 
+                              ? "pointer" 
+                              : "not-allowed",
+                            fontWeight: row?.is_land_bank_created ? 600 : 500,
+                            '&:hover': {
+                              borderColor: row?.is_land_bank_created 
+                                ? "#2e7d32"
+                                : row?.status_of_site_visit === "Approved" 
+                                  ? "#115293" 
+                                  : "gray",
+                              backgroundColor: row?.is_land_bank_created 
+                                ? "rgba(46, 125, 50, 0.08)"
+                                : row?.status_of_site_visit === "Approved" 
+                                  ? "rgba(25, 118, 210, 0.04)" 
+                                  : "transparent",
+                            },
+                          }}
+                        >
+                          {row?.is_land_bank_created ? "Land Bank Created" : "Create"}
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
                   <TableCell 
-                    colSpan={7} 
+                    colSpan={totalColumns}
                     align="center"
                     sx={{
                       padding: { xs: '16px 8px', sm: '24px 16px' },
@@ -380,6 +533,7 @@ const SiteVisitTable = () => {
           </Table>
         </TableContainer>
       </div>
+
 
       <TablePagination
         component="div"
@@ -401,6 +555,7 @@ const SiteVisitTable = () => {
         }}
       />
 
+
       <AssessmentFormModal open={openCreateSfa} handleClose={handleCloseSpa} />
       <AssessmentFormUpdateModal
         open={openUpdateSfa}
@@ -408,19 +563,31 @@ const SiteVisitTable = () => {
         activeItem={activeItem}
         refetch={refetch}
       />
-      <AssessmentFormApproval
-        open={openApproveSfa}
-        handleClose={handleSfaApproveClose}
-        activeItem={activeItem}
-        refetch={refetch}
-      />
-      <CreateLandBankModal
-        open={openCreateLandBank}
-        handleClose={handleCreateLandBankClose}
+      {/* View Modal - visible for everyone */}
+      <ViewSFADetailsModal
+        open={openViewModal}
+        handleClose={handleViewModalClose}
         activeItem={activeItem}
       />
+      {/* Only render approval/create modals if user has LAND permissions */}
+      {canAccessLandFeatures && (
+        <>
+          <AssessmentFormApproval
+            open={openApproveSfa}
+            handleClose={handleSfaApproveClose}
+            activeItem={activeItem}
+            refetch={refetch}
+          />
+          <CreateLandBankModal
+            open={openCreateLandBank}
+            handleClose={handleCreateLandBankClose}
+            activeItem={activeItem}
+          />
+        </>
+      )}
     </div>
   );
 };
+
 
 export default SiteVisitTable;

@@ -9,7 +9,7 @@ import {
     getCategoryChartData
 } from './dummyActivitiesData';
 import { exportActivitiesToExcelWithCharts } from './excelExportUtils';
-import ProjectUpdate from "../../../components/pages/projects/ProjectMain/ProjectUpdate";
+import ProjectUpdateModal from "../../../components/pages/projects/ProjectMain/ProjectUpdate";
 // import ProjectUpdate from "../project-update-details/ProjectUpdateModal";
 
 function ViewProjectDetails() {
@@ -411,7 +411,7 @@ function ViewProjectDetails() {
                     </div>
                 </div>
             </div>
-            <ProjectUpdate
+            <ProjectUpdateModal
                 isOpen={updateModal}
                 onClose={handleCloseUpdateModal}
                 project={projectData}

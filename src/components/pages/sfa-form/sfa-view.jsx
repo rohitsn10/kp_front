@@ -1,14 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
   Typography,
   Box,
   IconButton,
@@ -20,65 +16,16 @@ import {
   Chip,
   Paper
 } from '@mui/material';
-import { toast } from 'react-toastify';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DownloadIcon from '@mui/icons-material/Download';
-import { useUpdateLandBankStatusMutation } from '../../../api/sfa/sfaApi';
+import CloseIcon from '@mui/icons-material/Close';
 
-const AssessmentFormApproval = ({
+const ViewSFADetailsModal = ({
   open,
   handleClose,
-  activeItem,
-  refetch
+  activeItem
 }) => {
-  const [landBankStatus, setLandBankStatus] = useState('');
-  const [approvedReportFiles, setApprovedReportFiles] = useState([]);
-  const [updateLandBankStatus, { isLoading, isError }] = useUpdateLandBankStatusMutation();
-  
-  useEffect(() => {
-    if (activeItem) {
-      setLandBankStatus(''); // Reset the status when activeItem changes
-      setApprovedReportFiles([]); // Reset the files when activeItem changes
-    }
-  }, [activeItem]);
-  
-  const handleLandBankStatusChange = (event) => {
-    setLandBankStatus(event.target.value);
-  };
-
-  const handleFileChange = (event) => {
-    const files = event.target.files;
-    setApprovedReportFiles(Array.from(files)); // Convert FileList to an array
-  };
-
-  const handleSubmit = async () => {
-    // Check if Land Bank Status and Files are selected
-    if (!landBankStatus || approvedReportFiles.length === 0) {
-      toast.error("Please select the land bank status and upload the approved report files.");
-      return;
-    }
-
-    const land_sfa_data_id = activeItem.id;
-    const formData = new FormData();
-    formData.append('status_of_site_visit', landBankStatus);
-
-    // Append files to FormData
-    approvedReportFiles.forEach((file) => {
-      formData.append('approved_report_files', file);
-    });
-
-    try {
-      // Make API call to update status
-      await updateLandBankStatus({ land_bank_id: land_sfa_data_id, formData });
-      toast.success("SFA Status updated successfully!");
-      refetch();
-      handleClose(); // Close the modal on success
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to update SFA status. Please try again.");
-    }
-  };
 
   // Format dates for better display
   const formatDate = (dateString) => {
@@ -161,9 +108,20 @@ const AssessmentFormApproval = ({
           fontSize: "27px",
           fontWeight: "600",
           marginBottom: "10px",
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}
       >
-        SFA Form Details and Approval
+        SFA Form Details
+        <IconButton
+          edge="end"
+          color="inherit"
+          onClick={handleClose}
+          aria-label="close"
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
       <DialogContent dividers>
         <Box mb={3}>
@@ -381,84 +339,27 @@ const AssessmentFormApproval = ({
             </AccordionDetails>
           </Accordion>
         </Box>
-
-        {/* Approval Section */}
-        <Paper elevation={3} sx={{ p: 3, mt: 3, backgroundColor: '#f8f9fa' }}>
-          <Typography variant="h6" color="primary" gutterBottom>
-            Update SFA Status
-          </Typography>
-          
-          {/* Land Bank Status */}
-          <FormControl fullWidth variant="outlined" margin="normal">
-            <InputLabel>Land Bank Status</InputLabel>
-            <Select
-              value={landBankStatus}
-              onChange={handleLandBankStatusChange}
-              label="Land Bank Status"
-              fullWidth
-            >
-              <MenuItem value="Rejected">Rejected</MenuItem>
-              <MenuItem value="Approved">Approved</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* Approved Report File Upload */}
-          <Box mb={2} mt={2}>
-            <Typography variant="subtitle1" color="primary" gutterBottom>
-              Approved Report Files
-            </Typography>
-            <input
-              type="file"
-              name="approved_report_file"
-              multiple
-              onChange={handleFileChange}
-              style={{ marginBottom: "10px", marginTop: "10px" }}
-            />
-            <Typography variant="caption" color="textSecondary">
-              Upload relevant approval documents
-            </Typography>
-          </Box>
-        </Paper>
       </DialogContent>
       <DialogActions sx={{ justifyContent: "center", padding: "20px" }}>
         <Button
           onClick={handleClose}
           sx={{
-            backgroundColor: "#e0e0e0",
-            color: "#333333",
+            backgroundColor: "#1976d2",
+            color: "#FFFFFF",
             fontSize: "16px",
             padding: "6px 36px",
             width: "150px",
             borderRadius: "8px",
             textTransform: "none",
             fontWeight: "bold",
-            marginRight: "10px",
-            "&:hover": { backgroundColor: "#d0d0d0" },
+            "&:hover": { backgroundColor: "#115293" },
           }}
         >
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          type="submit"
-          disabled={isLoading}
-          sx={{
-            backgroundColor: "#f6812d",
-            color: "#FFFFFF",
-            fontSize: "16px",
-            padding: "6px 36px",
-            width: "200px",
-            borderRadius: "8px",
-            textTransform: "none",
-            fontWeight: "bold",
-            "&:hover": { backgroundColor: "#E66A1F" },
-          }}
-        >
-          {isLoading ? 'Submitting...' : 'Submit'}
+          Close
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default AssessmentFormApproval;
+export default ViewSFADetailsModal;
