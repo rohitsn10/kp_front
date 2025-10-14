@@ -25,9 +25,11 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
     land_bank_id: activeItem?.id || "",
     land_category_id: "",
     land_name: "",
-    old_block_number: "",
-    new_block_number: "",
+    block_number: "",
+    land_type: "",
     sale_deed_date: "",
+    sale_deed_number: "",
+    lease_deed_date: "",
     lease_deed_number: "",
     survey_number: "",
     village_name: "",
@@ -46,10 +48,10 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
     actual_bucket: "",
     remarks: "",
     index_number: "",
-    tcr: "",
+    tsr: "",
     advocate_name: "",
     total_land_area: "",
-    keypoints: [], // New field for keypoints
+    keypoints: [],
     // File fields
     land_location_files: [],
     land_survey_number_files: [],
@@ -68,9 +70,11 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
       land_bank_id: activeItem?.id || "",
       land_category_id: "",
       land_name: "",
-      old_block_number: "",
-      new_block_number: "",
+      block_number: "",
+      land_type: "",
       sale_deed_date: "",
+      sale_deed_number: "",
+      lease_deed_date: "",
       lease_deed_number: "",
       survey_number: "",
       village_name: "",
@@ -89,7 +93,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
       actual_bucket: "",
       remarks: "",
       index_number: "",
-      tcr: "",
+      tsr: "",
       advocate_name: "",
       total_land_area: "",
       keypoints: [],
@@ -126,7 +130,21 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // Clear conditional fields when land_type changes
+    if (name === "land_type") {
+      setFormData({
+        ...formData,
+        [name]: value,
+        sale_deed_date: "",
+        sale_deed_number: "",
+        lease_deed_date: "",
+        lease_deed_number: "",
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleFileChange = (e, field) => {
@@ -159,27 +177,32 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
   };
 
   const handleSubmit = async () => {
-    // Add validation for required fields
+    // Validation for required fields
     const requiredFields = [
-      "land_bank_id",
-      "land_category_id",
-      "land_name",
-      "survey_number",
-      "village_name",
-      "district_name",
-      "taluka_tahshil_name",
+      { key: "land_bank_id", label: "Land Bank ID" },
+      { key: "land_name", label: "Land Bank Name" },
+      { key: "block_number", label: "Block Number" },
+      { key: "survey_number", label: "Survey Number" },
+      { key: "village_name", label: "Village Name" },
+      { key: "district_name", label: "District Name" },
+      { key: "taluka_tahshil_name", label: "Taluka/Tahshil Name" },
+      { key: "land_co_ordinates", label: "Land Coordinates" },
+      { key: "area_meters", label: "Area (Meters)" },
+      { key: "area_acres", label: "Area (Acres)" },
+      { key: "seller_name", label: "Seller Name" },
+      { key: "buyer_name", label: "Buyer Name" },
     ];
 
-    const missingFields = requiredFields.filter(field => !formData[field]);
+    const missingFields = requiredFields.filter(field => !formData[field.key]);
+    
     if (missingFields.length > 0) {
-      toast.error(`Please fill in all required fields: ${missingFields.join(", ")}`);
+      toast.error("Please fill in all required data.");
       return;
     }
 
     const formDataToSend = new FormData();
     Object.keys(formData).forEach((key) => {
       if (key === 'keypoints') {
-        // Send keypoints as JSON string array
         formDataToSend.append(key, JSON.stringify(formData[key]));
       } else if (Array.isArray(formData[key])) {
         formData[key].forEach((file) => formDataToSend.append(key, file));
@@ -285,91 +308,128 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
 
           <div>
             <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
-              Land Category <span className="text-red-600">*</span>
+              Block Number <span className="text-red-600">*</span>
+            </label>
+            <TextField 
+              name="block_number" 
+              value={formData.block_number} 
+              onChange={handleChange} 
+              fullWidth 
+              margin="normal" 
+              sx={inputStyles}
+              size="small"
+            />
+          </div>
+
+          {/* Land Type */}
+          <div>
+            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
+              Land Type
             </label>
             <TextField
-              name="land_category_id"
+              name="land_type"
               select
-              value={formData.land_category_id}
+              value={formData.land_type}
               onChange={handleChange}
               fullWidth
               margin="normal"
               sx={inputStyles}
               size="small"
             >
-              {isLoadingCategory ? (
-                <MenuItem disabled><CircularProgress size={24} /></MenuItem>
-              ) : (
-                data?.data.map((category) => (
-                  <MenuItem key={category.id} value={category.id}>
-                    {category.category_name}
-                  </MenuItem>
-                ))
-              )}
+              <MenuItem value="buy">Buy</MenuItem>
+              <MenuItem value="lease">Lease</MenuItem>
             </TextField>
           </div>
 
-          {/* Block Numbers */}
-          <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
-              Old Block Number
-            </label>
-            <TextField 
-              name="old_block_number" 
-              value={formData.old_block_number} 
-              onChange={handleChange} 
-              fullWidth 
-              margin="normal" 
-              sx={inputStyles}
-              size="small"
-            />
-          </div>
+          {/* Conditional fields based on Land Type */}
+          {formData.land_type === "buy" && (
+            <>
+              <div>
+                <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
+                  Sale Deed Date
+                </label>
+                <TextField 
+                  type="date" 
+                  name="sale_deed_date" 
+                  value={formData.sale_deed_date} 
+                  onChange={handleChange} 
+                  fullWidth 
+                  margin="normal" 
+                  sx={inputStyles}
+                  size="small"
+                />
+              </div>
 
-          <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
-              New Block Number
-            </label>
-            <TextField 
-              name="new_block_number" 
-              value={formData.new_block_number} 
-              onChange={handleChange} 
-              fullWidth 
-              margin="normal" 
-              sx={inputStyles}
-              size="small"
-            />
-          </div>
+              <div>
+                <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
+                  Sale Deed Number
+                </label>
+                <TextField 
+                  name="sale_deed_number" 
+                  value={formData.sale_deed_number} 
+                  onChange={handleChange} 
+                  fullWidth 
+                  margin="normal" 
+                  sx={inputStyles}
+                  size="small"
+                />
+              </div>
+            </>
+          )}
 
-          {/* Deed Information */}
-          <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
-              Sale Deed Date
-            </label>
-            <TextField 
-              type="date" 
-              name="sale_deed_date" 
-              value={formData.sale_deed_date} 
-              onChange={handleChange} 
-              fullWidth 
-              margin="normal" 
-              sx={inputStyles}
-              size="small"
-            />
-          </div>
+          {formData.land_type === "lease" && (
+            <>
+              <div>
+                <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
+                  Lease Deed Date
+                </label>
+                <TextField 
+                  type="date" 
+                  name="lease_deed_date" 
+                  value={formData.lease_deed_date} 
+                  onChange={handleChange} 
+                  fullWidth 
+                  margin="normal" 
+                  sx={inputStyles}
+                  size="small"
+                />
+              </div>
 
+              <div>
+                <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
+                  Lease Deed Number
+                </label>
+                <TextField 
+                  name="lease_deed_number" 
+                  value={formData.lease_deed_number} 
+                  onChange={handleChange} 
+                  fullWidth 
+                  margin="normal" 
+                  sx={inputStyles}
+                  size="small"
+                />
+              </div>
+            </>
+          )}
+
+          {/* TSR Field */}
           <div>
             <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
-              Lease Deed Number
+              TSR
             </label>
-            <TextField 
-              name="lease_deed_number" 
-              value={formData.lease_deed_number} 
-              onChange={handleChange} 
-              fullWidth 
-              margin="normal" 
+            <TextField
+              name="tsr"
+              select
+              value={formData.tsr}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
               sx={inputStyles}
               size="small"
-            />
+            >
+              <MenuItem value="clear">Clear</MenuItem>
+              <MenuItem value="not_clear">Not Clear</MenuItem>
+            </TextField>
           </div>
 
           {/* Location Information */}
@@ -451,7 +511,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
 
           <div>
             <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
-              Land Coordinates
+              Land Coordinates <span className="text-red-600">*</span>
             </label>
             <TextField 
               name="land_co_ordinates" 
@@ -467,7 +527,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
           {/* Area Information */}
           <div>
             <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
-              Area (Meters)
+              Area (Meters) <span className="text-red-600">*</span>
             </label>
             <TextField 
               type="number" 
@@ -483,7 +543,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
 
           <div>
             <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
-              Area (Acres)
+              Area (Acres) <span className="text-red-600">*</span>
             </label>
             <TextField 
               type="number" 
@@ -497,7 +557,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
             />
           </div>
 
-          {/* Additional Information */}
+          {/* Additional Information - Optional */}
           <div>
             <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Industrial Jantri
@@ -532,7 +592,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
           {/* Seller/Buyer Information */}
           <div>
             <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
-              Seller Name
+              Seller Name <span className="text-red-600">*</span>
             </label>
             <TextField 
               name="seller_name" 
@@ -547,7 +607,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
 
           <div>
             <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
-              Buyer Name
+              Buyer Name <span className="text-red-600">*</span>
             </label>
             <TextField 
               name="buyer_name" 
@@ -560,7 +620,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
             />
           </div>
 
-          {/* Status and Additional Fields */}
+          {/* Status and Additional Fields - Optional */}
           <div>
             <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Land Status
@@ -595,7 +655,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
             </TextField>
           </div>
 
-          {/* Additional Details */}
+          {/* Additional Details - Optional */}
           <div>
             <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
               Actual Bucket
@@ -624,25 +684,6 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
               sx={inputStyles}
               size="small"
             />
-          </div>
-
-          <div>
-            <label className="block mt-4 mb-1 text-[#29346B] text-base sm:text-lg font-semibold">
-              TCR
-            </label>
-            <TextField
-              name="tcr"
-              select
-              value={formData.tcr}
-              onChange={handleChange}
-              fullWidth
-              margin="normal"
-              sx={inputStyles}
-              size="small"
-            >
-              <MenuItem value="True">True</MenuItem>
-              <MenuItem value="False">False</MenuItem>
-            </TextField>
           </div>
 
           <div>
@@ -709,7 +750,6 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
               </Button>
             </div>
             
-            {/* Display added keypoints */}
             {formData.keypoints.length > 0 && (
               <Box className="mt-3 p-3 border border-yellow-200 rounded-lg bg-yellow-50">
                 <p className="text-sm font-medium text-[#29346B] mb-2">
