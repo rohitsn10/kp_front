@@ -7,10 +7,11 @@ import {
   Button,
   TextField,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useGetSfaDataQuery, useAddSfaDataToLandBankMutation } from "../../../api/sfa/sfaApi";
-
+import { useGetLandCategoriesQuery } from "../../../api/users/categoryApi";
 // Memoized coordinate format options to prevent recreation on every render
 const COORDINATE_FORMAT_OPTIONS = [
   { value: "decimal_degree", label: "Decimal Degree" },
@@ -168,10 +169,11 @@ const AssessmentFormModal = ({ open, handleClose }) => {
     sfa_name: "",
     land_sfa_file: [],
     sfa_for_transmission_line_gss_files: [],
-    solar_or_winds: "",
+    // solar_or_winds: "",
     date_of_assessment: "",
     site_visit_date: "",
-
+    land_category_id: "", // Stores ID
+    land_category: "", // Stores name
     // New fields from CURL request
     land_address: "",
     client_consultant: "",
@@ -284,15 +286,26 @@ const AssessmentFormModal = ({ open, handleClose }) => {
 
   const [addSfaDataToLandBank] = useAddSfaDataToLandBankMutation();
   const { refetch } = useGetSfaDataQuery();
-
+ const { data, isLoading: isLoadingCategory } = useGetLandCategoriesQuery();
   // Memoized change handler to prevent recreation on every render
-  const handleChange = useCallback((e) => {
+ const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  }, []);
+    
+    // Special handling for land_category_id to store both ID and name
+    if (name === "land_category_id") {
+      const selectedOption = data?.data.find(option => option.id === value);
+      setFormData(prev => ({
+        ...prev,
+        land_category_id: value, // Store ID
+        land_category: selectedOption?.category_name || "" // Store name (adjust based on your API response)
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  }, [data]);
 
   // Memoized file change handler
   const handleFileChange = useCallback((e, field) => {
@@ -431,17 +444,47 @@ const AssessmentFormModal = ({ open, handleClose }) => {
             </div>
           </div>
 
-          {/* Dates and Basic Fields */}
           <MemoizedTextField
-            label="Solar or Wind"
-            name="solar_or_winds"
+            label="Land Category"
+            name="land_category_id"
             select
-            value={formData.solar_or_winds}
+            value={formData.land_category_id}
             onChange={handleChange}
             required
           >
-            {solarWindOptions}
+            {isLoadingCategory ? (
+              <MenuItem disabled>
+                <CircularProgress size={24} />
+              </MenuItem>
+            ) : (
+              data?.data.map((category) => (
+                <MenuItem key={category.id} value={category.id}>
+                  {category.category_name}
+                </MenuItem>
+              ))
+            )}
           </MemoizedTextField>
+          {/* Dates and Basic Fields */}
+{/* <MemoizedTextField
+  label="Solar or Wind"
+  name="land_category_id"
+  select
+  value={formData.land_category_id}
+  onChange={handleChange}
+  required
+>
+  {isLoadingSolarWind ? (
+    <MenuItem disabled>
+      <CircularProgress size={24} />
+    </MenuItem>
+  ) : (
+    solarWindData?.data.map((option) => (
+      <MenuItem key={option.id} value={option.id}>
+        {option.name}
+      </MenuItem>
+    ))
+  )}
+</MemoizedTextField> */}
 
           <MemoizedTextField
             label="Date of Assessment"

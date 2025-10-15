@@ -192,7 +192,7 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
       { key: "seller_name", label: "Seller Name" },
       { key: "buyer_name", label: "Buyer Name" },
     ];
-
+    console.log(">>>>>",formData)
     const missingFields = requiredFields.filter(field => !formData[field.key]);
     
     if (missingFields.length > 0) {

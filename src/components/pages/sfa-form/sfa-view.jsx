@@ -245,8 +245,13 @@ const ViewSFADetailsModal = ({
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle1" color="secondary" gutterBottom>Location & Connectivity</Typography>
-                  {renderDetailItem("Geographical Coordinates", activeItem.geo_graphical_cordinates)}
-                  {renderDetailItem("Land Co-ordinates", activeItem.land_co_ordinates)}
+                  {renderDetailItem("Geographical Coordinates", activeItem?.geo_graphical_cordinates)}
+                  {renderDetailItem("Land Co-ordinate Format", activeItem?.land_coordinate_format)}
+                  {renderDetailItem("Land", activeItem?.land_co_ordinates)}
+                  {renderDetailItem("Land Easting", activeItem?.land_easting)}
+                  {renderDetailItem("Land Northing", activeItem.land_northing)}
+                  {renderDetailItem("Land Zone", activeItem.land_zone)}
+
                   {renderDetailItem("Substation Coordinates", activeItem.substation_cordinates)}
                   
                   {/* Substation Coordinates Details */}
