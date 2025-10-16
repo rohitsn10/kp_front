@@ -27,6 +27,7 @@ import EditLandModal from "../../components/pages/Land-back/edit-land";
 import { useNavigate } from "react-router-dom";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useDeleteLandBankLocationMutation } from "../../api/users/landbankApi";
+import { AuthContext } from "../../context/AuthContext";
 
 function LandListing() {
   const { data, error, isLoading, refetch } = useGetLandBankMasterQuery();
@@ -40,6 +41,20 @@ function LandListing() {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedLand, setSelectedLand] = useState(null);
   const navigate = useNavigate();
+    const { permissions } = useContext(AuthContext);
+    
+    // Check if user has LAND permissions (for both Approve and Create Land Bank)
+    const hasLandPermissions = () => {
+      const userGroup = permissions?.group?.name;
+      const landGroups = [
+        'admin',
+        'LAND_HOD_FULL',
+        'LAND_MANAGER_FULL', 
+        'LAND_SPOC_FULL',
+        'LAND_AM_FULL'
+      ];
+      return landGroups.includes(userGroup);
+    };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);

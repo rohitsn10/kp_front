@@ -74,6 +74,17 @@ const UpdateLandBankModal = ({ open, handleClose, activeItem }) => {
     land_transmission_line_file: [],
   });
 
+  const [filesToRemove, setFilesToRemove] = useState({
+    land_location_files_to_remove: [],
+    land_survey_number_files_to_remove: [],
+    land_key_plan_files_to_remove: [],
+    land_attach_approval_report_files_to_remove: [],
+    land_approach_road_files_to_remove: [],
+    land_co_ordinates_files_to_remove: [],
+    land_lease_deed_files_to_remove: [],
+    land_transmission_line_files_to_remove: [],
+  });
+
   const [currentKeypoint, setCurrentKeypoint] = useState("");
 
   useEffect(() => {
@@ -181,6 +192,24 @@ const UpdateLandBankModal = ({ open, handleClose, activeItem }) => {
       ...existingFiles,
       [fileKey]: existingFiles[fileKey].filter(file => file.id !== fileId)
     });
+
+    // Map the key to the removal key
+    const removalKeyMap = {
+      land_location_file: 'land_location_files_to_remove',
+      land_survey_number_file: 'land_survey_number_files_to_remove',
+      land_key_plan_file: 'land_key_plan_files_to_remove',
+      land_attach_approval_report_file: 'land_attach_approval_report_files_to_remove',
+      land_approach_road_file: 'land_approach_road_files_to_remove',
+      land_co_ordinates_file: 'land_co_ordinates_files_to_remove',
+      land_lease_deed_file: 'land_lease_deed_files_to_remove',
+      land_transmission_line_file: 'land_transmission_line_files_to_remove',
+    };
+
+    const removalKey = removalKeyMap[fileKey];
+    setFilesToRemove({
+      ...filesToRemove,
+      [removalKey]: [...filesToRemove[removalKey], fileId]
+    });
   };
 
   // Keypoints handlers
@@ -247,10 +276,11 @@ const UpdateLandBankModal = ({ open, handleClose, activeItem }) => {
       }
     });
 
-    // Add existing files to be retained
-    Object.keys(existingFiles).forEach((key) => {
-      if (existingFiles[key] && existingFiles[key].length > 0) {
-        formDataToSend.append(`existing_${key}`, JSON.stringify(existingFiles[key].map(f => f.id)));
+    // Add files to remove (as array of integers, not strings)
+    Object.keys(filesToRemove).forEach((key) => {
+      if (filesToRemove[key] && filesToRemove[key].length > 0) {
+        const integerIds = filesToRemove[key].map(id => parseInt(id, 10));
+        formDataToSend.append(key, JSON.stringify(integerIds));
       }
     });
 
