@@ -20,11 +20,12 @@ import { useGetSfaDataQuery } from "../../api/sfa/sfaApi";
 import AssessmentFormModal from "../../components/pages/sfa-form/sfa-form";
 import AssessmentFormUpdateModal from "../../components/pages/sfa-form/sfaUpdate";
 import AssessmentFormApproval from "../../components/pages/sfa-form/sfa-approval";
-import ViewSFADetailsModal from "../../components/pages/sfa-form/sfa-view"; // Import the new modal
+import ViewSFADetailsModal from "../../components/pages/sfa-form/sfa-view";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import LibraryAddIcon from "@mui/icons-material/LibraryAdd";
 import CreateLandBankModal from "../../components/pages/Land-bank/createLandBank";
 import { AuthContext } from "../../context/AuthContext";
+import UpdateLandBankModal from "../../components/pages/Land-bank/updateLandBank";
 
 
 const SiteVisitTable = () => {
@@ -36,7 +37,8 @@ const SiteVisitTable = () => {
   const [openUpdateSfa, setUpdateSfa] = useState(false);
   const [openApproveSfa, setOpenApproveSfa] = useState(false);
   const [openCreateLandBank, setCreateLandBank] = useState(false);
-  const [openViewModal, setOpenViewModal] = useState(false); // New state for view modal
+  const [openUpdateLandBank, setUpdateLandBank] = useState(false); // New state
+  const [openViewModal, setOpenViewModal] = useState(false);
   const [activeItem, setActiveItem] = useState(null);
 
 
@@ -80,9 +82,26 @@ const SiteVisitTable = () => {
     setCreateLandBank(false);
   };
 
+  const handleUpdateLandBankClose = () => {
+    setActiveItem(null);
+    setUpdateLandBank(false);
+  };
+
   const handleViewModalClose = () => {
     setActiveItem(null);
     setOpenViewModal(false);
+  };
+
+  // New handler for Create/Update Land Bank button
+  const handleLandBankAction = (row) => {
+    setActiveItem(row);
+    if (row.is_land_bank_started) {
+      // Open Update Modal
+      setUpdateLandBank(true);
+    } else {
+      // Open Create Modal
+      setCreateLandBank(true);
+    }
   };
 
 
@@ -129,8 +148,8 @@ const SiteVisitTable = () => {
   };
 
 
-  // Calculate total columns for colspan - updated to include View Data column
-  const totalColumns = 6 + (canAccessLandFeatures ? 2 : 0); // Base 6 (added View Data) + Approve + Create Land Bank
+  // Calculate total columns for colspan
+  const totalColumns = 6 + (canAccessLandFeatures ? 2 : 0);
 
 
   return (
@@ -253,7 +272,6 @@ const SiteVisitTable = () => {
                 >
                   Edit
                 </TableCell>
-                {/* New View Data column header - visible for everyone */}
                 <TableCell 
                   align="center"
                   style={{ fontWeight: 'normal', color: '#5C5E67' }}
@@ -264,7 +282,6 @@ const SiteVisitTable = () => {
                 >
                   View Data
                 </TableCell>
-                {/* Conditionally render Approve column header */}
                 {canAccessLandFeatures && (
                   <TableCell 
                     align="center"
@@ -277,7 +294,6 @@ const SiteVisitTable = () => {
                     Approve
                   </TableCell>
                 )}
-                {/* Conditionally render Create Land Bank column header */}
                 {canAccessLandFeatures && (
                   <TableCell 
                     align="center"
@@ -364,10 +380,6 @@ const SiteVisitTable = () => {
                           />
                           :
                           <RiEditFill
-                            onClick={() => {
-                              // setActiveItem(row);
-                              // setUpdateSfa(true);
-                            }}
                             style={{
                               cursor: "not-allowed",
                               color: "gray",
@@ -379,7 +391,6 @@ const SiteVisitTable = () => {
                         }
                       </div>
                     </TableCell>
-                    {/* New View Data column cell - visible for everyone */}
                     <TableCell 
                       align="center"
                       sx={{
@@ -414,7 +425,6 @@ const SiteVisitTable = () => {
                         View
                       </Button>
                     </TableCell>
-                    {/* Conditionally render Approve column cell */}
                     {canAccessLandFeatures && (
                       <TableCell 
                         align="center"
@@ -454,7 +464,6 @@ const SiteVisitTable = () => {
                         </Button>
                       </TableCell>
                     )}
-                    {/* Conditionally render Create Land Bank column cell */}
                     {canAccessLandFeatures && (
                       <TableCell 
                         align="center"
@@ -465,10 +474,7 @@ const SiteVisitTable = () => {
                         <Button
                           variant="outlined"
                           size="small"
-                          onClick={() => {
-                            setActiveItem(row);
-                            setCreateLandBank(true);
-                          }}
+                          onClick={() => handleLandBankAction(row)}
                           disabled={row?.status_of_site_visit !== "Approved" || row?.is_land_bank_created === true}
                           sx={{
                             minWidth: { xs: "70px", sm: "150px" },
@@ -508,7 +514,12 @@ const SiteVisitTable = () => {
                             },
                           }}
                         >
-                          {row?.is_land_bank_created ? "Land Bank Created" : "Create"}
+                          {row?.is_land_bank_created 
+                            ? "Land Bank Created" 
+                            : row?.is_land_bank_started 
+                              ? "Update" 
+                              : "Create"
+                          }
                         </Button>
                       </TableCell>
                     )}
@@ -563,13 +574,11 @@ const SiteVisitTable = () => {
         activeItem={activeItem}
         refetch={refetch}
       />
-      {/* View Modal - visible for everyone */}
       <ViewSFADetailsModal
         open={openViewModal}
         handleClose={handleViewModalClose}
         activeItem={activeItem}
       />
-      {/* Only render approval/create modals if user has LAND permissions */}
       {canAccessLandFeatures && (
         <>
           <AssessmentFormApproval
@@ -582,6 +591,12 @@ const SiteVisitTable = () => {
             open={openCreateLandBank}
             handleClose={handleCreateLandBankClose}
             activeItem={activeItem}
+          />
+          <UpdateLandBankModal
+            open={openUpdateLandBank}
+            handleClose={handleUpdateLandBankClose}
+            activeItem={activeItem}
+            refetch={refetch}
           />
         </>
       )}
