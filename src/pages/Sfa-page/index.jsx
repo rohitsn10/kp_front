@@ -53,11 +53,43 @@ const SiteVisitTable = () => {
       'LAND_HOD_FULL',
       'LAND_MANAGER_FULL', 
       'LAND_SPOC_FULL',
-      'LAND_AM_FULL'
+      'LAND_AM_FULL',
     ];
     return landGroups.includes(userGroup);
   };
 
+    const hasLandViewEditPermissions = () => {
+    const userGroup = permissions?.group?.name;
+    const landGroups = [
+      'ADMIN',
+      'LAND_HOD_FULL',
+      'LAND_MANAGER_FULL', 
+      'LAND_SPOC_FULL',
+      'LAND_AM_FULL',
+      'LAND_EXECUTIVE_FULL'
+    ];
+    return landGroups.includes(userGroup);
+  };
+
+    const hasProjectApprovalPermissions = () => {
+    const userGroup = permissions?.group?.name;
+    const projectGroups = [
+      'PROJECT_HOD_FULL',
+      'ADMIN',
+    ];
+    return projectGroups.includes(userGroup);
+  };
+
+    const hasProjectViewPermissions = () => {
+    const userGroup = permissions?.group?.name;
+    const projectGroups = [
+      'PROJECT_HOD_FULL',
+      'PROJECT_MANAGER_FULL',
+      'PROJECT_ENGINEER_FULL',
+      'ADMIN',
+    ];
+    return projectGroups.includes(userGroup);
+  };
 
   const canAccessLandFeatures = hasLandPermissions();
 
@@ -358,39 +390,46 @@ const SiteVisitTable = () => {
                     >
                       {row?.land_category_name   || "N/A"}
                     </TableCell>
-                    <TableCell 
-                      align="center"
-                      sx={{
-                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                      }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "center" }}>
-                        {row?.status_of_site_visit == 'Pending' ?
-                          <RiEditFill
-                            onClick={() => {
-                              setActiveItem(row);
-                              setUpdateSfa(true);
-                            }}
-                            style={{
-                              cursor: "pointer",
-                              color: "#61D435",
-                              fontSize: "20px",
-                            }}
-                            title="Edit"
-                          />
-                          :
-                          <RiEditFill
-                            style={{
-                              cursor: "not-allowed",
-                              color: "gray",
-                              fontSize: "20px",
-                              opacity: 0.6,
-                            }}
-                            title="Edit"
-                          />
-                        }
-                      </div>
-                    </TableCell>
+<TableCell 
+  align="center"
+  sx={{
+    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+  }}
+>
+  <div style={{ display: "flex", justifyContent: "center" }}>
+    {hasLandViewEditPermissions() ? (
+      // Show edit icon only for LAND team members
+      row?.status_of_site_visit == 'Pending' ? (
+        <RiEditFill
+          onClick={() => {
+            setActiveItem(row);
+            setUpdateSfa(true);
+          }}
+          style={{
+            cursor: "pointer",
+            color: "#61D435",
+            fontSize: "20px",
+          }}
+          title="Edit"
+        />
+      ) : (
+        <RiEditFill
+          style={{
+            cursor: "not-allowed",
+            color: "gray",
+            fontSize: "20px",
+            opacity: 0.6,
+          }}
+          title="Edit"
+        />
+      )
+    ) : (
+      // Show placeholder for non-LAND users
+      <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
+    )}
+  </div>
+</TableCell>
+
                     <TableCell 
                       align="center"
                       sx={{

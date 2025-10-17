@@ -17,24 +17,37 @@ function Sidebar({ isOpen }) {
   console.log("Group from permissions>>", permissions?.group);
 
   // Filter sidebar items based on group from permissions
-  const filteredSidebarItems = useMemo(() => {
-    const userGroup = permissions?.group;
-    
-      if (userGroup?.name && userGroup.name.toUpperCase().startsWith('ADMIN')) {
+const filteredSidebarItems = useMemo(() => {
+  const userGroup = permissions?.group;
+
+  if (userGroup?.name && userGroup.name.toUpperCase().startsWith('ADMIN')) {
     return sidebarConstant;
   }
-    // If group exists and starts with 'LAND', show only Land Bank and SFA
-    if (userGroup?.name && userGroup.name.startsWith('LAND')) {
-      return sidebarConstant.filter(item => 
-        item.name === 'Land Bank' || item.name === 'SFA' || item.name === 'Reports'
-      );
-    }
-    
-    // If group doesn't exist or doesn't start with 'LAND', hide Land Bank and SFA, show rest
+
+  // If group starts with 'PROJECT', show Land Bank, SFA, Reports, and Project
+  if (
+    userGroup?.name && 
+    userGroup.name.startsWith('PROJECT')
+  ) {
     return sidebarConstant.filter(item => 
-      item.name !== 'Land Bank' && item.name !== 'SFA'
+      item.name === 'Land Bank' || item.name === 'SFA' || item.name === 'Reports' || item.name === 'Project'
     );
-  }, [permissions]);
+  }
+
+  // If group starts with 'LAND', show only Land Bank, SFA, and Reports
+  if (userGroup?.name && userGroup.name.startsWith('LAND')) {
+    return sidebarConstant.filter(item => 
+      item.name === 'Land Bank' || item.name === 'SFA' || item.name === 'Reports'
+    );
+  }
+
+  // Otherwise, hide Land Bank and SFA
+  return sidebarConstant.filter(item => 
+    item.name !== 'Land Bank' && item.name !== 'SFA'
+  );
+}, [permissions]);
+
+
 
   const handleToggleDropdown = (itemName) => {
     setOpenDropdown((prev) => (prev === itemName ? null : itemName));

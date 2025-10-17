@@ -13,7 +13,7 @@ import { useGetLandCategoriesQuery } from "../../../../api/users/categoryApi";
 import { useGetCompaniesQuery } from "../../../../api/General/company/companyApi";
 import { useGetDropdownSubActivitiesQuery } from "../../../../api/users/subActivityApi";
 import { useGetMultipleSubSubActivitiesMutation } from "../../../../api/users/multipleActivityApi";
-import { useGetLandBankMasterQuery } from "../../../../api/users/landbankApi";
+import { useGetApprovedLandBankMasterQuery, useGetLandBankMasterQuery } from "../../../../api/users/landbankApi";
 import { toast } from "react-toastify";
 import { useCreateMainProjectMutation } from "../../../../api/users/projectApi";
 import { useGetElectricityLinesQuery } from "../../../../api/General/Electricity-line/ElectricityLineApi";
@@ -98,7 +98,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
   ];
 
   const { data: landBankData, isLoading: LandLoading } =
-    useGetLandBankMasterQuery();
+    useGetApprovedLandBankMasterQuery();
   // const [selectedLandId, setSelectedLandId] = useState(null);
   const [totalLandArea, setTotalLandArea] = useState("");
   const [selectTotalLandArea, setSelectTotalLandArea] = useState();

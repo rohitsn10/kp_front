@@ -88,12 +88,19 @@ export const landBankApi = createApi({
       }),
     }),
     updateLandBankMasterEntry: builder.mutation({
-  query: ({ id, formData }) => ({
-    url: `land_module/create_land_bank_master/${id}`,
-    method: "PUT",
-    body: formData,
-  }),
+      query: ({ id, formData }) => ({
+        url: `land_module/create_land_bank_master/${id}`,
+        method: "PUT",
+        body: formData,
+      }),
 }),
+    getApprovedLandBankMaster: builder.query({
+      query: () => ({
+        url: "project_module/land_bank_data_approved_by_project_hod",
+        method: "GET",
+      }),
+    }),
+
   }),
 }); 
 
@@ -111,4 +118,5 @@ export const {
   useUpdateDataAfterApprovalLandBankMutation,
   useGetLandBankApproveDataQuery,
   useUpdateLandBankMasterEntryMutation,
+  useGetApprovedLandBankMasterQuery
 } = landBankApi;

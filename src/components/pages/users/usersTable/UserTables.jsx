@@ -44,7 +44,7 @@ function UserTable() {
     data: groupData, 
     isLoading: GroupLoading, 
     error: GroupError 
-  } = useGetAllGroupsQuery();
+  } = useGetAllGroupsQuery({ page: 1, page_size: 100, search: '' });
 
   const {
     data: projectData,

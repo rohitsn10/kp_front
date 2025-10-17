@@ -20,7 +20,7 @@ export const permissionsApi = createApi({
       query: () => `user_profile/permission_list`,
     }),
     getAllGroups: builder.query({
-      query: ({ page = 1, page_size = 10, search = '' }) => {
+      query: ({ page = 1, page_size = 30, search = '' }) => {
         let url = `user_profile/group_create_with_permissions?page=${page}&page_size=${page_size}`;
         if (search) {
           url += `&search=${search}`;
