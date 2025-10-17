@@ -20,6 +20,9 @@ function Sidebar({ isOpen }) {
   const filteredSidebarItems = useMemo(() => {
     const userGroup = permissions?.group;
     
+      if (userGroup?.name && userGroup.name.toUpperCase().startsWith('ADMIN')) {
+    return sidebarConstant;
+  }
     // If group exists and starts with 'LAND', show only Land Bank and SFA
     if (userGroup?.name && userGroup.name.startsWith('LAND')) {
       return sidebarConstant.filter(item => 

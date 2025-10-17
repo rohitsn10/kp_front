@@ -49,7 +49,7 @@ const SiteVisitTable = () => {
   const hasLandPermissions = () => {
     const userGroup = permissions?.group?.name;
     const landGroups = [
-      'admin',
+      'ADMIN',
       'LAND_HOD_FULL',
       'LAND_MANAGER_FULL', 
       'LAND_SPOC_FULL',
@@ -356,7 +356,7 @@ const SiteVisitTable = () => {
                         padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
                       }}
                     >
-                      {row?.solar_or_winds || "N/A"}
+                      {row?.land_category_name   || "N/A"}
                     </TableCell>
                     <TableCell 
                       align="center"

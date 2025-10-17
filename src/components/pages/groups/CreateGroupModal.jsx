@@ -78,6 +78,64 @@ const LAND_PERMISSIONS = [
   'saverejectdataofstatusofsitevisit'
 ];
 
+const PROJECT_PERMISSIONS = [
+  'projectactivity',
+  'subactivityname',
+  'subactivityname_sub_activity',
+  'subactivity',
+  'subsubactivityname',
+  'subsubactivityname_sub_sub_activity',
+  'subsubactivity',
+  'project',
+  'otherdrawinganddesignattachments',
+  'projectprogress',
+  'drawinganddesignresubmissionattachments',
+  'drawinganddesignmanagement',
+  'drawinganddesignattachments',
+  'adharcardattachments',
+  'company',
+  'epc_contractattachments',
+  'expenseprojectattachments',
+  'loa_poattachments',
+  'loiattachments',
+  'msmecertificateattachments',
+  'ommcontactattachments',
+  'drawinganddesignmanagement_drawing_and_desigb51f',
+  'drawinganddesignmanagement_other_drawing_andbccd',
+  'pancardattachments',
+  'electricity',
+  'project_assigned_users',
+  'project_location_name_survey',
+  'project_location_survey',
+  'project_project_sub_activity',
+  'project_project_sub_sub_activity',
+  'otherdrawinganddesignresubmissionattachments',
+  'expensetracking',
+  'expensetracking_expense_document_attachments',
+  'drawinganddesignresubmittedactions',
+  'drawinganddesignresubmittedactions_drawing_a58ed',
+  'drawinganddesignresubmittedactions_other_dra1c95',
+  'drawinganddesigncommentedactions',
+  'drawinganddesignapprovedactions',
+  'projectmilestone',
+  'projectmilestone_project_sub_activity',
+  'projectmilestone_project_sub_sub_activity',
+  'inflowpaymentonmilestone',
+  'thirdauthorityadharcardattachments',
+  'thirdauthoritypancardattachments',
+  'clientdetails',
+  'clientdetails_adhar_card_attachments',
+  'clientdetails_msme_certificate_attachments',
+  'clientdetails_pan_card_attachments',
+  'clientdetails_third_authority_adhar_card_att5a11',
+  'clientdetails_third_authority_pan_card_attac759f',
+  'wo_po',
+  'wo_po_epc_contract_attachments',
+  'wo_po_loa_po_attachments',
+  'wo_po_loi_attachments',
+  'wo_po_omm_contact_attachments'
+];
+
 // Debounce hook for search optimization
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -184,11 +242,15 @@ function CreateGroupModal({ open, setOpen }) {
     let permissions = data.data;
     
     // Apply simple array filter
-    if (filterMode === "land") {
-      permissions = permissions.filter(item => 
-        LAND_PERMISSIONS.includes(item.name.toLowerCase())
-      );
-    }
+  if (filterMode === "land") {
+    permissions = permissions.filter(item => 
+      LAND_PERMISSIONS.includes(item.name.toLowerCase())
+    );
+  } else if (filterMode === "project") {
+    permissions = permissions.filter(item => 
+      PROJECT_PERMISSIONS.includes(item.name.toLowerCase())
+    );
+  }
     
     // Apply search filter
     if (debouncedSearchTerm) {
@@ -385,6 +447,7 @@ function CreateGroupModal({ open, setOpen }) {
               >
                 <MenuItem value="all">All Permissions</MenuItem>
                 <MenuItem value="land">Land Permissions Only ({LAND_PERMISSIONS.length})</MenuItem>
+                <MenuItem value="project">Project Permissions Only ({PROJECT_PERMISSIONS.length})</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -414,15 +477,16 @@ function CreateGroupModal({ open, setOpen }) {
           </Box>
 
           {/* Results Info */}
-          {(debouncedSearchTerm || filterMode === 'land') && (
-            <Box mb={2}>
-              <small className="text-gray-600">
-                Found {filteredPermissions.length} permissions
-                {debouncedSearchTerm && ` matching "${debouncedSearchTerm}"`}
-                {filterMode === 'land' && ` (Land permissions only)`}
-              </small>
-            </Box>
-          )}
+{(debouncedSearchTerm || filterMode === 'land' || filterMode === 'project') && (
+  <Box mb={2}>
+    <small className="text-gray-600">
+      Found {filteredPermissions.length} permissions
+      {debouncedSearchTerm && ` matching "${debouncedSearchTerm}"`}
+      {filterMode === 'land' && ` (Land permissions only)`}
+      {filterMode === 'project' && ` (Project permissions only)`}
+    </small>
+  </Box>
+)}
         </Box>
 
         {/* Table Section */}

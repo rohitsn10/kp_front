@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { RiEditFill } from "react-icons/ri";
 import { GiConfirmed } from "react-icons/gi";
+import { MdApproval } from "react-icons/md";
 import {
   AiOutlineStop,
   AiOutlineCheck,
@@ -28,6 +29,7 @@ import { useNavigate } from "react-router-dom";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useDeleteLandBankLocationMutation } from "../../api/users/landbankApi";
 import { AuthContext } from "../../context/AuthContext";
+import HodApprovalModal from "../../components/pages/Land-back/HodApprovalModal.jsx";
 
 function LandListing() {
   const { data, error, isLoading, refetch } = useGetLandBankMasterQuery();
@@ -39,22 +41,32 @@ function LandListing() {
   const [openApproveModal, setOpenApproveModal] = useState(false);
   const [openSfaModal, setOpenSfaModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
+  const [openHodApprovalModal, setOpenHodApprovalModal] = useState(false);
   const [selectedLand, setSelectedLand] = useState(null);
   const navigate = useNavigate();
-    const { permissions } = useContext(AuthContext);
-    
-    // Check if user has LAND permissions (for both Approve and Create Land Bank)
-    const hasLandPermissions = () => {
-      const userGroup = permissions?.group?.name;
-      const landGroups = [
-        'admin',
-        'LAND_HOD_FULL',
-        'LAND_MANAGER_FULL', 
-        'LAND_SPOC_FULL',
-        'LAND_AM_FULL'
-      ];
-      return landGroups.includes(userGroup);
-    };
+  const { permissions } = useContext(AuthContext);
+
+  // Check if user has LAND permissions
+  const hasLandPermissions = () => {
+    const userGroup = permissions?.group?.name;
+    const landGroups = [
+      'admin',
+      'LAND_HOD_FULL',
+      'LAND_MANAGER_FULL',
+      'LAND_SPOC_FULL',
+      'LAND_AM_FULL'
+    ];
+    return landGroups.includes(userGroup);
+  };
+
+  const hasProjectApprovalPermissions = () => {
+    const userGroup = permissions?.group?.name;
+    const projectGroups = [
+      'PROJECT_HOD_FULL',
+      'ADMIN',
+    ];
+    return projectGroups.includes(userGroup);
+  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -80,6 +92,11 @@ function LandListing() {
     setOpenApproveModal(true);
   };
 
+  const handleHodApprovalClick = (land) => {
+    setSelectedLand(land);
+    setOpenHodApprovalModal(true);
+  };
+
   const handleSfaModalClose = () => {
     setOpenSfaModal(false);
   };
@@ -103,6 +120,10 @@ function LandListing() {
       console.error("Error deleting land location:", error);
       alert("Failed to delete land location!");
     }
+  };
+
+  const handleHodApprovalSuccess = () => {
+    refetch();
   };
 
   if (isLoading) {
@@ -137,16 +158,13 @@ function LandListing() {
     <div className="bg-white p-3 sm:p-4 md:p-6 w-full max-w-none mx-auto my-4 sm:my-6 md:my-8 rounded-lg shadow-sm">
       {/* Responsive Header */}
       <div className="mb-6">
-        {/* Title - Always on top on mobile */}
         <div className="text-center mb-4 sm:mb-6">
           <h2 className="text-xl sm:text-2xl md:text-3xl text-[#29346B] font-semibold">
             Land Listing
           </h2>
         </div>
-        
-        {/* Search and Filters Container */}
+
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
-          {/* Search Input */}
           <div className="w-full sm:w-auto sm:flex-1 sm:max-w-xs">
             <TextField
               placeholder="Search by land name..."
@@ -164,7 +182,6 @@ function LandListing() {
             />
           </div>
 
-          {/* Filters/Actions */}
           <div className="w-full sm:w-auto text-center sm:text-right">
             <h3 className="text-lg sm:text-xl md:text-2xl text-[#29346B] font-medium">
               {/* Filters */}
@@ -180,390 +197,137 @@ function LandListing() {
           style={{
             borderRadius: "8px",
             overflow: "hidden",
-            minWidth: "1200px" // Ensure minimum width for very wide table
+            minWidth: "1200px"
           }}
         >
           <Table stickyHeader>
             <TableHead>
               <TableRow style={{ backgroundColor: "#F2EDED" }}>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  Sr No.
-                </TableCell>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  Land Name
-                </TableCell>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  Category
-                </TableCell>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  Energy Type
-                </TableCell>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  User Full Name
-                </TableCell>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  Status
-                </TableCell>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  Create Date
-                </TableCell>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  Approve
-                </TableCell>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  Action
-                </TableCell>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  Attachments
-                </TableCell>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  Edit Attachments
-                </TableCell>
-                <TableCell 
-                  align="center"
-                  style={{ fontWeight: 'normal', color: '#5C5E67' }}
-                  sx={{
-                    fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                  }}
-                >
-                  View Attachments
-                </TableCell>
+                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Sr No.</TableCell>
+                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Land Name</TableCell>
+                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Category</TableCell>
+                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Created By</TableCell>
+                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Status</TableCell>
+                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Create Date</TableCell>
+                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Approve</TableCell>
+                {hasProjectApprovalPermissions() && (
+                  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>HOD Approval</TableCell>
+                )}
+                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Action</TableCell>
+                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Attachments</TableCell>
+                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Edit Attachments</TableCell>
+                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>View Attachments</TableCell>
               </TableRow>
             </TableHead>
 
             <TableBody>
               {currentRows?.map((row, index) => (
-                <TableRow 
-                  key={row.id}
-                  sx={{
-                    '&:hover': {
-                      backgroundColor: '#f5f5f5'
-                    }
-                  }}
-                >
-                  <TableCell 
-                    align="center"
-                    sx={{
-                      fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                    }}
-                  >
-                    {index + 1}
-                  </TableCell>
-                  <TableCell 
-                    align="center"
-                    sx={{
-                      fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' },
-                      wordBreak: 'break-word'
-                    }}
-                  >
-                    {row?.land_name}
-                  </TableCell>
-                  <TableCell 
-                    align="center"
-                    sx={{
-                      fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                    }}
-                  >
-                    {row?.land_category_name}
-                  </TableCell>
-                  <TableCell 
-                    align="center"
-                    sx={{
-                      fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                    }}
-                  >
-                    {row?.solar_or_winds}
-                  </TableCell>
-                  <TableCell 
-                    align="center"
-                    sx={{
-                      fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                    }}
-                  >
-                    {row.user_full_name || "N/A"}
-                  </TableCell>
-                  <TableCell 
-                    align="center"
-                    sx={{
-                      fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                    }}
-                  >
-                    {row?.land_bank_status}
-                  </TableCell>
-                  <TableCell 
-                    align="center"
-                    sx={{
-                      fontSize: { xs: '12px', sm: '14px', md: '16px' },
-                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                    }}
-                  >
+                <TableRow key={row.id}>
+                  <TableCell align="center">{index + 1}</TableCell>
+                  <TableCell align="center">{row?.land_name}</TableCell>
+                  <TableCell align="center">{row?.land_category_name}</TableCell>
+                  <TableCell align="center">{row.user_full_name || "N/A"}</TableCell>
+                  <TableCell align="center">{row?.land_bank_status}</TableCell>
+                  <TableCell align="center">
                     {new Date(row.created_at).toLocaleDateString()}
                   </TableCell>
-                  <TableCell 
-                    align="center"
-                    sx={{
-                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        height: "100%",
-                      }}
-                    >
-                      <GiConfirmed 
-                        style={{
-                          cursor: "pointer",
-                          color: "#4CAF50",
-                          fontSize: "24px", // Slightly smaller for mobile
-                        }}
-                        title="Approve Land"
-                        onClick={() => handleApproveClick(row)}
-                      />
+                  
+                  {/* Approve - Show only if attachments added */}
+                  <TableCell align="center">
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                      {row.is_land_bank_added_attachment ? (
+                        <GiConfirmed
+                          style={{ cursor: "pointer", color: "#4CAF50", fontSize: "24px" }}
+                          title="Approve Land"
+                          onClick={() => handleApproveClick(row)}
+                        />
+                      ) : (
+                        <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
+                      )}
                     </div>
                   </TableCell>
-                  
-                  {/* Action column (Edit + Delete) */}
-                  <TableCell 
-                    align="center"
-                    sx={{
-                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: "8px",
-                      }}
-                    >
+
+                  {/* HOD Approval - Show only if attachments added */}
+                  {hasProjectApprovalPermissions() && (
+                    <TableCell align="center">
+                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                        {row.is_land_bank_added_attachment ? (
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleHodApprovalClick(row)}
+                            style={{
+                              backgroundColor: "#29346B",
+                              color: "white",
+                              textTransform: "none",
+                              fontSize: "12px",
+                              padding: "4px 12px"
+                            }}
+                          >
+                            HOD Approval
+                          </Button>
+                        ) : (
+                          <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
+
+                  {/* Action - Always visible */}
+                  <TableCell align="center">
+                    <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
                       <RiEditFill
-                        style={{ 
-                          cursor: "pointer", 
-                          color: "#61D435", 
-                          fontSize: "20px" // Smaller for mobile
-                        }}
+                        style={{ cursor: "pointer", color: "#61D435", fontSize: "20px" }}
                         title="Edit"
                         onClick={() => handleEditClick(row)}
                       />
                       <DeleteIcon
-                        style={{
-                          cursor: "pointer",
-                          color: "#df3d34",
-                          fontSize: "20px", // Smaller for mobile
-                        }}
+                        style={{ cursor: "pointer", color: "#df3d34", fontSize: "20px" }}
                         title="Delete"
                         onClick={() => handleDeleteClick(row.id)}
                       />
                     </div>
                   </TableCell>
 
-                  {/* Attachment columns */}
-                  <TableCell 
-                    align="center"
-                    sx={{
-                      fontSize: { xs: '11px', sm: '13px', md: '16px' },
-                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                    }}
-                  >
-                    {row.land_bank_status != "Approved" ? (
+                  {/* Add Attachments - Show only if attachments NOT added */}
+                  <TableCell align="center">
+                    {!row.is_land_bank_added_attachment ? (
                       <span
-                        style={{
-                          cursor: "pointer",
-                          color: "#F6812D",
-                          fontWeight: "bold",
-                          textDecoration: "underline",
-                        }}
-                        onClick={() =>
-                          navigate("/add-land-doc", { state: { landData: row } })
-                        }
+                        style={{ cursor: "pointer", color: "#F6812D", fontWeight: "bold", textDecoration: "underline" }}
+                        onClick={() => navigate("/add-land-doc", { state: { landData: row } })}
                       >
                         Add Attachments
                       </span>
                     ) : (
-                      <span
-                        style={{
-                          cursor: "pointer",
-                          color: "#F6812D",
-                          fontWeight: "bold",
-                          textDecoration: "underline",
-                        }}
-                        onClick={() =>
-                          navigate("/add-land-doc", { state: { landData: row } })
-                        }
-                      >
-                        Add Attachments
-                      </span>
+                      <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
                     )}
                   </TableCell>
-                  
-                  <TableCell 
-                    align="center"
-                    sx={{
-                      fontSize: { xs: '11px', sm: '13px', md: '16px' },
-                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                    }}
-                  >
-                    {row.land_bank_status === "Approved" ? (
+
+                  {/* Edit Attachments - Show only if attachments added */}
+                  <TableCell align="center">
+                    {row.is_land_bank_added_attachment ? (
                       <span
-                        style={{
-                          cursor: "pointer",
-                          color: "#F6812D",
-                          fontWeight: "bold",
-                          textDecoration: "underline",
-                        }}
-                        onClick={() =>
-                          navigate(`/edit-land-doc/${row.id}`, {
-                            state: { landData: row },
-                          })
-                        }
+                        style={{ cursor: "pointer", color: "#F6812D", fontWeight: "bold", textDecoration: "underline" }}
+                        onClick={() => navigate(`/edit-land-doc/${row.id}`, { state: { landData: row } })}
                       >
                         Edit Attachments
                       </span>
                     ) : (
-                      <span
-                        style={{
-                          cursor: "pointer",
-                          color: "#F6812D",
-                          fontWeight: "bold",
-                          textDecoration: "underline",
-                        }}
-                        onClick={() =>
-                          navigate(`/edit-land-doc/${row.id}`, {
-                            state: { landData: row },
-                          })
-                        }
-                      >
-                        Edit Attachments
-                      </span>
+                      <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
                     )}
                   </TableCell>
-                  
-                  <TableCell 
-                    align="center"
-                    sx={{
-                      fontSize: { xs: '11px', sm: '13px', md: '16px' },
-                      padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-                    }}
-                  >
-                    {row.land_bank_status === "Approved" ? (
+
+                  {/* View Attachments - Show only if attachments added */}
+                  <TableCell align="center">
+                    {row.is_land_bank_added_attachment ? (
                       <span
-                        style={{
-                          cursor: "pointer",
-                          color: "#F6812D",
-                          fontWeight: "bold",
-                          textDecoration: "underline",
-                        }}
-                        onClick={() =>
-                          navigate(`/view-landbank-docs/${row.id}`, {
-                            state: { landData: row },
-                          })
-                        }
+                        style={{ cursor: "pointer", color: "#F6812D", fontWeight: "bold", textDecoration: "underline" }}
+                        onClick={() => navigate(`/view-landbank-docs/${row.id}`, { state: { landData: row } })}
                       >
                         View Land Attachments
                       </span>
                     ) : (
-                      <span
-                        style={{
-                          cursor: "pointer",
-                          color: "#F6812D",
-                          fontWeight: "bold",
-                          textDecoration: "underline",
-                        }}
-                        onClick={() =>
-                          navigate(`/view-landbank-docs/${row.id}`, {
-                            state: { landData: row },
-                          })
-                        }
-                      >
-                        View Land Attachments
-                      </span>
+                      <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
                     )}
                   </TableCell>
                 </TableRow>
@@ -580,45 +344,26 @@ function LandListing() {
             onRowsPerPageChange={handleChangeRowsPerPage}
             rowsPerPageOptions={[5, 10, 25]}
             style={{ borderTop: "1px solid #e0e0e0" }}
-            sx={{
-              '& .MuiTablePagination-toolbar': {
-                fontSize: { xs: '12px', sm: '14px' },
-                padding: { xs: '8px', sm: '16px' }
-              },
-              '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
-                fontSize: { xs: '12px', sm: '14px' }
-              }
-            }}
           />
         </TableContainer>
       </div>
 
-      {/* No data message */}
       {!isLoading && filteredRows.length === 0 && (
         <div className="text-center py-8">
           <p className="text-gray-500 text-lg">No land records found matching your search.</p>
         </div>
       )}
 
-      {/* Add Land Modal */}
-      <LandActivityModal
-        open={openAddLandModal}
-        setOpen={setOpenAddLandModal}
-      />
-
-      {/* Approve Land Modal */}
-      <LandApproveModal
-        open={openApproveModal}
-        setOpen={setOpenApproveModal}
+      {/* Modals */}
+      <LandActivityModal open={openAddLandModal} setOpen={setOpenAddLandModal} />
+      <LandApproveModal open={openApproveModal} setOpen={setOpenApproveModal} selectedLand={selectedLand} />
+      <EditLandModal open={openEditModal} setOpen={setOpenEditModal} activeItem={selectedLand} handleClose={handleCloseModal} />
+      
+      <HodApprovalModal
+        open={openHodApprovalModal}
+        setOpen={setOpenHodApprovalModal}
         selectedLand={selectedLand}
-      />
-
-      {/* Edit Land Modal */}
-      <EditLandModal
-        open={openEditModal}
-        setOpen={setOpenEditModal}
-        activeItem={selectedLand}
-        handleClose={handleCloseModal}
+        onSuccess={handleHodApprovalSuccess}
       />
     </div>
   );

@@ -33,6 +33,13 @@ export const landBankApi = createApi({
         body: data.formData, // Send the formData with other parameters
       }),
     }),
+    approveLandBankByProjectHod: builder.mutation({
+      query: ({ land_bank_id, is_land_bank_approved_by_project_hod }) => ({
+        url: `land_module/approve_land_bank_by_project_hod/${land_bank_id}`,
+        method: "PUT",
+        body: { is_land_bank_approved_by_project_hod },
+      }),
+    }),
     updateLandBankMaster: builder.mutation({
       query: ({ id, formData }) => ({
         url: `land_module/update_land_bank_master/${id}`,
@@ -94,6 +101,7 @@ export const {
   useCreateLandBankMasterMutation,
   useGetLandBankMasterQuery,
   useApproveLandBankByHodMutation,
+  useApproveLandBankByProjectHodMutation,
   useUpdateLandBankMasterMutation,
   useAddSfaDataToLandBankMutation,
   useDeleteLandBankLocationMutation,

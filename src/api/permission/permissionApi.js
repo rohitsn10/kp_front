@@ -20,7 +20,14 @@ export const permissionsApi = createApi({
       query: () => `user_profile/permission_list`,
     }),
     getAllGroups: builder.query({
-      query: () => `user_profile/group_create_with_permissions`,
+      query: ({ page = 1, page_size = 10, search = '' }) => {
+        let url = `user_profile/group_create_with_permissions?page=${page}&page_size=${page_size}`;
+        if (search) {
+          url += `&search=${search}`;
+        }
+        return url;
+      },
+      providesTags: ['Group'],
     }),
     createGroupWithPermissions: builder.mutation({
       query: (groupData) => ({

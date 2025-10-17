@@ -325,13 +325,13 @@ function EditLandApproveDoc() {
                 {renderFileSection("Transmission Line Shifting Permission", "any_transmission_line_shifting_permission_attachment_file")}
                 {renderFileSection("Gram Panchayat Permission", "gram_panchayat_permission_attachment_file")}
                 {renderFileSection("Municipal Corporation Permission", "municipal_corporation_permission_file")}
-                {renderFileSection("Municipal Corporation Permission", "municipalCorporationPermission")}
-                {renderFileSection("Other Approvals", "otherApprovals")}
-                {renderFileSection("Title Search Report", "tsr")}
-                {renderFileSection("Coordinate Verification", "coordinateVerification")}
-                {renderFileSection("Encumbrance NOC", "encumbranceNoc")}
-                {renderFileSection("Developer Permission", "developerPermission")}
-                {renderFileSection("NOC from Ministry of Defence", "nocMinistryOfDefence")}
+                {/* {renderFileSection("Municipal Corporation Permission", "municipal_corporation_permission_file")} */}
+                {renderFileSection("Other Approvals", "list_of_other_approvals_land_file")}
+                {renderFileSection("Title Search Report", "title_search_report_file")}
+                {renderFileSection("Coordinate Verification", "coordinate_verification_file")}
+                {renderFileSection("Encumbrance NOC", "encumbrance_noc_file")}
+                {renderFileSection("Developer Permission", "developer_permission_file")}
+                {renderFileSection("NOC from Ministry of Defence", "noc_from_ministry_of_defence_file")}
             </div>
             <Button
           onClick={handleSubmit}
