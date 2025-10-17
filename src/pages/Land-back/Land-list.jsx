@@ -202,22 +202,23 @@ function LandListing() {
         >
           <Table stickyHeader>
             <TableHead>
-              <TableRow style={{ backgroundColor: "#F2EDED" }}>
-                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Sr No.</TableCell>
-                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Land Name</TableCell>
-                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Category</TableCell>
-                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Created By</TableCell>
-                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Status</TableCell>
-                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Create Date</TableCell>
-                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Approve</TableCell>
-                {hasProjectApprovalPermissions() && (
-                  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>HOD Approval</TableCell>
-                )}
-                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Action</TableCell>
-                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Attachments</TableCell>
-                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Edit Attachments</TableCell>
-                <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>View Attachments</TableCell>
-              </TableRow>
+<TableRow style={{ backgroundColor: "#F2EDED" }}>
+  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Sr No.</TableCell>
+  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Land Name</TableCell>
+  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Category</TableCell>
+  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Created By</TableCell>
+  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Status</TableCell>
+  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Create Date</TableCell>
+  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Action</TableCell>
+  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Attachments</TableCell>
+  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Edit Attachments</TableCell>
+  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>View Attachments</TableCell>
+  <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>Approve</TableCell>
+  {hasProjectApprovalPermissions() && (
+    <TableCell align="center" style={{ fontWeight: 'normal', color: '#5C5E67' }}>HOD Approval</TableCell>
+  )}
+</TableRow>
+
             </TableHead>
 
             <TableBody>
@@ -231,21 +232,121 @@ function LandListing() {
                   <TableCell align="center">
                     {new Date(row.created_at).toLocaleDateString()}
                   </TableCell>
-                  
-                  {/* Approve - Show only if attachments added */}
+                                    {/* Action - Always visible */}
                   <TableCell align="center">
-                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                      {row.is_land_bank_added_attachment ? (
-                        <GiConfirmed
-                          style={{ cursor: "pointer", color: "#4CAF50", fontSize: "24px" }}
-                          title="Approve Land"
-                          onClick={() => handleApproveClick(row)}
-                        />
-                      ) : (
-                        <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
-                      )}
+                    <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
+                      <RiEditFill
+                        style={{ cursor: "pointer", color: "#61D435", fontSize: "20px" }}
+                        title="Edit"
+                        onClick={() => handleEditClick(row)}
+                      />
+                      <DeleteIcon
+                        style={{ cursor: "pointer", color: "#df3d34", fontSize: "20px" }}
+                        title="Delete"
+                        onClick={() => handleDeleteClick(row.id)}
+                      />
                     </div>
                   </TableCell>
+
+
+
+                  {/* Add Attachments - Show only if attachments NOT added */}
+<TableCell align="center">
+  {!row.is_land_bank_added_attachment ? (
+    <Button
+      variant="contained"
+      size="small"
+      onClick={() => navigate("/add-land-doc", { state: { landData: row } })}
+      startIcon={<AiOutlineFileText />}
+      style={{
+        backgroundColor: "#F6812D",
+        color: "white",
+        textTransform: "none",
+        fontSize: "12px",
+        padding: "6px 16px",
+        fontWeight: "500"
+      }}
+    >
+      Add Attachments
+    </Button>
+  ) : (
+    <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
+  )}
+</TableCell>
+
+
+                  {/* Edit Attachments - Show only if attachments added */}
+<TableCell align="center">
+  {row.is_land_bank_added_attachment ? (
+    <Button
+      variant="contained"
+      size="small"
+      onClick={() => navigate(`/edit-land-doc/${row.id}`, { state: { landData: row } })}
+      startIcon={<RiEditFill />}
+      style={{
+        backgroundColor: "#2196F3",
+        color: "white",
+        textTransform: "none",
+        fontSize: "12px",
+        padding: "6px 16px",
+        fontWeight: "500"
+      }}
+    >
+      Edit Attachments
+    </Button>
+  ) : (
+    <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
+  )}
+</TableCell>
+
+                  {/* View Attachments - Show only if attachments added */}
+<TableCell align="center">
+  {row.is_land_bank_added_attachment ? (
+    <Button
+      variant="outlined"
+      size="small"
+      onClick={() => navigate(`/view-landbank-docs/${row.id}`, { state: { landData: row } })}
+      startIcon={<AiOutlineFileText />}
+      style={{
+        borderColor: "#F6812D",
+        color: "#F6812D",
+        textTransform: "none",
+        fontSize: "12px",
+        padding: "6px 16px",
+        fontWeight: "500"
+      }}
+    >
+      View Attachments
+    </Button>
+  ) : (
+    <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
+  )}
+</TableCell>
+
+                  {/* Approve - Show only if attachments added */}
+{/* Approve - Show only if attachments added */}
+<TableCell align="center">
+  {row.is_land_bank_added_attachment ? (
+    <Button
+      variant="contained"
+      size="small"
+      onClick={() => handleApproveClick(row)}
+      startIcon={<AiOutlineCheck />}
+      style={{
+        backgroundColor: "#4CAF50",
+        color: "white",
+        textTransform: "none",
+        fontSize: "12px",
+        padding: "6px 16px",
+        fontWeight: "500"
+      }}
+    >
+      Approve Land
+    </Button>
+  ) : (
+    <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
+  )}
+</TableCell>
 
                   {/* HOD Approval - Show only if attachments added */}
                   {hasProjectApprovalPermissions() && (
@@ -273,63 +374,6 @@ function LandListing() {
                     </TableCell>
                   )}
 
-                  {/* Action - Always visible */}
-                  <TableCell align="center">
-                    <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
-                      <RiEditFill
-                        style={{ cursor: "pointer", color: "#61D435", fontSize: "20px" }}
-                        title="Edit"
-                        onClick={() => handleEditClick(row)}
-                      />
-                      <DeleteIcon
-                        style={{ cursor: "pointer", color: "#df3d34", fontSize: "20px" }}
-                        title="Delete"
-                        onClick={() => handleDeleteClick(row.id)}
-                      />
-                    </div>
-                  </TableCell>
-
-                  {/* Add Attachments - Show only if attachments NOT added */}
-                  <TableCell align="center">
-                    {!row.is_land_bank_added_attachment ? (
-                      <span
-                        style={{ cursor: "pointer", color: "#F6812D", fontWeight: "bold", textDecoration: "underline" }}
-                        onClick={() => navigate("/add-land-doc", { state: { landData: row } })}
-                      >
-                        Add Attachments
-                      </span>
-                    ) : (
-                      <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
-                    )}
-                  </TableCell>
-
-                  {/* Edit Attachments - Show only if attachments added */}
-                  <TableCell align="center">
-                    {row.is_land_bank_added_attachment ? (
-                      <span
-                        style={{ cursor: "pointer", color: "#F6812D", fontWeight: "bold", textDecoration: "underline" }}
-                        onClick={() => navigate(`/edit-land-doc/${row.id}`, { state: { landData: row } })}
-                      >
-                        Edit Attachments
-                      </span>
-                    ) : (
-                      <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
-                    )}
-                  </TableCell>
-
-                  {/* View Attachments - Show only if attachments added */}
-                  <TableCell align="center">
-                    {row.is_land_bank_added_attachment ? (
-                      <span
-                        style={{ cursor: "pointer", color: "#F6812D", fontWeight: "bold", textDecoration: "underline" }}
-                        onClick={() => navigate(`/view-landbank-docs/${row.id}`, { state: { landData: row } })}
-                      >
-                        View Land Attachments
-                      </span>
-                    ) : (
-                      <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
-                    )}
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
