@@ -216,28 +216,30 @@ const SiteVisitTable = () => {
           </div>
 
 
-          <div className="w-full sm:w-auto">
-            <Button
-              onClick={() => {
-                setOpenCreateSpa(true);
-              }}
-              variant="contained"
-              fullWidth
-              sx={{
-                backgroundColor: "#FF8C00",
-                color: "white",
-                fontWeight: "bold",
-                fontSize: { xs: '14px', sm: '16px' },
-                textTransform: "none",
-                padding: { xs: '10px 16px', sm: '8px 24px' },
-                '&:hover': {
-                  backgroundColor: '#e67c00'
-                }
-              }}
-            >
-              Add SFA
-            </Button>
-          </div>
+<div className="w-full sm:w-auto">
+  {hasLandViewEditPermissions() && (
+    <Button
+      onClick={() => {
+        setOpenCreateSpa(true);
+      }}
+      variant="contained"
+      fullWidth
+      sx={{
+        backgroundColor: "#FF8C00",
+        color: "white",
+        fontWeight: "bold",
+        fontSize: { xs: '14px', sm: '16px' },
+        textTransform: "none",
+        padding: { xs: '10px 16px', sm: '8px 24px' },
+        '&:hover': {
+          backgroundColor: '#e67c00'
+        }
+      }}
+    >
+      Add SFA
+    </Button>
+  )}
+</div>
         </div>
       </div>
 

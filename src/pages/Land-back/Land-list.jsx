@@ -56,7 +56,6 @@ function LandListing() {
   const hasLandPermissions = () => {
     const userGroup = permissions?.group?.name;
     const landGroups = [
-      'admin',
       'LAND_HOD_FULL',
       'LAND_MANAGER_FULL',
       'LAND_SPOC_FULL',
@@ -64,6 +63,15 @@ function LandListing() {
     ];
     return landGroups.includes(userGroup);
   };
+
+  // const hasProjectApprovalPermissons1 = ()=>{
+  //   const userGroup = permissions?.group?.name;
+  //   const projectGroups = [
+  //     'PROJECT_HOD_FULL',
+  //     'ADMIN',
+  //   ];
+  //   return projectGroups.includes(userGroup);
+  // }
 
 
   const hasProjectApprovalPermissions = () => {
@@ -74,6 +82,7 @@ function LandListing() {
     ];
     return projectGroups.includes(userGroup);
   };
+
 
     const hasProjectViewPermissions = () => {
     const userGroup = permissions?.group?.name;
@@ -419,7 +428,7 @@ function LandListing() {
 
 {/* Approve Button */}
 <TableCell align="center">
-  {(!hasProjectViewPermissions() || hasLandPermissions()) ? (
+  {( hasLandPermissions()) ? (
     <Button
       variant="contained"
       size="small"
