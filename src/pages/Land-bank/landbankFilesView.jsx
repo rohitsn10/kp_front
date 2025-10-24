@@ -1,13 +1,35 @@
-import React from "react";
-import { useParams } from "react-router-dom";
+import React, { useContext, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useGetLandBankApproveDataQuery } from "../../api/users/landbankApi";
+import { AuthContext } from "../../context/AuthContext";
 // import { useGetLandBankDataQuery } from "../../../api/landbank/landBankApi"; // Adjust this import to match your API
 // useGetLandBankDataQuery
 function ViewLandBankDetails() {
+
     const { landBankId } = useParams();
     const { data: landBankFetchData, error, isLoading } = useGetLandBankApproveDataQuery(landBankId);
     const landBankData = landBankFetchData?.data[0];
-    
+    const navigate = useNavigate();
+          const { permissions } = useContext(AuthContext);
+        
+          useEffect(()=>{
+                const userGroup = permissions?.group?.name;
+            const allowedGroups = [
+              'ADMIN',
+              'LAND_HOD_FULL',
+              'LAND_MANAGER_FULL', 
+              'LAND_SPOC_FULL',
+              'LAND_AM_FULL',
+              'LAND_EXECUTIVE_FULL',
+              'PROJECT_HOD_FULL',
+              'PROJECT_MANAGER_FULL',
+              'PROJECT_ENGINEER_FULL',
+            ];
+                if (permissions && !allowedGroups.includes(userGroup)) {
+              navigate('/'); // or navigate('/home') depending on your route
+            }
+          },[permissions,navigate])
+
     if (isLoading) return <p className="text-center">Loading...</p>;
     if (error) return <p className="text-center text-red-500">Error fetching data</p>;
 

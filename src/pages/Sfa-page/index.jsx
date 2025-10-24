@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext,useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -26,9 +26,9 @@ import LibraryAddIcon from "@mui/icons-material/LibraryAdd";
 import CreateLandBankModal from "../../components/pages/Land-bank/createLandBank";
 import { AuthContext } from "../../context/AuthContext";
 import UpdateLandBankModal from "../../components/pages/Land-bank/updateLandBank";
-
-
+import { useNavigate } from "react-router-dom";
 const SiteVisitTable = () => {
+  const navigate = useNavigate();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [filter, setFilter] = useState("");
@@ -44,7 +44,24 @@ const SiteVisitTable = () => {
 
   // Get permissions from AuthContext
   const { permissions } = useContext(AuthContext);
-  
+    useEffect(()=>{
+      const userGroup = permissions?.group?.name;
+      const allowedGroups = [
+      'ADMIN',
+      'LAND_HOD_FULL',
+      'LAND_MANAGER_FULL', 
+      'LAND_SPOC_FULL',
+      'LAND_AM_FULL',
+      'LAND_EXECUTIVE_FULL',
+      'PROJECT_HOD_FULL',
+      'PROJECT_MANAGER_FULL',
+      'PROJECT_ENGINEER_FULL',
+    ];
+        // If user doesn't have required permissions, redirect to home
+    if (permissions && !allowedGroups.includes(userGroup)) {
+      navigate('/'); // or navigate('/home') depending on your route
+    }
+  },[permissions,navigate])
   // Check if user has LAND permissions (for both Approve and Create Land Bank)
   const hasLandPermissions = () => {
     const userGroup = permissions?.group?.name;
@@ -632,6 +649,7 @@ const SiteVisitTable = () => {
             open={openCreateLandBank}
             handleClose={handleCreateLandBankClose}
             activeItem={activeItem}
+            refetch={refetch}
           />
           <UpdateLandBankModal
             open={openUpdateLandBank}

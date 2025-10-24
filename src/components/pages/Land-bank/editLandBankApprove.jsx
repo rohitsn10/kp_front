@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useContext } from "react";
 import Button from "@mui/material/Button";
 import { toast } from "react-toastify";
 import Autocomplete from "@mui/material/Autocomplete";
@@ -9,22 +9,37 @@ import { useGetLandBankApproveDataQuery, useUpdateDataAfterApprovalLandBankMutat
 import { useNavigate } from 'react-router-dom';
 import { Link } from '@mui/material';
 import { useParams } from "react-router-dom";
+import { AuthContext } from "../../../context/AuthContext";
 
 function EditLandApproveDoc() {
     const location = useLocation();
     const { id } = useParams();
-
     console.log("Land ID:", id);
     const { landData } = location.state || {};
-    
-    const [locationInput, setLocationInput] = useState(landData?.land_name || '');
-    const { data: categories } = useGetLandCategoriesQuery();
-    // console.log(categories)
-    const [selectedCategory, setSelectedCategory] = useState(landData?.land_category || null);
+        // console.log(categories)
     const navigate = useNavigate();
     const { data: landBankApproveData, isLoading, isError } = useGetLandBankApproveDataQuery(id);
     // console.log("EDIDEIDT",landBankApproveData)
     // State for form data including existing files
+      const { permissions } = useContext(AuthContext);
+    
+      useEffect(()=>{
+            const userGroup = permissions?.group?.name;
+        const allowedGroups = [
+          'ADMIN',
+          'LAND_HOD_FULL',
+          'LAND_MANAGER_FULL', 
+          'LAND_SPOC_FULL',
+          'LAND_AM_FULL',
+          'LAND_EXECUTIVE_FULL',
+          'PROJECT_HOD_FULL',
+          'PROJECT_MANAGER_FULL',
+          'PROJECT_ENGINEER_FULL',
+        ];
+            if (permissions && !allowedGroups.includes(userGroup)) {
+          navigate('/'); // or navigate('/home') depending on your route
+        }
+      },[permissions,navigate])
     const [formData, setFormData] = useState({
         dilr_attachment_file: [],
         na_65b_permission_attachment_file: [],
@@ -149,45 +164,65 @@ function EditLandApproveDoc() {
         }));
     };
 
-    const handleSubmit = async () => {
-        if (!selectedCategory || !locationInput) {
-            if (!selectedCategory) toast.error('Land category is required.');
-            if (!locationInput) toast.error('Land name is required.');
-            return;
+const handleSubmit = async () => {
+
+    const formDataToSend = new FormData();
+    // formDataToSend.append('land_category_id', selectedCategory.id);
+    // formDataToSend.append('land_name', locationInput);
+    // formDataToSend.append('land_bank_id', landData.id);
+
+    // Append new files
+    Object.keys(newFiles).forEach(fileType => {
+        newFiles[fileType].forEach(file => {
+            formDataToSend.append(fileType, file);
+        });
+    });
+
+    // Append removed file IDs
+    Object.keys(removedFiles).forEach(fileType => {
+        if (removedFiles[fileType].length > 0) {
+            formDataToSend.append(
+                `remove_${fileType}`,
+                removedFiles[fileType].join(',')
+            );
         }
+    });
 
-        const formDataToSend = new FormData();
-        // formDataToSend.append('land_category_id', selectedCategory.id);
-        // formDataToSend.append('land_name', locationInput);
-        // formDataToSend.append('land_bank_id', landData.id);
-
-        // Append new files
-        Object.keys(newFiles).forEach(fileType => {
-            newFiles[fileType].forEach(file => {
-                formDataToSend.append(fileType, file);
-            });
-        });
-
-        // Append removed file IDs
-        Object.keys(removedFiles).forEach(fileType => {
-            if (removedFiles[fileType].length > 0) {
-                formDataToSend.append(
-                    `remove_${fileType}`,
-                    removedFiles[fileType].join(',')
-                );
-            }
-        });
-
-        try {
-            // await updateDataAfterApproval(formDataToSend).unwrap();
-            await updateDataAfterApproval({ id:landBankApproveData?.data[0]?.id, formData: formDataToSend }).unwrap();
-            toast.success('Land documents updated successfully');
-            // navigate('/land-bank');
-        } catch (error) {
-            console.error('Error:', error);
+    try {
+        const response = await updateDataAfterApproval({ 
+            id: landBankApproveData?.data[0]?.id, 
+            formData: formDataToSend 
+        }).unwrap();
+        
+        // Check if backend returned success status
+        if (response?.status === false) {
+            // Show backend error message
+            toast.error(response?.message || 'Failed to update land documents');
+        } else {
+            // Success case
+            toast.success(response?.message || 'Land documents updated successfully');
+            // Redirect to land bank page after successful submission
+            navigate('/landbank');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        
+        // Handle different error scenarios
+        if (error?.data?.status === false) {
+            // Backend returned error with status false
+            toast.error(error?.data?.message || 'Failed to update land documents');
+        } else if (error?.data?.message) {
+            // Backend returned error message
+            toast.error(error.data.message);
+        } else if (error?.message) {
+            // Generic error message
+            toast.error(error.message);
+        } else {
+            // Fallback error message
             toast.error('Failed to update land documents');
         }
-    };
+    }
+};
 
     const renderFileSection = (title, fieldName) => (
         <div className="mb-6">
@@ -275,38 +310,6 @@ function EditLandApproveDoc() {
     return (
         <div className="p-6 max-w-4xl max-h-[95%] overflow-y-auto mx-auto bg-white rounded-md shadow-md my-10">
             <h2 className="text-2xl font-semibold text-[#29346B] mb-5">Edit Land</h2>
-
-            <div className="mb-6">
-                <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                    Land Category <span className="text-red-600">*</span>
-                </label>
-                <Autocomplete
-                    value={selectedCategory}
-                    onChange={(event, newValue) => setSelectedCategory(newValue)}
-                    options={categories?.data || []}
-                    getOptionLabel={(option) => option?.category_name || ''}
-                    renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            placeholder="Select Land Category"
-                            className="w-full"
-                        />
-                    )}
-                />
-            </div>
-
-            <div className="mb-6">
-                <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                    Land Name <span className="text-red-600">*</span>
-                </label>
-                <input
-                    type="text"
-                    value={locationInput}
-                    onChange={(e) => setLocationInput(e.target.value)}
-                    className="border p-3 rounded-md w-full"
-                    placeholder="Enter Land Name"
-                />
-            </div>
 
             {/* Document Upload Sections */}
             <div className="space-y-6">

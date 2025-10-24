@@ -67,7 +67,7 @@ const formatCoordinateData = (format, easting, northing, zone) => {
   return parts.length > 0 ? parts.join(", ") : "N/A";
 };
 
-export default function LandApproveModal({ open, setOpen, selectedLand }) {
+export default function LandApproveModal({ open, setOpen, selectedLand,refetch }) {
   const [files, setFiles] = useState({});
   const [landBankStatus, setLandBankStatus] = useState("pending");
   const [approveRejectLandBankStatus, { isLoading, error }] = useApproveRejectLandBankStatusMutation();
@@ -107,6 +107,7 @@ export default function LandApproveModal({ open, setOpen, selectedLand }) {
       try {
         await approveRejectLandBankStatus({ id: selectedLand.id, land_bank_status: landBankStatus }).unwrap();
         console.log("Status updated successfully");
+        refetch();
         setOpen(false);
       } catch (err) {
         console.error("Error updating status:", err);
@@ -638,7 +639,6 @@ const KeypointsDisplay = ({ keypoints }) => {
             >
               <MenuItem value="Approved">Approved</MenuItem>
               <MenuItem value="Rejected">Rejected</MenuItem>
-              <MenuItem value="Pending">Pending</MenuItem>
             </Select>
           </FormControl>
           {error && (

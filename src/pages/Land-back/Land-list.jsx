@@ -13,14 +13,7 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
-import { RiEditFill } from "react-icons/ri";
-import { GiConfirmed } from "react-icons/gi";
 import { MdApproval } from "react-icons/md";
-import {
-  AiOutlineStop,
-  AiOutlineCheck,
-  AiOutlineFileText,
-} from "react-icons/ai";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import EditIcon from "@mui/icons-material/Edit";
@@ -35,8 +28,8 @@ import { useDeleteLandBankLocationMutation } from "../../api/users/landbankApi";
 import { AuthContext } from "../../context/AuthContext";
 import HodApprovalModal from "../../components/pages/Land-back/HodApprovalModal.jsx";
 
-
 function LandListing() {
+  const navigate = useNavigate();
   const { data, error, isLoading, refetch } = useGetLandBankMasterQuery();
   const [deleteLandBankLocation] = useDeleteLandBankLocationMutation();
   const [page, setPage] = useState(0);
@@ -48,10 +41,25 @@ function LandListing() {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openHodApprovalModal, setOpenHodApprovalModal] = useState(false);
   const [selectedLand, setSelectedLand] = useState(null);
-  const navigate = useNavigate();
   const { permissions } = useContext(AuthContext);
 
-
+  useEffect(()=>{
+        const userGroup = permissions?.group?.name;
+    const allowedGroups = [
+      'ADMIN',
+      'LAND_HOD_FULL',
+      'LAND_MANAGER_FULL', 
+      'LAND_SPOC_FULL',
+      'LAND_AM_FULL',
+      'LAND_EXECUTIVE_FULL',
+      'PROJECT_HOD_FULL',
+      'PROJECT_MANAGER_FULL',
+      'PROJECT_ENGINEER_FULL',
+    ];
+        if (permissions && !allowedGroups.includes(userGroup)) {
+      navigate('/'); // or navigate('/home') depending on your route
+    }
+  },[permissions,navigate])
   // Check if user has LAND permissions
   const hasLandPermissions = () => {
     const userGroup = permissions?.group?.name;
@@ -63,6 +71,7 @@ function LandListing() {
     ];
     return landGroups.includes(userGroup);
   };
+
 
   // const hasProjectApprovalPermissons1 = ()=>{
   //   const userGroup = permissions?.group?.name;
@@ -520,7 +529,7 @@ function LandListing() {
 
       {/* Modals */}
       <LandActivityModal open={openAddLandModal} setOpen={setOpenAddLandModal} />
-      <LandApproveModal open={openApproveModal} setOpen={setOpenApproveModal} selectedLand={selectedLand} />
+      <LandApproveModal open={openApproveModal} setOpen={setOpenApproveModal} selectedLand={selectedLand} refetch={refetch} />
       <EditLandModal open={openEditModal} setOpen={setOpenEditModal} activeItem={selectedLand} handleClose={handleCloseModal} />
       
       <HodApprovalModal

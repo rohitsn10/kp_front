@@ -207,7 +207,13 @@ const ViewSFADetailsModal = ({
                     Approved Report Files
                   </Typography>
                   {renderFileList(activeItem.approved_report_file)}
+
+                                    <Typography variant="subtitle2" color="secondary" gutterBottom mt={2}>
+                    Rejected Report Files
+                  </Typography>
+                  {renderFileList(activeItem.rejected_report_file)}
                 </AccordionDetails>
+                
               </Accordion>
             </Grid>
             

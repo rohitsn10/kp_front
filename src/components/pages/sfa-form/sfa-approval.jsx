@@ -52,33 +52,38 @@ const AssessmentFormApproval = ({
     setApprovedReportFiles(Array.from(files)); // Convert FileList to an array
   };
 
-  const handleSubmit = async () => {
-    // Check if Land Bank Status and Files are selected
-    if (!landBankStatus || approvedReportFiles.length === 0) {
-      toast.error("Please select the land bank status and upload the approved report files.");
-      return;
-    }
+const handleSubmit = async () => {
+  // Check if Land Bank Status and Files are selected
+  if (!landBankStatus || approvedReportFiles.length === 0) {
+    toast.error("Please select the land bank status and upload the approved report files.");
+    return;
+  }
 
-    const land_sfa_data_id = activeItem.id;
-    const formData = new FormData();
-    formData.append('status_of_site_visit', landBankStatus);
+  const land_sfa_data_id = activeItem.id;
+  const formData = new FormData();
+  formData.append('status_of_site_visit', landBankStatus);
 
-    // Append files to FormData
-    approvedReportFiles.forEach((file) => {
+  // Conditionally append files based on status
+  approvedReportFiles.forEach((file) => {
+    if (landBankStatus === 'Rejected') {
+      formData.append('rejected_report_files', file);
+    } else if (landBankStatus === 'Approved') {
       formData.append('approved_report_files', file);
-    });
-
-    try {
-      // Make API call to update status
-      await updateLandBankStatus({ land_bank_id: land_sfa_data_id, formData });
-      toast.success("SFA Status updated successfully!");
-      refetch();
-      handleClose(); // Close the modal on success
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to update SFA status. Please try again.");
     }
-  };
+  });
+
+  try {
+    // Make API call to update status
+    await updateLandBankStatus({ land_bank_id: land_sfa_data_id, formData });
+    toast.success("SFA Status updated successfully!");
+    refetch();
+    handleClose(); // Close the modal on success
+  } catch (error) {
+    console.error("Error:", error);
+    toast.error("Failed to update SFA status. Please try again.");
+  }
+};
+
 
   // Format dates for better display
   const formatDate = (dateString) => {

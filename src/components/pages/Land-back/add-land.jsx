@@ -1,14 +1,35 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Button from "@mui/material/Button";
 import { toast } from "react-toastify";
 import { useLocation } from "react-router-dom";
 import { useAddDataAfterApprovalLandBankMutation } from "../../../api/users/landbankApi";
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from "../../../context/AuthContext";
 
 export default function AddLandDoc() {
   const location = useLocation();
   const { landData } = location.state || {};
   const navigate = useNavigate();
+        const { permissions } = useContext(AuthContext);
+    
+      useEffect(()=>{
+            const userGroup = permissions?.group?.name;
+        const allowedGroups = [
+          'ADMIN',
+          'LAND_HOD_FULL',
+          'LAND_MANAGER_FULL', 
+          'LAND_SPOC_FULL',
+          'LAND_AM_FULL',
+          'LAND_EXECUTIVE_FULL',
+          'PROJECT_HOD_FULL',
+          'PROJECT_MANAGER_FULL',
+          'PROJECT_ENGINEER_FULL',
+        ];
+            if (permissions && !allowedGroups.includes(userGroup)) {
+          navigate('/'); // or navigate('/home') depending on your route
+        }
+      },[permissions,navigate])
+  
   const [fileInputs, setFileInputs] = useState({
     dilr: [],
     na65Permission: [],
@@ -113,6 +134,15 @@ export default function AddLandDoc() {
       const response = await addDataAfterApprovalLandBank(formData).unwrap();
       toast.success('Land documents updated successfully');
       // navigate('/land-bank');
+              if (response?.status === false) {
+            // Show backend error message
+            toast.error(response?.message || 'Failed to update land documents');
+        } else {
+            // Success case
+            toast.success(response?.message || 'Land documents updated successfully');
+            // Redirect to land bank page after successful submission
+            navigate('/landbank');
+        }
     } catch (error) {
       console.error('Error:', error);
       toast.error('Failed to update land documents');
@@ -121,7 +151,7 @@ export default function AddLandDoc() {
 
   return (
     <div className="p-6 max-w-4xl max-h-[95%] overflow-y-auto mx-auto bg-white rounded-md shadow-md my-10">
-      <h2 className="text-2xl font-semibold text-[#29346B] mb-5">Add Land</h2>
+      <h2 className="text-2xl font-semibold text-[#29346B] mb-5">Add Land Attachments</h2>
 
       <div className="mt-6">
         <div className="flex justify-between mb-4">

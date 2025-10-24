@@ -17,7 +17,7 @@ import { toast } from "react-toastify";
 import { useCreateLandBankMasterMutation } from "../../../api/users/landbankApi";
 import { useGetLandCategoriesQuery } from "../../../api/users/categoryApi";
 
-const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
+const CreateLandBankModal = ({ open, handleClose, activeItem ,refetch}) => {
   const [createLandBank, { isLoading }] = useCreateLandBankMasterMutation();
   const { data, isLoading: isLoadingCategory } = useGetLandCategoriesQuery();
 
@@ -299,6 +299,8 @@ const CreateLandBankModal = ({ open, handleClose, activeItem }) => {
       }
       
       toast.success(response.message || "Land Bank created successfully!");
+      refetch();
+
       handleClose();
     } catch (error) {
       // Handle API errors
