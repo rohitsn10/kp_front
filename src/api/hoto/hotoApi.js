@@ -107,6 +107,20 @@ export const hotoApi = createApi({
     body: certificateData,
   }),
 }),
+    fetchallHotoDocuments: builder.query({
+      query: () => ({
+        url: "hoto_module/fetch_all_documents_names",
+        method: "GET",
+      }),
+      transformResponse: (response) => {
+        // Optional: clean up / format data before returning
+        return response
+      },
+      transformErrorResponse: (response) => {
+        console.error("Error fetching all HOTO documents:", response);
+        return response;
+      },
+    }),
   }),
 });
 
@@ -116,5 +130,6 @@ export const {
   useAddRemarksToDocumentMutation,
   useUploadDocumentMutation,
   useVerifyDocumentMutation,
-  useGenerateHotoCertificateMutation
+  useGenerateHotoCertificateMutation,
+  useFetchallHotoDocumentsQuery
 } = hotoApi;

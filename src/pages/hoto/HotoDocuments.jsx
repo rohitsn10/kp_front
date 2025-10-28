@@ -9,6 +9,10 @@ import {
   InputAdornment,
   CircularProgress,
   Tooltip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PrintIcon from "@mui/icons-material/Print";
@@ -16,12 +20,13 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import CommentIcon from "@mui/icons-material/Comment";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useNavigate, useParams } from 'react-router-dom';
 import DocumentDetailsDialog from '../../components/pages/hoto/documents-page/DocumentDetailsDialog';
 import RemarksDialog from '../../components/pages/hoto/documents-page/RemarksDialog';
 import FileUploadModal from '../../components/pages/hoto/documents-page/FileUploadModal';
 import VerifyDocumentDialog from '../../components/pages/hoto/documents-page/VerifyDocumentDialog';
-import { useGetDocumentsByProjectIdQuery } from '../../api/hoto/hotoApi';
+import { useFetchallHotoDocumentsQuery, useGetDocumentsByProjectIdQuery } from '../../api/hoto/hotoApi';
 import AddDocumentModal from '../../components/pages/hoto/documents-page/AddDocumentModal';
 import CertificateGenerationForm from '../../components/pages/hoto/hoto-certificate/CertificateGenerationForm';
 
@@ -29,9 +34,9 @@ function HotoDocuments() {
   const { projectId } = useParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  // const [filteredItems, setFilteredItems] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const navigate = useNavigate();
+  
   // State for dialogs
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [openFileUploadModal, setOpenFileUploadModal] = useState(false);
@@ -40,51 +45,80 @@ function HotoDocuments() {
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [openAddDocumentModal, setOpenAddDocumentModal] = useState(false);
   const [openCertificateForm, setOpenCertificateForm] = useState(false);
-  // Fetch documents using the RTK Query hook
-  const { 
-    data: documentsResponse, 
-    isLoading, 
-    isError, 
-    error,
-    refetch
-  } = useGetDocumentsByProjectIdQuery(projectId);
-
-  // Extract documents from the response
-  const documents = documentsResponse?.data || [];
-
-const filteredItems = useMemo(() => {
-  if (!documents || documents.length === 0) return [];
   
-  let result = [...documents];
+  // Fetch documents using the new API
+  const { 
+    data: HotoListData, 
+    isLoading: HotoListLoading, 
+    isError: HotoListErr, 
+    error: HotoListError,
+    refetch
+  } = useFetchallHotoDocumentsQuery();
 
-  // Apply search filter
-  if (searchTerm) {
-    const searchLower = searchTerm.toLowerCase();
-    result = result.filter(item =>
-      (item.document_name && item.document_name.toLowerCase().includes(searchLower)) ||
-      (item.category && item.category.toLowerCase().includes(searchLower)) ||
-      (item.created_by_name && item.created_by_name.toLowerCase().includes(searchLower))
+  console.log(HotoListData);
+  
+  // Extract categories from the response
+  const categories = HotoListData?.data || [];
+
+  // Flatten documents with category information for filtering
+  const allDocuments = useMemo(() => {
+    if (!categories || categories.length === 0) return [];
+    
+    return categories.flatMap(category => 
+      category.documents.map(doc => ({
+        ...doc,
+        categoryId: category.id,
+        categoryName: category.category,
+        // Add default values for fields that might be needed
+        created_at: doc.created_at || new Date().toISOString(),
+        created_by_name: doc.created_by_name || 'N/A',
+        status: doc.status || 'pending',
+        punch_point_balance: doc.punch_point_balance || 0,
+        remarks: doc.remarks || '',
+      }))
     );
-  }
+  }, [categories]);
 
-  // Apply status filter
-  if (statusFilter !== "all") {
-    result = result.filter(item => item.status.toLowerCase() === statusFilter);
-  }
+  // Filter and sort documents
+  const filteredCategories = useMemo(() => {
+    if (!categories || categories.length === 0) return [];
+    
+    let filteredCats = [...categories];
 
-  // Apply sort option
-  if (sortOption === "date_asc") {
-    result.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  } else if (sortOption === "date_desc") {
-    result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  } else if (sortOption === "name") {
-    result.sort((a, b) => a.document_name.localeCompare(b.document_name));
-  } else if (sortOption === "category") {
-    result.sort((a, b) => a.category.localeCompare(b.category));
-  }
+    // Apply category filter
+    if (categoryFilter !== "all") {
+      filteredCats = filteredCats.filter(cat => cat.id === parseInt(categoryFilter));
+    }
 
-  return result;
-}, [searchTerm, sortOption, statusFilter, documents]);
+    // Apply search and sorting to documents within each category
+    filteredCats = filteredCats.map(category => {
+      let docs = [...category.documents];
+
+      // Apply search filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        docs = docs.filter(doc =>
+          (doc.name && doc.name.toLowerCase().includes(searchLower)) ||
+          (category.category && category.category.toLowerCase().includes(searchLower))
+        );
+      }
+
+      // Apply sort option
+      if (sortOption === "name") {
+        docs.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (sortOption === "id") {
+        docs.sort((a, b) => a.id - b.id);
+      }
+
+      return {
+        ...category,
+        documents: docs
+      };
+    }).filter(cat => cat.documents.length > 0); // Remove empty categories
+
+    return filteredCats;
+  }, [searchTerm, sortOption, categoryFilter, categories]);
+
   // Handlers for modal actions
   const handleFileUpload = (document) => {
     setSelectedDocument(document);
@@ -125,6 +159,7 @@ const filteredItems = useMemo(() => {
     setOpenDetailsDialog(false);
     setSelectedDocument(null);
   };
+  
   const handleOpenAddDocumentModal = () => {
     setOpenAddDocumentModal(true);
   };
@@ -133,28 +168,26 @@ const filteredItems = useMemo(() => {
     setOpenAddDocumentModal(false);
   };
 
-    const handleOpenCertificateForm = () => {
+  const handleOpenCertificateForm = () => {
     setOpenCertificateForm(true);
   };
   
-    const handleCertificateSuccess = () => {
-    // You can add additional handling here if needed
-    // For example, showing a success notification
+  const handleCertificateSuccess = () => {
+    // Additional handling if needed
   };
+  
   const handleCloseCertificateForm = () => {
     setOpenCertificateForm(false);
   };
   
-  const handleOpenPunchPoints = (item)=>{
-    // navigate(`/hoto-page/add-document/punchpoints/${projectId}/${item.id}`);
+  const handleOpenPunchPoints = (item) => {
     window.location.href = `/hoto-page/punchpoints/${projectId}/${item.id}`;
   }
-  // Add a handler for successful document upload
+  
   const handleDocumentUploadSuccess = () => {
-    refetch(); // Refresh the documents list
+    refetch();
   };
 
-  // Update functions
   const handleSaveRemarks = (documentId, remarks) => {
     refetch();
   };
@@ -163,18 +196,14 @@ const filteredItems = useMemo(() => {
     refetch();
   };
 
-  // Clear filters
   const clearFilters = () => {
     setSearchTerm("");
     setSortOption("all");
-    setStatusFilter("all");
+    setCategoryFilter("all");
   };
 
-  // Status badge component
   const StatusBadge = ({ status }) => {
     let bgColor, textColor, label;
-    
-    // Convert status to lowercase for consistent comparison
     const statusLower = status.toLowerCase();
     
     switch(statusLower) {
@@ -208,11 +237,10 @@ const filteredItems = useMemo(() => {
     );
   };
 
-  // Format date string from ISO to local date format
   const formatDate = (isoDate) => {
     if (!isoDate) return 'N/A';
     const date = new Date(isoDate);
-    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+    return date.toLocaleDateString('en-GB');
   };
   
   return (
@@ -234,7 +262,7 @@ const filteredItems = useMemo(() => {
               <TextField
                 fullWidth
                 variant="outlined"
-                placeholder="Search by document name, category or submitter"
+                placeholder="Search by document name or category"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 InputProps={{
@@ -262,27 +290,26 @@ const filteredItems = useMemo(() => {
                 onChange={(e) => setSortOption(e.target.value)}
               >
                 <MenuItem value="all">Default Order</MenuItem>
-                <MenuItem value="date_asc">Date (Oldest First)</MenuItem>
-                <MenuItem value="date_desc">Date (Newest First)</MenuItem>
                 <MenuItem value="name">Document Name</MenuItem>
-                <MenuItem value="category">Category</MenuItem>
+                <MenuItem value="id">Document ID</MenuItem>
               </Select>
             </FormControl>
             
-            {/* Status Filter */}
-            <FormControl sx={{ minWidth: 160 }}>
-              <InputLabel id="status-filter-label">Status</InputLabel>
+            {/* Category Filter */}
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel id="category-filter-label">Category</InputLabel>
               <Select
-                labelId="status-filter-label"
-                value={statusFilter}
-                label="Status"
-                onChange={(e) => setStatusFilter(e.target.value)}
+                labelId="category-filter-label"
+                value={categoryFilter}
+                label="Category"
+                onChange={(e) => setCategoryFilter(e.target.value)}
               >
-                <MenuItem value="all">All Statuses</MenuItem>
-                <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="approved">Approved</MenuItem>
-                <MenuItem value="rejected">Rejected</MenuItem>
-                <MenuItem value="needs_revision">Needs Revision</MenuItem>
+                <MenuItem value="all">All Categories</MenuItem>
+                {categories.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id.toString()}>
+                    {cat.category}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
 
@@ -305,9 +332,9 @@ const filteredItems = useMemo(() => {
             <Button
               variant="contained"
               startIcon={<PrintIcon />}
-               onClick={handleOpenCertificateForm}
+              onClick={handleOpenCertificateForm}
               sx={{
-                bgcolor: "#3B82F6", // Blue color
+                bgcolor: "#3B82F6",
                 "&:hover": { bgcolor: "#2563EB" }
               }}
             >
@@ -329,13 +356,13 @@ const filteredItems = useMemo(() => {
           </div>
         </div>
 
-        {isLoading ? (
+        {HotoListLoading ? (
           <div className="flex justify-center my-8">
             <CircularProgress />
           </div>
-        ) : isError ? (
+        ) : HotoListErr ? (
           <div className="text-center p-4 bg-red-50 border border-red-200 rounded">
-            <p className="text-red-600">Error loading documents: {error?.message || 'Unknown error'}</p>
+            <p className="text-red-600">Error loading documents: {HotoListError?.message || 'Unknown error'}</p>
             <Button 
               variant="contained" 
               onClick={refetch}
@@ -344,133 +371,161 @@ const filteredItems = useMemo(() => {
               Retry
             </Button>
           </div>
-        ) : documents && filteredItems.length ? (
-          <div className="overflow-x-auto">
-            <table id="hoto-documents-table" className="min-w-full bg-white border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="py-2 px-3 text-[#29346B] border text-left">Sr</th>
-                  <th className="py-2 px-3 text-[#29346B] border text-left">Document Name</th>
-                  <th className="py-2 px-3 text-[#29346B] border text-left">Category</th>
-                  <th className="py-2 px-3 text-[#29346B] border text-left">Date Created</th>
-                  <th className="py-2 px-3 text-[#29346B] border text-left">Created By</th>
-                  <th className="py-2 px-3 text-[#29346B] border text-left">Status</th>
-                  <th className="py-2 px-3 text-[#29346B] border text-left">Punch Balance</th>
-                  <th className="py-2 px-3 text-[#29346B] border text-left">Remarks</th>
-                  <th className="py-2 px-3 text-[#29346B] border text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.map((item, index) => (
-                  <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                    <td className="py-2 px-3 border">{index + 1}</td>
-                    <td className="py-2 px-3 border">{item.document_name}</td>
-                    <td className="py-2 px-3 border">{item.category}</td>
-                    <td className="py-2 px-3 border">{formatDate(item.created_at)}</td>
-                    <td className="py-2 px-3 border">{item.created_by_name || `User ID: ${item.created_by}`}</td>
-                    <td className="py-2 px-3 border">
-                      <StatusBadge status={item.status} />
-                    </td>
-                    <td className="py-2 px-3 border">
-                      <div className="flex justify-center">
-                        <span className="font-medium">{item.punch_point_balance || 0}</span>
-                      </div>
-                    </td>
-                    <td className="py-2 px-3 border">
-                      <div className="max-w-xs truncate">
-                        {item.remarks || "No remarks"}
-                      </div>
-                    </td>
-                    <td className="py-2 px-3 border">
-                      <div className="flex flex-wrap gap-2">
-                        <Tooltip title="View Details">
-                          <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => handleOpenDetailsDialog(item)}
-                            startIcon={<VisibilityIcon />}
-                            sx={{
-                              bgcolor: "#29346B",
-                              "&:hover": { bgcolor: "#1e2756" },
-                              padding: "2px 8px"
-                            }}
-                          >
-                            View
-                          </Button>
-                        </Tooltip>
-                        <Tooltip title="Upload Files">
-                          <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => handleFileUpload(item)}
-                            startIcon={<UploadFileIcon />}
-                            sx={{
-                              bgcolor: "#EC4899", // Pink color
-                              "&:hover": { bgcolor: "#DB2777" },
-                              padding: "2px 8px"
-                            }}
-                          >
-                            Upload
-                          </Button>
-                        </Tooltip>
-                        <Tooltip title="Add Remarks">
-                          <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => handleOpenRemarksDialog(item)}
-                            startIcon={<CommentIcon />}
-                            sx={{
-                              bgcolor: "#FACC15",
-                              color: "#29346B",
-                              "&:hover": { bgcolor: "#e5b812" },
-                              padding: "2px 8px"
-                            }}
-                          >
-                            Remarks
-                          </Button>
-                        </Tooltip>
-                        <Tooltip title="Verify Document">
-                          <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => handleOpenVerifyDialog(item)}
-                            startIcon={<VerifiedIcon />}
-                            sx={{
-                              bgcolor: "#10B981", // Green color
-                              "&:hover": { bgcolor: "#059669" },
-                              padding: "2px 8px"
-                            }}
-                          >
-                            Verify
-                          </Button>
-                        </Tooltip>
-                        <Tooltip title="Punchpoints">
-                        <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => handleOpenPunchPoints(item)}
-                            startIcon={<VerifiedIcon />}
-                            sx={{
-                              bgcolor: "#10B981", // Green color
-                              "&:hover": { bgcolor: "#059669" },
-                              padding: "2px 8px"
-                            }}
-                          >
-                            Punchpoints
-                          </Button>
-                        </Tooltip>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        ) : categories && filteredCategories.length ? (
+          <div className="space-y-4">
+            {filteredCategories.map((category) => (
+              <Accordion key={category.id} defaultExpanded>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    bgcolor: "#f3f4f6",
+                    "&:hover": { bgcolor: "#e5e7eb" }
+                  }}
+                >
+                  <Typography variant="h6" className="text-[#29346B] font-semibold">
+                    {category.category} ({category.documents.length} documents)
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ p: 0 }}>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white border border-gray-300">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="py-2 px-3 text-[#29346B] border text-left">Sr</th>
+                          <th className="py-2 px-3 text-[#29346B] border text-left">Document ID</th>
+                          <th className="py-2 px-3 text-[#29346B] border text-left">Document Name</th>
+                          <th className="py-2 px-3 text-[#29346B] border text-left">Status</th>
+                          <th className="py-2 px-3 text-[#29346B] border text-left">Punch Balance</th>
+                          <th className="py-2 px-3 text-[#29346B] border text-left">Remarks</th>
+                          <th className="py-2 px-3 text-[#29346B] border text-left">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {category.documents.map((doc, index) => {
+                          const fullDoc = {
+                            ...doc,
+                            categoryId: category.id,
+                            categoryName: category.category,
+                            created_at: doc.created_at || new Date().toISOString(),
+                            created_by_name: doc.created_by_name || 'N/A',
+                            status: doc.status || 'pending',
+                            punch_point_balance: doc.punch_point_balance || 0,
+                            remarks: doc.remarks || '',
+                          };
+                          
+                          return (
+                            <tr key={doc.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                              <td className="py-2 px-3 border">{index + 1}</td>
+                              <td className="py-2 px-3 border">{doc.id}</td>
+                              <td className="py-2 px-3 border">{doc.name}</td>
+                              <td className="py-2 px-3 border">
+                                <StatusBadge status={fullDoc.status} />
+                              </td>
+                              <td className="py-2 px-3 border">
+                                <div className="flex justify-center">
+                                  <span className="font-medium">{fullDoc.punch_point_balance}</span>
+                                </div>
+                              </td>
+                              <td className="py-2 px-3 border">
+                                <div className="max-w-xs truncate">
+                                  {fullDoc.remarks || "No remarks"}
+                                </div>
+                              </td>
+                              <td className="py-2 px-3 border">
+                                <div className="flex flex-wrap gap-2">
+                                  <Tooltip title="View Details">
+                                    <Button
+                                      variant="contained"
+                                      size="small"
+                                      onClick={() => handleOpenDetailsDialog(fullDoc)}
+                                      startIcon={<VisibilityIcon />}
+                                      sx={{
+                                        bgcolor: "#29346B",
+                                        "&:hover": { bgcolor: "#1e2756" },
+                                        padding: "2px 8px"
+                                      }}
+                                    >
+                                      View
+                                    </Button>
+                                  </Tooltip>
+                                  <Tooltip title="Upload Files">
+                                    <Button
+                                      variant="contained"
+                                      size="small"
+                                      onClick={() => handleFileUpload(fullDoc)}
+                                      startIcon={<UploadFileIcon />}
+                                      sx={{
+                                        bgcolor: "#EC4899",
+                                        "&:hover": { bgcolor: "#DB2777" },
+                                        padding: "2px 8px"
+                                      }}
+                                    >
+                                      Upload
+                                    </Button>
+                                  </Tooltip>
+                                  <Tooltip title="Add Remarks">
+                                    <Button
+                                      variant="contained"
+                                      size="small"
+                                      onClick={() => handleOpenRemarksDialog(fullDoc)}
+                                      startIcon={<CommentIcon />}
+                                      sx={{
+                                        bgcolor: "#FACC15",
+                                        color: "#29346B",
+                                        "&:hover": { bgcolor: "#e5b812" },
+                                        padding: "2px 8px"
+                                      }}
+                                    >
+                                      Remarks
+                                    </Button>
+                                  </Tooltip>
+                                  <Tooltip title="Verify Document">
+                                    <Button
+                                      variant="contained"
+                                      size="small"
+                                      onClick={() => handleOpenVerifyDialog(fullDoc)}
+                                      startIcon={<VerifiedIcon />}
+                                      sx={{
+                                        bgcolor: "#10B981",
+                                        "&:hover": { bgcolor: "#059669" },
+                                        padding: "2px 8px"
+                                      }}
+                                    >
+                                      Verify
+                                    </Button>
+                                  </Tooltip>
+                                  <Tooltip title="Punchpoints">
+                                    <Button
+                                      variant="contained"
+                                      size="small"
+                                      onClick={() => handleOpenPunchPoints(fullDoc)}
+                                      startIcon={<VerifiedIcon />}
+                                      sx={{
+                                        bgcolor: "#10B981",
+                                        "&:hover": { bgcolor: "#059669" },
+                                        padding: "2px 8px"
+                                      }}
+                                    >
+                                      Punchpoints
+                                    </Button>
+                                  </Tooltip>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </AccordionDetails>
+              </Accordion>
+            ))}
           </div>
         ) : (
           <p className="text-center p-4 bg-gray-50 border rounded">
-            {searchTerm || sortOption !== "all" || statusFilter !== "all" ?
+            {searchTerm || sortOption !== "all" || categoryFilter !== "all" ?
               "No matching documents found. Try adjusting your filters." :
-              "No documents available for this project."}
+              "No documents available."}
           </p>
         )}
       </div>
@@ -504,7 +559,7 @@ const filteredItems = useMemo(() => {
         projectId={projectId}
         onSuccess={handleDocumentUploadSuccess}
       />
-            <CertificateGenerationForm
+      <CertificateGenerationForm
         open={openCertificateForm}
         handleClose={handleCloseCertificateForm}
         projectId={projectId}
