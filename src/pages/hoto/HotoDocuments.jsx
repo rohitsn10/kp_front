@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   TextField,
   Button,
@@ -30,7 +30,7 @@ function HotoDocuments() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [filteredItems, setFilteredItems] = useState([]);
+  // const [filteredItems, setFilteredItems] = useState([]);
   const navigate = useNavigate();
   // State for dialogs
   const [selectedDocument, setSelectedDocument] = useState(null);
@@ -52,41 +52,39 @@ function HotoDocuments() {
   // Extract documents from the response
   const documents = documentsResponse?.data || [];
 
-  // Apply filters, search, and sort whenever relevant state changes
-  useEffect(() => {
-    if (!documents) return;
-    
-    let result = [...documents];
+const filteredItems = useMemo(() => {
+  if (!documents || documents.length === 0) return [];
+  
+  let result = [...documents];
 
-    // Apply search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      result = result.filter(item =>
-        (item.document_name && item.document_name.toLowerCase().includes(searchLower)) ||
-        (item.category && item.category.toLowerCase().includes(searchLower)) ||
-        (item.created_by_name && item.created_by_name.toLowerCase().includes(searchLower))
-      );
-    }
+  // Apply search filter
+  if (searchTerm) {
+    const searchLower = searchTerm.toLowerCase();
+    result = result.filter(item =>
+      (item.document_name && item.document_name.toLowerCase().includes(searchLower)) ||
+      (item.category && item.category.toLowerCase().includes(searchLower)) ||
+      (item.created_by_name && item.created_by_name.toLowerCase().includes(searchLower))
+    );
+  }
 
-    // Apply status filter
-    if (statusFilter !== "all") {
-      result = result.filter(item => item.status.toLowerCase() === statusFilter);
-    }
+  // Apply status filter
+  if (statusFilter !== "all") {
+    result = result.filter(item => item.status.toLowerCase() === statusFilter);
+  }
 
-    // Apply sort option
-    if (sortOption === "date_asc") {
-      result.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    } else if (sortOption === "date_desc") {
-      result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    } else if (sortOption === "name") {
-      result.sort((a, b) => a.document_name.localeCompare(b.document_name));
-    } else if (sortOption === "category") {
-      result.sort((a, b) => a.category.localeCompare(b.category));
-    }
+  // Apply sort option
+  if (sortOption === "date_asc") {
+    result.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  } else if (sortOption === "date_desc") {
+    result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  } else if (sortOption === "name") {
+    result.sort((a, b) => a.document_name.localeCompare(b.document_name));
+  } else if (sortOption === "category") {
+    result.sort((a, b) => a.category.localeCompare(b.category));
+  }
 
-    setFilteredItems(result);
-  }, [searchTerm, sortOption, statusFilter, documents]);
-
+  return result;
+}, [searchTerm, sortOption, statusFilter, documents]);
   // Handlers for modal actions
   const handleFileUpload = (document) => {
     setSelectedDocument(document);

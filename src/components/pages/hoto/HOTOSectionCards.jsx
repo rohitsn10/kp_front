@@ -25,15 +25,15 @@ const HOTOSectionCards = ({ selectedProject }) => {
       borderColor: 'border-blue-300',
       textColor: 'text-blue-800'
     },
-    // {
-    //   id: 'punchpoints',
-    //   title: 'HOTO Punchpoints',
-    //   description: 'View all handover takeover records',
-    //   icon: <FaClipboardCheck className="w-12 h-12 text-green-600" />,
-    //   bgColor: 'bg-green-50',
-    //   borderColor: 'border-green-300',
-    //   textColor: 'text-green-800'
-    // },
+    {
+      id: 'punchpoints',
+      title: 'HOTO Punchpoints',
+      description: 'View all handover takeover records',
+      icon: <FaClipboardCheck className="w-12 h-12 text-green-600" />,
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-300',
+      textColor: 'text-green-800'
+    },
     // {
     //   id: 'documentation',
     //   title: 'Documentation',
