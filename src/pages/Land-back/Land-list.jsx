@@ -81,7 +81,9 @@ function LandListing() {
     
     return userGroups?.some(group => landGroups.includes(group.name));
   };
-
+useEffect(() => {
+  refetch();
+}, []);
 
   const hasProjectApprovalPermissions = () => {
     const userGroups = permissions?.groups;
