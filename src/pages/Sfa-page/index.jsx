@@ -1,4 +1,4 @@
-import React, { useState, useContext,useEffect } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -27,6 +27,7 @@ import CreateLandBankModal from "../../components/pages/Land-bank/createLandBank
 import { AuthContext } from "../../context/AuthContext";
 import UpdateLandBankModal from "../../components/pages/Land-bank/updateLandBank";
 import { useNavigate } from "react-router-dom";
+
 const SiteVisitTable = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
@@ -37,16 +38,16 @@ const SiteVisitTable = () => {
   const [openUpdateSfa, setUpdateSfa] = useState(false);
   const [openApproveSfa, setOpenApproveSfa] = useState(false);
   const [openCreateLandBank, setCreateLandBank] = useState(false);
-  const [openUpdateLandBank, setUpdateLandBank] = useState(false); // New state
+  const [openUpdateLandBank, setUpdateLandBank] = useState(false);
   const [openViewModal, setOpenViewModal] = useState(false);
   const [activeItem, setActiveItem] = useState(null);
 
-
   // Get permissions from AuthContext
   const { permissions } = useContext(AuthContext);
-    useEffect(()=>{
-      const userGroup = permissions?.group?.name;
-      const allowedGroups = [
+
+  useEffect(() => {
+    const userGroups = permissions?.groups;
+    const allowedGroups = [
       'ADMIN',
       'LAND_HOD_FULL',
       'LAND_MANAGER_FULL', 
@@ -57,14 +58,20 @@ const SiteVisitTable = () => {
       'PROJECT_MANAGER_FULL',
       'PROJECT_ENGINEER_FULL',
     ];
-        // If user doesn't have required permissions, redirect to home
-    if (permissions && !allowedGroups.includes(userGroup)) {
-      navigate('/'); // or navigate('/home') depending on your route
+    
+    // Check if user has at least one allowed group
+    const hasAllowedGroup = userGroups?.some(group => 
+      allowedGroups.includes(group.name)
+    );
+    
+    if (permissions && !hasAllowedGroup) {
+      navigate('/');
     }
-  },[permissions,navigate])
+  }, [permissions, navigate]);
+
   // Check if user has LAND permissions (for both Approve and Create Land Bank)
   const hasLandPermissions = () => {
-    const userGroup = permissions?.group?.name;
+    const userGroups = permissions?.groups;
     const landGroups = [
       'ADMIN',
       'LAND_HOD_FULL',
@@ -72,11 +79,11 @@ const SiteVisitTable = () => {
       'LAND_SPOC_FULL',
       'LAND_AM_FULL',
     ];
-    return landGroups.includes(userGroup);
+    return userGroups?.some(group => landGroups.includes(group.name));
   };
 
-    const hasLandViewEditPermissions = () => {
-    const userGroup = permissions?.group?.name;
+  const hasLandViewEditPermissions = () => {
+    const userGroups = permissions?.groups;
     const landGroups = [
       'ADMIN',
       'LAND_HOD_FULL',
@@ -85,31 +92,30 @@ const SiteVisitTable = () => {
       'LAND_AM_FULL',
       'LAND_EXECUTIVE_FULL'
     ];
-    return landGroups.includes(userGroup);
+    return userGroups?.some(group => landGroups.includes(group.name));
   };
 
-    const hasProjectApprovalPermissions = () => {
-    const userGroup = permissions?.group?.name;
+  const hasProjectApprovalPermissions = () => {
+    const userGroups = permissions?.groups;
     const projectGroups = [
       'PROJECT_HOD_FULL',
       'ADMIN',
     ];
-    return projectGroups.includes(userGroup);
+    return userGroups?.some(group => projectGroups.includes(group.name));
   };
 
-    const hasProjectViewPermissions = () => {
-    const userGroup = permissions?.group?.name;
+  const hasProjectViewPermissions = () => {
+    const userGroups = permissions?.groups;
     const projectGroups = [
       'PROJECT_HOD_FULL',
       'PROJECT_MANAGER_FULL',
       'PROJECT_ENGINEER_FULL',
       'ADMIN',
     ];
-    return projectGroups.includes(userGroup);
+    return userGroups?.some(group => projectGroups.includes(group.name));
   };
 
   const canAccessLandFeatures = hasLandPermissions();
-
 
   const handleCloseSpa = () => {
     setOpenCreateSpa(!openCreateSfa);
@@ -124,7 +130,6 @@ const SiteVisitTable = () => {
     setActiveItem(null);
     setOpenApproveSfa(false);
   };
-
 
   const handleCreateLandBankClose = () => {
     setActiveItem(null);
@@ -153,7 +158,6 @@ const SiteVisitTable = () => {
     }
   };
 
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -161,7 +165,6 @@ const SiteVisitTable = () => {
       </div>
     );
   }
-
 
   if (isError) {
     return (
@@ -173,33 +176,27 @@ const SiteVisitTable = () => {
     );
   }
 
-
   const siteData = data?.data || [];
   const filteredRows = siteData?.filter((row) =>
     row.sfa_name?.toLowerCase().includes(filter?.toLowerCase())
   );
-
 
   const currentRows = filteredRows?.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
 
-
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
-
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-
   // Calculate total columns for colspan
   const totalColumns = 6 + (canAccessLandFeatures ? 2 : 0);
-
 
   return (
     <div className="bg-white p-3 sm:p-4 md:p-6 w-full max-w-7xl mx-auto my-4 sm:my-6 md:my-8 rounded-lg shadow-sm">
@@ -232,34 +229,32 @@ const SiteVisitTable = () => {
             />
           </div>
 
-
-<div className="w-full sm:w-auto">
-  {hasLandViewEditPermissions() && (
-    <Button
-      onClick={() => {
-        setOpenCreateSpa(true);
-      }}
-      variant="contained"
-      fullWidth
-      sx={{
-        backgroundColor: "#FF8C00",
-        color: "white",
-        fontWeight: "bold",
-        fontSize: { xs: '14px', sm: '16px' },
-        textTransform: "none",
-        padding: { xs: '10px 16px', sm: '8px 24px' },
-        '&:hover': {
-          backgroundColor: '#e67c00'
-        }
-      }}
-    >
-      Add SFA
-    </Button>
-  )}
-</div>
+          <div className="w-full sm:w-auto">
+            {hasLandViewEditPermissions() && (
+              <Button
+                onClick={() => {
+                  setOpenCreateSpa(true);
+                }}
+                variant="contained"
+                fullWidth
+                sx={{
+                  backgroundColor: "#FF8C00",
+                  color: "white",
+                  fontWeight: "bold",
+                  fontSize: { xs: '14px', sm: '16px' },
+                  textTransform: "none",
+                  padding: { xs: '10px 16px', sm: '8px 24px' },
+                  '&:hover': {
+                    backgroundColor: '#e67c00'
+                  }
+                }}
+              >
+                Add SFA
+              </Button>
+            )}
+          </div>
         </div>
       </div>
-
 
       {/* Responsive Table Container */}
       <div className="overflow-x-auto">
@@ -360,7 +355,6 @@ const SiteVisitTable = () => {
               </TableRow>
             </TableHead>
 
-
             <TableBody>
               {currentRows.length > 0 ? (
                 currentRows.map((row) => (
@@ -407,47 +401,45 @@ const SiteVisitTable = () => {
                         padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
                       }}
                     >
-                      {row?.land_category_name   || "N/A"}
+                      {row?.land_category_name || "N/A"}
                     </TableCell>
-<TableCell 
-  align="center"
-  sx={{
-    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
-  }}
->
-  <div style={{ display: "flex", justifyContent: "center" }}>
-    {hasLandViewEditPermissions() ? (
-      // Show edit icon only for LAND team members
-      row?.status_of_site_visit == 'Pending' ? (
-        <RiEditFill
-          onClick={() => {
-            setActiveItem(row);
-            setUpdateSfa(true);
-          }}
-          style={{
-            cursor: "pointer",
-            color: "#61D435",
-            fontSize: "20px",
-          }}
-          title="Edit"
-        />
-      ) : (
-        <RiEditFill
-          style={{
-            cursor: "not-allowed",
-            color: "gray",
-            fontSize: "20px",
-            opacity: 0.6,
-          }}
-          title="Edit"
-        />
-      )
-    ) : (
-      // Show placeholder for non-LAND users
-      <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
-    )}
-  </div>
-</TableCell>
+                    <TableCell 
+                      align="center"
+                      sx={{
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "center" }}>
+                        {hasLandViewEditPermissions() ? (
+                          row?.status_of_site_visit == 'Pending' ? (
+                            <RiEditFill
+                              onClick={() => {
+                                setActiveItem(row);
+                                setUpdateSfa(true);
+                              }}
+                              style={{
+                                cursor: "pointer",
+                                color: "#61D435",
+                                fontSize: "20px",
+                              }}
+                              title="Edit"
+                            />
+                          ) : (
+                            <RiEditFill
+                              style={{
+                                cursor: "not-allowed",
+                                color: "gray",
+                                fontSize: "20px",
+                                opacity: 0.6,
+                              }}
+                              title="Edit"
+                            />
+                          )
+                        ) : (
+                          <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
+                        )}
+                      </div>
+                    </TableCell>
 
                     <TableCell 
                       align="center"
@@ -603,7 +595,6 @@ const SiteVisitTable = () => {
         </TableContainer>
       </div>
 
-
       <TablePagination
         component="div"
         count={filteredRows.length}
@@ -623,7 +614,6 @@ const SiteVisitTable = () => {
           }
         }}
       />
-
 
       <AssessmentFormModal open={openCreateSfa} handleClose={handleCloseSpa} />
       <AssessmentFormUpdateModal
@@ -662,6 +652,5 @@ const SiteVisitTable = () => {
     </div>
   );
 };
-
 
 export default SiteVisitTable;

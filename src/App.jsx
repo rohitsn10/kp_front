@@ -518,7 +518,7 @@ function App() {
             element={<HotoDocuments />}
           />    
                     <Route
-            path="punchpoints/:projectId/:documentId"
+            path="punchpoints/:projectId"
             element={<HotoPunchPoints />}
           />        
         </Route>

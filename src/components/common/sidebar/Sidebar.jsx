@@ -14,28 +14,43 @@ function Sidebar({ isOpen }) {
   const { user, token, permissions } = useContext(AuthContext);
   
   console.log("Permissions>>", permissions);
-  console.log("Group from permissions>>", permissions?.group);
-
+  console.log("Group from permissions>>", permissions?.groups);
+  console.log(">>>>",user)
   // Filter sidebar items based on group from permissions
+// Filter sidebar items based on groups array from permissions
 const filteredSidebarItems = useMemo(() => {
-  const userGroup = permissions?.group;
+  const userGroups = permissions?.groups;
 
-  if (userGroup?.name && userGroup.name.toUpperCase().startsWith('ADMIN')) {
+  // If no groups, return filtered sidebar (hide Land Bank and SFA)
+  if (!userGroups || userGroups.length === 0) {
+    return sidebarConstant.filter(item => 
+      item.name !== 'Land Bank' && item.name !== 'SFA'
+    );
+  }
+
+  // Check if any group starts with 'ADMIN'
+  const hasAdminGroup = userGroups.some(group => 
+    group.name && group.name.toUpperCase().startsWith('ADMIN')
+  );
+  if (hasAdminGroup) {
     return sidebarConstant;
   }
 
-  // If group starts with 'PROJECT', show Land Bank, SFA, Reports, and Project
-  if (
-    userGroup?.name && 
-    userGroup.name.startsWith('PROJECT')
-  ) {
+  // Check if any group starts with 'PROJECT'
+  const hasProjectGroup = userGroups.some(group => 
+    group.name && group.name.startsWith('PROJECT')
+  );
+  if (hasProjectGroup) {
     return sidebarConstant.filter(item => 
       item.name === 'Land Bank' || item.name === 'SFA' || item.name === 'Reports' || item.name === 'Project'
     );
   }
 
-  // If group starts with 'LAND', show only Land Bank, SFA, and Reports
-  if (userGroup?.name && userGroup.name.startsWith('LAND')) {
+  // Check if any group starts with 'LAND'
+  const hasLandGroup = userGroups.some(group => 
+    group.name && group.name.startsWith('LAND')
+  );
+  if (hasLandGroup) {
     return sidebarConstant.filter(item => 
       item.name === 'Land Bank' || item.name === 'SFA' || item.name === 'Reports'
     );
@@ -46,6 +61,7 @@ const filteredSidebarItems = useMemo(() => {
     item.name !== 'Land Bank' && item.name !== 'SFA'
   );
 }, [permissions]);
+
 
 
 

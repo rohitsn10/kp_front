@@ -44,59 +44,94 @@ export const hotoApi = createApi({
     }),
 
     // Endpoint for adding remarks to a document
-    addRemarksToDocument: builder.mutation({
-      query: ({ documentId, remarksData }) => {
-        // Validate the documentId parameter
-        if (!documentId || isNaN(documentId)) {
-          throw new Error('Valid document ID is required');
-        }
-        
-        return {
-          url: `hoto_module/add_remarks_to_document/${documentId}`,
-          method: "PUT",
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: remarksData,
-        };
+addRemarksToDocument: builder.mutation({
+  query: ({ projectId, documentId, remarks }) => {
+    // Validate the projectId parameter
+    if (!projectId || isNaN(projectId)) {
+      throw new Error('Valid project ID is required');
+    }
+    
+    // Validate the documentId parameter
+    if (!documentId || isNaN(documentId)) {
+      throw new Error('Valid document ID is required');
+    }
+    
+    return {
+      url: `hoto_module/add_remarks_to_document/${projectId}`,
+      method: "PUT",
+      headers: {
+        'Content-Type': 'application/json',
       },
-    }),
+      body: {
+        document_id: documentId,
+        remarks: remarks
+      },
+    };
+  },
+}),
 
     // Endpoint for uploading additional documents
-    uploadDocument: builder.mutation({
-      query: ({ documentId, formData }) => {
-        // Validate the documentId parameter
-        if (!documentId || isNaN(documentId)) {
-          throw new Error('Valid document ID is required');
-        }
-        
-        return {
-          url: `hoto_module/upload_document/${documentId}`,
-          method: "PUT",
-          body: formData,
-          formData: true, // Important for file uploads
-        };
-      },
-    }),
+uploadDocument: builder.mutation({
+  query: ({ projectId, categoryId, documentId, formData }) => {
+    // Validate required parameters
+    if (!projectId || isNaN(projectId)) {
+      throw new Error('Valid project ID is required');
+    }
+    if (!categoryId || isNaN(categoryId)) {
+      throw new Error('Valid category ID is required');
+    }
+    if (!documentId || isNaN(documentId)) {
+      throw new Error('Valid document ID is required');
+    }
+    
+    // Append IDs to formData
+    formData.append('project_id', projectId);
+    formData.append('category_id', categoryId);
+    formData.append('document_id', documentId);
+    
+    return {
+      url: `hoto_module/upload_document/${projectId}`,
+            // url: `hoto_module/upload_main_document`,
+
+      method: "PUT",
+      body: formData,
+      formData: true, // Important for file uploads
+    };
+  },
+}),
 
     // Endpoint for verifying a document
-    verifyDocument: builder.mutation({
-      query: ({ documentId, verifyData }) => {
-        // Validate the documentId parameter
-        if (!documentId || isNaN(documentId)) {
-          throw new Error('Valid document ID is required');
-        }
-        
-        return {
-          url: `hoto_module/verify_document/${documentId}`,
-          method: "PUT",
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: verifyData,
-        };
+verifyDocument: builder.mutation({
+  query: ({ projectId, documentId, status, verifyComment }) => {
+    // Validate the projectId parameter
+    if (!projectId || isNaN(projectId)) {
+      throw new Error('Valid project ID is required');
+    }
+    
+    // Validate the documentId parameter
+    if (!documentId || isNaN(documentId)) {
+      throw new Error('Valid document ID is required');
+    }
+    
+    // Validate status
+    if (!status || !["Verified", "Rejected", "Pending"].includes(status)) {
+      throw new Error('Valid status is required (Verified, Rejected, or Pending)');
+    }
+    
+    return {
+      url: `hoto_module/verify_document/${projectId}`,
+      method: "PUT",
+      headers: {
+        'Content-Type': 'application/json',
       },
-    }),
+      body: {
+        document_id: documentId,
+        status: status,
+        verify_comment: verifyComment
+      },
+    };
+  },
+}),
     generateHotoCertificate: builder.mutation({
   query: (certificateData) => ({
     url: "hoto_module/hoto_certificate",
@@ -108,8 +143,8 @@ export const hotoApi = createApi({
   }),
 }),
     fetchallHotoDocuments: builder.query({
-      query: () => ({
-        url: "hoto_module/fetch_all_documents_names",
+      query: ({projectId}) => ({
+        url: `hoto_module/fetch_all_documents_names/${projectId}`,
         method: "GET",
       }),
       transformResponse: (response) => {
@@ -121,6 +156,32 @@ export const hotoApi = createApi({
         return response;
       },
     }),
+    // Add this inside the endpoints builder, after your other endpoints
+deleteDocument: builder.mutation({
+  query: ({ projectId, documentIds }) => {
+    // Validate the projectId parameter
+    if (!projectId || isNaN(projectId)) {
+      throw new Error('Valid project ID is required');
+    }
+    
+    // Validate the documentIds parameter
+    if (!documentIds || !Array.isArray(documentIds) || documentIds.length === 0) {
+      throw new Error('Valid document IDs array is required');
+    }
+    
+    return {
+      url: `hoto_module/delete_document/${projectId}`,
+      method: "DELETE",
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: {
+        document_id: documentIds
+      },
+    };
+  },
+}),
+
   }),
 });
 
@@ -131,5 +192,6 @@ export const {
   useUploadDocumentMutation,
   useVerifyDocumentMutation,
   useGenerateHotoCertificateMutation,
-  useFetchallHotoDocumentsQuery
+  useFetchallHotoDocumentsQuery,
+  useDeleteDocumentMutation  
 } = hotoApi;

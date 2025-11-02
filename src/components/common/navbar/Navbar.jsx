@@ -11,7 +11,7 @@ function Navbar({ toggleSidebar }) {
   const { logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
+  
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
   };

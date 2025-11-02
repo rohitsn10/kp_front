@@ -19,15 +19,19 @@ import { toast } from "react-toastify";
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { useUploadDocumentMutation, useUploadMainDocumentMutation } from '../../../../api/hoto/hotoApi';
-// import { useUploadMainDocumentMutation } from '../../path/to/your/api'; // Update with your actual API path
+import { useUploadDocumentMutation } from '../../../../api/hoto/hotoApi';
+import { useParams } from 'react-router-dom';
 
 // Component for file upload modal
 const FileUploadModal = ({ open, handleClose, documentData }) => {
+  const { projectId } = useParams();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
-  console.log(">>>>",documentData)
+  
+  console.log("Project ID:", projectId);
+  console.log("Document Data:", documentData);
+  
   // Use the RTK Query mutation hook
   const [uploadDocument, { isLoading }] = useUploadDocumentMutation();
   
@@ -69,8 +73,19 @@ const FileUploadModal = ({ open, handleClose, documentData }) => {
       return;
     }
     
+    // Validate required data
     if (!documentData?.id) {
       toast.error("Missing document ID");
+      return;
+    }
+    
+    if (!documentData?.categoryId) {
+      toast.error("Missing category ID");
+      return;
+    }
+    
+    if (!projectId) {
+      toast.error("Missing project ID");
       return;
     }
     
@@ -85,12 +100,13 @@ const FileUploadModal = ({ open, handleClose, documentData }) => {
         formData.append('file', file);
       });
       
-      // Add document ID to the form data if needed by your API
-      // (Check if your API expects the ID in the URL or in the form data)
-      formData.append('document_id', documentData.id);
-      // console.log(documentData.id)
-      // Call the mutation with the formData
-      const response = await uploadDocument({documentId:documentData.id,formData}).unwrap();
+      // Call the mutation with all required parameters
+      const response = await uploadDocument({
+        projectId: projectId,
+        categoryId: documentData.categoryId,
+        documentId: documentData.id,
+        formData: formData
+      }).unwrap();
       
       if (response && response.status) {
         toast.success("Files uploaded successfully");
@@ -129,7 +145,7 @@ const FileUploadModal = ({ open, handleClose, documentData }) => {
         py: 2
       }}>
         <Typography variant="h6">
-          Upload Files for {documentData?.document_name}
+          Upload Files for {documentData?.name || documentData?.document_name}
         </Typography>
       </DialogTitle>
       
@@ -139,6 +155,19 @@ const FileUploadModal = ({ open, handleClose, documentData }) => {
             {uploadError}
           </Alert>
         )}
+        
+        {/* Document Info Display */}
+        <Box sx={{ mb: 2, p: 2, bgcolor: '#f8f9fa', borderRadius: '4px' }}>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Project ID:</strong> {projectId}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Category:</strong> {documentData?.categoryName || 'N/A'}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Document ID:</strong> {documentData?.id}
+          </Typography>
+        </Box>
         
         <Box 
           sx={{ 

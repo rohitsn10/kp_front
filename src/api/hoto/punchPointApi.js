@@ -22,7 +22,6 @@ export const punchPointApi = createApi({
         formData: true, // Important for file uploads
       }),
     }),
-    
     // Endpoint for submitting completed punch points (second curl)
     submitCompletedPunchPoint: builder.mutation({
       query: (formData) => ({
@@ -32,7 +31,6 @@ export const punchPointApi = createApi({
         formData: true,
       }),
     }),
-    
     // Endpoint for verifying completed punch points (third curl)
     verifyCompletedPunchPoint: builder.mutation({
       query: ({ id, formData }) => ({
@@ -42,7 +40,6 @@ export const punchPointApi = createApi({
         formData: true,
       }),
     }),
-    
     // Endpoint for getting punch point details (fourth curl)
     getAllPunchPointDetails: builder.query({
       query: (hotoId) => {

@@ -53,7 +53,7 @@ function HotoDocuments() {
     isError: HotoListErr, 
     error: HotoListError,
     refetch
-  } = useFetchallHotoDocumentsQuery();
+  } = useFetchallHotoDocumentsQuery({projectId});
 
   console.log(HotoListData);
   
@@ -395,7 +395,6 @@ function HotoDocuments() {
                           <th className="py-2 px-3 text-[#29346B] border text-left">Document ID</th>
                           <th className="py-2 px-3 text-[#29346B] border text-left">Document Name</th>
                           <th className="py-2 px-3 text-[#29346B] border text-left">Status</th>
-                          <th className="py-2 px-3 text-[#29346B] border text-left">Punch Balance</th>
                           <th className="py-2 px-3 text-[#29346B] border text-left">Remarks</th>
                           <th className="py-2 px-3 text-[#29346B] border text-left">Actions</th>
                         </tr>
@@ -409,7 +408,6 @@ function HotoDocuments() {
                             created_at: doc.created_at || new Date().toISOString(),
                             created_by_name: doc.created_by_name || 'N/A',
                             status: doc.status || 'pending',
-                            punch_point_balance: doc.punch_point_balance || 0,
                             remarks: doc.remarks || '',
                           };
                           
@@ -419,13 +417,14 @@ function HotoDocuments() {
                               <td className="py-2 px-3 border">{doc.id}</td>
                               <td className="py-2 px-3 border">{doc.name}</td>
                               <td className="py-2 px-3 border">
-                                <StatusBadge status={fullDoc.status} />
+                                {/* <StatusBadge status={fullDoc.status} /> */}
+                                {doc.is_verified ? "Verified":"Pending Verification"}
                               </td>
-                              <td className="py-2 px-3 border">
+                              {/* <td className="py-2 px-3 border">
                                 <div className="flex justify-center">
                                   <span className="font-medium">{fullDoc.punch_point_balance}</span>
                                 </div>
-                              </td>
+                              </td> */}
                               <td className="py-2 px-3 border">
                                 <div className="max-w-xs truncate">
                                   {fullDoc.remarks || "No remarks"}
@@ -552,6 +551,7 @@ function HotoDocuments() {
         open={openDetailsDialog}
         handleClose={handleCloseDetailsDialog}
         documentData={selectedDocument}
+        onDeleteSuccess={()=>{console.log("")}}
       />
       <AddDocumentModal 
         open={openAddDocumentModal}

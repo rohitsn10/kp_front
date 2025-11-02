@@ -28,6 +28,7 @@ import { useDeleteLandBankLocationMutation } from "../../api/users/landbankApi";
 import { AuthContext } from "../../context/AuthContext";
 import HodApprovalModal from "../../components/pages/Land-back/HodApprovalModal.jsx";
 
+
 function LandListing() {
   const navigate = useNavigate();
   const { data, error, isLoading, refetch } = useGetLandBankMasterQuery();
@@ -43,8 +44,9 @@ function LandListing() {
   const [selectedLand, setSelectedLand] = useState(null);
   const { permissions } = useContext(AuthContext);
 
-  useEffect(()=>{
-        const userGroup = permissions?.group?.name;
+
+  useEffect(() => {
+    const userGroups = permissions?.groups;
     const allowedGroups = [
       'ADMIN',
       'LAND_HOD_FULL',
@@ -56,57 +58,59 @@ function LandListing() {
       'PROJECT_MANAGER_FULL',
       'PROJECT_ENGINEER_FULL',
     ];
-        if (permissions && !allowedGroups.includes(userGroup)) {
-      navigate('/'); // or navigate('/home') depending on your route
+    
+    // Check if user has at least one allowed group
+    const hasAllowedGroup = userGroups?.some(group => 
+      allowedGroups.includes(group.name)
+    );
+    
+    if (permissions && !hasAllowedGroup) {
+      navigate('/');
     }
-  },[permissions,navigate])
+  }, [permissions, navigate]);
+
   // Check if user has LAND permissions
   const hasLandPermissions = () => {
-    const userGroup = permissions?.group?.name;
+    const userGroups = permissions?.groups;
     const landGroups = [
       'LAND_HOD_FULL',
       'LAND_MANAGER_FULL',
       'LAND_SPOC_FULL',
       'LAND_AM_FULL'
     ];
-    return landGroups.includes(userGroup);
+    
+    return userGroups?.some(group => landGroups.includes(group.name));
   };
 
 
-  // const hasProjectApprovalPermissons1 = ()=>{
-  //   const userGroup = permissions?.group?.name;
-  //   const projectGroups = [
-  //     'PROJECT_HOD_FULL',
-  //     'ADMIN',
-  //   ];
-  //   return projectGroups.includes(userGroup);
-  // }
-
-
   const hasProjectApprovalPermissions = () => {
-    const userGroup = permissions?.group?.name;
+    const userGroups = permissions?.groups;
     const projectGroups = [
       'PROJECT_HOD_FULL',
       'ADMIN',
     ];
-    return projectGroups.includes(userGroup);
+    
+    return userGroups?.some(group => projectGroups.includes(group.name));
   };
 
 
-    const hasProjectViewPermissions = () => {
-    const userGroup = permissions?.group?.name;
+  const hasProjectViewPermissions = () => {
+    const userGroups = permissions?.groups;
     const projectGroups = [
       'PROJECT_HOD_FULL',
       'PROJECT_MANAGER_FULL',
       'PROJECT_ENGINEER_FULL',
       'ADMIN',
     ];
-    return projectGroups.includes(userGroup);
+    
+    return userGroups?.some(group => projectGroups.includes(group.name));
   };
+
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
+
 
 
   useEffect(() => {
@@ -116,9 +120,11 @@ function LandListing() {
   }, [open, refetch]);
 
 
+
   const handleCloseModal = () => {
     setOpenEditModal(false);
   };
+
 
 
   const handleChangeRowsPerPage = (event) => {
@@ -127,10 +133,12 @@ function LandListing() {
   };
 
 
+
   const handleApproveClick = (land) => {
     setSelectedLand(land);
     setOpenApproveModal(true);
   };
+
 
 
   const handleHodApprovalClick = (land) => {
@@ -139,9 +147,11 @@ function LandListing() {
   };
 
 
+
   const handleSfaModalClose = () => {
     setOpenSfaModal(false);
   };
+
 
 
   const handleSfaClick = (land) => {
@@ -150,10 +160,12 @@ function LandListing() {
   };
 
 
+
   const handleEditClick = (land) => {
     setSelectedLand(land);
     setOpenEditModal(true);
   };
+
 
 
   const handleDeleteClick = async (landId) => {
@@ -168,9 +180,11 @@ function LandListing() {
   };
 
 
+
   const handleHodApprovalSuccess = () => {
     refetch();
   };
+
 
 
   if (isLoading) {
@@ -180,6 +194,7 @@ function LandListing() {
       </div>
     );
   }
+
 
 
   if (error) {
@@ -193,16 +208,19 @@ function LandListing() {
   }
 
 
+
   const filteredRows =
     data?.data?.filter((row) =>
       (row?.land_name || "").toLowerCase().includes(searchQuery?.toLowerCase())
     ) || [];
 
 
+
   const currentRows = filteredRows?.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
+
 
 
   return (
@@ -214,6 +232,7 @@ function LandListing() {
             Land Listing
           </h2>
         </div>
+
 
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
@@ -235,6 +254,7 @@ function LandListing() {
           </div>
 
 
+
           <div className="w-full sm:w-auto text-center sm:text-right">
             <h3 className="text-lg sm:text-xl md:text-2xl text-[#29346B] font-medium">
               {/* Filters */}
@@ -242,6 +262,7 @@ function LandListing() {
           </div>
         </div>
       </div>
+
 
 
       {/* Responsive Table Container */}
@@ -275,6 +296,7 @@ function LandListing() {
             </TableHead>
 
 
+
             <TableBody>
               {currentRows?.map((row, index) => (
                 <TableRow key={row.id}>
@@ -288,7 +310,6 @@ function LandListing() {
                   </TableCell>
                   
                   {/* Edit Land and Delete */}
-{/* Edit Land and Delete */}
 <TableCell align="center">
   {!hasProjectViewPermissions() || hasLandPermissions() ? (
     <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
@@ -351,6 +372,7 @@ function LandListing() {
   )}
 </TableCell>
 
+
 {/* Add Documents */}
 <TableCell align="center">
   {(!row.is_land_bank_added_attachment && (!hasProjectViewPermissions() || hasLandPermissions())) ? (
@@ -381,6 +403,7 @@ function LandListing() {
     <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
   )}
 </TableCell>
+
 
 {/* Edit Documents */}
 <TableCell align="center">
@@ -413,6 +436,7 @@ function LandListing() {
   )}
 </TableCell>
 
+
 {/* View Documents - Always available for all users */}
 <TableCell align="center">
   <Button
@@ -434,6 +458,7 @@ function LandListing() {
     View
   </Button>
 </TableCell>
+
 
 {/* Approve Button */}
 <TableCell align="center">
@@ -465,6 +490,7 @@ function LandListing() {
     <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
   )}
 </TableCell>
+
 
                   {/* HOD Approval Button */}
                   {hasProjectApprovalPermissions() && (
@@ -506,6 +532,7 @@ function LandListing() {
           </Table>
 
 
+
           <TablePagination
             component="div"
             count={filteredRows.length}
@@ -520,11 +547,13 @@ function LandListing() {
       </div>
 
 
+
       {!isLoading && filteredRows.length === 0 && (
         <div className="text-center py-8">
           <p className="text-gray-500 text-lg">No land records found matching your search.</p>
         </div>
       )}
+
 
 
       {/* Modals */}
@@ -541,6 +570,7 @@ function LandListing() {
     </div>
   );
 }
+
 
 
 export default LandListing;

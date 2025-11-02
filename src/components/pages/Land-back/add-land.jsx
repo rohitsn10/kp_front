@@ -12,23 +12,29 @@ export default function AddLandDoc() {
   const navigate = useNavigate();
         const { permissions } = useContext(AuthContext);
     
-      useEffect(()=>{
-            const userGroup = permissions?.group?.name;
-        const allowedGroups = [
-          'ADMIN',
-          'LAND_HOD_FULL',
-          'LAND_MANAGER_FULL', 
-          'LAND_SPOC_FULL',
-          'LAND_AM_FULL',
-          'LAND_EXECUTIVE_FULL',
-          'PROJECT_HOD_FULL',
-          'PROJECT_MANAGER_FULL',
-          'PROJECT_ENGINEER_FULL',
-        ];
-            if (permissions && !allowedGroups.includes(userGroup)) {
-          navigate('/'); // or navigate('/home') depending on your route
-        }
-      },[permissions,navigate])
+  useEffect(() => {
+    const userGroups = permissions?.groups;
+    const allowedGroups = [
+      'ADMIN',
+      'LAND_HOD_FULL',
+      'LAND_MANAGER_FULL', 
+      'LAND_SPOC_FULL',
+      'LAND_AM_FULL',
+      'LAND_EXECUTIVE_FULL',
+      'PROJECT_HOD_FULL',
+      'PROJECT_MANAGER_FULL',
+      'PROJECT_ENGINEER_FULL',
+    ];
+    
+    // Check if user has at least one allowed group
+    const hasAllowedGroup = userGroups?.some(group => 
+      allowedGroups.includes(group.name)
+    );
+    
+    if (permissions && !hasAllowedGroup) {
+      navigate('/');
+    }
+  }, [permissions, navigate]);
   
   const [fileInputs, setFileInputs] = useState({
     dilr: [],

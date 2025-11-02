@@ -13,9 +13,14 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useAddRemarksToDocumentMutation } from '../../../../api/hoto/hotoApi';
+import { useParams } from 'react-router-dom';
+
 
 // Component for remarks dialog
 const RemarksDialog = ({ open, handleClose, documentData, onSaveRemarks }) => {
+  const { projectId } = useParams();
+  console.log(documentData);
+  
   const [remarks, setRemarks] = useState("");
   const [error, setError] = useState(null);
   
@@ -41,25 +46,28 @@ const RemarksDialog = ({ open, handleClose, documentData, onSaveRemarks }) => {
       return;
     }
     
+    if (!projectId) {
+      toast.error("Missing project ID");
+      return;
+    }
+    
     try {
       setError(null);
       
-      // Prepare the request payload
-      const remarksData = {
-        remarks: remarks.trim()
-      };
-      
-      // Call the mutation with the document ID and remarks data
+      // Call the mutation with projectId, documentId, and remarks
       const response = await addRemarksToDocument({
+        projectId: parseInt(projectId),
         documentId: documentData.id,
-        remarksData: remarksData
+        remarks: remarks.trim()
       }).unwrap();
       
       if (response && response.status) {
-        toast.success("Remarks added successfully");
+        toast.success(response.message || "Remarks added successfully");
         
-        // Call the parent callback to update the UI
-        onSaveRemarks(documentData.id, remarks);
+        // Call the parent callback to update the UI with the new data
+        if (onSaveRemarks) {
+          onSaveRemarks(response.data);
+        }
         
         // Close the dialog
         handleClose();
@@ -69,7 +77,7 @@ const RemarksDialog = ({ open, handleClose, documentData, onSaveRemarks }) => {
       }
     } catch (error) {
       console.error("Error adding remarks:", error);
-      const errorMessage = error.data?.message || "Failed to add remarks. Please try again.";
+      const errorMessage = error.data?.message || error.message || "Failed to add remarks. Please try again.";
       toast.error(errorMessage);
       setError(errorMessage);
     }
@@ -145,7 +153,7 @@ const RemarksDialog = ({ open, handleClose, documentData, onSaveRemarks }) => {
         <Button 
           onClick={handleSave}
           variant="contained"
-          disabled={isLoading}
+          disabled={isLoading || !remarks.trim()}
           startIcon={isLoading ? <CircularProgress size={20} /> : null}
           sx={{ 
             bgcolor: "#29346B", 
@@ -159,5 +167,6 @@ const RemarksDialog = ({ open, handleClose, documentData, onSaveRemarks }) => {
     </Dialog>
   );
 };
+
 
 export default RemarksDialog;
