@@ -15,8 +15,8 @@ export const punchPointApi = createApi({
   endpoints: (builder) => ({
     // Endpoint for creating punch point (first curl)
     createPunchPoint: builder.mutation({
-      query: (formData) => ({
-        url: "hoto_module/raise_punch_points",
+      query: ({ projectId, formData }) => ({
+        url: `hoto_module/raise_punch_points/${projectId}`,
         method: "POST",
         body: formData,
         formData: true, // Important for file uploads
@@ -60,7 +60,40 @@ export const punchPointApi = createApi({
         return response;
       },
     }),
+    getAllProjectPunchPoints: builder.query({
+  query: (projectId) => ({
+    url: `hoto_module/get_all_project_wise_punch_raise_completed_verify/${projectId}`,
+    method: "GET",
   }),
+}),
+    acceptRejectPunchPoint: builder.mutation({
+      query: ({ projectId, formData }) => ({
+        url: `hoto_module/accepted_rejected_punch_points/${projectId}`,
+        method: "POST",
+        body: formData,
+        formData: true, // Important for file uploads
+      }),
+    }),
+    markPunchPointCompleted: builder.mutation({
+      query: ({ projectId, formData }) => ({
+        url: `hoto_module/mark_punch_points_completed/${projectId}`,
+        method: "PUT",
+        body: formData,
+        formData: true, // Important for file uploads
+      }),
+    }),
+        verifyCompletedPunchPointNew: builder.mutation({
+      query: ({ projectId, data }) => ({
+        url: `hoto_module/verify_completed_punch_points/${projectId}`,
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }),
+    }),
+  }),
+
 });
 
 export const {
@@ -68,4 +101,8 @@ export const {
   useSubmitCompletedPunchPointMutation,
   useVerifyCompletedPunchPointMutation,
   useGetAllPunchPointDetailsQuery,
+  useGetAllProjectPunchPointsQuery,
+  useAcceptRejectPunchPointMutation,
+  useMarkPunchPointCompletedMutation,
+  useVerifyCompletedPunchPointNewMutation
 } = punchPointApi;

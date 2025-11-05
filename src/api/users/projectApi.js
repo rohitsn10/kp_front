@@ -56,6 +56,25 @@ export const projectApi = createApi({
         body,
       }),
     }),
+            uploadProjectProgress: builder.mutation({
+      query: ({ file, project_id }) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("project_id", project_id);
+
+        return {
+          url: "project_module/upload_project_progress/",
+          method: "POST",
+          body: formData,
+        };
+      },
+    }),
+        getProjectProgress: builder.query({
+      query: (projectId) => ({
+        url: `project_module/get_progress/?project_id=${projectId}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -65,5 +84,7 @@ export const {
   useUpdateMainProjectMutation,
   useDeleteMainProjectMutation,
   useGetProjectDataByIdQuery,
-  useUpdateProjectByIdMutation
+  useUpdateProjectByIdMutation,
+  useUploadProjectProgressMutation,
+  useGetProjectProgressQuery
 } = projectApi;

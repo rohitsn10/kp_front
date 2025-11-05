@@ -13,7 +13,8 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-// import { useUploadActivitySheetMutation } from '../../api/activity/activityApi'; // You'll need to create this API endpoint
+import { useUploadProjectProgressMutation } from '../../../../api/users/projectApi';
+// import { useUploadProjectProgressMutation } from '../../api/project/projectApi'; // Update path as needed
 
 // Styled component for the file input
 const VisuallyHiddenInput = styled('input')({
@@ -34,8 +35,7 @@ const ProjectActivityUploadDialog = ({ open, handleActivityClose, projectId, onS
   const [successMessage, setSuccessMessage] = useState('');
   const [showSuccessSnackbar, setShowSuccessSnackbar] = useState(false);
   
-  // const [uploadActivity, { isLoading }] = useUploadActivitySheetMutation(); // Uncomment when API is ready
-  const isLoading = false; // Temporary placeholder
+  const [uploadProgress, { isLoading }] = useUploadProjectProgressMutation();
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -64,24 +64,26 @@ const ProjectActivityUploadDialog = ({ open, handleActivityClose, projectId, onS
       return;
     }
 
+    if (!projectId) {
+      setError('Project ID is required');
+      return;
+    }
+
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('project_id', projectId);
-      
-      // const response = await uploadActivity(formData).unwrap(); // Uncomment when API is ready
-      
-      // Temporary success simulation - remove this when API is implemented
-      const response = { status: true, message: 'Activity sheet uploaded successfully!' };
+      const response = await uploadProgress({
+        file: selectedFile,
+        project_id: projectId,
+      }).unwrap();
       
       // Handle successful upload
       if (response.status === true) {
-        setSuccessMessage(response.message || 'Activity sheet uploaded successfully!');
+        const message = `${response.message} (${response.total_records} records uploaded)`;
+        setSuccessMessage(message);
         setShowSuccessSnackbar(true);
         
         // Call success callback if provided
         if (onSuccess && typeof onSuccess === 'function') {
-          onSuccess();
+          onSuccess(response);
         }
         
         // Close dialog after small delay to allow user to see success message
@@ -94,10 +96,24 @@ const ProjectActivityUploadDialog = ({ open, handleActivityClose, projectId, onS
       }
     } catch (err) {
       console.error('Error uploading activity sheet:', err);
-      // Extract error message from the response
-      const errorMessage = err.data?.message || 
-                          (err.data?.status === false ? err.data.message : null) || 
-                          'Failed to upload activity sheet. Please try again.';
+      
+      // Handle different error scenarios
+      let errorMessage = 'Failed to upload activity sheet. Please try again.';
+      
+      if (err.data) {
+        // Backend validation errors
+        if (err.data.message) {
+          errorMessage = err.data.message;
+        }
+        
+        // Handle missing headers error specifically
+        if (err.data.missing && Array.isArray(err.data.missing)) {
+          errorMessage = `Missing required headers in Excel file: ${err.data.missing.join(', ')}`;
+        }
+      } else if (err.error) {
+        // Network or other errors
+        errorMessage = err.error;
+      }
       
       setError(errorMessage);
     }
@@ -118,7 +134,7 @@ const ProjectActivityUploadDialog = ({ open, handleActivityClose, projectId, onS
     <>
       <Dialog open={open} onClose={handleDialogClose} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ bgcolor: '#29346B', color: 'white', fontWeight: 'bold' }}>
-          Upload Project Activity Sheet
+          Upload Project Progress Sheet
         </DialogTitle>
         
         <DialogContent sx={{ pt: 3, mt: 2 }}>
@@ -140,6 +156,7 @@ const ProjectActivityUploadDialog = ({ open, handleActivityClose, projectId, onS
                 variant="contained"
                 startIcon={<CloudUploadIcon />}
                 sx={{ bgcolor: '#FF8C00', '&:hover': { bgcolor: '#e67e00' } }}
+                disabled={isLoading}
               >
                 Select Excel File
                 <VisuallyHiddenInput 
@@ -153,10 +170,17 @@ const ProjectActivityUploadDialog = ({ open, handleActivityClose, projectId, onS
                 Accepts .xlsx, .xls, and .xlsm files only
               </Typography>
               
+              <Typography variant="caption" display="block" sx={{ mt: 1, color: 'text.secondary', fontStyle: 'italic' }}>
+                Required headers: Particulars, Status, Category, UOM, Qty., Days to Complete, etc.
+              </Typography>
+              
               {selectedFile && (
                 <Box sx={{ mt: 2, p: 1, bgcolor: '#e8f4f8', borderRadius: 1 }}>
                   <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
                     Selected: {selectedFile.name}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Size: {(selectedFile.size / 1024).toFixed(2)} KB
                   </Typography>
                 </Box>
               )}
@@ -179,7 +203,7 @@ const ProjectActivityUploadDialog = ({ open, handleActivityClose, projectId, onS
             sx={{ bgcolor: '#FF8C00', '&:hover': { bgcolor: '#e67e00' } }}
             startIcon={isLoading ? <CircularProgress size={20} /> : null}
           >
-            {isLoading ? 'Uploading...' : 'Upload Activity'}
+            {isLoading ? 'Uploading...' : 'Upload Progress'}
           </Button>
         </DialogActions>
       </Dialog>

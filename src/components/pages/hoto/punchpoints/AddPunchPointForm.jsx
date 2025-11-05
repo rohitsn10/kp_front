@@ -22,21 +22,17 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DescriptionIcon from '@mui/icons-material/Description';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useCreatePunchPointMutation } from '../../../../api/hoto/punchPointApi';
+import { useParams } from 'react-router-dom';
 
-// Import the RTK Query mutation hook
-// import { useCreatePunchPointMutation } from '../../services/api'; // Adjust the path based on your project structure
-
-const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
+const AddPunchPointForm = ({ open, handleClose, onSuccess }) => {
   // Initialize the mutation hook
   const [createPunchPoint, { isLoading }] = useCreatePunchPointMutation();
+  const { projectId } = useParams();
 
   const [formData, setFormData] = useState({
-    punch_file_name: '',
     punch_title: '',
     punch_description: '',
-    punch_point_raised: '',
-    closure_date: '',
-    punch_files: [] // Changed to array for multiple files
+    punch_file: [] // Changed field name to match backend
   });
 
   const [errors, setErrors] = useState({});
@@ -52,14 +48,8 @@ const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
       newErrors.punch_description = 'Description is required';
     }
     
-    if (!formData.punch_point_raised.trim()) {
-      newErrors.punch_point_raised = 'Raised points value is required';
-    } else if (isNaN(formData.punch_point_raised) || parseInt(formData.punch_point_raised) <= 0) {
-      newErrors.punch_point_raised = 'Raised points must be a positive number';
-    }
-    
-    if (formData.punch_files.length === 0) {
-      newErrors.punch_files = 'At least one file is required';
+    if (formData.punch_file.length === 0) {
+      newErrors.punch_file = 'At least one file is required';
     }
     
     setErrors(newErrors);
@@ -89,22 +79,14 @@ const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
       // Add the new files to the existing files array
       setFormData((prev) => ({
         ...prev,
-        punch_files: [...prev.punch_files, ...newFiles]
+        punch_file: [...prev.punch_file, ...newFiles]
       }));
       
-      // Auto-populate file name with first file name if not already set
-      if (!formData.punch_file_name && newFiles[0]?.name) {
-        setFormData((prev) => ({
-          ...prev,
-          punch_file_name: newFiles[0].name.split('.')[0] // Use filename without extension
-        }));
-      }
-      
       // Clear file error if it exists
-      if (errors.punch_files) {
+      if (errors.punch_file) {
         setErrors((prev) => ({
           ...prev,
-          punch_files: undefined
+          punch_file: undefined
         }));
       }
     }
@@ -116,7 +98,7 @@ const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
   const handleRemoveFile = (indexToRemove) => {
     setFormData((prev) => ({
       ...prev,
-      punch_files: prev.punch_files.filter((_, index) => index !== indexToRemove)
+      punch_file: prev.punch_file.filter((_, index) => index !== indexToRemove)
     }));
   };
   
@@ -127,60 +109,48 @@ const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
       try {
         // Create FormData object for file upload
         const submitData = new FormData();
-        submitData.append('hoto_id', hotoId);
         submitData.append('punch_title', formData.punch_title);
         submitData.append('punch_description', formData.punch_description);
-        submitData.append('punch_point_raised', formData.punch_point_raised);
         
-        // Add "Pending" as the default status
-        submitData.append('status', 'Pending');
-        
-        if (formData.closure_date) {
-          submitData.append('closure_date', formData.closure_date);
-        }
-        
-        // Append all files with the same field name for multiple file upload
-        formData.punch_files.forEach((file, index) => {
+        // Append all files with the same field name 'punch_file' for multiple file upload
+        formData.punch_file.forEach((file) => {
           submitData.append('punch_file', file);
         });
         
-        // Use the mutation hook to send the data
-        const response = await createPunchPoint(submitData).unwrap();
+        // Use the mutation hook to send the data with projectId
+        const response = await createPunchPoint({ 
+          projectId: projectId, 
+          formData: submitData 
+        }).unwrap();
+        
         console.log('Punch point created successfully:', response);
-        onSuccess();
+        
+        if (onSuccess) {
+          onSuccess();
+        }
+        
         // Reset form and close modal on success
         resetForm();
         handleClose();
       } catch (error) {
         console.error('Failed to create punch point:', error);
         // You could display an error message here
+        setErrors({ submit: error?.data?.message || 'Failed to create punch point' });
       }
     }
   };
   
   const resetForm = () => {
     setFormData({
-      punch_file_name: '',
       punch_title: '',
       punch_description: '',
-      punch_point_raised: '',
-      closure_date: '',
-      punch_files: []
+      punch_file: []
     });
     setErrors({});
   };
   
   const handleReset = () => {
     resetForm();
-  };
-  
-  // Get current date in YYYY-MM-DD format for the date input min attribute
-  const getCurrentDate = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
   };
   
   // Helper function to format file size
@@ -228,7 +198,7 @@ const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
             {/* Title */}
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="Punch Title"
@@ -238,22 +208,7 @@ const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
                 variant="outlined"
                 error={!!errors.punch_title}
                 helperText={errors.punch_title}
-              />
-            </Grid>
-            
-            {/* Raised Points */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Punch Points Raised"
-                name="punch_point_raised"
-                value={formData.punch_point_raised}
-                onChange={handleChange}
-                variant="outlined"
-                type="number"
-                InputProps={{ inputProps: { min: 1 } }}
-                error={!!errors.punch_point_raised}
-                helperText={errors.punch_point_raised}
+                required
               />
             </Grid>
             
@@ -270,41 +225,11 @@ const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
                 rows={4}
                 error={!!errors.punch_description}
                 helperText={errors.punch_description}
+                required
               />
             </Grid>
             
-            {/* Closure Date - using standard input type="date" */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Target Closure Date"
-                name="closure_date"
-                type="date"
-                value={formData.closure_date}
-                onChange={handleChange}
-                variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                inputProps={{ min: getCurrentDate() }}
-              />
-            </Grid>
-            
-            {/* File Name */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="File Name"
-                name="punch_file_name"
-                value={formData.punch_file_name}
-                onChange={handleChange}
-                variant="outlined"
-                error={!!errors.punch_file_name}
-                helperText={errors.punch_file_name}
-                InputLabelProps={{ shrink: true }}
-                placeholder="Used for reference only"
-              />
-            </Grid>
-            
-            {/* Multiple File Upload - moved to the end */}
+            {/* Multiple File Upload */}
             <Grid item xs={12}>
               <Box
                 sx={{
@@ -315,6 +240,7 @@ const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
                   mb: 2,
                   backgroundColor: '#f8f9fa',
                   cursor: 'pointer',
+                  transition: 'all 0.3s ease',
                   '&:hover': {
                     borderColor: '#29346B',
                     backgroundColor: '#f1f3f9'
@@ -344,7 +270,7 @@ const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
               </Box>
               
               {/* Display selected files list */}
-              {formData.punch_files.length > 0 && (
+              {formData.punch_file.length > 0 && (
                 <List 
                   sx={{ 
                     bgcolor: '#f5f5f5', 
@@ -354,7 +280,7 @@ const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
                     overflowY: 'auto' 
                   }}
                 >
-                  {formData.punch_files.map((file, index) => (
+                  {formData.punch_file.map((file, index) => (
                     <ListItem key={index} sx={{ py: 1 }}>
                       <ListItemIcon>
                         <DescriptionIcon color="primary" />
@@ -379,12 +305,21 @@ const AddPunchPointForm = ({ open, handleClose, hotoId,onSuccess }) => {
                 </List>
               )}
               
-              {errors.punch_files && (
-                <Typography color="error" variant="caption">
-                  {errors.punch_files}
+              {errors.punch_file && (
+                <Typography color="error" variant="caption" sx={{ mt: 1, display: 'block' }}>
+                  {errors.punch_file}
                 </Typography>
               )}
             </Grid>
+
+            {/* Display submit error if any */}
+            {errors.submit && (
+              <Grid item xs={12}>
+                <Typography color="error" variant="body2">
+                  {errors.submit}
+                </Typography>
+              </Grid>
+            )}
           </Grid>
         </form>
       </DialogContent>

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -9,255 +8,314 @@ import {
   Typography,
   Box,
   Chip,
-  Grid,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Divider,
+  Grid,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import DownloadIcon from '@mui/icons-material/Download';
+import PersonIcon from '@mui/icons-material/Person';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import DescriptionIcon from '@mui/icons-material/Description';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
-import PersonIcon from '@mui/icons-material/Person';
-import EventIcon from '@mui/icons-material/Event';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import LoopIcon from '@mui/icons-material/Loop';
 
-// Status badge component
-const StatusBadge = ({ status }) => {
-  let bgColor, textColor, icon;
+function ViewPunchPointModal({ open, handleClose, punchPoint }) {
   
-  const statusLower = status.toLowerCase();
-  
-  switch(statusLower) {
-    case 'completed':
-      bgColor = 'success.light';
-      textColor = 'success.dark';
-      icon = <CheckCircleIcon fontSize="small" />;
-      break;
-    case 'pending':
-    case 'not started':
-    case 'not_started':
-      bgColor = 'error.light';
-      textColor = 'error.dark';
-      icon = <ErrorIcon fontSize="small" />;
-      break;
-    case 'in progress':
-    case 'in_progress':
-      bgColor = 'warning.light';
-      textColor = 'warning.dark';
-      icon = <LoopIcon fontSize="small" />;
-      break;
-    case 'rejected':
-      bgColor = 'orange';
-      textColor = 'black';
-      icon = <ErrorIcon fontSize="small" />;
-      break;
-    default:
-      bgColor = 'grey.200';
-      textColor = 'grey.700';
-      icon = null;
-  }
-  
-  return (
-    <Chip 
-      icon={icon}
-      label={status} 
-      sx={{ 
-        backgroundColor: bgColor, 
-        color: textColor,
-        '& .MuiChip-icon': {
-          color: textColor
-        }
-      }} 
-    />
-  );
-};
-
-// Format date helper
-const formatDate = (isoDate) => {
-  if (!isoDate) return 'N/A';
-  const date = new Date(isoDate);
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-const ViewPunchPointModal = ({ open, handleClose, punchPointData }) => {
-  if (!punchPointData) return null;
-
-  // Function to extract filename from path
-  const getFileName = (filePath) => {
-    if (!filePath) return 'N/A';
-    return filePath.split('/').pop();
+  // Format date
+  const formatDate = (isoDate) => {
+    if (!isoDate) return 'N/A';
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
+
+  // Get status color
+  const getStatusColor = (status) => {
+    const statusLower = status?.toLowerCase() || '';
+    switch(statusLower) {
+      case 'completed':
+      case 'closed':
+        return 'success';
+      case 'open':
+      case 'pending':
+        return 'warning';
+      case 'in progress':
+      case 'in_progress':
+        return 'info';
+      case 'rejected':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  // Download file
+  const handleDownloadFile = (fileUrl) => {
+    window.open(import.meta.env.VITE_API_KEY.replace('/api/', '') + fileUrl, '_blank');
+  };
+
+  // Get file name from URL
+  const getFileName = (fileUrl) => {
+    if (!fileUrl) return 'Unknown file';
+    const parts = fileUrl.split('/');
+    return parts[parts.length - 1];
+  };
+
+  if (!punchPoint) return null;
 
   return (
     <Dialog 
       open={open} 
       onClose={handleClose}
-      fullWidth
       maxWidth="md"
+      fullWidth
       PaperProps={{
-        sx: {
-          borderRadius: '8px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-        }
+        sx: { borderRadius: '12px' }
       }}
     >
       <DialogTitle sx={{ 
-        backgroundColor: '#29346B', 
+        bgcolor: '#29346B', 
         color: 'white',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        px: 3,
-        py: 2
+        pb: 2
       }}>
-        <Typography variant="h6" component="div">
-          Punch Point Details
-        </Typography>
+        <Box>
+          <Typography variant="h6" component="div">
+            Punch Point Details
+          </Typography>
+          <Typography variant="caption" sx={{ opacity: 0.9 }}>
+            ID: #{punchPoint.id}
+          </Typography>
+        </Box>
         <IconButton
-          edge="end"
-          color="inherit"
           onClick={handleClose}
-          aria-label="close"
+          sx={{ color: 'white' }}
         >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 3 }}>
-        <Box mb={3}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                <Typography variant="h5" color="primary" fontWeight="bold">
-                  {punchPointData.punch_title}
-                </Typography>
-                <StatusBadge status={punchPointData.status} />
-              </Box>
-              <Divider sx={{ mb: 2 }} />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" color="text.secondary">
-                Description
-              </Typography>
-              <Typography variant="body1" sx={{ mb: 2, wordBreak: 'break-word' }}>
-                {punchPointData.punch_description || 'No description provided'}
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Box sx={{ mb: 2 }}>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Points Raised
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {punchPointData.punch_point_raised || 'N/A'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Balance Points
-                    </Typography>
-                    <Typography 
-                      variant="body1" 
-                      fontWeight="medium"
-                      color={parseInt(punchPointData.punch_point_balance) > 0 ? 'warning.main' : 'success.main'}
-                    >
-                      {punchPointData.punch_point_balance || 'N/A'}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Box>
-            </Grid>
-          </Grid>
+      <DialogContent sx={{ mt: 2 }}>
+        {/* Status Badge */}
+        <Box sx={{ mb: 3, display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Chip 
+            label={punchPoint.status || 'Unknown'} 
+            color={getStatusColor(punchPoint.status)}
+            sx={{ fontWeight: '600', fontSize: '0.875rem' }}
+          />
+          {punchPoint.is_verified !== null && (
+            <Chip 
+              label={punchPoint.is_verified ? 'Verified' : 'Not Verified'} 
+              color={punchPoint.is_verified ? 'success' : 'default'}
+              variant="outlined"
+              size="small"
+            />
+          )}
+          {punchPoint.is_accepted !== null && (
+            <Chip 
+              label={punchPoint.is_accepted ? 'Accepted' : 'Rejected'} 
+              color={punchPoint.is_accepted ? 'success' : 'error'}
+              variant="outlined"
+              size="small"
+            />
+          )}
         </Box>
 
-        <Box mb={3}>
-          <Typography variant="h6" color="primary" gutterBottom>
-            Attached Files
+        {/* Title */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="overline" color="textSecondary" sx={{ fontWeight: '600' }}>
+            Punch Title
           </Typography>
-          <Divider sx={{ mb: 2 }} />
-          {punchPointData.punch_file && punchPointData.punch_file.length > 0 ? (
-            <List sx={{ bgcolor: 'background.paper' }}>
-              {punchPointData.punch_file.map((file) => (
-                <ListItem key={file.id} sx={{ py: 1, px: 2, border: '1px solid', borderColor: 'divider', borderRadius: '4px', mb: 1 }}>
-                  <ListItemIcon>
-                    <AttachFileIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={getFileName(file.file)} 
-                    secondary={`Uploaded on: ${formatDate(file.created_at)}`}
-                    primaryTypographyProps={{ fontWeight: 'medium' }}
-                  />
-                </ListItem>
+          <Typography variant="h6" sx={{ mt: 0.5, color: '#29346B', fontWeight: '600' }}>
+            {punchPoint.punch_title}
+          </Typography>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Description */}
+        <Box sx={{ mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <DescriptionIcon sx={{ color: '#29346B', fontSize: '1.2rem' }} />
+            <Typography variant="subtitle2" sx={{ fontWeight: '600', color: '#29346B' }}>
+              Description
+            </Typography>
+          </Box>
+          <Typography variant="body1" sx={{ pl: 4, color: 'text.secondary' }}>
+            {punchPoint.punch_description || 'No description provided'}
+          </Typography>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Created By & Date Info */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <PersonIcon sx={{ color: '#29346B', fontSize: '1.2rem' }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: '600', color: '#29346B' }}>
+                Created By
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ pl: 4 }}>
+              {punchPoint.created_by_name || `User ${punchPoint.created_by}`}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <CalendarTodayIcon sx={{ color: '#29346B', fontSize: '1.2rem' }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: '600', color: '#29346B' }}>
+                Created Date
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ pl: 4 }}>
+              {formatDate(punchPoint.created_at)}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <PersonIcon sx={{ color: '#29346B', fontSize: '1.2rem' }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: '600', color: '#29346B' }}>
+                Updated By
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ pl: 4 }}>
+              {punchPoint.updated_by_name || `User ${punchPoint.updated_by}`}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <CalendarTodayIcon sx={{ color: '#29346B', fontSize: '1.2rem' }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: '600', color: '#29346B' }}>
+                Updated Date
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ pl: 4 }}>
+              {formatDate(punchPoint.updated_at)}
+            </Typography>
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Attached Files */}
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <AttachFileIcon sx={{ color: '#29346B', fontSize: '1.2rem' }} />
+            <Typography variant="subtitle2" sx={{ fontWeight: '600', color: '#29346B' }}>
+              Attached Files ({punchPoint.punch_file?.length || 0})
+            </Typography>
+          </Box>
+          
+          {punchPoint.punch_file && punchPoint.punch_file.length > 0 ? (
+            <Box sx={{ pl: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {punchPoint.punch_file.map((file, index) => (
+                <Box
+                  key={file.id || index}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    p: 1.5,
+                    bgcolor: '#f5f5f5',
+                    borderRadius: '8px',
+                    border: '1px solid #e0e0e0',
+                    '&:hover': {
+                      bgcolor: '#eeeeee'
+                    }
+                  }}
+                >
+                  <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis',
+                        fontWeight: '500'
+                      }}
+                    >
+                      {getFileName(file.file)}
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      Uploaded: {formatDate(file.created_at)}
+                    </Typography>
+                  </Box>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<DownloadIcon />}
+                    onClick={() => handleDownloadFile(file.file)}
+                    sx={{
+                      ml: 2,
+                      borderColor: '#29346B',
+                      color: '#29346B',
+                      '&:hover': {
+                        borderColor: '#1e2756',
+                        bgcolor: '#f0f0f0'
+                      }
+                    }}
+                  >
+                    Download
+                  </Button>
+                </Box>
               ))}
-            </List>
+            </Box>
           ) : (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="textSecondary" sx={{ pl: 4, fontStyle: 'italic' }}>
               No files attached
             </Typography>
           )}
         </Box>
 
-        <Box mb={2}>
-          <Typography variant="h6" color="primary" gutterBottom>
-            Additional Information
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          <List>
-            <ListItem disablePadding sx={{ mb: 1 }}>
-              <ListItemIcon sx={{ minWidth: '40px' }}>
-                <PersonIcon color="primary" />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Created By" 
-                secondary={punchPointData.created_by_name || `User ID: ${punchPointData.created_by}`} 
-              />
-            </ListItem>
-            <ListItem disablePadding sx={{ mb: 1 }}>
-              <ListItemIcon sx={{ minWidth: '40px' }}>
-                <EventIcon color="primary" />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Created At" 
-                secondary={formatDate(punchPointData.created_at)} 
-              />
-            </ListItem>
-            <ListItem disablePadding sx={{ mb: 1 }}>
-              <ListItemIcon sx={{ minWidth: '40px' }}>
-                <EventIcon color="primary" />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Last Updated" 
-                secondary={formatDate(punchPointData.updated_at)} 
-              />
-            </ListItem>
-          </List>
-        </Box>
+        {/* Accepted/Rejected Points */}
+        {punchPoint.accepted_rejected_points && punchPoint.accepted_rejected_points.length > 0 && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: '600', color: '#29346B', mb: 2 }}>
+                Accept/Reject History
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {punchPoint.accepted_rejected_points.map((point, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      p: 2,
+                      bgcolor: '#f9f9f9',
+                      borderRadius: '8px',
+                      border: '1px solid #e0e0e0'
+                    }}
+                  >
+                    <Typography variant="body2">
+                      {/* Display accept/reject history details here */}
+                      History item {index + 1}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          </>
+        )}
       </DialogContent>
-      
-      <DialogActions sx={{ p: 2, bgcolor: 'background.default' }}>
-        <Button 
-          onClick={handleClose} 
-          variant="contained" 
-          sx={{ 
-            bgcolor: "#29346B",
-            "&:hover": { bgcolor: "#1e2756" },
-            borderRadius: "6px",
-            textTransform: "none",
-            fontWeight: "500"
+
+      <DialogActions sx={{ p: 2, bgcolor: '#f9f9f9' }}>
+        <Button
+          onClick={handleClose}
+          variant="contained"
+          sx={{
+            bgcolor: '#29346B',
+            '&:hover': {
+              bgcolor: '#1e2756'
+            }
           }}
         >
           Close
@@ -265,6 +323,6 @@ const ViewPunchPointModal = ({ open, handleClose, punchPointData }) => {
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default ViewPunchPointModal;

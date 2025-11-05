@@ -1,41 +1,117 @@
 import React, { useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { useGetProjectDataByIdQuery } from "../../../api/users/projectApi";
+import { useGetProjectDataByIdQuery, useGetProjectProgressQuery } from "../../../api/users/projectApi";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import {
-    dummyActivitiesData,
-    getProjectSummary,
-    getStatusChartData,
-    getCategoryChartData
-} from './dummyActivitiesData';
 import { exportActivitiesToExcelWithCharts } from './excelExportUtils';
 import ProjectUpdateModal from "../../../components/pages/projects/ProjectMain/ProjectUpdate";
-// import ProjectUpdate from "../project-update-details/ProjectUpdateModal";
 
 function ViewProjectDetails() {
     const { projectId } = useParams();
-    const { data: projectFetchData, error, isLoading,refetch } = useGetProjectDataByIdQuery(projectId);
+    const { data: projectFetchData, error, isLoading, refetch } = useGetProjectDataByIdQuery(projectId);
+    const { data: progressData, isLoading: progressDataLoading, isError: progressIsError, error: progressError } = useGetProjectProgressQuery(projectId);
+    
     const projectData = projectFetchData?.data;
+    const activitiesData = progressData || [];
+    
     const [activeTab, setActiveTab] = useState('overview');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
-    const [updateModal, setUpdateModal] = useState(false)
-    // Get summary data
-    const summary = getProjectSummary();
-    const statusChartData = getStatusChartData();
-    const categoryChartData = getCategoryChartData();
+    const [updateModal, setUpdateModal] = useState(false);
+
+    // Transform API data to match the component's expected format
+    const transformedActivities = useMemo(() => {
+        return activitiesData.map(activity => ({
+            id: activity.id,
+            taskName: activity.particulars,
+            status: activity.status,
+            category: activity.category,
+            uom: activity.uom,
+            totalQuantity: activity.qty,
+            completedQuantity: activity.cumulative_completed,
+            completionPercentage: activity.percent_completion * 100,
+            plannedStartDate: activity.scheduled_start_date,
+            plannedEndDate: activity.targeted_end_date,
+            actualStartDate: activity.actual_start_date,
+            actualCompletionDate: activity.actual_completion_date,
+            todayQty: activity.today_qty,
+            remarks: activity.remarks === "nan" ? "" : activity.remarks,
+            daysToDeadline: activity.days_to_deadline,
+            daysToComplete: activity.days_to_complete
+        }));
+    }, [activitiesData]);
+
+    // Calculate summary data from API
+    const summary = useMemo(() => {
+        const totalTasks = transformedActivities.length;
+        const completedTasks = transformedActivities.filter(a => a.status === 'Completed').length;
+        const wipTasks = transformedActivities.filter(a => a.status === 'WIP').length;
+        const pendingTasks = transformedActivities.filter(a => 
+            a.status === 'Yet to start' || a.status === 'Pending' || a.status === 'Yet to start/Pending'
+        ).length;
+        const serviceTasks = transformedActivities.filter(a => a.category === 'Service').length;
+        const supplyTasks = transformedActivities.filter(a => a.category === 'Supply').length;
+        const overallProgress = totalTasks > 0 
+            ? (transformedActivities.reduce((sum, a) => sum + a.completionPercentage, 0) / totalTasks).toFixed(1)
+            : 0;
+
+        return {
+            totalTasks,
+            completedTasks,
+            wipTasks,
+            pendingTasks,
+            serviceTasks,
+            supplyTasks,
+            overallProgress
+        };
+    }, [transformedActivities]);
+
+    // Generate chart data from API
+    const statusChartData = useMemo(() => {
+        const statusCounts = transformedActivities.reduce((acc, activity) => {
+            acc[activity.status] = (acc[activity.status] || 0) + 1;
+            return acc;
+        }, {});
+
+        const colorMap = {
+            'Completed': '#10B981',
+            'WIP': '#F59E0B',
+            'Yet to start': '#EF4444',
+            'Pending': '#EF4444',
+            'Yet to start/Pending': '#EF4444'
+        };
+
+        return Object.entries(statusCounts).map(([name, value]) => ({
+            name,
+            value,
+            color: colorMap[name] || '#6B7280'
+        }));
+    }, [transformedActivities]);
+
+    const categoryChartData = useMemo(() => {
+        const categoryCounts = transformedActivities.reduce((acc, activity) => {
+            acc[activity.category] = (acc[activity.category] || 0) + 1;
+            return acc;
+        }, {});
+
+        return Object.entries(categoryCounts).map(([name, value]) => ({
+            name,
+            value
+        }));
+    }, [transformedActivities]);
 
     // Filter activities based on search and status
     const filteredActivities = useMemo(() => {
-        return dummyActivitiesData.filter(activity => {
+        return transformedActivities.filter(activity => {
             const matchesSearch = activity.taskName.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesStatus = statusFilter === 'All' || activity.status === statusFilter;
             return matchesSearch && matchesStatus;
         });
-    }, [searchTerm, statusFilter]);
+    }, [transformedActivities, searchTerm, statusFilter]);
 
     // Get unique status options for filter
-    const statusOptions = ['All', ...new Set(dummyActivitiesData.map(activity => activity.status))];
+    const statusOptions = useMemo(() => {
+        return ['All', ...new Set(transformedActivities.map(activity => activity.status))];
+    }, [transformedActivities]);
 
     // Handle Excel export
     const handleExportToExcel = async () => {
@@ -46,14 +122,16 @@ function ViewProjectDetails() {
             alert('Failed to export data. Please try again.');
         }
     };
-    const handleOpenUpdateModal = () => {
-        setUpdateModal(true)
-    }
-    const handleCloseUpdateModal = () => {
-        setUpdateModal(false)
-    }
 
-    if (isLoading) return (
+    const handleOpenUpdateModal = () => {
+        setUpdateModal(true);
+    };
+
+    const handleCloseUpdateModal = () => {
+        setUpdateModal(false);
+    };
+
+    if (isLoading || progressDataLoading) return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
@@ -62,7 +140,7 @@ function ViewProjectDetails() {
         </div>
     );
 
-    if (error) return (
+    if (error || progressIsError) return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <div className="text-center">
                 <div className="text-red-500 text-6xl mb-4">⚠️</div>
@@ -290,13 +368,13 @@ function ViewProjectDetails() {
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <ProgressBar
                                             label="Service Tasks"
-                                            completed={dummyActivitiesData.filter(t => t.category === 'Service' && t.status === 'Completed').length}
+                                            completed={transformedActivities.filter(t => t.category === 'Service' && t.status === 'Completed').length}
                                             total={summary.serviceTasks}
                                             color="bg-blue-500"
                                         />
                                         <ProgressBar
                                             label="Supply Tasks"
-                                            completed={dummyActivitiesData.filter(t => t.category === 'Supply' && t.status === 'Completed').length}
+                                            completed={transformedActivities.filter(t => t.category === 'Supply' && t.status === 'Completed').length}
                                             total={summary.supplyTasks}
                                             color="bg-purple-500"
                                         />
@@ -352,7 +430,7 @@ function ViewProjectDetails() {
                                 {/* Filter Results Summary */}
                                 <div className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
                                     <span>
-                                        Showing {filteredActivities.length} of {dummyActivitiesData.length} activities
+                                        Showing {filteredActivities.length} of {transformedActivities.length} activities
                                         {searchTerm && (
                                             <span className="ml-1">
                                                 for "<span className="font-medium text-gray-900">{searchTerm}</span>"
@@ -415,7 +493,7 @@ function ViewProjectDetails() {
                 isOpen={updateModal}
                 onClose={handleCloseUpdateModal}
                 project={projectData}
-                handleRefetch={()=>{refetch()}}
+                handleRefetch={() => { refetch() }}
             />
         </div>
     );
@@ -508,6 +586,8 @@ const ActivityCard = ({ activity }) => {
         switch (status) {
             case 'Completed': return 'bg-green-100 text-green-800 border-green-200';
             case 'WIP': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'Yet to start': return 'bg-red-100 text-red-800 border-red-200';
+            case 'Pending': return 'bg-red-100 text-red-800 border-red-200';
             case 'Yet to start/Pending': return 'bg-red-100 text-red-800 border-red-200';
             default: return 'bg-gray-100 text-gray-800 border-gray-200';
         }
