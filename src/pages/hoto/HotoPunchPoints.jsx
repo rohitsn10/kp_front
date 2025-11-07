@@ -255,7 +255,8 @@ function HotoPunchPoints() {
 
   // Check if punch point can be marked as completed (only Accepted status)
   const canMarkCompleted = (punchPoint) => {
-    return punchPoint.status?.toLowerCase() === 'accepted';
+  const status = punchPoint.status?.toLowerCase();
+  return status === 'accepted' || status === 'rework';
   };
 
   // Check if punch point can be verified (only Completed status)

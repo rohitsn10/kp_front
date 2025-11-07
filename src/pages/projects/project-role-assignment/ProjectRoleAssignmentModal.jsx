@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -15,12 +15,16 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
-import { useFetchUsersQuery } from '../../../api/users/usersApi';
-// import { useFetchUsersQuery } from "../../../api/users/usersApi";
+import { debounce } from '@mui/material/utils';
+import { useGetUserByNamesQuery } from '../../../api/users/usersApi';
+import { useAssignProjectRolesMutation } from '../../../api/users/projectApi';
+// import { useAssignProjectRolesMutation } from '../../../api/projects/projectApi'; // Import the mutation hook
+
 
 const ProjectRoleAssignmentModal = ({ open, handleClose, projectId, projectName }) => {
-  // Fetch users data
-  const { data: usersData, isLoading } = useFetchUsersQuery();
+  // State for search input
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   
   // Available roles
   const roles = [
@@ -42,16 +46,53 @@ const ProjectRoleAssignmentModal = ({ open, handleClose, projectId, projectName 
   // State for role assignments
   const [roleAssignments, setRoleAssignments] = useState({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+
+  // RTK Query mutation hook
+  const [assignProjectRoles, { isLoading: isSaving, isSuccess, isError, error: mutationError }] = useAssignProjectRolesMutation();
+
+  // Debounced search function
+  const debouncedSetSearch = useMemo(
+    () =>
+      debounce((value) => {
+        setDebouncedSearch(value);
+      }, 500),
+    []
+  );
+
+  // Fetch users with search query
+  const { data: usersData, isLoading: isLoadingUsers } = useGetUserByNamesQuery(
+    {
+      name: debouncedSearch,
+      page: 1,
+      page_size: 50
+    },
+    {
+      skip: !debouncedSearch || debouncedSearch.length < 2 // Only search if 2+ characters
+    }
+  );
 
   // Transform users data for dropdown options
-  const userOptions = usersData?.data?.map((user) => ({
-    id: user.id,
-    full_name: user.full_name,
-    email: user.email,
-    group_name: user.group_name
-  })) || [];
+  const userOptions = useMemo(() => {
+    if (!usersData?.users) return [];
+    
+    return usersData.users.map((user) => ({
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email,
+      group_name: user.group_name
+    }));
+  }, [usersData]);
+
+  // Handle search input change
+  useEffect(() => {
+    if (searchInput) {
+      debouncedSetSearch(searchInput);
+    }
+    
+    return () => {
+      debouncedSetSearch.clear();
+    };
+  }, [searchInput, debouncedSetSearch]);
 
   // Initialize role assignments
   useEffect(() => {
@@ -62,47 +103,24 @@ const ProjectRoleAssignmentModal = ({ open, handleClose, projectId, projectName 
         initialAssignments[role] = [];
       });
       setRoleAssignments(initialAssignments);
-      setError('');
-      setSuccess('');
+      setSearchInput('');
+      setDebouncedSearch('');
       
-      // Load existing assignments if available
-      loadExistingAssignments();
     }
   }, [open, projectId]);
 
-  // Mock function to load existing assignments
-  const loadExistingAssignments = async () => {
-    try {
-      setLoading(true);
+  // Handle successful mutation
+  useEffect(() => {
+    if (isSuccess) {
+      // Close modal after 2 seconds on success
+      const timer = setTimeout(() => {
+        handleClose();
+      }, 2000);
       
-      // Simulate API call - replace with actual API call
-      // const response = await fetch(`/api/projects/${projectId}/role-assignments`);
-      // const data = await response.json();
-      
-      // Mock data for demonstration
-      const mockExistingAssignments = {
-        'Project Director': [
-          { id: 14, full_name: 'Viraj', email: 'vj@gmail.com', group_name: 'Viewer' }
-        ],
-        'Manager': [
-          { id: 13, full_name: 'Kedar', email: 'kedar@gmail.com', group_name: 'Viewer' }
-        ]
-      };
-      
-      // Simulate delay
-      setTimeout(() => {
-        setRoleAssignments(prev => ({
-          ...prev,
-          ...mockExistingAssignments
-        }));
-        setLoading(false);
-      }, 1000);
-      
-    } catch (err) {
-      setError('Failed to load existing role assignments');
-      setLoading(false);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [isSuccess, handleClose]);
+
 
   // Handle role assignment change
   const handleRoleChange = (role, selectedUsers) => {
@@ -112,55 +130,27 @@ const ProjectRoleAssignmentModal = ({ open, handleClose, projectId, projectName 
     }));
   };
 
-  // Handle save assignments
+  // Handle save assignments with RTK Query mutation
   const handleSaveAssignments = async () => {
     try {
-      setLoading(true);
-      setError('');
-      
-      // Prepare payload for backend
-      const payload = {
-        project_id: projectId,
-        role_assignments: Object.entries(roleAssignments)
-          .filter(([role, users]) => users.length > 0)
-          .map(([role, users]) => ({
-            role_name: role,
-            user_ids: users.map(user => user.id),
-            users: users.map(user => ({
-              id: user.id,
-              full_name: user.full_name,
-              email: user.email
-            }))
-          }))
-      };
+      // Prepare payload in the format expected by the backend
+      const assigned_users = Object.entries(roleAssignments)
+        .filter(([role, users]) => users.length > 0)
+        .map(([role, users]) => ({
+          role: role,
+          user_ids: users.map(user => user.id)
+        }));
 
-      console.log('Payload to be sent to backend:', payload);
-      
-      // Simulate API call - replace with actual API call
-      // const response = await fetch(`/api/projects/${projectId}/assign-roles`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify(payload)
-      // });
-      
-      // Simulate success response
-      setTimeout(() => {
-        setLoading(false);
-        setSuccess('Role assignments saved successfully!');
-        
-        // Close modal after 2 seconds
-        setTimeout(() => {
-          handleClose();
-          setSuccess('');
-        }, 2000);
-      }, 1500);
+      // Call the mutation
+      await assignProjectRoles({
+        project_id: projectId,
+        assigned_users: assigned_users
+      }).unwrap();
+
+      console.log('Role assignments saved successfully!');
       
     } catch (err) {
-      setError('Failed to save role assignments. Please try again.');
-      setLoading(false);
+      console.error('Failed to save role assignments:', err);
     }
   };
 
@@ -216,25 +206,23 @@ const ProjectRoleAssignmentModal = ({ open, handleClose, projectId, projectName 
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
-        {error && (
+        {isError && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
+            {mutationError?.data?.message || 'Failed to save role assignments. Please try again.'}
           </Alert>
         )}
         
-        {success && (
+        {isSuccess && (
           <Alert severity="success" sx={{ mb: 2 }}>
-            {success}
+            Role assignments saved successfully!
           </Alert>
         )}
 
-        {loading && !success ? (
+        {loading && !isSuccess ? (
           <Box display="flex" justifyContent="center" alignItems="center" py={4}>
             <CircularProgress size={40} />
             <Typography variant="body1" sx={{ ml: 2 }}>
-              {Object.keys(roleAssignments).some(role => roleAssignments[role].length > 0) 
-                ? 'Saving role assignments...' 
-                : 'Loading existing assignments...'}
+              Loading existing assignments...
             </Typography>
           </Box>
         ) : (
@@ -257,7 +245,17 @@ const ProjectRoleAssignmentModal = ({ open, handleClose, projectId, projectName 
                       getOptionLabel={(option) => `${option.full_name} (${option.email})`}
                       value={roleAssignments[role] || []}
                       onChange={(_, selectedUsers) => handleRoleChange(role, selectedUsers)}
+                      onInputChange={(_, newInputValue) => {
+                        setSearchInput(newInputValue);
+                      }}
                       isOptionEqualToValue={(option, value) => option.id === value.id}
+                      loading={isLoadingUsers}
+                      noOptionsText={
+                        debouncedSearch.length < 2 
+                          ? "Type at least 2 characters to search" 
+                          : "No users found"
+                      }
+                      loadingText="Searching users..."
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
                           <Chip
@@ -273,10 +271,21 @@ const ProjectRoleAssignmentModal = ({ open, handleClose, projectId, projectName 
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          placeholder={`Select users for ${role}`}
+                          placeholder={`Search and select users for ${role}`}
                           variant="outlined"
                           size="small"
                           sx={inputStyles}
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <>
+                                {isLoadingUsers ? (
+                                  <CircularProgress color="inherit" size={20} />
+                                ) : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
                         />
                       )}
                       renderOption={(props, option) => (
@@ -342,7 +351,7 @@ const ProjectRoleAssignmentModal = ({ open, handleClose, projectId, projectName 
               backgroundColor: '#F9FAFB'
             }
           }}
-          disabled={loading}
+          disabled={isSaving}
         >
           Cancel
         </Button>
@@ -355,9 +364,9 @@ const ProjectRoleAssignmentModal = ({ open, handleClose, projectId, projectName 
               backgroundColor: '#1E2A5A'
             }
           }}
-          disabled={loading || Object.entries(roleAssignments).filter(([role, users]) => users.length > 0).length === 0}
+          disabled={isSaving || Object.entries(roleAssignments).filter(([role, users]) => users.length > 0).length === 0}
         >
-          {loading ? <CircularProgress size={20} color="inherit" /> : 'Save Assignments'}
+          {isSaving ? <CircularProgress size={20} color="inherit" /> : 'Save Assignments'}
         </Button>
       </DialogActions>
     </Dialog>
