@@ -40,7 +40,9 @@ const ProjectRoleAssignmentModal = ({ open, handleClose, projectId, projectName 
     'Manager',
     'Sr. Engineer',
     'Officer',
-    'Assistant Manager'
+    'Assistant Manager',
+    'Hoto Team',
+    'O&M Team'
   ];
 
   // State for role assignments

@@ -9,6 +9,8 @@ import {
   InputAdornment,
   CircularProgress,
   Alert,
+  Paper,
+  Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
@@ -16,6 +18,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import VerifiedIcon from "@mui/icons-material/Verified";
+import BlockIcon from "@mui/icons-material/Block";
 import { useParams } from 'react-router-dom';
 
 // Import the API hook and modals
@@ -25,13 +28,42 @@ import ViewPunchPointModal from '../../components/pages/hoto/punchpoints/ViewPun
 import MarkCompletedModal from '../../components/pages/hoto/punchpoints/MarkCompletedModal';
 import VerifyCompletedModal from '../../components/pages/hoto/punchpoints/VerifyCompletedModal';
 import { useGetAllProjectPunchPointsQuery } from '../../api/hoto/punchPointApi';
-// import { useGetAllProjectPunchPointsQuery } from '../../api/hoto/punchPointApi';
+import StatusBadge from '../../utils/statusBadge';
+import { useGetAssignedProjectRolesQuery } from '../../api/users/projectApi';
 
 function HotoPunchPoints() {
   const { projectId } = useParams();
   
+  // Fetch user roles
+  const { 
+    data: roleData,  
+    isLoading: isRoleLoading, 
+    isError: isRoleError,
+    error: roleError
+  } = useGetAssignedProjectRolesQuery(projectId);
+  
+  console.log(">>>", roleData);
+
+  // Role checking utility functions
+  const hasAccess = () => {
+    const allowedRoles = ["Project Manager", "Hoto Team", "O&M Team"];
+    const userRoles = roleData?.user_roles || [];
+    return userRoles.some(role => allowedRoles.includes(role));
+  };
+
+  const hasRole = (roleName) => {
+    const userRoles = roleData?.user_roles || [];
+    return userRoles.includes(roleName);
+  };
+
+  const hasAnyRole = (roleNames) => {
+    const userRoles = roleData?.user_roles || [];
+    return roleNames.some(role => userRoles.includes(role));
+  };
+
+  // Fetch punch points data (skip if no access)
   const { data, isLoading, isError, error, refetch } = useGetAllProjectPunchPointsQuery(projectId, {
-    skip: !projectId,
+    skip: !projectId || isRoleLoading || !hasAccess(),
   });
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -90,7 +122,7 @@ function HotoPunchPoints() {
     }
   }, [data, searchTerm, sortOption, statusFilter]);
 
-  // Add Punch Point modal handlers
+  // Modal handlers
   const handleOpenAddPunchPointModal = () => {
     setOpenAddPunchPointModal(true);
   };
@@ -99,7 +131,6 @@ function HotoPunchPoints() {
     setOpenAddPunchPointModal(false);
   };
 
-  // Accept/Reject modal handlers
   const handleOpenAcceptRejectModal = (punchPoint) => {
     setSelectedPunchPoint(punchPoint);
     setOpenAcceptRejectModal(true);
@@ -110,7 +141,6 @@ function HotoPunchPoints() {
     setSelectedPunchPoint(null);
   };
 
-  // View modal handlers
   const handleOpenViewModal = (punchPoint) => {
     setSelectedPunchPoint(punchPoint);
     setOpenViewModal(true);
@@ -121,7 +151,6 @@ function HotoPunchPoints() {
     setSelectedPunchPoint(null);
   };
 
-  // Mark Completed modal handlers
   const handleOpenMarkCompletedModal = (punchPoint) => {
     if (punchPoint.accepted_rejected_points && punchPoint.accepted_rejected_points.length > 0) {
       setSelectedCompletedPunchPoint(punchPoint.accepted_rejected_points[0]);
@@ -140,7 +169,6 @@ function HotoPunchPoints() {
     setSelectedCompletedPunchPoint(null);
   };
 
-  // Verify modal handlers
   const handleOpenVerifyModal = (punchPoint) => {
     if (punchPoint.accepted_rejected_points && punchPoint.accepted_rejected_points.length > 0) {
       setSelectedCompletedPunchPoint(punchPoint.accepted_rejected_points[0]);
@@ -182,64 +210,6 @@ function HotoPunchPoints() {
     setSortOption("all");
     setStatusFilter("all");
   };
-  
-  // Status badge component
-  const StatusBadge = ({ status }) => {
-    let bgColor, textColor, label;
-    
-    const statusLower = status?.toLowerCase() || '';
-    
-    switch(statusLower) {
-      case 'completed':
-      case 'closed':
-        bgColor = 'bg-green-100';
-        textColor = 'text-green-800';
-        label = 'Completed';
-        break;
-      case 'open':
-      case 'pending':
-        bgColor = 'bg-yellow-100';
-        textColor = 'text-yellow-800';
-        label = 'Open';
-        break;
-      case 'in progress':
-      case 'in_progress':
-        bgColor = 'bg-blue-100';
-        textColor = 'text-blue-800';
-        label = 'In Progress';
-        break;
-      case 'rejected':
-        bgColor = 'bg-red-100';
-        textColor = 'text-red-800';
-        label = 'Rejected';
-        break;
-      case 'accepted':
-        bgColor = 'bg-teal-100';
-        textColor = 'text-teal-800';
-        label = 'Accepted';
-        break;
-      case 'verified':
-        bgColor = 'bg-purple-100';
-        textColor = 'text-purple-800';
-        label = 'Verified';
-        break;
-      case 'rework':
-        bgColor = 'bg-orange-100';
-        textColor = 'text-orange-800';
-        label = 'Rework';
-        break;
-      default:
-        bgColor = 'bg-gray-100';
-        textColor = 'text-gray-800';
-        label = status || 'Unknown';
-    }
-    
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bgColor} ${textColor}`}>
-        {label}
-      </span>
-    );
-  };
 
   // Format date
   const formatDate = (isoDate) => {
@@ -250,21 +220,66 @@ function HotoPunchPoints() {
   
   // Check if punch point can be accepted/rejected (only Open status)
   const canAcceptReject = (punchPoint) => {
-    return punchPoint.status?.toLowerCase() === 'open';
+    return punchPoint?.status?.toLowerCase() === 'open';
   };
 
   // Check if punch point can be marked as completed (only Accepted status)
   const canMarkCompleted = (punchPoint) => {
-  const status = punchPoint.status?.toLowerCase();
-  return status === 'accepted' || status === 'rework';
+    const status = punchPoint?.status?.toLowerCase();
+    return status === 'accepted' || status === 'rework';
   };
 
   // Check if punch point can be verified (only Completed status)
   const canVerify = (punchPoint) => {
-    return punchPoint.status?.toLowerCase() === 'completed';
+    return punchPoint?.status?.toLowerCase() === 'completed';
   };
 
-  // Loading state
+  // Loading state for roles
+  if (isRoleLoading) {
+    return (
+      <div className="min-h-screen p-4 bg-white m-1 md:m-8 rounded-md flex items-center justify-center">
+        <CircularProgress size={60} sx={{ color: '#29346B' }} />
+      </div>
+    );
+  }
+
+  // Error state for roles
+  if (isRoleError) {
+    return (
+      <div className="min-h-screen p-4 bg-white m-1 md:m-8 rounded-md">
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {roleError?.data?.message || 'Failed to load user roles. Please try again.'}
+        </Alert>
+      </div>
+    );
+  }
+
+  // No access - Show access denied message
+  if (!hasAccess()) {
+    return (
+      <div className="min-h-screen p-4 bg-white m-1 md:m-8 rounded-md flex items-center justify-center">
+        <Paper elevation={3} sx={{ p: 4, maxWidth: 500, textAlign: 'center' }}>
+          <BlockIcon sx={{ fontSize: 80, color: '#ff5252', mb: 2 }} />
+          <Typography variant="h5" sx={{ color: '#29346B', fontWeight: 600, mb: 2 }}>
+            Access Denied
+          </Typography>
+          <Typography variant="body1" sx={{ color: '#666', mb: 2 }}>
+            You do not have permission to access this page.
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#999' }}>
+            Required roles: Project Manager, Hoto Team, or O&M Team
+          </Typography>
+          {roleData?.user_roles && roleData.user_roles.length > 0 && (
+            <Typography variant="body2" sx={{ color: '#999', mt: 2 }}>
+              Your current role(s): {roleData.user_roles.join(', ')}
+            </Typography>
+          )}
+        </Paper>
+      </div>
+    );
+  }
+
+  // Loading state for punch points
   if (isLoading) {
     return (
       <div className="min-h-screen p-4 bg-white m-1 md:m-8 rounded-md flex items-center justify-center">
@@ -273,7 +288,7 @@ function HotoPunchPoints() {
     );
   }
 
-  // Error state
+  // Error state for punch points
   if (isError) {
     return (
       <div className="min-h-screen p-4 bg-white m-1 md:m-8 rounded-md">
@@ -310,21 +325,23 @@ function HotoPunchPoints() {
             </span>
           </h3>
           
-          {/* Add Punch Point Button */}
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpenAddPunchPointModal}
-            sx={{
-              bgcolor: "#29346B",
-              "&:hover": { bgcolor: "#1e2756" },
-              borderRadius: "6px",
-              textTransform: "none",
-              fontWeight: "500"
-            }}
-          >
-            Add Punch Point
-          </Button>
+          {/* Add Punch Point Button - Only show for O&M Team */}
+          {hasAnyRole(["O&M Team", "O&M Engineer", "O&M AM", "O&M Manager", "O&M HOD"]) && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleOpenAddPunchPointModal}
+              sx={{
+                bgcolor: "#29346B",
+                "&:hover": { bgcolor: "#1e2756" },
+                borderRadius: "6px",
+                textTransform: "none",
+                fontWeight: "500"
+              }}
+            >
+              Add Punch Point
+            </Button>
+          )}
         </div>
 
         {/* Search and Filter Controls */}
@@ -420,24 +437,24 @@ function HotoPunchPoints() {
               </thead>
               <tbody>
                 {filteredItems?.map((item, index) => (
-                  <tr key={item.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                  <tr key={item?.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                     <td className="py-2 px-3 border">{index + 1}</td>
                     <td className="py-2 px-3 border">
-                      <div className="max-w-xs truncate" title={item.punch_title}>
-                        {item.punch_title}
+                      <div className="max-w-xs truncate" title={item?.punch_title}>
+                        {item?.punch_title}
                       </div>
                     </td>
                     <td className="py-2 px-3 border">
-                      <div className="max-w-xs truncate" title={item.punch_description}>
-                        {item.punch_description}
+                      <div className="max-w-xs truncate" title={item?.punch_description}>
+                        {item?.punch_description}
                       </div>
                     </td>
                     <td className="py-2 px-3 border">
-                      <StatusBadge status={item.status} />
+                      <StatusBadge status={item?.status} />
                     </td>
-                    <td className="py-2 px-3 border">{formatDate(item.created_at)}</td>
+                    <td className="py-2 px-3 border">{formatDate(item?.created_at)}</td>
                     <td className="py-2 px-3 border">
-                      {item.created_by_name || `User ${item.created_by}`}
+                      {item?.created_by_name || `User ${item?.created_by}`}
                     </td>
                     <td className="py-2 px-3 border">
                       <div className="flex flex-wrap gap-2">
@@ -457,55 +474,58 @@ function HotoPunchPoints() {
                         </Button>
                         
                         {/* Accept/Reject Button - only show for Open status */}
-                        {canAcceptReject(item) && (
-                          <Button 
-                            size="small" 
-                            variant="contained"
-                            startIcon={<CheckCircleIcon />}
-                            onClick={() => handleOpenAcceptRejectModal(item)}
-                            sx={{ 
-                              bgcolor: '#4caf50',
-                              color: 'white',
-                              '&:hover': { bgcolor: '#45a049' }
-                            }}
-                          >
-                            Accept/Reject
-                          </Button>
-                        )}
+                        {/* { && (
+                          
+                        )} */}
+{hasAnyRole(["Project Team", "Project Head", "Project Manager", "Project Engineer"]) && canAcceptReject(item) && (
+  <Button 
+    size="small" 
+    variant="contained"
+    startIcon={<CheckCircleIcon />}
+    onClick={() => handleOpenAcceptRejectModal(item)}
+    sx={{ 
+      bgcolor: '#4caf50',
+      color: 'white',
+      '&:hover': { bgcolor: '#45a049' }
+    }}
+  >
+    Accept/Reject
+  </Button>
+)}
 
                         {/* Mark Completed Button - only show for Accepted status */}
-                        {canMarkCompleted(item) && (
-                          <Button 
-                            size="small" 
-                            variant="contained"
-                            startIcon={<TaskAltIcon />}
-                            onClick={() => handleOpenMarkCompletedModal(item)}
-                            sx={{ 
-                              bgcolor: '#2196f3',
-                              color: 'white',
-                              '&:hover': { bgcolor: '#1976d2' }
-                            }}
-                          >
-                            Mark Completed
-                          </Button>
-                        )}
+{hasAnyRole(["Project Team", "Project Head", "Project Manager", "Site Engineer", "Quality Team"]) && canMarkCompleted(item) && (
+  <Button 
+    size="small" 
+    variant="contained"
+    startIcon={<TaskAltIcon />}
+    onClick={() => handleOpenMarkCompletedModal(item)}
+    sx={{ 
+      bgcolor: '#2196f3',
+      color: 'white',
+      '&:hover': { bgcolor: '#1976d2' }
+    }}
+  >
+    Mark Completed
+  </Button>
+)}
 
                         {/* Verify Button - only show for Completed status */}
-                        {canVerify(item) && (
-                          <Button 
-                            size="small" 
-                            variant="contained"
-                            startIcon={<VerifiedIcon />}
-                            onClick={() => handleOpenVerifyModal(item)}
-                            sx={{ 
-                              bgcolor: '#9c27b0',
-                              color: 'white',
-                              '&:hover': { bgcolor: '#7b1fa2' }
-                            }}
-                          >
-                            Verify
-                          </Button>
-                        )}
+{hasAnyRole(["O&M Team", "O&M Engineer", "O&M AM", "O&M Manager", "O&M HOD"]) && canVerify(item) && (
+  <Button 
+    size="small" 
+    variant="contained"
+    startIcon={<VerifiedIcon />}
+    onClick={() => handleOpenVerifyModal(item)}
+    sx={{ 
+      bgcolor: '#9c27b0',
+      color: 'white',
+      '&:hover': { bgcolor: '#7b1fa2' }
+    }}
+  >
+    Verify
+  </Button>
+)}
                       </div>
                     </td>
                   </tr>

@@ -181,7 +181,7 @@ const PermissionRow = React.memo(({
   onCheckboxChange 
 }) => {
   return (
-    <TableRow key={item.name}>
+    <TableRow>
       <TableCell sx={{ fontWeight: 500 }}>{item.name}</TableCell>
       <TableCell align="center">
         <OptimizedCheckbox
@@ -212,6 +212,16 @@ const PermissionRow = React.memo(({
         />
       </TableCell>
     </TableRow>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison function for React.memo
+  // Only re-render if the relevant states have changed
+  return (
+    prevProps.item.name === nextProps.item.name &&
+    prevProps.selectedPermissions.has(prevProps.item.add) === nextProps.selectedPermissions.has(nextProps.item.add) &&
+    prevProps.selectedPermissions.has(prevProps.item.change) === nextProps.selectedPermissions.has(nextProps.item.change) &&
+    prevProps.selectedPermissions.has(prevProps.item.delete) === nextProps.selectedPermissions.has(nextProps.item.delete) &&
+    prevProps.selectedPermissions.has(prevProps.item.view) === nextProps.selectedPermissions.has(nextProps.item.view)
   );
 });
 

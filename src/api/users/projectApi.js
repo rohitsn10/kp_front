@@ -82,6 +82,12 @@ export const projectApi = createApi({
         body: { assigned_users },
       }),
     }),
+    getAssignedProjectRoles: builder.query({
+  query: (projectId) => ({
+    url: `project_module/get_assigned_project_roles/${projectId}`,
+    method: "GET",
+  }),
+}),
   }),
 });
 
@@ -94,5 +100,6 @@ export const {
   useUpdateProjectByIdMutation,
   useUploadProjectProgressMutation,
   useGetProjectProgressQuery,
-  useAssignProjectRolesMutation
+  useAssignProjectRolesMutation,
+  useGetAssignedProjectRolesQuery  
 } = projectApi;
