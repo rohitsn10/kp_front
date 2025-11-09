@@ -88,6 +88,30 @@ export const projectApi = createApi({
     method: "GET",
   }),
 }),
+    updateProjectProgress: builder.mutation({
+      query: ({ project_id, ...body }) => ({
+        url: `project_module/update_project_progress/${project_id}`,
+        method: "PUT",
+        body,
+      }),
+    }),
+    getProjectTaskHistory: builder.query({
+  query: (projectTaskId) => ({
+    url: `project_module/get_project_task_history/${projectTaskId}`,
+    method: "GET",
+  }),
+  transformResponse: (response) => {
+    // Filter to only include cumulative_completed changes
+    const filteredData = response.data.filter(
+      (record) => record.field_name === 'cumulative_completed'
+    );
+    return {
+      ...response,
+      data: filteredData
+    };
+  },
+  keepUnusedDataFor: 0,
+}),
   }),
 });
 
@@ -101,5 +125,7 @@ export const {
   useUploadProjectProgressMutation,
   useGetProjectProgressQuery,
   useAssignProjectRolesMutation,
-  useGetAssignedProjectRolesQuery  
+  useGetAssignedProjectRolesQuery,
+  useUpdateProjectProgressMutation,
+  useGetProjectTaskHistoryQuery
 } = projectApi;
