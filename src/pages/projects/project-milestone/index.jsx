@@ -14,19 +14,58 @@ import {
   TextField,
   Button,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { useGetMilestoneQuery } from '../../../api/milestone/milestoneApi';
 import MilestoneModal from '../../../components/pages/milestones/addMilestone';
+
 function ProjectMilestonePage() {
-    const { projectId } = useParams();
+  const { projectId } = useParams();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchQuery, setSearchQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedMilestone, setSelectedMilestone] = useState(null);
-  const { data, isLoading, error ,refetch} = useGetMilestoneQuery(projectId);
+  
+  // New state for activities modal
+  const [activitiesModalOpen, setActivitiesModalOpen] = useState(false);
+  const [selectedActivities, setSelectedActivities] = useState([]);
+
+  const { data, isLoading, error, refetch } = useGetMilestoneQuery(projectId);
   const navigate = useNavigate();
+
+  // Function to open activities modal
+  const handleViewActivities = (progressDetails) => {
+    setSelectedActivities(progressDetails);
+    setActivitiesModalOpen(true);
+  };
+
+  // Function to close activities modal
+  const handleCloseActivities = () => {
+    setActivitiesModalOpen(false);
+    setSelectedActivities([]);
+  };
+
+  // Function to get status color
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'success';
+      case 'in_progress':
+        return 'primary';
+      case 'pending':
+        return 'warning';
+      default:
+        return 'default';
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -44,17 +83,14 @@ function ProjectMilestonePage() {
   }
 
   const milestoneRows = data?.data || [];
-
-  // Filter milestones based on the search query
   const filteredRows = milestoneRows.filter((row) =>
     row.milestone_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
   const currentRows = filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
-  const handleViewMilestone = (id)=>{
-    navigate(`/milestone-view/${id}`)
-  }
+  const handleViewMilestone = (id) => {
+    navigate(`/milestone-view/${id}`);
+  };
 
   return (
     <div className="bg-white p-4 md:w-[90%] lg:w-[80%] mx-auto my-8 rounded-md">
@@ -96,10 +132,9 @@ function ProjectMilestonePage() {
               <TableCell align="center">Start Date</TableCell>
               <TableCell align="center">End Date</TableCell>
               <TableCell align="center">Milestone Status</TableCell>
+              <TableCell align="center">Activities</TableCell>
               <TableCell align="center">Action</TableCell>
               <TableCell align="center">Payment</TableCell>
-              {/* <TableCell align="center">Manage Milestone</TableCell>
-              <TableCell align="center">View Milestone</TableCell> */}
             </TableRow>
           </TableHead>
 
@@ -112,72 +147,59 @@ function ProjectMilestonePage() {
                   <TableCell align="center">{row.milestone_description}</TableCell>
                   <TableCell align="center">{row.project_main_activity_name || 'N/A'}</TableCell>
                   <TableCell align="center">Sub Activity 1</TableCell>
-
-                  {/* <TableCell align="center">{row.project_sub_activity.length > 0 ? row.project_sub_activity.join(', ') : 'N/A'}</TableCell> */}
                   <TableCell align="center">{new Date(row.start_date).toLocaleDateString()}</TableCell>
                   <TableCell align="center">{new Date(row.end_date).toLocaleDateString()}</TableCell>
                   <TableCell align="center">
-                  {/* in_progress */}
-                  {/* {row.milestone_status} */}
-                  {row.milestone_status === "pending" && (
-                    <Chip variant="outlined" label="Pending" color="warning" />
-                  )}
-                  {row.milestone_status === "completed" && (
-                    <Chip variant="outlined" label="Success" color="success" />
-                  )}
-                  {row.milestone_status === "in_progress" && (
-                    <Chip variant="outlined" label="Draft" color="primary" />
-                  )}
-                  </TableCell>
-                  <TableCell align="center">
-                  {/* {row.milestone_status === 'pending' && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        // onClick={() => handleUpdateStatus(row.id, 'in_progress')}
-                      >
-                        Manage
-                      </Button>
+                    {row.milestone_status === "pending" && (
+                      <Chip variant="outlined" label="Pending" color="warning" />
                     )}
-                    {row.milestone_status === 'in_progress' && (
-                      <Button
-                        variant="contained"
-                        color="success"
-                        size="small"
-                        // onClick={() => handleUpdateStatus(row.id, 'success')}
-                        style={{ marginLeft: '10px' }}
-                      >
-                        Completed
-                      </Button>
-                    )} */}
+                    {row.milestone_status === "completed" && (
+                      <Chip variant="outlined" label="Success" color="success" />
+                    )}
+                    {row.milestone_status === "in_progress" && (
+                      <Chip variant="outlined" label="Draft" color="primary" />
+                    )}
+                  </TableCell>
+                  
+                  {/* New Activities Column */}
+                  <TableCell align="center">
                     <Button
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        onClick={() => 
-                        // handleUpdateStatus(row.id, 'in_progress')
-                        navigate(`/project/milestone-view/${row.id}`)
-                        }
-                      >
-                        Manage
-                      </Button>
+                      variant="outlined"
+                      color="info"
+                      size="small"
+                      onClick={() => handleViewActivities(row.project_progress_details)}
+                      disabled={!row.project_progress_details || row.project_progress_details.length === 0}
+                    >
+                      View Activities ({row.project_progress_details?.length || 0})
+                    </Button>
+                  </TableCell>
+
+                  <TableCell align="center">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      size="small"
+                      onClick={() => navigate(`/project/milestone-view/${row.id}`)}
+                    >
+                      Manage
+                    </Button>
                   </TableCell>
                   <TableCell align='center'>
-                    
                     <Chip 
-                    onClick={()=>{
-                      console.log(row)
-                      navigate(`/project/milestone-view/payment/${row.id}`)
-                    }} 
-                    variant="filled" label="Payment" color="success" />
-                    
+                      onClick={() => {
+                        console.log(row)
+                        navigate(`/project/milestone-view/payment/${row.id}`)
+                      }} 
+                      variant="filled" 
+                      label="Payment" 
+                      color="success" 
+                    />
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={11} align="center">
                   No milestones found
                 </TableCell>
               </TableRow>
@@ -198,6 +220,93 @@ function ProjectMilestonePage() {
           rowsPerPageOptions={[5, 10, 25]}
         />
       </TableContainer>
+
+      {/* Activities Modal */}
+      <Dialog
+        open={activitiesModalOpen}
+        onClose={handleCloseActivities}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>
+          Project Progress Activities
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseActivities}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow style={{ backgroundColor: '#F2EDED' }}>
+                  <TableCell><strong>Sr No.</strong></TableCell>
+                  <TableCell><strong>Particulars</strong></TableCell>
+                  <TableCell><strong>Status</strong></TableCell>
+                  <TableCell><strong>Category</strong></TableCell>
+                  <TableCell><strong>UOM</strong></TableCell>
+                  <TableCell><strong>Qty</strong></TableCell>
+                  <TableCell><strong>Cumulative</strong></TableCell>
+                  <TableCell><strong>Today Qty</strong></TableCell>
+                  <TableCell><strong>% Complete</strong></TableCell>
+                  <TableCell><strong>Start Date</strong></TableCell>
+                  <TableCell><strong>Target Date</strong></TableCell>
+                  <TableCell><strong>Days to Deadline</strong></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {selectedActivities.map((activity, index) => (
+                  <TableRow key={activity.id}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{activity.particulars}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={activity.status} 
+                        color={getStatusColor(activity.status)} 
+                        size="small"
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell>{activity.category}</TableCell>
+                    <TableCell>{activity.uom}</TableCell>
+                    <TableCell>{activity.qty}</TableCell>
+                    <TableCell>{activity.cumulative_completed}</TableCell>
+                    <TableCell>{activity.today_qty}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={`${activity.percent_completion}%`} 
+                        color={activity.percent_completion === 100 ? 'success' : 'default'}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>{activity.scheduled_start_date}</TableCell>
+                    <TableCell>{activity.targeted_end_date}</TableCell>
+                    <TableCell>
+                      <span style={{ color: parseInt(activity.days_to_deadline) < 0 ? 'red' : 'green' }}>
+                        {activity.days_to_deadline} days
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseActivities} color="primary" variant="contained">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <MilestoneModal
         open={open}
         setOpen={setOpen}

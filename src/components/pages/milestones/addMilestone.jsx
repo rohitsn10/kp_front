@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import Button from '@mui/material/Button';
 import { 
   Dialog, 
@@ -7,42 +7,57 @@ import {
   TextField, 
   Autocomplete, 
   CircularProgress,
-  FormHelperText 
+  FormHelperText,
+  Chip,
+  Box,
+  Typography
 } from '@mui/material';
-import { useCreateMilestoneMutation, useGetProductActivityQuery, useGetProductSubActivityQuery, useGetProductSubSubActivityQuery } from '../../../api/milestone/milestoneApi';
+import { createFilterOptions } from '@mui/material/Autocomplete';
+import { useCreateMilestoneMutation } from '../../../api/milestone/milestoneApi';
+// import { useGetProjectProgressQuery } from '../../../api/your-progress-api';
 import { toast } from 'react-toastify';
+import { useGetProjectProgressQuery } from '../../../api/users/projectApi';
+
+// Create filter with limit for performance
+const filterOptions = createFilterOptions({
+  limit: 50, // Show max 50 options at once
+  matchFrom: 'any',
+  stringify: (option) => `${option.label} ${option.status} ${option.category}`,
+});
 
 export default function MilestoneModal({ open, setOpen, refetch, projectId }) {
-  // Form state
   const [formData, setFormData] = useState({
     milestoneName: '',
     startDate: '',
     endDate: '',
     milestoneDescription: '',
     isDepended: null,
-    projectMainActivity: null,
-    selectedSubActivities: [],
-    selectedSubSubActivities: []
+    selectedProgressTasks: []
   });
 
-  // Validation state
   const [errors, setErrors] = useState({});
 
   // API hooks
   const [createMilestone, { isLoading }] = useCreateMilestoneMutation();
-  const { data: activityData, isLoading: isActivityLoading } = useGetProductActivityQuery(projectId);
-  const { data: subActivityData, isLoading: isSubActivityLoading } = useGetProductSubActivityQuery(projectId);
-  const { data: subSubActivityData, isLoading: isSubSubActivityLoading } = useGetProductSubSubActivityQuery(projectId);
+  const { 
+    data: progressData, 
+    isLoading: progressDataLoading, 
+    isError: progressIsError, 
+    error: progressError 
+  } = useGetProjectProgressQuery(projectId);
 
-  // Compute disabled states based on isDepended
-  const isActivitiesDisabled = formData.isDepended === null;
-  
-  // Only apply sequential disabling when isDepended is true
-  const isSubActivitiesDisabled = formData.isDepended === "True" ? 
-    (isActivitiesDisabled || !formData.projectMainActivity) : isActivitiesDisabled;
-  
-  const isSubSubActivitiesDisabled = formData.isDepended === "True" ? 
-    (isSubActivitiesDisabled || formData.selectedSubActivities.length === 0) : isActivitiesDisabled;
+  // Transform progress data for Autocomplete
+  const progressOptions = useMemo(() => {
+    if (!progressData) return [];
+    return progressData.map(item => ({
+      id: item.id,
+      label: item.particulars,
+      status: item.status,
+      category: item.category,
+      completion: item.percent_completion,
+      daysToDeadline: item.days_to_deadline
+    }));
+  }, [progressData]);
 
   // Handle form field changes
   const handleFieldChange = (field, value) => {
@@ -51,27 +66,8 @@ export default function MilestoneModal({ open, setOpen, refetch, projectId }) {
       [field]: value
     }));
 
-    // Only clear dependent fields when isDepended is true
-    if (field === 'isDepended') {
-      setFormData(prev => ({
-        ...prev,
-        projectMainActivity: null,
-        selectedSubActivities: [],
-        selectedSubSubActivities: []
-      }));
-    } else if (formData.isDepended === "True") {
-      if (field === 'projectMainActivity') {
-        setFormData(prev => ({
-          ...prev,
-          selectedSubActivities: [],
-          selectedSubSubActivities: []
-        }));
-      } else if (field === 'selectedSubActivities') {
-        setFormData(prev => ({
-          ...prev,
-          selectedSubSubActivities: []
-        }));
-      }
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
 
@@ -79,34 +75,30 @@ export default function MilestoneModal({ open, setOpen, refetch, projectId }) {
   const validateForm = () => {
     const newErrors = {};
     
-    // Basic required field validation
-    if (!formData.milestoneName) newErrors.milestoneName = 'Milestone name is required';
-    if (!formData.startDate) newErrors.startDate = 'Start date is required';
-    if (!formData.endDate) newErrors.endDate = 'End date is required';
+    if (!formData.milestoneName.trim()) {
+      newErrors.milestoneName = 'Milestone name is required';
+    }
+    if (!formData.startDate) {
+      newErrors.startDate = 'Start date is required';
+    }
+    if (!formData.endDate) {
+      newErrors.endDate = 'End date is required';
+    }
+    if (!formData.milestoneDescription.trim()) {
+      newErrors.milestoneDescription = 'Milestone description is required';
+    }
     
-    // Date validation
-    if (formData.startDate && formData.endDate && new Date(formData.startDate) > new Date(formData.endDate)) {
+    if (formData.startDate && formData.endDate && 
+        new Date(formData.startDate) > new Date(formData.endDate)) {
       newErrors.endDate = 'End date must be after start date';
     }
 
-    // Dependency validation
     if (formData.isDepended === null) {
       newErrors.isDepended = 'Please select whether the milestone is dependent';
     }
 
-    if (formData.isDepended === "True") {
-      // Validate all fields are selected when isDepended is true
-      if (!formData.projectMainActivity) newErrors.projectMainActivity = 'Main activity is required';
-      if (formData.selectedSubActivities.length === 0) newErrors.selectedSubActivities = 'At least one sub activity is required';
-      if (formData.selectedSubSubActivities.length === 0) newErrors.selectedSubSubActivities = 'At least one sub-sub activity is required';
-    } else if (formData.isDepended === "False") {
-      // Validate at least one activity is selected when isDepended is false
-      const hasAnyActivity = formData.projectMainActivity || 
-                           formData.selectedSubActivities.length > 0 || 
-                           formData.selectedSubSubActivities.length > 0;
-      if (!hasAnyActivity) {
-        newErrors.activitySelection = 'Please select at least one activity type when not dependent';
-      }
+    if (!Array.isArray(formData.selectedProgressTasks)) {
+      newErrors.selectedProgressTasks = 'Project tasks list is required';
     }
 
     setErrors(newErrors);
@@ -121,38 +113,34 @@ export default function MilestoneModal({ open, setOpen, refetch, projectId }) {
       endDate: '',
       milestoneDescription: '',
       isDepended: null,
-      projectMainActivity: null,
-      selectedSubActivities: [],
-      selectedSubSubActivities: []
+      selectedProgressTasks: []
     });
     setErrors({});
   };
 
-  // Handle close
   const handleClose = () => {
     setOpen(false);
     resetForm();
   };
 
-  // Handle submit
   const handleSubmit = async () => {
     if (!validateForm()) {
-      toast.error('Please fill the required data in the form.');
+      toast.error('Please fill all required fields correctly.');
       return;
     }
 
     try {
-      await createMilestone({
+      const payload = {
         project: projectId,
         milestone_name: formData.milestoneName,
         start_date: formData.startDate,
         end_date: formData.endDate,
         milestone_description: formData.milestoneDescription,
-        is_depended: formData.isDepended === "True" || "False",
-        project_main_activity: formData.projectMainActivity ? String(formData.projectMainActivity) : null,
-        project_sub_activity: formData.selectedSubActivities.map(sa => sa.id),
-        project_sub_sub_activity: formData.selectedSubSubActivities.map(ssa => ssa.id),
-      }).unwrap();
+        is_depended: formData.isDepended === "True",
+        project_progress_list: formData.selectedProgressTasks.map(task => task.id)
+      };
+
+      await createMilestone(payload).unwrap();
       
       refetch();
       resetForm();
@@ -160,12 +148,12 @@ export default function MilestoneModal({ open, setOpen, refetch, projectId }) {
       toast.success("Milestone created successfully!");
     } catch (err) {
       console.error('Error creating milestone:', err);
-      toast.error('Failed to create milestone. Please try again.');
+      toast.error(err?.data?.message || 'Failed to create milestone. Please try again.');
     }
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
       <DialogContent>
         <h2 className="text-[#29346B] text-2xl font-semibold mb-5">Add Milestone</h2>
         <div className='flex flex-col gap-3'>
@@ -181,6 +169,7 @@ export default function MilestoneModal({ open, setOpen, refetch, projectId }) {
           />
           
           <TextField
+            label="Start Date"
             type="date"
             variant="outlined"
             fullWidth
@@ -188,10 +177,12 @@ export default function MilestoneModal({ open, setOpen, refetch, projectId }) {
             onChange={(e) => handleFieldChange('startDate', e.target.value)}
             error={!!errors.startDate}
             helperText={errors.startDate}
+            InputLabelProps={{ shrink: true }}
             required
           />
           
           <TextField
+            label="End Date"
             type="date"
             variant="outlined"
             fullWidth
@@ -199,6 +190,7 @@ export default function MilestoneModal({ open, setOpen, refetch, projectId }) {
             onChange={(e) => handleFieldChange('endDate', e.target.value)}
             error={!!errors.endDate}
             helperText={errors.endDate}
+            InputLabelProps={{ shrink: true }}
             required
           />
           
@@ -210,12 +202,21 @@ export default function MilestoneModal({ open, setOpen, refetch, projectId }) {
             rows={3}
             value={formData.milestoneDescription}
             onChange={(e) => handleFieldChange('milestoneDescription', e.target.value)}
+            error={!!errors.milestoneDescription}
+            helperText={errors.milestoneDescription}
+            required
           />
           
           <Autocomplete
-            options={[{ id: "True", label: "Yes" }, { id: "False", label: "No" }]}
+            options={[
+              { id: "True", label: "Yes" }, 
+              { id: "False", label: "No" }
+            ]}
             getOptionLabel={(option) => option.label}
-            value={[{ id: "True", label: "Yes" }, { id: "False", label: "No" }].find(option => option.id === formData.isDepended) || null}
+            value={formData.isDepended ? 
+              { id: formData.isDepended, label: formData.isDepended === "True" ? "Yes" : "No" } : 
+              null
+            }
             onChange={(_, value) => handleFieldChange('isDepended', value?.id || null)}
             renderInput={(params) => (
               <TextField 
@@ -229,87 +230,98 @@ export default function MilestoneModal({ open, setOpen, refetch, projectId }) {
             )}
           />
 
-          <Autocomplete
-            options={activityData?.data?.map((activity) => ({
-              id: activity.id,
-              label: activity.activity_name,
-            })) || []}
-            getOptionLabel={(option) => option.label}
-            value={formData.projectMainActivity ? { 
-              id: formData.projectMainActivity, 
-              label: activityData?.data?.find(a => a.id === formData.projectMainActivity)?.activity_name 
-            } : null}
-            onChange={(_, value) => handleFieldChange('projectMainActivity', value?.id || null)}
-            loading={isActivityLoading}
-            disabled={isActivitiesDisabled}
-            renderInput={(params) => (
-              <TextField 
-                {...params} 
-                label="Project Main Activity" 
-                fullWidth
-                error={!!errors.projectMainActivity}
-                helperText={errors.projectMainActivity}
-                required={formData.isDepended === "True"}
-              />
-            )}
-          />
-
+          {/* Project Progress Tasks with optimized filtering */}
           <Autocomplete
             multiple
-            options={subActivityData?.data[0]?.sub_activity?.map((subActivity) => ({
-              id: subActivity.id,
-              label: subActivity.name,
-            })) || []}
+            options={progressOptions}
             getOptionLabel={(option) => option.label}
-            value={formData.selectedSubActivities}
-            onChange={(_, values) => handleFieldChange('selectedSubActivities', values)}
-            loading={isSubActivityLoading}
-            disabled={isSubActivitiesDisabled}
+            value={formData.selectedProgressTasks}
+            onChange={(_, values) => handleFieldChange('selectedProgressTasks', values)}
+            loading={progressDataLoading}
+            disabled={progressDataLoading}
+            filterOptions={filterOptions}
+            renderOption={(props, option) => (
+              <li {...props} key={option.id}>
+                <Box sx={{ width: '100%' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {option.label}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, mt: 0.5, alignItems: 'center' }}>
+                    <Chip 
+                      label={option.status} 
+                      size="small" 
+                      color={option.status === 'Completed' ? 'success' : 'default'}
+                      sx={{ height: 20, fontSize: '0.7rem' }}
+                    />
+                    <Chip 
+                      label={option.category} 
+                      size="small" 
+                      variant="outlined"
+                      sx={{ height: 20, fontSize: '0.7rem' }}
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
+                      {Math.round(option.completion * 100)}%
+                    </Typography>
+                  </Box>
+                </Box>
+              </li>
+            )}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                <Chip
+                  label={option.label}
+                  {...getTagProps({ index })}
+                  size="small"
+                  key={option.id}
+                />
+              ))
+            }
             renderInput={(params) => (
               <TextField 
                 {...params} 
-                label="Project Sub Activities" 
+                label="Project Progress Tasks" 
                 fullWidth
-                error={!!errors.selectedSubActivities}
-                helperText={errors.selectedSubActivities}
-                required={formData.isDepended === "True"}
+                error={!!errors.selectedProgressTasks}
+                helperText={
+                  errors.selectedProgressTasks || 
+                  `${formData.selectedProgressTasks.length} selected${progressOptions.length > 0 ? ` • ${progressOptions.length} total tasks • Type to search` : ''}`
+                }
+                placeholder={formData.selectedProgressTasks.length === 0 ? "Search tasks..." : ""}
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {progressDataLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
               />
             )}
+            ListboxProps={{
+              style: { maxHeight: '300px' }
+            }}
           />
 
-          <Autocomplete
-            multiple
-            options={subSubActivityData?.data?.map((subSubActivity) => ({
-              id: subSubActivity.id,
-              label: subSubActivity.sub_sub_activity_name[0],
-            })) || []}
-            getOptionLabel={(option) => option.label}
-            value={formData.selectedSubSubActivities}
-            onChange={(_, values) => handleFieldChange('selectedSubSubActivities', values)}
-            loading={isSubSubActivityLoading}
-            disabled={isSubSubActivitiesDisabled}
-            renderInput={(params) => (
-              <TextField 
-                {...params} 
-                label="Project Sub-Sub Activities" 
-                fullWidth
-                error={!!errors.selectedSubSubActivities}
-                helperText={errors.selectedSubSubActivities}
-                required={formData.isDepended === "True"}
-              />
-            )}
-          />
-
-          {errors.activitySelection && (
-            <FormHelperText error>{errors.activitySelection}</FormHelperText>
+          {progressIsError && (
+            <FormHelperText error>
+              Failed to load project progress data. Please try again.
+            </FormHelperText>
           )}
         </div>
       </DialogContent>
-      <DialogActions sx={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-        <Button onClick={handleClose} color="secondary">Cancel</Button>
+      <DialogActions sx={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', gap: 2 }}>
+        <Button 
+          onClick={handleClose} 
+          variant="outlined"
+          color="secondary"
+        >
+          Cancel
+        </Button>
         <Button
           onClick={handleSubmit}
-          disabled={isLoading}
+          disabled={isLoading || progressDataLoading}
+          variant="contained"
           style={{ backgroundColor: '#F6812D', color: '#FFFFFF', fontWeight: 'bold' }}
         >
           {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Add Milestone'}

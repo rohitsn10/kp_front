@@ -17,7 +17,6 @@ function ViewProjectDetails() {
     const { projectId } = useParams();
     const { data: projectFetchData, error, isLoading, refetch } = useGetProjectDataByIdQuery(projectId);
     const { data: progressData, isLoading: progressDataLoading, isError: progressIsError, error: progressError } = useGetProjectProgressQuery(projectId);
-    
     const projectData = projectFetchData?.data;
     const activitiesData = progressData || [];
     
