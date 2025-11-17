@@ -30,6 +30,7 @@ import { useFetchallHotoDocumentsQuery, useGetDocumentsByProjectIdQuery } from '
 import AddDocumentModal from '../../components/pages/hoto/documents-page/AddDocumentModal';
 import CertificateGenerationForm from '../../components/pages/hoto/hoto-certificate/CertificateGenerationForm';
 
+
 function HotoDocuments() {
   const { projectId } = useParams();
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,8 +69,7 @@ function HotoDocuments() {
       category.documents.map(doc => ({
         ...doc,
         categoryId: category.id,
-        categoryName: category.category,
-        // Add default values for fields that might be needed
+        categoryName: category.name, // ✅ Fixed: Changed from category.category
         created_at: doc.created_at || new Date().toISOString(),
         created_by_name: doc.created_by_name || 'N/A',
         status: doc.status || 'pending',
@@ -99,7 +99,7 @@ function HotoDocuments() {
         const searchLower = searchTerm.toLowerCase();
         docs = docs.filter(doc =>
           (doc.name && doc.name.toLowerCase().includes(searchLower)) ||
-          (category.category && category.category.toLowerCase().includes(searchLower))
+          (category.name && category.name.toLowerCase().includes(searchLower)) // ✅ Fixed: Changed from category.category
         );
       }
 
@@ -307,7 +307,7 @@ function HotoDocuments() {
                 <MenuItem value="all">All Categories</MenuItem>
                 {categories.map((cat) => (
                   <MenuItem key={cat.id} value={cat.id.toString()}>
-                    {cat.category}
+                    {cat.name} {/* ✅ Fixed: Changed from cat.category */}
                   </MenuItem>
                 ))}
               </Select>
@@ -383,7 +383,7 @@ function HotoDocuments() {
                   }}
                 >
                   <Typography variant="h6" className="text-[#29346B] font-semibold">
-                    {category.category} ({category.documents.length} documents)
+                    {category.name} ({category.documents.length} documents) {/* ✅ Fixed: Changed from category.category */}
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails sx={{ p: 0 }}>
@@ -404,7 +404,7 @@ function HotoDocuments() {
                           const fullDoc = {
                             ...doc,
                             categoryId: category.id,
-                            categoryName: category.category,
+                            categoryName: category.name, // ✅ Fixed: Changed from category.category
                             created_at: doc.created_at || new Date().toISOString(),
                             created_by_name: doc.created_by_name || 'N/A',
                             status: doc.status || 'pending',
@@ -417,14 +417,8 @@ function HotoDocuments() {
                               <td className="py-2 px-3 border">{doc.id}</td>
                               <td className="py-2 px-3 border">{doc.name}</td>
                               <td className="py-2 px-3 border">
-                                {/* <StatusBadge status={fullDoc.status} /> */}
-                                {doc.is_verified ? "Verified":"Pending Verification"}
+                                {doc.is_verified ? "Verified" : "Pending Verification"}
                               </td>
-                              {/* <td className="py-2 px-3 border">
-                                <div className="flex justify-center">
-                                  <span className="font-medium">{fullDoc.punch_point_balance}</span>
-                                </div>
-                              </td> */}
                               <td className="py-2 px-3 border">
                                 <div className="max-w-xs truncate">
                                   {fullDoc.remarks || "No remarks"}
