@@ -27,13 +27,13 @@ function ProgressActivity({transformedActivities,summary}) {
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <ProgressBar
                                             label="Service Tasks"
-                                            completed={transformedActivities.filter(t => t.category === 'Service' && t.status === 'Completed').length}
+                                            completed={transformedActivities.filter(t => t.category === 'Service' && t.status === 'completed').length}
                                             total={summary.serviceTasks}
                                             color="bg-blue-500"
                                         />
                                         <ProgressBar
                                             label="Supply Tasks"
-                                            completed={transformedActivities.filter(t => t.category === 'Supply' && t.status === 'Completed').length}
+                                            completed={transformedActivities.filter(t => t.category === 'Supply' && t.status === 'completed').length}
                                             total={summary.supplyTasks}
                                             color="bg-purple-500"
                                         />

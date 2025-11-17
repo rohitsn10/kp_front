@@ -355,42 +355,59 @@ const AddEditUserModal = ({
             </div>
           )}
 
-          {isEditMode && (
-            <div className='col-span-2 md:col-span-1'>
-              {/* Group Dropdown */}
-              <FormControl fullWidth className="mt-4">
-                <label htmlFor="group" className="block text-lg font-medium text-gray-700 mb-2">
-                  Group
-                </label>
-                {GroupLoading && <p>Loading groups...</p>}
-                {GroupError && <p className="text-red-500">Failed to load groups</p>}
-                {!GroupLoading && !GroupError && (
-                  <Select
-                    id="group"
-                    value={group}
-                    onChange={(event) => setGroup(event.target.value)}
-                    className="border rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 focus:outline-none"
-                    displayEmpty
-                    sx={{
-                      height: '50px',
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        border: 'none'
-                      }
-                    }}
-                  >
-                    <MenuItem value="" disabled>
-                      <em>Select Group</em>
+          {/* {isEditMode && (
+          <div className="col-span-2">
+            <FormControl fullWidth>
+              <label htmlFor="userRole" className="block text-lg font-medium text-gray-700 mb-2">
+                User Groups/Roles <span className="text-red-600"> *</span>
+              </label>
+              {GroupLoading && <p>Loading groups...</p>}
+              {GroupError && <p className="text-red-500">Failed to load groups</p>}
+              {!GroupLoading && !GroupError && (
+                <Select
+                  id="userRole"
+                  multiple
+                  value={userRole}
+                  onChange={handleUserRoleChange}
+                  input={<OutlinedInput />}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {getSelectedGroupNames().map((name) => (
+                        <Chip 
+                          key={name} 
+                          label={name} 
+                          size="small"
+                          sx={{
+                            backgroundColor: '#F6812D',
+                            color: 'white',
+                            '& .MuiChip-deleteIcon': {
+                              color: 'white'
+                            }
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                  MenuProps={MenuProps}
+                  className="border rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 focus:outline-none"
+                  sx={{
+                    minHeight: '50px',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      border: 'none'
+                    }
+                  }}
+                >
+                  {groupData?.data?.map((group) => (
+                    <MenuItem key={group.id} value={group.id}>
+                      <Checkbox checked={userRole.indexOf(group.id) > -1} />
+                      <ListItemText primary={group.name} />
                     </MenuItem>
-                    {groupData?.data?.map((grp) => (
-                      <MenuItem key={grp.id} value={grp.id}>
-                        {grp.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                )}
-              </FormControl>
-            </div>
-          )}
+                  ))}
+                </Select>
+              )}
+            </FormControl>
+          </div>
+          )} */}
 
           {/* Designation */}
           {isEditMode && (

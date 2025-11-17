@@ -8,16 +8,13 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useFetchUsersQuery } from "../../../../api/users/usersApi";
-import { useGetActivitiesQuery } from "../../../../api/users/projectActivityApi";
 import { useGetLandCategoriesQuery } from "../../../../api/users/categoryApi";
 import { useGetCompaniesQuery } from "../../../../api/General/company/companyApi";
-import { useGetDropdownSubActivitiesQuery } from "../../../../api/users/subActivityApi";
-import { useGetMultipleSubSubActivitiesMutation } from "../../../../api/users/multipleActivityApi";
-import { useGetApprovedLandBankMasterQuery, useGetLandBankMasterQuery } from "../../../../api/users/landbankApi";
+import { useGetApprovedLandBankMasterQuery } from "../../../../api/users/landbankApi";
 import { toast } from "react-toastify";
 import { useCreateMainProjectMutation } from "../../../../api/users/projectApi";
 import { useGetElectricityLinesQuery } from "../../../../api/General/Electricity-line/ElectricityLineApi";
-// import { useFetchUsersQuery } from '../api/userApi';
+
 function ProjectCreate({ open, handleClose, refetch }) {
   const { data: usersData, isLoading } = useFetchUsersQuery();
   const spocOptions =
@@ -26,54 +23,37 @@ function ProjectCreate({ open, handleClose, refetch }) {
       full_name: user.full_name,
     })) || [];
 
-  const { data: activitiesData, isLoading: activitiesLoading } =
-    useGetActivitiesQuery();
   const { data: companiesData, isLoading: companiesLoading } =
     useGetCompaniesQuery();
-  const [
-    getSubSubActivities,
-    { data: subSubActivitiesData, isLoading: subSubActivitiesLoading },
-  ] = useGetMultipleSubSubActivitiesMutation();
   const [createMainProject, { isError, isSuccess, error }] =
     useCreateMainProjectMutation();
   const { data } = useGetElectricityLinesQuery();
-  const electricityLineOptions = data?.data || [];
-  const activitiesFetched = activitiesData?.data || []; // Ensure we get an array
+  const transmissionLineOptions = data?.data || [];
+
   const companyOptions =
     companiesData?.data?.map((company) => ({
       id: company.id,
-      label: company.company_name, // Ensures proper display in dropdown
+      label: company.company_name,
     })) || [];
 
   const [companyName, setCompanyName] = useState("");
   const [projectName, setProjectName] = useState("");
   const [selectedLandId, setSelectedLandId] = useState(null);
-  const [projectLocation, setProjectLocation] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [codDate, setCodDate] = useState("");
   const [committedDate, setCommittedDate] = useState("");
   const [totalArea, setTotalArea] = useState("");
   const [capacity, setCapacity] = useState("");
-  const [numDays, setNumDays] = useState("");
   const [address, setAddress] = useState("");
   const [locations, setLocations] = useState([]);
-  // State for selection fields
+  
   const [projectCategory, setProjectCategory] = useState(null);
-  const [subCategory, setSubCategory] = useState(null);
-  const [activity, setActivity] = useState(null);
-  const [subActivities, setSubActivities] = useState([]);
-  // console.log("Sub categories id",subActivities)
   const [spoc, setSpoc] = useState(null);
-  const [criticalActivity, setCriticalActivity] = useState(null);
-  const [selectedMultipleActivities, setSelectedMultipleActivities] = useState(
-    []
-  );
-  const [multipleActivities, setMultipleActivities] = useState([]);
   const { data: categories } = useGetLandCategoriesQuery();
   const [ciUtility, setCiUtility] = useState(null);
   const [cppIpp, setCppIpp] = useState(null);
-  const [electricityLine, setElectricityLine] = useState(null);
+  const [transmissionLine, setTransmissionLine] = useState(null);
   const [areaError, setAreaError] = useState("");
 
   const [loiDate, setLoiDate] = useState("");
@@ -94,38 +74,44 @@ function ProjectCreate({ open, handleClose, refetch }) {
     { id: "ipp", label: "IPP" },
     { id: "drebp", label: "DREBP" },
     { id: "kusum", label: "Kusum" },
-
   ];
 
   const { data: landBankData, isLoading: LandLoading } =
     useGetApprovedLandBankMasterQuery();
-  // const [selectedLandId, setSelectedLandId] = useState(null);
   const [totalLandArea, setTotalLandArea] = useState("");
-  const [selectTotalLandArea, setSelectTotalLandArea] = useState();
+  const [remainingLand, setRemainingLand] = useState("");
+  const [landAddress,setLandAddress]=useState("");
   const landOptions =
     landBankData?.data?.map((land) => ({
       id: land.id,
       label: land.land_name,
-      totalArea: land.total_land_area,
+      totalArea: land.remaining_land_area,
+       landAddress: land.land_address, 
     })) || [];
 
   const handleLandChange = (event, value) => {
     if (value) {
       setSelectedLandId(value.id);
       setTotalLandArea(value.totalArea);
+      setLandAddress(value.land_address);
+      setAddress(value.landAddress);
       setTotalArea("");
+      setRemainingLand("");
       setAreaError("");
     } else {
       setSelectedLandId(null);
       setTotalLandArea("");
+      setLandAddress("")
       setTotalArea("");
+         setAddress("");
+      setRemainingLand("");
       setAreaError("");
     }
   };
+
   const getLineLabel = (option) => {
     if (typeof option.electricity_line === "string") {
       try {
-        // Try parsing if it's JSON-like
         const parsed = JSON.parse(option.electricity_line.replace(/'/g, '"'));
         return parsed?.name || option.electricity_line;
       } catch {
@@ -134,11 +120,13 @@ function ProjectCreate({ open, handleClose, refetch }) {
     }
     return "";
   };
+
   const handleTotalAreaChange = (e) => {
     const inputValue = e.target.value;
 
     if (inputValue === "") {
       setTotalArea("");
+      setRemainingLand("");
       setAreaError("");
       return;
     }
@@ -148,69 +136,39 @@ function ProjectCreate({ open, handleClose, refetch }) {
 
     if (isNaN(numericValue) || numericValue < 0) {
       setAreaError("Please enter a valid positive number");
+      setRemainingLand("");
     } else if (numericValue > availableArea) {
       setAreaError(
-        `Selected area cannot exceed available land area of ${availableArea}`
+        `Required area cannot exceed available land area of ${availableArea}`
       );
+      setRemainingLand("");
     } else {
       setAreaError("");
+      // Calculate Remaining Land
+      const remaining = (availableArea - numericValue).toFixed(2);
+      setRemainingLand(remaining);
     }
 
     setTotalArea(inputValue);
   };
 
-  // console.log("Multiple activities",multipleActivities);
-  // const criticalActivities = ["Critical 1", "Critical 2", "Critical 3"];
-  const { data: subActivitiesData, isLoading: subActivitiesLoading } =
-    useGetDropdownSubActivitiesQuery(activity, {
-      skip: !activity,
-    });
-
-  const subActivitiesOptions =
-    subActivitiesData?.data[0]?.sub_activity?.map((sub) => ({
-      id: sub.sub_activity_id, // FIX: Correct ID key
-      label: sub.sub_activity_name,
-    })) || [];
-
-  // console.log("sub",subActivitiesOptions);
-
-  useEffect(() => {
-    if (subActivities.length > 0) {
-      getSubSubActivities(subActivities);
-    }
-  }, [subActivities, getSubSubActivities]); // Make sure getSubSubActivities is memoized if needed
-
-
-  useEffect(() => {
-    if (subSubActivitiesData?.data) {
-      const formattedActivities = subSubActivitiesData.data.map((activity) => ({
-        id: activity?.id,
-        name: activity?.sub_sub_activity_name[0],
-      }));
-      // console.log("SUBSUB Activity",formattedActivities);
-      setMultipleActivities(formattedActivities);
-      setSelectedMultipleActivities([]);
-    }
-  }, [subSubActivitiesData]);
-
-  // console.log("Select Checkeeer",selectedMultipleActivities)
   const inputStyles = {
     "& .MuiOutlinedInput-root": {
       borderRadius: "6px",
       transition: "border 0.2s ease-in-out",
       "&:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on hover
+        borderColor: "#FACC15",
         borderBottom: "4px solid #FACC15",
       },
       "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: "#FACC15", // Ensures yellow border on focus
+        borderColor: "#FACC15",
         borderWidth: "2px",
         borderBottom: "4px solid #FACC15",
       },
     },
     "& .MuiOutlinedInput-notchedOutline": {
-      border: "1px solid #FACC15", // Default border
-      borderBottom: "4px solid #FACC15", // Maintain yellow bottom border
+      border: "1px solid #FACC15",
+      borderBottom: "4px solid #FACC15",
     },
   };
 
@@ -230,7 +188,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
       isValid = false;
     }
     if (!totalArea) {
-      toast.error("Total Area is required");
+      toast.error("Required Area is required");
       isValid = false;
     }
     if (!startDate) {
@@ -269,27 +227,14 @@ function ProjectCreate({ open, handleClose, refetch }) {
       toast.error("CPP/IPP selection is required");
       isValid = false;
     }
-    if (!electricityLine) {
-      toast.error("Electricity Line selection is required");
+    if (!transmissionLine) {
+      toast.error("Transmission Line selection is required");
       isValid = false;
     }
     if (!projectCategory) {
       toast.error("Project Category is required");
       isValid = false;
     }
-    if (!activity) {
-      toast.error("Activity selection is required");
-      isValid = false;
-    }
-    if (subActivities.length === 0) {
-      toast.error("At least one Sub Activity is required");
-      isValid = false;
-    }
-    if (selectedMultipleActivities.length === 0) {
-      toast.error("At least one Multiple Activity is required");
-      isValid = false;
-    }
-    // console.log("New new new check",selectedMultipleActivities);
     if (!spoc) {
       toast.error("SPOC selection is required");
       isValid = false;
@@ -299,11 +244,9 @@ function ProjectCreate({ open, handleClose, refetch }) {
       isValid = false;
     }
     if (!isValid) {
-      return; // Stop execution if validation fails
+      return;
     }
 
-    // Proceed with form submission if all fields are filled
-    // console.log("Form submitted successfully!");
     const submissionData = {
       company_id: companyName,
       landbank_id: selectedLandId,
@@ -312,12 +255,12 @@ function ProjectCreate({ open, handleClose, refetch }) {
       end_date: new Date(endDate).toISOString(),
       alloted_land_area: totalArea,
       available_land_area: totalLandArea,
+      remaining_land_area: remainingLand,
       cod_commission_date: new Date(codDate).toISOString(),
       capacity: capacity,
       ci_or_utility: ciUtility.id,
       cpp_or_ipp: cppIpp.id,
-      project_activity_id: activity,
-      electricity_line_id: electricityLine.id,
+      electricity_line_id: transmissionLine.id,
       spoc_user: spoc,
       address: address.trim(),
       loi_date: loiDate ? new Date(loiDate).toISOString() : null,
@@ -328,19 +271,13 @@ function ProjectCreate({ open, handleClose, refetch }) {
       location_name: Array.isArray(locations)
         ? locations.join(", ")
         : locations,
-      project_sub_activity_ids: subActivities.map(Number),
-      project_sub_sub_activity_ids: selectedMultipleActivities.map(
-        (item) => item.id
-      ),
     };
-    // console.log("Submitting form",submissionData)
+
     try {
-      const response = await createMainProject(submissionData).unwrap(); // Call mutation & unwrap response
+      const response = await createMainProject(submissionData).unwrap();
       console.log("Project Created:", response);
       refetch();
       handleClose();
-
-      // alert("Project Created Successfully!");
     } catch (err) {
       console.error("Error creating project:", err);
       alert("Failed to create project");
@@ -352,7 +289,6 @@ function ProjectCreate({ open, handleClose, refetch }) {
       setCompanyName("");
       setProjectName("");
       setSelectedLandId(null);
-      setProjectLocation("");
       setStartDate("");
       setEndDate("");
       setCodDate("");
@@ -365,18 +301,15 @@ function ProjectCreate({ open, handleClose, refetch }) {
       setPoDate("");
       setCapacityType(null);
       setProjectCategory(null);
-      setSubCategory(null);
-      setActivity(null);
-      setSubActivities([]);
       setSpoc(null);
-      setCriticalActivity(null);
-      setSelectedMultipleActivities([]);
-      setMultipleActivities([]);
       setCiUtility(null);
       setCppIpp(null);
-      setElectricityLine(null);
+      setTransmissionLine(null);
       setAreaError("");
       setLocations([]);
+      setTotalLandArea("");
+      setRemainingLand("");
+      setLandAddress("")
     }
   }, [open]);
 
@@ -396,8 +329,8 @@ function ProjectCreate({ open, handleClose, refetch }) {
               getOptionLabel={(option) => option.label}
               value={
                 companyOptions.find((comp) => comp.id === companyName) || null
-              } // Match selected value
-              onChange={(_, value) => setCompanyName(value?.id || "")} // Store only ID in state
+              }
+              onChange={(_, value) => setCompanyName(value?.id || "")}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -420,12 +353,6 @@ function ProjectCreate({ open, handleClose, refetch }) {
               sx={inputStyles}
             />
           </div>
-          {/* <div className='flex flex-col gap-2'>
-                        <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                            Project Location
-                        </label>
-                        <TextField value={projectLocation} onChange={(e) => setProjectLocation(e.target.value)} placeholder='Project Location' fullWidth sx={inputStyles} />
-                    </div> */}
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Select Land
@@ -449,7 +376,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
             {selectedLandId && (
               <div className="flex flex-col gap-2">
                 <label className="block text-[#29346B] text-lg font-semibold">
-                  Total Land Area
+                  Total Available Land
                 </label>
                 <TextField
                   value={totalLandArea}
@@ -462,7 +389,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
           </div>
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Add Total Area (Acres)
+              Required Area (Acres)
             </label>
             <TextField
               type="number"
@@ -479,6 +406,22 @@ function ProjectCreate({ open, handleClose, refetch }) {
               }}
             />
           </div>
+          {remainingLand && (
+            <div className="flex flex-col gap-2">
+              <label className="block mb-1 text-[#29346B] text-lg font-semibold">
+                Remaining Land (Acres)
+              </label>
+              <TextField
+                value={remainingLand}
+                disabled
+                fullWidth
+                sx={inputStyles}
+                InputProps={{
+                  endAdornment: <span style={{ color: '#666', fontSize: '14px' }}>acres</span>,
+                }}
+              />
+            </div>
+          )}
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Start Date
@@ -527,12 +470,6 @@ function ProjectCreate({ open, handleClose, refetch }) {
               sx={inputStyles}
             />
           </div>
-          {/* <div className='flex flex-col gap-2'>
-                        <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-                            Add Total Area
-                        </label>
-                        <TextField type='number' value={totalArea} onChange={(e) => setTotalArea(e.target.value)} placeholder='Add Total Area' fullWidth sx={inputStyles} />
-                    </div> */}
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Capacity Type
@@ -586,7 +523,6 @@ function ProjectCreate({ open, handleClose, refetch }) {
             />
           </div>
 
-          {/* CPP/IPP Dropdown */}
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               CPP/IPP
@@ -607,28 +543,27 @@ function ProjectCreate({ open, handleClose, refetch }) {
             />
           </div>
 
-          {/* Electricity Line Dropdown */}
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Electricity Line
+              Transmission Line
             </label>
 
-            {electricityLineOptions.length === 0 && !isLoading ? (
+            {transmissionLineOptions.length === 0 && !isLoading ? (
               <Typography sx={{ color: "red", fontStyle: "italic", mt: 1 }}>
-                No Electricity Line added, please add one first.
+                No Transmission Line added, please add one first.
               </Typography>
             ) : (
               <Autocomplete
-                options={electricityLineOptions}
+                options={transmissionLineOptions}
                 getOptionLabel={getLineLabel}
-                value={electricityLine}
-                onChange={(_, value) => setElectricityLine(value)}
+                value={transmissionLine}
+                onChange={(_, value) => setTransmissionLine(value)}
                 loading={isLoading}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     fullWidth
-                    placeholder="Select Electricity Line"
+                    placeholder="Select Transmission Line"
                     sx={inputStyles}
                   />
                 )}
@@ -643,7 +578,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
               options={
                 categories?.data?.map((category) => ({
                   id: category.id,
-                  label: category.category_name, // Ensure Autocomplete has a label
+                  label: category.category_name,
                 })) || []
               }
               value={projectCategory}
@@ -658,113 +593,6 @@ function ProjectCreate({ open, handleClose, refetch }) {
               )}
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Select Activity
-            </label>
-            <Autocomplete
-              options={activitiesFetched}
-              getOptionLabel={(option) => option.activity_name} // Display the activity name
-              value={
-                activitiesFetched.find((act) => act.id === activity) || null
-              } // Match selected activity
-              onChange={(_, value) => setActivity(value?.id || null)} // Store only ID
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  placeholder="Select Activity"
-                  sx={inputStyles}
-                />
-              )}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Select Sub Activities
-            </label>
-            <Autocomplete
-              multiple
-              options={subActivitiesOptions}
-              getOptionLabel={(option) => option.label}
-              value={
-                subActivitiesOptions.filter((sub) =>
-                  subActivities.includes(sub.id)
-                ) || []
-              }
-              onChange={(_, selected) =>
-                setSubActivities(selected?.map((sub) => sub.id) || [])
-              }
-              disabled={!activity}
-              loading={subActivitiesLoading}
-              isOptionEqualToValue={(option, value) => option?.id === value?.id} // Ensures correct selection
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  placeholder="Select Sub Activity"
-                  sx={inputStyles}
-                />
-              )}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="block mb-1 text-[#29346B] text-lg font-semibold">
-              Select Multiple Activities
-            </label>
-            {/* <Autocomplete
-        multiple
-        options={multipleActivities}
-        getOptionLabel={(option) => option.name || ''}
-        value={selectedMultipleActivities}
-        onChange={(_, newValue) => {
-            setSelectedMultipleActivities(newValue);
-        }}
-        isOptionEqualToValue={(option, value) => option.id === value.id}
-        disabled={subSubActivitiesLoading || multipleActivities.length === 0}
-        renderInput={(params) => (
-            <TextField 
-                {...params} 
-                fullWidth 
-                placeholder="Select Multiple Activities" 
-                sx={inputStyles}
-            />
-        )}
-    /> */}
-            <Autocomplete
-              multiple
-              options={multipleActivities}
-              getOptionLabel={(option) => option.name || ""}
-              value={selectedMultipleActivities}
-              onChange={(_, newValue) => {
-                // console.log("new check",newValue)
-                setSelectedMultipleActivities(newValue);
-              }}
-              isOptionEqualToValue={(option, value) => {
-                if (
-                  typeof value === "object" &&
-                  value !== null &&
-                  typeof option === "object" &&
-                  option !== null
-                ) {
-                  return option.id === value.id;
-                }
-                return false;
-              }}
-              disabled={
-                subSubActivitiesLoading || multipleActivities.length === 0
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  placeholder="Select Multiple Activities"
-                  sx={inputStyles} // Make sure inputStyles is defined
-                />
-              )}
-            />
-          </div>
 
           <div className="flex flex-col gap-2">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
@@ -772,9 +600,9 @@ function ProjectCreate({ open, handleClose, refetch }) {
             </label>
             <Autocomplete
               options={spocOptions}
-              getOptionLabel={(option) => option.full_name} // Display full name
+              getOptionLabel={(option) => option.full_name}
               value={spocOptions.find((user) => user.id === spoc) || null}
-              onChange={(_, selectedUser) => setSpoc(selectedUser?.id || null)} // Store only a single user ID
+              onChange={(_, selectedUser) => setSpoc(selectedUser?.id || null)}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -791,8 +619,8 @@ function ProjectCreate({ open, handleClose, refetch }) {
             </label>
             <TextField
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Enter Address"
+              // onChange={(e) => setAddress(e.target.value)}
+              disabled
               fullWidth
               multiline
               rows={3}
@@ -806,7 +634,7 @@ function ProjectCreate({ open, handleClose, refetch }) {
             <Autocomplete
               multiple
               freeSolo
-              options={[]} // You can populate this if you have location suggestions
+              options={[]}
               value={locations}
               onChange={(_, newValue) => setLocations(newValue)}
               renderInput={(params) => (
@@ -857,7 +685,6 @@ function ProjectCreate({ open, handleClose, refetch }) {
               sx={inputStyles}
             />
           </div>
-          {/* <Autocomplete options={criticalActivities} value={criticalActivity} onChange={(_, value) => setCriticalActivity(value)} renderInput={(params) => <TextField {...params} fullWidth placeholder='Select Critical Activity' sx={inputStyles} />} /> */}
         </div>
         <div className="flex flex-row justify-center my-4">
           <Button

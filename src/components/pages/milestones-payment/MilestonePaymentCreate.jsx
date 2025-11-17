@@ -6,6 +6,7 @@ import { useCreateMilestonePaymentMutation } from "../../../api/milestonePayment
 
 function AddInvoiceModal({ open, handleClose, milestoneId, refetch }) {
   const [createMilestonePayment, { isLoading }] = useCreateMilestonePaymentMutation();
+
   const [formData, setFormData] = useState({
     milestone_id: milestoneId,
     party_name: "",
@@ -13,10 +14,7 @@ function AddInvoiceModal({ open, handleClose, milestoneId, refetch }) {
     invoice_number: "",
     total_amount: "",
     gst_percentage: "",
-    gst_amount: "",  // This will now store total + GST amount
-    paid_amount: "",
-    pending_amount: "",
-    payment_date: "",
+    gst_amount: "",
     notes: "",
   });
 
@@ -29,9 +27,6 @@ function AddInvoiceModal({ open, handleClose, milestoneId, refetch }) {
       total_amount: "",
       gst_percentage: "",
       gst_amount: "",
-      paid_amount: "",
-      pending_amount: "",
-      payment_date: "",
       notes: "",
     });
   }, [open]);
@@ -42,40 +37,34 @@ function AddInvoiceModal({ open, handleClose, milestoneId, refetch }) {
     }
   }, [milestoneId]);
 
-  // Calculate total amount with GST when total amount or GST percentage changes
+  // Auto Calculate GST Total Amount
   useEffect(() => {
     if (formData.total_amount && formData.gst_percentage) {
-      const totalAmount = parseFloat(formData.total_amount);
-      const gstPercentage = parseFloat(formData.gst_percentage);
-      
-      if (!isNaN(totalAmount) && !isNaN(gstPercentage)) {
-        const gstAmount = totalAmount * gstPercentage / 100;
-        const totalWithGst = (totalAmount + gstAmount).toFixed(2);
-        
-        setFormData(prev => ({
+      const total = parseFloat(formData.total_amount);
+      const gst = parseFloat(formData.gst_percentage);
+
+      if (!isNaN(total) && !isNaN(gst)) {
+        const gstValue = (total * gst) / 100;
+        const totalWithGst = (total + gstValue).toFixed(2);
+
+        setFormData((prev) => ({
           ...prev,
-          gst_amount: totalWithGst
+          gst_amount: totalWithGst,
         }));
       }
     }
   }, [formData.total_amount, formData.gst_percentage]);
 
-  // Calculate pending amount based on total with GST and paid amount
-  useEffect(() => {
-    if (formData.gst_amount && formData.paid_amount) {
-      const totalWithGst = parseFloat(formData.gst_amount);
-      const paidAmount = parseFloat(formData.paid_amount);
-      
-      if (!isNaN(totalWithGst) && !isNaN(paidAmount)) {
-        const pendingAmount = (totalWithGst - paidAmount).toFixed(2);
-        
-        setFormData(prev => ({
-          ...prev,
-          pending_amount: pendingAmount
-        }));
+  const gstOnlyAmount = () => {
+    if (formData.total_amount && formData.gst_percentage) {
+      const total = parseFloat(formData.total_amount);
+      const gst = parseFloat(formData.gst_percentage);
+      if (!isNaN(total) && !isNaN(gst)) {
+        return (total * gst / 100).toFixed(2);
       }
     }
-  }, [formData.gst_amount, formData.paid_amount]);
+    return "0.00";
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -84,29 +73,11 @@ function AddInvoiceModal({ open, handleClose, milestoneId, refetch }) {
 
   const validateForm = () => {
     return (
-      formData.party_name.trim() !== "" &&
-      formData.po_number.trim() !== "" &&
-      formData.invoice_number.trim() !== "" &&
-      formData.total_amount !== "" &&
-      formData.gst_percentage !== "" &&
-      formData.gst_amount !== "" &&
-      formData.paid_amount !== "" &&
-      formData.pending_amount !== "" &&
-      formData.payment_date !== ""
+      formData.party_name.trim() &&
+      formData.invoice_number.trim() &&
+      formData.total_amount &&
+      formData.gst_amount
     );
-  };
-
-  // Calculate just the GST amount (for display purposes)
-  const calculateGstOnlyAmount = () => {
-    if (formData.total_amount && formData.gst_percentage) {
-      const totalAmount = parseFloat(formData.total_amount);
-      const gstPercentage = parseFloat(formData.gst_percentage);
-      
-      if (!isNaN(totalAmount) && !isNaN(gstPercentage)) {
-        return (totalAmount * gstPercentage / 100).toFixed(2);
-      }
-    }
-    return "0.00";
   };
 
   const handleSubmit = async () => {
@@ -116,7 +87,18 @@ function AddInvoiceModal({ open, handleClose, milestoneId, refetch }) {
     }
 
     try {
-      const response = await createMilestonePayment(formData).unwrap();
+      const payload = {
+        milestone_id: formData.milestone_id,
+        party_name: formData.party_name,
+        po_number: formData.po_number,
+        invoice_number: formData.invoice_number,
+        total_amount: formData.total_amount,
+        gst_amount: formData.gst_amount,
+        notes: formData.notes,
+      };
+
+      const response = await createMilestonePayment(payload).unwrap();
+
       if (response?.status) {
         toast.success("Invoice Added Successfully");
         refetch();
@@ -125,13 +107,9 @@ function AddInvoiceModal({ open, handleClose, milestoneId, refetch }) {
         toast.error(response?.message || "Failed to add invoice");
       }
     } catch (error) {
-      console.error("Error submitting invoice:", error);
       toast.error("Something went wrong");
     }
   };
-
-  // Get GST only amount for the label
-  const gstOnlyAmount = calculateGstOnlyAmount();
 
   return (
     <Dialog
@@ -144,6 +122,7 @@ function AddInvoiceModal({ open, handleClose, milestoneId, refetch }) {
       <h2 className="text-2xl my-6 text-center font-semibold text-[#29346B] mb-5">
         Add Invoice
       </h2>
+
       <DialogContent>
         <div className="mb-4">
           {[
@@ -152,21 +131,21 @@ function AddInvoiceModal({ open, handleClose, milestoneId, refetch }) {
             { label: "Invoice Number", name: "invoice_number" },
             { label: "Total Amount", name: "total_amount", type: "number" },
             { label: "GST Percentage (%)", name: "gst_percentage", type: "number" },
-            { 
-              label: `Total Amount With GST (GST: ₹${gstOnlyAmount})`, 
-              name: "gst_amount", 
-              type: "number", 
-              readOnly: true 
+            {
+              label: `Total Amount With GST (GST: ₹${gstOnlyAmount()})`,
+              name: "gst_amount",
+              type: "number",
+              readOnly: true,
             },
-            { label: "Paid Amount", name: "paid_amount", type: "number" },
-            { label: "Pending Amount", name: "pending_amount", type: "number", readOnly: true },
-            { label: "Payment Date", name: "payment_date", type: "date" },
           ].map(({ label, name, type = "text", readOnly = false }) => (
             <div key={name} className="w-full">
               <label className="block mb-1 text-[#29346B] text-lg font-semibold">
                 {label}
-                <span className="text-red-600"> *</span>
+                {name !== "po_number" && name !== "notes" && (
+                  <span className="text-red-600"> *</span>
+                )}
               </label>
+
               <input
                 type={type}
                 name={name}
@@ -174,12 +153,13 @@ function AddInvoiceModal({ open, handleClose, milestoneId, refetch }) {
                 onChange={handleChange}
                 readOnly={readOnly}
                 className={`border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none ${
-                  readOnly ? "bg-gray-100" : ""
+                  readOnly ? "bg-gray-200" : ""
                 }`}
               />
             </div>
           ))}
 
+          {/* Notes */}
           <div className="w-full">
             <label className="block mb-1 text-[#29346B] text-lg font-semibold">
               Notes
@@ -188,12 +168,13 @@ function AddInvoiceModal({ open, handleClose, milestoneId, refetch }) {
               name="notes"
               value={formData.notes}
               onChange={handleChange}
-              className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
               rows={2}
-            ></textarea>
+              className="border m-1 p-3 rounded-md w-full border-yellow-300 border-b-4 border-b-yellow-400 outline-none"
+            />
           </div>
         </div>
       </DialogContent>
+
       <DialogActions sx={{ justifyContent: "center" }}>
         <Button
           onClick={handleSubmit}

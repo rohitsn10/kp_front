@@ -477,7 +477,7 @@ function HotoPunchPoints() {
                         {/* { && (
                           
                         )} */}
-{hasAnyRole(["Project Team", "Project Head", "Project Manager", "Project Engineer"]) && canAcceptReject(item) && (
+{hasAnyRole(["Project Team", "Project Head", "Project Manager", "Project Engineer","Hoto Team"]) && canAcceptReject(item) && (
   <Button 
     size="small" 
     variant="contained"
@@ -494,7 +494,7 @@ function HotoPunchPoints() {
 )}
 
                         {/* Mark Completed Button - only show for Accepted status */}
-{hasAnyRole(["Project Team", "Project Head", "Project Manager", "Site Engineer", "Quality Team"]) && canMarkCompleted(item) && (
+{hasAnyRole(["Project Team", "Project Head", "Project Manager", "Site Engineer", "Hoto Team"]) && canMarkCompleted(item) && (
   <Button 
     size="small" 
     variant="contained"

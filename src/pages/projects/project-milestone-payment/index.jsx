@@ -13,9 +13,6 @@ import {
     Alert,
     TextField,
     Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
     IconButton,
     Tooltip
 } from '@mui/material';
@@ -24,21 +21,21 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useGetMilestonePaymentQuery } from '../../../api/milestonePayment/milestonePaymentApi';
 import AddInvoiceModal from '../../../components/pages/milestones-payment/MilestonePaymentCreate';
 import EditPaymentModal from '../../../components/pages/milestones-payment/MilestonePaymentUpdate';
-// import { useGetMilestonePaymentQuery } from '../../../api/milestone/milestonePaymentApi';
 
 function ProjectMilestonePayment() {
   const { milestoneId } = useParams();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchQuery, setSearchQuery] = useState('');
-  const { data, isLoading, error,refetch } = useGetMilestonePaymentQuery(milestoneId);
-  const [createModalOpen,setCreateModal]=useState(false);
+  const { data, isLoading, error, refetch } = useGetMilestonePaymentQuery(milestoneId);
+  const [createModalOpen, setCreateModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
 
-  const handleCreateModalClose = ()=>{
-    setCreateModal(false)
-  }
+  const handleCreateModalClose = () => {
+    setCreateModal(false);
+  };
+
   const handleEditModalOpen = (payment) => {
     setSelectedPayment(payment);
     setEditModalOpen(true);
@@ -67,9 +64,11 @@ function ProjectMilestonePayment() {
 
   const paymentRows = data?.data || [];
 
-  // Filter payments based on the search query
+  // Filter payments based on search query (party name, invoice number, or project name)
   const filteredRows = paymentRows.filter((row) =>
-    row.party_name.toLowerCase().includes(searchQuery.toLowerCase())
+    row.party_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    row.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    row.project_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const currentRows = filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
@@ -107,14 +106,14 @@ function ProjectMilestonePayment() {
           <TableHead>
             <TableRow style={{ backgroundColor: '#F2EDED' }}>
               <TableCell align="center">Sr No.</TableCell>
+              <TableCell align="center">Project Name</TableCell>
+              <TableCell align="center">Milestone Name</TableCell>
               <TableCell align="center">Party Name</TableCell>
               <TableCell align="center">Invoice Number</TableCell>
               <TableCell align="center">Total Amount</TableCell>
               <TableCell align="center">GST Amount</TableCell>
-              <TableCell align="center">Paid Amount</TableCell>
-              <TableCell align="center">Pending Amount</TableCell>
-              <TableCell align="center">Payment Date</TableCell>
               <TableCell align="center">Notes</TableCell>
+              <TableCell align="center">Created Date</TableCell>
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -124,14 +123,14 @@ function ProjectMilestonePayment() {
               currentRows.map((row, index) => (
                 <TableRow key={row.id}>
                   <TableCell align="center">{page * rowsPerPage + index + 1}</TableCell>
+                  <TableCell align="center">{row.project_name}</TableCell>
+                  <TableCell align="center">{row.milestone_name}</TableCell>
                   <TableCell align="center">{row.party_name}</TableCell>
                   <TableCell align="center">{row.invoice_number}</TableCell>
-                  <TableCell align="center">{row.total_amount}</TableCell>
-                  <TableCell align="center">{row.gst_amount}</TableCell>
-                  <TableCell align="center">{row.paid_amount}</TableCell>
-                  <TableCell align="center">{row.pending_amount}</TableCell>
-                  <TableCell align="center">{new Date(row.payment_date).toLocaleDateString()}</TableCell>
-                  <TableCell align="center">{row.notes}</TableCell>
+                  <TableCell align="center">₹{parseFloat(row.total_amount).toFixed(2)}</TableCell>
+                  <TableCell align="center">₹{parseFloat(row.gst_amount).toFixed(2)}</TableCell>
+                  <TableCell align="center">{row.notes || '-'}</TableCell>
+                  <TableCell align="center">{new Date(row.created_at).toLocaleDateString('en-IN')}</TableCell>
                   <TableCell align="center">
                     <Tooltip title="Edit Payment">
                       <IconButton
@@ -147,7 +146,7 @@ function ProjectMilestonePayment() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={9} align="center">
+                <TableCell colSpan={10} align="center">
                   No payments found
                 </TableCell>
               </TableRow>
@@ -167,21 +166,22 @@ function ProjectMilestonePayment() {
           }}
           rowsPerPageOptions={[5, 10, 25]}
         />
-        <AddInvoiceModal
-          open={createModalOpen}
-          handleClose={handleCreateModalClose}
-          milestoneId={milestoneId}
-          refetch={refetch}  
-        />
-        {selectedPayment && (
-          <EditPaymentModal
-            open={editModalOpen}
-            handleClose={handleEditModalClose}
-            paymentData={selectedPayment}
-            refetch={refetch}
-          />
-        )}
       </TableContainer>
+
+      <AddInvoiceModal
+        open={createModalOpen}
+        handleClose={handleCreateModalClose}
+        milestoneId={milestoneId}
+        refetch={refetch}  
+      />
+      {selectedPayment && (
+        <EditPaymentModal
+          open={editModalOpen}
+          handleClose={handleEditModalClose}
+          paymentData={selectedPayment}
+          refetch={refetch}
+        />
+      )}
     </div>
   );
 }

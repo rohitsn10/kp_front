@@ -43,9 +43,9 @@ function Navbar({ toggleSidebar }) {
         <div className="flex items-center space-x-3">
           <button className="p-2 text-gray-700 hover:bg-gray-100 rounded-full relative transition-colors">
             <IoNotificationsOutline size={24} />
-            <span className="absolute top-0 right-0 h-5 w-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center border-2 border-white">
-              3
-            </span>
+            {/* <span className="absolute top-0 right-0 h-5 w-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center border-2 border-white">
+              
+            </span> */}
           </button>
           
           <div className="h-8 w-px bg-gray-200 mx-1 hidden sm:block"></div>

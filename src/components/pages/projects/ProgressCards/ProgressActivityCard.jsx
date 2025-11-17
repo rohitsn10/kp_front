@@ -131,7 +131,10 @@ const ProgressActivityCards = ({ activity }) => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <div>
                     <div className="text-xs text-gray-500">Progress</div>
-                    <div className="text-sm font-semibold">{activity.completionPercentage.toFixed(1)}%</div>
+                    <div className="text-sm font-semibold">
+    {activity.totalQuantity > 0
+      ? ((activity.completedQuantity / activity.totalQuantity) * 100).toFixed(2)
+      : 0}% Completed                    </div>
                 </div>
                 <div>
                     <div className="text-xs text-gray-500">Quantity</div>
@@ -148,14 +151,20 @@ const ProgressActivityCards = ({ activity }) => {
             </div>
 
             {/* Progress Bar */}
-            <div className="mb-3">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${activity.completionPercentage}%` }}
-                    ></div>
-                </div>
-            </div>
+  <div className="mb-3 mt-2">
+    <div className="w-full bg-gray-200 rounded-full h-2">
+      <div
+        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+        style={{
+          width: `${
+            activity.totalQuantity > 0
+              ? (activity.completedQuantity / activity.totalQuantity) * 100
+              : 0
+          }%`,
+        }}
+      ></div>
+    </div>
+  </div>
 
             {activity.remarks && (
                 <div className="text-sm text-gray-600 italic mb-3">

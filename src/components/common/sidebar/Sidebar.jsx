@@ -7,6 +7,42 @@ import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import sidebarConstant from '../../../constants/sidebarRoutes.jsx';
 import { AuthContext } from '../../../context/AuthContext.jsx';
 
+// ============================================
+// PERMISSION CONFIGURATION
+// ============================================
+const TEAM_PERMISSIONS = {
+  ADMIN: ['Home', 'Land Bank', 'SFA', 'Document Management', 'User', 'Project', 
+          'Quality Assurance', 'Hoto', 'HSE', 'Design & Documents', 'Reports', 
+          'General', 'Material Management'],
+  
+  LAND_TEAM: ['Home', 'Land Bank', 'SFA', 'Reports'],
+  
+  PROJECT_TEAM: ['Land Bank', 'SFA', 'Project', 'Reports'],
+  
+  HOTO_TEAM: ['Home', 'Hoto', 'Reports']
+};
+
+// Group mappings
+const GROUP_MAPPINGS = {
+  // Admin
+  'ADMIN': 'ADMIN',
+  
+  // Land Team Groups
+  'LAND_HOD_FULL': 'LAND_TEAM',
+  'LAND_EXECUTIVE_FULL': 'LAND_TEAM',
+  'LAND_MANAGER_FULL': 'LAND_TEAM',
+  
+  // Project Team Groups
+  'PROJECT_HOD_FULL': 'PROJECT_TEAM',
+  'PROJECT_ENGINEER_FULL': 'PROJECT_TEAM',
+  'PROJECT_ENGINEER': 'PROJECT_TEAM',
+  'PROJECT_MANAGER_FULL': 'PROJECT_TEAM',
+  
+  // HOTO Team Groups
+  'HOD_TEAM': 'HOTO_TEAM',
+  'O&M_TEAM': 'HOTO_TEAM'
+};
+
 function Sidebar({ isOpen }) {
   const location = useLocation();
   const currPath = location.pathname;  
@@ -15,55 +51,73 @@ function Sidebar({ isOpen }) {
   
   console.log("Permissions>>", permissions);
   console.log("Group from permissions>>", permissions?.groups);
-  console.log(">>>>",user)
-  // Filter sidebar items based on group from permissions
-// Filter sidebar items based on groups array from permissions
-const filteredSidebarItems = useMemo(() => {
-  const userGroups = permissions?.groups;
 
-  // If no groups, return filtered sidebar (hide Land Bank and SFA)
-  if (!userGroups || userGroups.length === 0) {
+  // Determine user's teams and allowed menu items (handles multiple groups)
+  const { userTeams, allowedMenuItems } = useMemo(() => {
+    const userGroups = permissions?.groups || [];
+    
+    // If no groups, show only home
+    if (userGroups.length === 0) {
+      return { 
+        userTeams: ['NONE'], 
+        allowedMenuItems: ['Home'] 
+      };
+    }
+
+    // Extract group names from user's groups array
+    const userGroupNames = userGroups.map(group => group.name.toUpperCase());
+    
+    console.log("User Group Names>>", userGroupNames);
+
+    // Collect all teams the user belongs to
+    const teamsSet = new Set();
+    
+    // Check if user is ADMIN first (if admin, show everything)
+    if (userGroupNames.includes('ADMIN')) {
+      teamsSet.add('ADMIN');
+    } else {
+      // Check all group memberships and collect teams
+      userGroupNames.forEach(groupName => {
+        if (GROUP_MAPPINGS[groupName]) {
+          teamsSet.add(GROUP_MAPPINGS[groupName]);
+        }
+      });
+    }
+
+    const teams = Array.from(teamsSet);
+    console.log("User belongs to teams>>", teams);
+
+    // If user is ADMIN, they get all permissions
+    if (teams.includes('ADMIN')) {
+      return {
+        userTeams: teams,
+        allowedMenuItems: TEAM_PERMISSIONS.ADMIN
+      };
+    }
+
+    // Combine permissions from all teams (union of all allowed items)
+    const combinedMenuItems = new Set();
+    
+    teams.forEach(team => {
+      const teamPermissions = TEAM_PERMISSIONS[team] || [];
+      teamPermissions.forEach(item => combinedMenuItems.add(item));
+    });
+
+    const allowedItems = Array.from(combinedMenuItems);
+    console.log("Combined allowed menu items>>", allowedItems);
+    
+    return { 
+      userTeams: teams.length > 0 ? teams : ['NONE'], 
+      allowedMenuItems: allowedItems.length > 0 ? allowedItems : ['Home']
+    };
+  }, [permissions]);
+
+  // Filter sidebar items based on allowed menu items
+  const filteredSidebarItems = useMemo(() => {
     return sidebarConstant.filter(item => 
-      item.name !== 'Land Bank' && item.name !== 'SFA'
+      allowedMenuItems.includes(item.name)
     );
-  }
-
-  // Check if any group starts with 'ADMIN'
-  const hasAdminGroup = userGroups.some(group => 
-    group.name && group.name.toUpperCase().startsWith('ADMIN')
-  );
-  if (hasAdminGroup) {
-    return sidebarConstant;
-  }
-
-  // Check if any group starts with 'PROJECT'
-  const hasProjectGroup = userGroups.some(group => 
-    group.name && group.name.startsWith('PROJECT')
-  );
-  if (hasProjectGroup) {
-    return sidebarConstant.filter(item => 
-      item.name === 'Land Bank' || item.name === 'SFA' || item.name === 'Reports' || item.name === 'Project'
-    );
-  }
-
-  // Check if any group starts with 'LAND'
-  const hasLandGroup = userGroups.some(group => 
-    group.name && group.name.startsWith('LAND')
-  );
-  if (hasLandGroup) {
-    return sidebarConstant.filter(item => 
-      item.name === 'Land Bank' || item.name === 'SFA' || item.name === 'Reports'
-    );
-  }
-
-  // Otherwise, hide Land Bank and SFA
-  return sidebarConstant.filter(item => 
-    item.name !== 'Land Bank' && item.name !== 'SFA'
-  );
-}, [permissions]);
-
-
-
+  }, [allowedMenuItems]);
 
   const handleToggleDropdown = (itemName) => {
     setOpenDropdown((prev) => (prev === itemName ? null : itemName));
@@ -134,7 +188,7 @@ const filteredSidebarItems = useMemo(() => {
         </div>
         
         <div className="px-3 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Navigation
+          Navigation {userTeams[0] !== 'NONE' && `(${userTeams.join(', ')})`}
         </div>
         
         <nav className="px-3 flex-1 overflow-y-auto">

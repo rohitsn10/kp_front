@@ -50,7 +50,7 @@ function ViewProjectDetails() {
     // Calculate summary data from API
     const summary = useMemo(() => {
         const totalTasks = transformedActivities.length;
-        const completedTasks = transformedActivities.filter(a => a.status === 'Completed').length;
+        const completedTasks = transformedActivities.filter(a => a.status === 'completed').length;
         const wipTasks = transformedActivities.filter(a => a.status === 'WIP').length;
         const pendingTasks = transformedActivities.filter(a => 
             a.status === 'Yet to start' || a.status === 'Pending' || a.status === 'Yet to start/Pending'
