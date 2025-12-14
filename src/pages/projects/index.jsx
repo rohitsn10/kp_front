@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -11,7 +11,7 @@ import {
   TablePagination,
   CircularProgress,
   TextField,
-  Dialog,
+    Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
@@ -28,45 +28,9 @@ import ProjectRoleAssignmentModal from './project-role-assignment/ProjectRoleAss
 import ProjectRoleViewModal from './project-role-view/ProjectRoleViewModal';
 import ProjectActivityUploadDialog from '../../components/pages/projects/ProjectActivity/ProjectActivityUploadDialog';
 import { useDeleteActivitySheetMutation } from '../../api/users/projectActivityApi';
-import { AuthContext } from "../../context/AuthContext"; // Import AuthContext
-
-// --- PERMISSION CONFIGURATION ---
-const PERMISSIONS = {
-  PAGE_ACCESS: [
-    'PROJECT_HOD_FULL', 'ADMIN', 'PROJECT_ENGINEER_FULL', 'PROJECT_ENGINEER', 
-    'PROJECT_MANAGER_FULL', 'LAND_HOD_FULL'
-  ],
-  ADD_PROJECT: [
-    'PROJECT_HOD_FULL', 'ADMIN', 'PROJECT_ENGINEER_FULL', 
-    'PROJECT_ENGINEER', 'PROJECT_MANAGER_FULL'
-  ],
-  MILESTONE: [
-    'PROJECT_HOD_FULL', 'ADMIN', 'PROJECT_ENGINEER_FULL', 
-    'PROJECT_ENGINEER', 'PROJECT_MANAGER_FULL', 'LAND_HOD_FULL'
-  ],
-  CLIENT_ACCESS: [
-    'PROJECT_HOD_FULL', 'ADMIN', 'PROJECT_MANAGER_FULL'
-  ],
-  MDL_ACCESS: [
-    'PROJECT_HOD_FULL', 'PROJECT_ENGINEER_FULL', 'PROJECT_ENGINEER', 
-    'PROJECT_MANAGER_FULL', 'ADMIN', 'DESIGN_HOD', 'DESIGN_MANAGER', 
-    'DESIGN_ASSITANT_MANAGER', 'DESIGN_SENIOR_ENGINEER', 'DESIGN_ENGINEER'
-  ],
-  ACTIVITY_SHEET: [
-    'PROJECT_HOD_FULL', 'PROJECT_ENGINEER_FULL', 'PROJECT_ENGINEER', 
-    'PROJECT_MANAGER_FULL', 'ADMIN'
-  ],
-  ASSIGN_ROLES: [
-    'PROJECT_HOD_FULL', 'PROJECT_ENGINEER_FULL', 'PROJECT_ENGINEER', 
-    'PROJECT_MANAGER_FULL', 'ADMIN'
-  ]
-};
-
+// import ProjectRoleAssignmentModal from './ProjectRoleAssignmentModal'; // Import the new modal
+// ProjectRoleAssignmentModal
 const ProjectListingTable = () => {
-  const navigate = useNavigate();
-  const { permissions } = useContext(AuthContext); // Get permissions from context
-
-  // --- STATE VARIABLES ---
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [projectFilter, setProjectFilter] = useState("");
@@ -74,39 +38,21 @@ const ProjectListingTable = () => {
   const [updateModal, setUpdateModal] = useState(false);
   const [openWpoModal, setOpenWpoModal] = useState(false);
   const [activeProject, setActiveProject] = useState();
-  const { data: projectData, isLoading: ProjectLoading, error: ProjectError, refetch } = useGetMainProjectsQuery();
+  const { data: projectData, isLoading: ProjectLoading, error: ProjectError, refetch } = useGetMainProjectsQuery()
   const [openWpoViewModal, setOpenWpoView] = useState(false);
   const [openDrawingModal, setOpenDrawingModal] = useState(false);
   const [openActivityModal, setOpenActivityModal] = useState(false);
+  // New state for role assignment modal
   const [openRoleModal, setOpenRoleModal] = useState(false);
   const [selectedProjectForRole, setSelectedProjectForRole] = useState(null);
-  const [openRoleViewModal, setOpenRoleViewModal] = useState(false);
-  const [selectedProjectForRoleView, setSelectedProjectForRoleView] = useState(null);
+
+// 2. STATE VARIABLES - Add these to your existing useState declarations
+const [openRoleViewModal, setOpenRoleViewModal] = useState(false);
+const [selectedProjectForRoleView, setSelectedProjectForRoleView] = useState(null);
+
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deleteActivitySheet, { isLoading: isDeleting }] = useDeleteActivitySheetMutation();
-
-  // --- ACCESS CHECK HELPER ---
-  const checkAccess = (allowedRoles) => {
-    const userGroups = permissions?.groups || [];
-    return userGroups.some(group => allowedRoles.includes(group.name));
-  };
-
-  // --- DERIVED PERMISSIONS ---
-  const canAddProject = checkAccess(PERMISSIONS.ADD_PROJECT);
-  const canViewMilestone = checkAccess(PERMISSIONS.MILESTONE);
-  const canManageClient = checkAccess(PERMISSIONS.CLIENT_ACCESS);
-  const canAccessMDL = checkAccess(PERMISSIONS.MDL_ACCESS);
-  const canManageActivity = checkAccess(PERMISSIONS.ACTIVITY_SHEET);
-  const canAssignRoles = checkAccess(PERMISSIONS.ASSIGN_ROLES);
-
-  // --- 0. PAGE LEVEL SECURITY ---
-  useEffect(() => {
-    if (permissions && !checkAccess(PERMISSIONS.PAGE_ACCESS)) {
-      navigate('/'); // Redirect if user doesn't have page access
-    }
-  }, [permissions, navigate]);
-
-  // --- HANDLERS ---
+  // 3. ADD HANDLERS FOR DELETION
   const handleOpenDeleteDialog = (projectId) => {
     setActiveProject(projectId);
     setOpenDeleteDialog(true);
@@ -117,11 +63,13 @@ const ProjectListingTable = () => {
     setActiveProject(null);
   };
 
-  const handleConfirmDelete = async () => {
+    const handleConfirmDelete = async () => {
     if (activeProject) {
       try {
         await deleteActivitySheet(activeProject).unwrap();
+        // Close modal
         handleCloseDeleteDialog();
+        // Refresh the table data
         refetch(); 
         console.log("Activity sheet deleted");
       } catch (error) {
@@ -131,32 +79,64 @@ const ProjectListingTable = () => {
     }
   };
 
-  const handleCloseCreateModal = () => setCreateModal(false);
-  const handleCloseUpdateModal = () => setCreateModal(false);
-  const handleCloseWpoModal = () => { setOpenWpoModal(false); setActiveProject(null); };
-  const handleChangePage = (event, newPage) => setPage(newPage);
-  const handleChangeRowsPerPage = (event) => { setRowsPerPage(parseInt(event.target.value, 10)); setPage(0); };
-  const handleCloseWpoViewModal = () => { setOpenWpoView(false); setActiveProject(null); };
-  const handleCloseDrawingModal = () => { setOpenDrawingModal(false); setActiveProject(null); };
-  const handleCloseActivityModal = () => { setOpenActivityModal(false); setActiveProject(null); };
-  
+  const navigate = useNavigate();
+
+  const handleCloseCreateModal = () => {
+    setCreateModal(false)
+  }
+  const handleCloseUpdateModal = () => {
+    setCreateModal(false)
+  }
+  const handleCloseWpoModal = () => {
+    setOpenWpoModal(false)
+    setActiveProject(null)
+  }
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleCloseWpoViewModal = () => {
+    setOpenWpoView(false)
+    setActiveProject(null)
+  }
+
+  const handleCloseDrawingModal = () => {
+    setOpenDrawingModal(false);
+    setActiveProject(null);
+  };
+
+  const handleCloseActivityModal = () => {
+  setOpenActivityModal(false);
+  setActiveProject(null);
+};
+  // New handler for role assignment modal
   const handleOpenRoleModal = (project) => {
     setSelectedProjectForRole(project);
     setOpenRoleModal(true);
   };
+
   const handleCloseRoleModal = () => {
     setOpenRoleModal(false);
     setSelectedProjectForRole(null);
   };
-  const handleOpenRoleViewModal = (project) => {
-    setSelectedProjectForRoleView(project);
-    setOpenRoleViewModal(true);
-  };
-  const handleCloseRoleViewModal = () => {
-    setOpenRoleViewModal(false);
-    setSelectedProjectForRoleView(null);
-  };
 
+  const handleOpenRoleViewModal = (project) => {
+  setSelectedProjectForRoleView(project);
+  setOpenRoleViewModal(true);
+};
+
+const handleCloseRoleViewModal = () => {
+  setOpenRoleViewModal(false);
+  setSelectedProjectForRoleView(null);
+};
+
+  // Filter projects based on search
   const filteredProjects = projectData?.data?.filter(project =>
     project.project_name.toLowerCase().includes(projectFilter.toLowerCase())
   ) || [];
@@ -168,15 +148,18 @@ const ProjectListingTable = () => {
 
   return (
     <div className="bg-white p-3 sm:p-4 md:p-6 w-full max-w-none mx-auto my-4 sm:my-6 md:my-8 rounded-lg shadow-sm">
-      {/* Header */}
+      {/* Responsive Header */}
       <div className="mb-6">
+        {/* Title - Always on top on mobile */}
         <div className="text-center mb-4 sm:mb-6">
           <h2 className="text-xl sm:text-2xl md:text-3xl text-[#29346B] font-semibold">
             Project Listing
           </h2>
         </div>
         
+        {/* Search and Button Container */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
+          {/* Search Input */}
           <div className="w-full sm:w-auto sm:flex-1 sm:max-w-xs">
             <TextField
               value={projectFilter}
@@ -185,36 +168,50 @@ const ProjectListingTable = () => {
               variant="outlined"
               size="small"
               fullWidth
-              style={{ backgroundColor: '#f9f9f9', borderRadius: '8px' }}
+              style={{ 
+                backgroundColor: '#f9f9f9', 
+                borderRadius: '8px'
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  fontSize: { xs: '14px', sm: '16px' }
+                }
+              }}
             />
           </div>
 
-          {/* 1. Add Project Button - Restricted Access */}
-          {canAddProject && (
-            <div className="w-full sm:w-auto">
-              <Button
-                variant="contained"
-                fullWidth
-                onClick={() => setCreateModal(!createModal)}
-                sx={{
-                  backgroundColor: '#FF8C00',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  textTransform: 'none',
-                  '&:hover': { backgroundColor: '#e67c00' }
-                }}
-              >
-                Add Project
-              </Button>
-            </div>
-          )}
+          {/* Add Button */}
+          <div className="w-full sm:w-auto">
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={() => setCreateModal(!createModal)}
+              sx={{
+                backgroundColor: '#FF8C00',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: { xs: '14px', sm: '16px' },
+                textTransform: 'none',
+                padding: { xs: '10px 16px', sm: '8px 24px' },
+                '&:hover': {
+                  backgroundColor: '#e67c00'
+                }
+              }}
+            >
+              Add Project
+            </Button>
+          </div>
         </div>
       </div>
 
+      {/* Show loading state */}
       {ProjectLoading && (
-        <div className="flex justify-center items-center h-64"><CircularProgress size={50} /></div>
+        <div className="flex justify-center items-center h-64">
+          <CircularProgress size={50} />
+        </div>
       )}
 
+      {/* Show error state */}
       {ProjectError && (
         <div className="flex justify-center items-center h-64">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
@@ -223,194 +220,553 @@ const ProjectListingTable = () => {
         </div>
       )}
 
+      {/* Show table only when data is available */}
       {!ProjectLoading && !ProjectError && filteredProjects.length > 0 && (
         <>
+          {/* Responsive Table Container */}
           <div className="overflow-x-auto">
-            <TableContainer component={Paper} style={{ borderRadius: '8px', minWidth: '1420px' }}>
+            <TableContainer 
+              component={Paper} 
+              style={{ 
+                borderRadius: '8px',
+                minWidth: '1420px' // Increased minimum width for the new column
+              }}
+            >
               <Table stickyHeader>
                 <TableHead>
                   <TableRow style={{ backgroundColor: '#F2EDED' }}>
-                    <TableCell align="center" width={80} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Sr No.</TableCell>
-                    <TableCell align="center" width={180} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Project Name</TableCell>
-                    <TableCell align="center" width={150} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Activity</TableCell>
-                    <TableCell align="center" width={150} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Alloted Land Area</TableCell>
-                    <TableCell align="center" width={180} style={{ fontWeight: 'normal', color: '#5C5E67' }}>LandBank Name</TableCell>
-                    <TableCell align="center" width={180} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Project Created At</TableCell>
-                    <TableCell align="center" width={180} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Project End Date</TableCell>
-                    <TableCell align="center" width={120} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Expense</TableCell>
-                    
-                    {/* 2. View Details - All Access (Implicit in Page Access) */}
-                    <TableCell align="center" width={130} style={{ fontWeight: 'normal', color: '#5C5E67' }}>View Details</TableCell>
-                    
-                    {/* 3. Milestone - Restricted Access */}
-                    {canViewMilestone && (
-                      <TableCell align="center" width={140} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Project Milestone</TableCell>
-                    )}
-
-                    {/* 4. Client Columns - Restricted Access */}
-                    {canManageClient && (
-                      <>
-                        <TableCell align="center" width={140} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Add Client Details</TableCell>
-                        <TableCell align="center" width={140} style={{ fontWeight: 'normal', color: '#5C5E67' }}>View Client Details</TableCell>
-                      </>
-                    )}
-
-                    <TableCell align="center" width={120} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Add WO PO</TableCell>
-                    <TableCell align="center" width={120} style={{ fontWeight: 'normal', color: '#5C5E67' }}>View WO PO</TableCell>
-                    
-                    {/* 5. MDL - Restricted Access */}
-                    {canAccessMDL && (
-                      <TableCell align="center" width={120} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Manage Drawings</TableCell>
-                    )}
-
-                    {/* 6 & 8. Activity Sheet (Upload & Clear) - Restricted Access */}
-                    {canManageActivity && (
-                      <>
-                        <TableCell align="center" width={120} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Upload Activity</TableCell>
-                        <TableCell align="center" width={120} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Clear Sheet</TableCell>
-                      </>
-                    )}
-
-                    {/* 7. Assign Roles - Restricted Access */}
-                    {canAssignRoles && (
-                      <TableCell align="center" width={130} style={{ fontWeight: 'normal', color: '#5C5E67' }}>Assign Roles</TableCell>
-                    )}
-
-                    {/* 9. View Roles - All Access */}
-                    <TableCell align="center" width={130} style={{ fontWeight: 'normal', color: '#5C5E67' }}>View Assigned Roles</TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={80}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Sr No.
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={180}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Project Name
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={150}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Activity
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={150}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Alloted Land Area
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={180}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      LandBank Name
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={180}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Project Created At
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={180}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Project End Date
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={120}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Expense
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={130}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      View Details
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={140}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Project Milestone
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={140}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Add Client Details
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={140}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      View Client Details
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={120}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Add WO PO
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={120}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      View WO PO
+                    </TableCell>
+                    <TableCell 
+                      align="center" 
+                      width={120}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Manage Drawings
+                    </TableCell>
+                    <TableCell 
+  align="center" 
+  width={120}
+  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+  sx={{
+    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+  }}
+>
+  Upload Activity
+</TableCell>
+<TableCell 
+  align="center" 
+  width={120}
+  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+  sx={{ fontSize: { xs: '12px', sm: '14px', md: '16px' }, padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }}}
+>
+  Clear Sheet
+</TableCell>
+                    {/* New column for Role Assignment */}
+                    <TableCell 
+                      align="center" 
+                      width={130}
+                      style={{ fontWeight: 'normal', color: '#5C5E67' }}
+                      sx={{
+                        fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                        padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+                      }}
+                    >
+                      Assign Roles
+                    </TableCell>
+<TableCell 
+  align="center" 
+  width={130}
+  style={{ fontWeight: 'normal', color: '#5C5E67' }}
+  sx={{
+    fontSize: { xs: '12px', sm: '14px', md: '16px' },
+    padding: { xs: '8px 4px', sm: '12px 8px', md: '16px' }
+  }}
+>
+  View Assigned Roles
+</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {currentRows?.map((project, index) => (
-                    <TableRow key={project.id} sx={{ '&:hover': { backgroundColor: '#f5f5f5' } }}>
-                      <TableCell align="center">{index + 1 + page * rowsPerPage}</TableCell>
-                      <TableCell align="center">{project.project_name}</TableCell>
-                      <TableCell align="center">{project.project_activity_name}</TableCell>
-                      <TableCell align="center">{project.alloted_land_area}</TableCell>
-                      <TableCell align="center">{project.landbank_name}</TableCell>
-                      <TableCell align="center">{new Date(project?.start_date).toLocaleDateString() || 'N/A'}</TableCell>
-                      <TableCell align="center">{new Date(project?.end_date).toLocaleDateString() || 'N/A'}</TableCell>
+                    <TableRow 
+                      key={project.id}
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: '#f5f5f5'
+                        }
+                      }}
+                    >
+                      <TableCell 
+                        align="center"
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        {index + 1 + page * rowsPerPage}
+                      </TableCell>
+                      <TableCell 
+                        align="center"
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' },
+                          wordBreak: 'break-word'
+                        }}
+                      >
+                        {project.project_name}
+                      </TableCell>
+                      <TableCell 
+                        align="center" 
+                        sx={{
+                          minWidth: '100px',
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        {project.project_activity_name}
+                      </TableCell>
+                      <TableCell 
+                        align="center" 
+                        sx={{
+                          minWidth: '100px',
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        {project.alloted_land_area}
+                      </TableCell>
+                      <TableCell 
+                        align="center"
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        {project.landbank_name}
+                      </TableCell>
+                      <TableCell 
+                        align="center"
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        {new Date(project?.start_date).toLocaleDateString() || 'N/A'}
+                      </TableCell>
+                      <TableCell 
+                        align="center"
+                        sx={{
+                          fontSize: { xs: '12px', sm: '14px', md: '16px' },
+                          padding: { xs: '6px 4px', sm: '8px', md: '12px' }
+                        }}
+                      >
+                        {new Date(project?.end_date).toLocaleDateString() || 'N/A'}
+                      </TableCell>
                       
-                      <TableCell align="center">
-                        <Button variant="contained" color="primary" size="small" onClick={() => navigate(`/project/expense/${project?.id}`)}>
+                      {/* Action Buttons */}
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          sx={{
+                            minWidth: { xs: '80px', sm: '100px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' }
+                          }}
+                          onClick={() => {
+                            navigate(`/project/expense/${project?.id}`)
+                          }}
+                        >
                           Expense
                         </Button>
                       </TableCell>
 
-                      <TableCell align="center">
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
                         <Button
                           variant="contained"
                           size="small"
-                          sx={{ backgroundColor: '#27d865', color: 'white', '&:hover': { backgroundColor: '#22c55e' } }}
-                          onClick={() => navigate(`/project/view_projects_details/${project?.id}`)}
+                          sx={{
+                            backgroundColor: '#27d865',
+                            color: 'white',
+                            minWidth: { xs: '90px', sm: '120px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' },
+                            '&:hover': {
+                              backgroundColor: '#22c55e'
+                            }
+                          }}
+                          onClick={() => {
+                            navigate(`/project/view_projects_details/${project?.id}`)
+                          }}
                         >
                           View Details
                         </Button>
                       </TableCell>
 
-                      {canViewMilestone && (
-                        <TableCell align="center">
-                          <Button
-                            variant="contained"
-                            size="small"
-                            sx={{ backgroundColor: '#1a01fe', color: 'white', '&:hover': { backgroundColor: '#1501d9' } }}
-                            onClick={() => navigate(`/project/milestone-listing/${project?.id}`)}
-                          >
-                            Milestone
-                          </Button>
-                        </TableCell>
-                      )}
-
-                      {canManageClient && (
-                        <>
-                          <TableCell align="center">
-                            <Button variant="contained" color="secondary" size="small" onClick={() => navigate(`/project/client_details/${project?.id}`)}>
-                              Add Client
-                            </Button>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Button variant="contained" color="secondary" size="small" onClick={() => navigate(`/project/view_client_details/${project?.id}`)}>
-                              View Client
-                            </Button>
-                          </TableCell>
-                        </>
-                      )}
-
-                      <TableCell align="center">
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
                         <Button
-                          variant="contained" size="small"
-                          sx={{ backgroundColor: '#FF8C00', color: 'white', '&:hover': { backgroundColor: '#e67c00' } }}
-                          onClick={() => { setOpenWpoModal(true); setActiveProject(project?.id); }}
+                          variant="contained"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#1a01fe',
+                            color: 'white',
+                            minWidth: { xs: '90px', sm: '120px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' },
+                            '&:hover': {
+                              backgroundColor: '#1501d9'
+                            }
+                          }}
+                          onClick={() => {
+                            navigate(`/project/milestone-listing/${project?.id}`)
+                          }}
+                        >
+                          Milestone
+                        </Button>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          color="secondary"
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '10px', sm: '11px' },
+                            padding: { xs: '4px 6px', sm: '4px 8px' },
+                            minWidth: { xs: '80px', sm: '100px' }
+                          }}
+                          onClick={() => {
+                            navigate(`/project/client_details/${project?.id}`)
+                          }}
+                        >
+                          Add Client
+                        </Button>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          color="secondary"
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '10px', sm: '11px' },
+                            padding: { xs: '4px 6px', sm: '4px 8px' },
+                            minWidth: { xs: '80px', sm: '100px' }
+                          }}
+                          onClick={() => {
+                            navigate(`/project/view_client_details/${project?.id}`)
+                          }}
+                        >
+                          View Client
+                        </Button>
+                      </TableCell>
+
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#FF8C00',
+                            color: 'white',
+                            minWidth: { xs: '80px', sm: '100px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' },
+                            '&:hover': {
+                              backgroundColor: '#e67c00'
+                            }
+                          }}
+                          onClick={() => {
+                            setOpenWpoModal(true)
+                            setActiveProject(project?.id)
+                          }}
                         >
                           Add WOPO
                         </Button>
                       </TableCell>
 
-                      <TableCell align="center">
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
                         <Button
-                          variant="contained" size="small"
-                          sx={{ backgroundColor: '#FF8C00', color: 'white', '&:hover': { backgroundColor: '#e67c00' } }}
-                          onClick={() => { setOpenWpoView(true); setActiveProject(project?.id); }}
+                          variant="contained"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#FF8C00',
+                            color: 'white',
+                            minWidth: { xs: '80px', sm: '110px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' },
+                            '&:hover': {
+                              backgroundColor: '#e67c00'
+                            }
+                          }}
+                          onClick={() => {
+                            setOpenWpoView(true)
+                            setActiveProject(project?.id)
+                          }}
                         >
                           View WOPO
                         </Button>
                       </TableCell>
 
-                      {canAccessMDL && (
-                        <TableCell align="center">
-                          <Button
-                            variant="contained" size="small"
-                            sx={{ backgroundColor: '#FF8C00', color: 'white', '&:hover': { backgroundColor: '#e67c00' } }}
-                            onClick={() => { setOpenDrawingModal(true); setActiveProject(project?.id); }}
-                          >
-                            MDL
-                          </Button>
-                        </TableCell>
-                      )}
-
-                      {canManageActivity && (
-                        <>
-                          <TableCell align="center">
-                            <Button
-                              variant="contained" size="small"
-                              sx={{ backgroundColor: '#FF8C00', color: 'white', '&:hover': { backgroundColor: '#e67c00' } }}
-                              onClick={() => { setOpenActivityModal(true); setActiveProject(project?.id); }}
-                            >
-                              Upload Activity Sheet
-                            </Button>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Button
-                              variant="contained" size="small" color="error"
-                              onClick={() => handleOpenDeleteDialog(project.id)}
-                            >
-                              Clear Activity Sheet
-                            </Button>
-                          </TableCell>
-                        </>
-                      )}
-
-                      {canAssignRoles && (
-                        <TableCell align="center">
-                          <Button
-                            variant="contained" size="small"
-                            sx={{ backgroundColor: '#29346B', color: 'white', '&:hover': { backgroundColor: '#1E2A5A' } }}
-                            onClick={() => handleOpenRoleModal(project)}
-                          >
-                            Assign Roles
-                          </Button>
-                        </TableCell>
-                      )}
-
-                      <TableCell align="center">
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
                         <Button
-                          variant="contained" size="small"
-                          sx={{ backgroundColor: '#27d865', color: 'white', '&:hover': { backgroundColor: '#22c55e' } }}
-                          onClick={() => handleOpenRoleViewModal(project)}
+                          variant="contained"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#FF8C00',
+                            color: 'white',
+                            minWidth: { xs: '60px', sm: '80px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' },
+                            '&:hover': {
+                              backgroundColor: '#e67c00'
+                            }
+                          }}
+                          onClick={() => {
+                            setOpenDrawingModal(true);
+                            setActiveProject(project?.id);
+                          }}
                         >
-                          View Roles
+                          MDL
                         </Button>
                       </TableCell>
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+  <Button
+    variant="contained"
+    size="small"
+    sx={{
+      backgroundColor: '#FF8C00',
+      color: 'white',
+      minWidth: { xs: '60px', sm: '80px' },
+      fontSize: { xs: '10px', sm: '12px' },
+      padding: { xs: '4px 8px', sm: '6px 12px' },
+      '&:hover': {
+        backgroundColor: '#e67c00'
+      }
+    }}
+    onClick={() => {
+      setOpenActivityModal(true);
+      setActiveProject(project?.id);
+    }}
+  >
+   Upload Activity Sheet
+  </Button>
+</TableCell>
+<TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+  <Button
+    variant="contained"
+    size="small"
+    color="error" // Makes the button red
+    sx={{
+      minWidth: { xs: '60px', sm: '80px' },
+      fontSize: { xs: '10px', sm: '12px' },
+      padding: { xs: '4px 8px', sm: '6px 12px' },
+    }}
+    // Only show/enable if you have a flag, otherwise just show it
+    // disabled={!project.is_activity_sheet_uploaded} 
+    onClick={() => handleOpenDeleteDialog(project.id)}
+  >
+    Clear Activity Sheet
+  </Button>
+</TableCell>
+
+                      {/* New Role Assignment Button */}
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#29346B',
+                            color: 'white',
+                            minWidth: { xs: '80px', sm: '110px' },
+                            fontSize: { xs: '10px', sm: '12px' },
+                            padding: { xs: '4px 8px', sm: '6px 12px' },
+                            '&:hover': {
+                              backgroundColor: '#1E2A5A'
+                            }
+                          }}
+                          onClick={() => handleOpenRoleModal(project)}
+                        >
+                          Assign Roles
+                        </Button>
+                      </TableCell>
+                      <TableCell align="center" sx={{ padding: { xs: '4px', sm: '8px' } }}>
+  <Button
+    variant="contained"
+    size="small"
+    sx={{
+      backgroundColor: '#27d865',
+      color: 'white',
+      minWidth: { xs: '80px', sm: '120px' },
+      fontSize: { xs: '10px', sm: '12px' },
+      padding: { xs: '4px 8px', sm: '6px 12px' },
+      '&:hover': {
+        backgroundColor: '#22c55e'
+      }
+    }}
+    onClick={() => handleOpenRoleViewModal(project)}
+  >
+    View Roles
+  </Button>
+</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -427,6 +783,15 @@ const ProjectListingTable = () => {
             onRowsPerPageChange={handleChangeRowsPerPage}
             rowsPerPageOptions={[5, 10, 25]}
             style={{ borderTop: '1px solid #e0e0e0' }}
+            sx={{
+              '& .MuiTablePagination-toolbar': {
+                fontSize: { xs: '12px', sm: '14px' },
+                padding: { xs: '8px', sm: '16px' }
+              },
+              '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+                fontSize: { xs: '12px', sm: '14px' }
+              }
+            }}
           />
         </>
       )}
@@ -438,18 +803,36 @@ const ProjectListingTable = () => {
         </div>
       )}
 
-      {/* Modals */}
       <ProjectCreate open={createModal} handleClose={handleCloseCreateModal} refetch={refetch} />
       <ProjectUpdate open={updateModal} handleClose={handleCloseUpdateModal} />
-      <ProjectWpo open={openWpoModal} projectId={activeProject} handleClose={handleCloseWpoModal} refetch={refetch} />
-      <ProjectWpoViewModal open={openWpoViewModal} projectId={activeProject} handleClose={handleCloseWpoViewModal} refetch={refetch} />
-      <ProjectDrawingUploadDialog open={openDrawingModal} handleDrawingClose={handleCloseDrawingModal} projectId={activeProject} />
-      <ProjectActivityUploadDialog 
-        open={openActivityModal} 
-        handleActivityClose={handleCloseActivityModal} 
+      <ProjectWpo 
+        open={openWpoModal} 
         projectId={activeProject}
-        onSuccess={() => console.log('Activity sheet uploaded successfully')}
+        handleClose={handleCloseWpoModal}
+        refetch={refetch}
       />
+      <ProjectWpoViewModal 
+        open={openWpoViewModal} 
+        projectId={activeProject}
+        handleClose={handleCloseWpoViewModal}
+        refetch={refetch}
+      />
+      <ProjectDrawingUploadDialog 
+        open={openDrawingModal} 
+        handleDrawingClose={handleCloseDrawingModal} 
+        projectId={activeProject}
+      />
+<ProjectActivityUploadDialog 
+  open={openActivityModal} 
+  handleActivityClose={handleCloseActivityModal} 
+  projectId={activeProject}
+  onSuccess={() => {
+    // Add any success callback logic here if needed
+    console.log('Activity sheet uploaded successfully');
+  }}
+/>
+      
+      {/* Role Assignment Modal */}
       <ProjectRoleAssignmentModal
         open={openRoleModal}
         handleClose={handleCloseRoleModal}
@@ -457,28 +840,42 @@ const ProjectListingTable = () => {
         projectName={selectedProjectForRole?.project_name}
       />
       <ProjectRoleViewModal
-        open={openRoleViewModal}
-        handleClose={handleCloseRoleViewModal}
-        projectId={selectedProjectForRoleView?.id}
-        projectName={selectedProjectForRoleView?.project_name}
-      />
+  open={openRoleViewModal}
+  handleClose={handleCloseRoleViewModal}
+  projectId={selectedProjectForRoleView?.id}
+  projectName={selectedProjectForRoleView?.project_name}
+/>
       <Dialog
         open={openDeleteDialog}
         onClose={handleCloseDeleteDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
       >
-        <DialogTitle>{"Confirm Deletion"}</DialogTitle>
+        <DialogTitle id="alert-dialog-title">
+          {"Confirm Deletion"}
+        </DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete the Activity Sheet for this project? This action cannot be undone.
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete the Activity Sheet for this project? 
+            This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} color="primary">Cancel</Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus disabled={isDeleting}>
+          <Button onClick={handleCloseDeleteDialog} color="primary">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error" 
+            variant="contained" 
+            autoFocus
+            disabled={isDeleting}
+          >
             {isDeleting ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>
+
     </div>
   );
 };
