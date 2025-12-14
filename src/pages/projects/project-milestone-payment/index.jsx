@@ -14,13 +14,16 @@ import {
     TextField,
     Button,
     IconButton,
-    Tooltip
+    Tooltip,
+    Chip
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import PaymentIcon from '@mui/icons-material/Payment';
 
 import { useGetMilestonePaymentQuery } from '../../../api/milestonePayment/milestonePaymentApi';
 import AddInvoiceModal from '../../../components/pages/milestones-payment/MilestonePaymentCreate';
 import EditPaymentModal from '../../../components/pages/milestones-payment/MilestonePaymentUpdate';
+import RecordPaymentModal from '../../../components/pages/milestones-payment/RecordPaymentModal';
 
 function ProjectMilestonePayment() {
   const { milestoneId } = useParams();
@@ -30,6 +33,7 @@ function ProjectMilestonePayment() {
   const { data, isLoading, error, refetch } = useGetMilestonePaymentQuery(milestoneId);
   const [createModalOpen, setCreateModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [recordPaymentModalOpen, setRecordPaymentModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
 
   const handleCreateModalClose = () => {
@@ -44,6 +48,32 @@ function ProjectMilestonePayment() {
   const handleEditModalClose = () => {
     setEditModalOpen(false);
     setSelectedPayment(null);
+  };
+
+  const handleRecordPaymentOpen = (payment) => {
+    setSelectedPayment(payment);
+    setRecordPaymentModalOpen(true);
+  };
+
+  const handleRecordPaymentClose = () => {
+    setRecordPaymentModalOpen(false);
+    setSelectedPayment(null);
+  };
+
+  // Calculate total paid and pending amount
+  const calculatePaymentStatus = (payment) => {
+    const totalAmount = parseFloat(payment.total_amount);
+    const totalPaid = payment.payment_history?.reduce(
+      (sum, history) => sum + parseFloat(history.amount_paid || 0), 
+      0
+    ) || 0;
+    const pending = totalAmount - totalPaid;
+    
+    return {
+      totalPaid: totalPaid.toFixed(2),
+      pending: pending.toFixed(2),
+      isFullyPaid: pending <= 0
+    };
   };
 
   if (isLoading) {
@@ -64,7 +94,6 @@ function ProjectMilestonePayment() {
 
   const paymentRows = data?.data || [];
 
-  // Filter payments based on search query (party name, invoice number, or project name)
   const filteredRows = paymentRows.filter((row) =>
     row.party_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     row.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -97,7 +126,7 @@ function ProjectMilestonePayment() {
             padding: '10px'
           }}
         >
-          Add Payment
+          Add Invoice
         </Button>
       </div>
 
@@ -111,6 +140,9 @@ function ProjectMilestonePayment() {
               <TableCell align="center">Party Name</TableCell>
               <TableCell align="center">Invoice Number</TableCell>
               <TableCell align="center">Total Amount</TableCell>
+              <TableCell align="center">Amount Paid</TableCell>
+              <TableCell align="center">Pending</TableCell>
+              <TableCell align="center">Status</TableCell>
               <TableCell align="center">GST Amount</TableCell>
               <TableCell align="center">Notes</TableCell>
               <TableCell align="center">Created Date</TableCell>
@@ -120,33 +152,65 @@ function ProjectMilestonePayment() {
 
           <TableBody>
             {currentRows.length > 0 ? (
-              currentRows.map((row, index) => (
-                <TableRow key={row.id}>
-                  <TableCell align="center">{page * rowsPerPage + index + 1}</TableCell>
-                  <TableCell align="center">{row.project_name}</TableCell>
-                  <TableCell align="center">{row.milestone_name}</TableCell>
-                  <TableCell align="center">{row.party_name}</TableCell>
-                  <TableCell align="center">{row.invoice_number}</TableCell>
-                  <TableCell align="center">₹{parseFloat(row.total_amount).toFixed(2)}</TableCell>
-                  <TableCell align="center">₹{parseFloat(row.gst_amount).toFixed(2)}</TableCell>
-                  <TableCell align="center">{row.notes || '-'}</TableCell>
-                  <TableCell align="center">{new Date(row.created_at).toLocaleDateString('en-IN')}</TableCell>
-                  <TableCell align="center">
-                    <Tooltip title="Edit Payment">
-                      <IconButton
-                        color="primary"
-                        size="small"
-                        onClick={() => handleEditModalOpen(row)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))
+              currentRows.map((row, index) => {
+                const paymentStatus = calculatePaymentStatus(row);
+                return (
+                  <TableRow key={row.id}>
+                    <TableCell align="center">{page * rowsPerPage + index + 1}</TableCell>
+                    <TableCell align="center">{row.project_name}</TableCell>
+                    <TableCell align="center">{row.milestone_name}</TableCell>
+                    <TableCell align="center">{row.party_name}</TableCell>
+                    <TableCell align="center">{row.invoice_number}</TableCell>
+                    <TableCell align="center">₹{parseFloat(row.total_amount).toFixed(2)}</TableCell>
+                    <TableCell align="center">
+                      <span style={{ color: '#4CAF50', fontWeight: 'bold' }}>
+                        ₹{paymentStatus.totalPaid}
+                      </span>
+                    </TableCell>
+                    <TableCell align="center">
+                      <span style={{ color: paymentStatus.pending > 0 ? '#f44336' : '#4CAF50', fontWeight: 'bold' }}>
+                        ₹{paymentStatus.pending}
+                      </span>
+                    </TableCell>
+                    <TableCell align="center">
+                      {paymentStatus.isFullyPaid ? (
+                        <Chip label="Paid" color="success" size="small" />
+                      ) : paymentStatus.totalPaid > 0 ? (
+                        <Chip label="Partial" color="warning" size="small" />
+                      ) : (
+                        <Chip label="Unpaid" color="error" size="small" />
+                      )}
+                    </TableCell>
+                    <TableCell align="center">₹{parseFloat(row.gst_amount).toFixed(2)}</TableCell>
+                    <TableCell align="center">{row.notes || '-'}</TableCell>
+                    <TableCell align="center">{new Date(row.created_at).toLocaleDateString('en-IN')}</TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="Edit Invoice">
+                        <IconButton
+                          color="primary"
+                          size="small"
+                          onClick={() => handleEditModalOpen(row)}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Record Payment">
+                        <IconButton
+                          color="success"
+                          size="small"
+                          onClick={() => handleRecordPaymentOpen(row)}
+                          disabled={paymentStatus.isFullyPaid}
+                        >
+                          <PaymentIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
-                <TableCell colSpan={10} align="center">
+                <TableCell colSpan={13} align="center">
                   No payments found
                 </TableCell>
               </TableRow>
@@ -175,12 +239,20 @@ function ProjectMilestonePayment() {
         refetch={refetch}  
       />
       {selectedPayment && (
-        <EditPaymentModal
-          open={editModalOpen}
-          handleClose={handleEditModalClose}
-          paymentData={selectedPayment}
-          refetch={refetch}
-        />
+        <>
+          <EditPaymentModal
+            open={editModalOpen}
+            handleClose={handleEditModalClose}
+            paymentData={selectedPayment}
+            refetch={refetch}
+          />
+          <RecordPaymentModal
+            open={recordPaymentModalOpen}
+            handleClose={handleRecordPaymentClose}
+            invoiceData={selectedPayment}
+            refetch={refetch}
+          />
+        </>
       )}
     </div>
   );

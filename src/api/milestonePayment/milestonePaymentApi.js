@@ -33,11 +33,19 @@ export const milestonePaymentApi = createApi({
         method: "GET",
       }),
     }),
+    addPaymentOnMilestone: builder.mutation({
+  query: (paymentData) => ({
+    url: "project_module/add_payment_on_milestone",
+    method: "POST",
+    body: paymentData,
+  }),
+}),
   }),
 });
 
 export const { 
   useCreateMilestonePaymentMutation, 
   useUpdateMilestonePaymentMutation, 
-  useGetMilestonePaymentQuery 
+  useGetMilestonePaymentQuery,
+  useAddPaymentOnMilestoneMutation  
 } = milestonePaymentApi;

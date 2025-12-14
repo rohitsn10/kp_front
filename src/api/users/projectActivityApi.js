@@ -53,6 +53,19 @@ export const activityApi = createApi({
         },
       }),
     }),
+        deleteActivitySheet: builder.mutation({
+      query: (projectId) => ({
+        url: `project_module/delete_activity_sheet/${projectId}`, 
+        method: "DELETE",
+      }),
+    }),
+        exportProjectProgressSheet: builder.query({
+      query: (projectId) => ({
+        // Matches curl: project_module/export_project_progress_sheet/6
+        url: `project_module/export_project_progress_sheet/${projectId}`,
+        method: "GET",
+      }),
+    }),
     deleteActivity: builder.mutation({
       query: (id) => ({
         url: `activity_module/update_activity/${id}`, // Dynamic ID in URL
@@ -66,5 +79,7 @@ export const {
   useCreateActivityMutation, 
   useGetActivitiesQuery, 
   useUpdateActivityMutation,
+  useDeleteActivitySheetMutation,
+  useLazyExportProjectProgressSheetQuery ,
   useDeleteActivityMutation
 } = activityApi;

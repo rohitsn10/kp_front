@@ -12,6 +12,7 @@ import StatItem from "../../../components/pages/projects/ProgressUi/StatItem";
 import TabButton from "../../../components/pages/projects/ProgressUi/TabButton";
 import TimelineCard from "../../../components/pages/projects/ProgressCards/TimelineCard";
 import DetailCard from "../../../components/pages/projects/ProgressCards/DetailCard";
+import { useLazyExportProjectProgressSheetQuery } from "../../../api/users/projectActivityApi";
 
 function ViewProjectDetails() {
     const { projectId } = useParams();
@@ -24,7 +25,7 @@ function ViewProjectDetails() {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [updateModal, setUpdateModal] = useState(false);
-
+    const [triggerExport, { isLoading: isExporting }] = useLazyExportProjectProgressSheetQuery();
     // Transform API data to match the component's expected format
     const transformedActivities = useMemo(() => {
         return activitiesData.map(activity => ({
@@ -121,11 +122,27 @@ function ViewProjectDetails() {
     }, [transformedActivities]);
 
     // Handle Excel export
-    const handleExportToExcel = async () => {
+    // const handleExportToExcel = async () => {
+    //     try {
+    //         await exportActivitiesToExcelWithCharts(filteredActivities, projectData, summary);
+    //     } catch (error) {
+    //         console.error('Export failed:', error);
+    //         alert('Failed to export data. Please try again.');
+    //     }
+    // };
+        const handleExportToExcel = async () => {
         try {
-            await exportActivitiesToExcelWithCharts(filteredActivities, projectData, summary);
+            // New API Call Logic
+            const response = await triggerExport(projectId).unwrap();
+            
+            if (response.status && response.file_url) {
+                // Open the URL in a new tab to start the download
+                window.open(response.file_url, "_blank");
+            } else {
+                alert(response.message || "Failed to generate report");
+            }
         } catch (error) {
-            console.error('Export failed:', error);
+            console.error('Export API failed:', error);
             alert('Failed to export data. Please try again.');
         }
     };
@@ -183,6 +200,7 @@ function ViewProjectDetails() {
                     projectData={projectData}
                     onExport={handleExportToExcel}
                     onUpdate={() => setUpdateModal(true)}
+                    isExporting={isExporting} 
                 />
 
                 {/* Progress Overview Cards */}
